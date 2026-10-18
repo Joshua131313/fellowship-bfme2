@@ -137,7 +137,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.13   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.14   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -342,7 +342,7 @@ public sealed class RoomWindow : Window
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Your team and spot sync both ways while the matching BFME2 LAN lobby is open. Approve Windows permission once per game session.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams and spots sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve Windows permission once per game session.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -367,7 +367,7 @@ public sealed class RoomWindow : Window
         customSetup.Children.Add(privacyChoice);var confirmPrivacy=UI.AsyncButton("Confirm privacy",()=>SaveRoomDetails(true));confirmPrivacy.Margin=new(0,10,0,0);confirmPrivacy.HorizontalAlignment=HorizontalAlignment.Stretch;customSetup.Children.Add(confirmPrivacy);
         right.Children.Add(customSetup);
         var guide=UI.Stack(UI.Text("IN BFME2",10,UI.Muted,true),UI.Text("1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Fellowship applies your team and spot",12,"#B5C0D3"));guide.Margin=new(0,20,0,0);guide.Children[1].SetValue(MarginProperty,new Thickness(0,8,0,0));right.Children.Add(guide);
-        var note=UI.Text("Selected maps and rules apply at the next host launch. Your spot and team apply through native LAN functions once the matching lobby opens. Guests still join manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
+        var note=UI.Text("The Fellowship host must also host BFME2. Map and rules sync through the host; each player's team and spot sync locally. Guests still join the native lobby manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
         var settingsCard=UI.Card(UI.Scroll(right),"#191D24",16);Grid.SetColumn(settingsCard,1);columns.Children.Add(settingsCard);UI.At(body,columns,1);
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var state=UI.Stack(consent,readySummary,UI.Text("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
@@ -387,7 +387,7 @@ public sealed class RoomWindow : Window
     {
         if(syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
-        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot));
+        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot),app.Peer.IsHost?NativeSetup.From(room):null);
     }
     async Task WatchNative()
     {
@@ -411,6 +411,15 @@ public sealed class RoomWindow : Window
                             changingPlacement=true;Refresh();
                             try{await app.Peer.SelectPlacement(choice.Spot,choice.Team);}
                             finally{changingPlacement=false;Refresh();}
+                        },async setup=>
+                        {
+                            if(!app.Peer.IsHost||app.Peer.Current is not {} room)return;
+                            var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(room))!;
+                            var selected=GameInstallation.Maps(app.Settings.GamePath).FirstOrDefault(m=>m.Path.Equals(setup.Map,StringComparison.OrdinalIgnoreCase))??throw new IOException("Native map is not installed.");
+                            draft.Map=selected.Name;draft.MapPath=selected.Path;draft.Match=setup.Rules;
+                            savingRules=true;Refresh();
+                            try{await app.Peer.EditRoom(draft);}
+                            finally{savingRules=false;Refresh();}
                         },message=>liveStatus.Text=message,syncLifetime.Token);
                     }
                     catch(OperationCanceledException) when(syncLifetime.IsCancellationRequested){break;}

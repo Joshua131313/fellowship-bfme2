@@ -16,15 +16,23 @@ public static class NativePlacement
         if(team is <0 or >4||spot is <0 or >8)throw new InvalidDataException("Invalid team or starting spot.");
         var map=Encoding.ASCII.GetBytes(snapshot.Map);if(map.Length>=512)throw new InvalidDataException("Map path too long.");
         using var stream=new MemoryStream();using var writer=new BinaryWriter(stream);
-        writer.Write(0x46424d32u);writer.Write(1u);writer.Write(pid);writer.Write(snapshot.Identity);
+        writer.Write(0x46424d32u);writer.Write(2u);writer.Write(pid);writer.Write(snapshot.Identity);
         writer.Write(snapshot.Local.Row);writer.Write(team-1);writer.Write(spot-1);writer.Write(readOnly?1:0);
         for(int i=0;i<6;i++)writer.Write(0);
-        writer.Write(map);writer.Write(new byte[512-map.Length]);return stream.ToArray();
+        writer.Write(map);writer.Write(new byte[512-map.Length]);writer.Write(new byte[532]);return stream.ToArray();
+    }
+    public static byte[] SetupRequestBytes(int pid,NativeLobby.Snapshot snapshot,NativeSetup setup)
+    {
+        setup.Rules.Validate();var target=Encoding.ASCII.GetBytes(setup.Map);
+        if(target.Length>=512||!setup.Map.StartsWith("maps\\",StringComparison.Ordinal)||!setup.Map.EndsWith(".map",StringComparison.Ordinal))throw new InvalidDataException("Invalid native map.");
+        var bytes=RequestBytes(pid,snapshot,0,0);using var stream=new MemoryStream(bytes);using var writer=new BinaryWriter(stream);
+        stream.Position=568;writer.Write(1);writer.Write(target);stream.Position=1084;
+        writer.Write(setup.Resources);writer.Write(setup.CommandPoints);writer.Write(setup.CustomHeroes?1:0);writer.Write(setup.RingHeroes?1:0);return bytes;
     }
     internal static string Extract()
     {
         var folder=Path.Combine(Settings.Folder,"native",AppUpdates.VersionText);Directory.CreateDirectory(folder);
-        foreach(var name in new[]{"Fellowship.NativeHost.exe","Fellowship.Native.v012a.dll"})
+        foreach(var name in new[]{"Fellowship.NativeHost.exe","Fellowship.Native.v014a.dll"})
         {
             using var resource=Assembly.GetExecutingAssembly().GetManifestResourceStream("Fellowship.Native."+name)??throw new IOException("Native bridge is missing from this build.");
             using var bytes=new MemoryStream();resource.CopyTo(bytes);var payload=bytes.ToArray();var path=Path.Combine(folder,name);
@@ -121,6 +129,9 @@ public static class NativePlacement
         -8=>"Could not identify your local BFME2 player.",
         -9=>"That starting spot is occupied in BFME2. Choose another spot.",
         -10=>"That starting spot is not valid on the native map.",
+        -14=>"Only the native BFME2 host can change map and rules.",
+        -15=>"The selected map is missing from BFME2's native map catalog.",
+        -16=>"BFME2 did not retain the map or rules.",
         -20=>"This BFME2 executable is not the verified 1.00 build.",
         -21=>"BFME2's engine window was not found.",
         -24 or -25=>"BFME2 did not accept the native bridge request. Leave its lobby open and retry.",

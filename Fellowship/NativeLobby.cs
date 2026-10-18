@@ -7,6 +7,12 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Fellowship;
 
+public sealed record NativeSetup(string Map,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes)
+{
+    public MatchRules Rules=>new(){Resources=Resources,CommandPoints=CommandPoints,CustomHeroes=CustomHeroes,RingHeroes=RingHeroes};
+    public static NativeSetup From(Room room)=>new(room.MapPath,room.Match.Resources,room.Match.CommandPoints,room.Match.CustomHeroes,room.Match.RingHeroes);
+}
+
 // Read-only adapter for the exact BFME2 1.00 binary validated by HostPreset.
 // Selection changes use the native LAN setters through NativePlacement.
 public sealed class NativeLobby : IDisposable
@@ -15,6 +21,7 @@ public sealed class NativeLobby : IDisposable
     public sealed record Snapshot(uint Identity,string Map,string HostAddress,List<Slot> Slots)
     {
         public Slot Local => Slots.Single(s=>s.Local);
+        public NativeSetup? Setup { get; init; }
     }
     readonly SafeProcessHandle handle;
     readonly long imageBase;
@@ -75,7 +82,9 @@ public sealed class NativeLobby : IDisposable
         }
         if(slots.Count(s=>s.Local)!=1)return null;
         var hostIp=read(lobby+0xb0+0x38,4);Array.Reverse(hostIp);
-        return new(lobby,map,new System.Net.IPAddress(hostIp).ToString(),slots);
+        var rules=new NativeSetup(map,I(lobby+0x70),I(lobby+0x6c),I(lobby+0x60)!=0,I(lobby+0x68)!=0);
+        rules.Rules.Validate();
+        return new(lobby,map,new System.Net.IPAddress(hostIp).ToString(),slots){Setup=rules};
     }
     public void Dispose()=>handle.Dispose();
     [DllImport("kernel32.dll",SetLastError=true)]static extern SafeProcessHandle OpenProcess(uint access,bool inherit,int pid);
