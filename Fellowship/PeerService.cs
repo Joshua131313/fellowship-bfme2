@@ -342,10 +342,6 @@ public sealed partial class PeerService : IDisposable
         }
         await Broadcast(new() { Type = "launch" });
         LaunchRequested?.Invoke();
-        lock (gate)
-        {
-            if (Current != null) foreach (var p in Current.Players) if (p.Id != "host") p.Ready = false;
-        }
         await BroadcastState();
     }
     async Task BroadcastState()

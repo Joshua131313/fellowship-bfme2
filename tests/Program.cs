@@ -118,6 +118,8 @@ await Until(() => host.Current!.Players.All(p => p.Ready), "renewed readiness");
 int launches = 0; guest.LaunchRequested += () => launches++;
 await host.Launch();
 await Until(() => launches == 1, "host launch signal");
+await Until(()=>guest.Current!.Players.All(p=>p.Ready),"launch preserves guest readiness");
+if(host.Current!.Players.Any(p=>!p.Ready))throw new Exception("Launching reset readiness");
 await host.SetHostGameRunning(true);
 await Until(() => guest.Current?.Phase == "Host in BFME2", "running status broadcast");
 await host.SetHostGameRunning(false);
