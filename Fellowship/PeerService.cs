@@ -65,6 +65,7 @@ public sealed partial class PeerService : IDisposable
             var hello = await c.Read(timeout.Token);
             if (hello == null) return;
             var remoteAddress=((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString();
+            if(settings.IsBlocked(remoteAddress)){await c.Send(new(){Type="error",Text="This peer is unavailable."});return;}
             if (hello.Type == "query")
             {
                 Room? snapshot;
@@ -108,6 +109,7 @@ public sealed partial class PeerService : IDisposable
             await BroadcastState();
             while (await c.Read(stop.Token) is { } msg)
             {
+                if(settings.IsBlocked(remoteAddress))break;
                 if(msg.Type=="handoff-ready")
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
@@ -124,6 +126,13 @@ public sealed partial class PeerService : IDisposable
                     try{ApplyPlacement(id,msg.MapPath,msg.Spot,msg.Team,msg.Color);await BroadcastState();}
                     catch(InvalidOperationException e){failure=e.Message;}
                     await c.Send(new(){Type="placement-result",RequestId=msg.RequestId,Text=failure});
+                }
+                else if(msg.Type=="nickname")
+                {
+                    string nickname=NormalizeNickname(msg.Name);
+                    if(nickname.Length==0)continue;
+                    lock(gate){var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null)player.Name=nickname;}
+                    await BroadcastState();
                 }
                 else if (msg.Type == "ready")
                 {
@@ -168,6 +177,7 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task Join(string address)
     {
+        if(settings.IsBlocked(address))throw new InvalidOperationException("Unblock this player before joining.");
         Leave();
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         try
@@ -191,6 +201,7 @@ public sealed partial class PeerService : IDisposable
                 // A disposed connection can still finish a buffered read after switching rooms.
                 // Never let its final messages replace the new room or launch its game.
                 if(!ReferenceEquals(upstream,c))break;
+                if(msg.Room?.Players.Any(p=>settings.IsBlocked(p.Address))==true){Leave();Notice?.Invoke("Left the room because a blocked player is present.");return;}
                 if(msg.Type=="become-host")
                 {
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
@@ -235,10 +246,37 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task SendPrivate(string address, string text)
     {
+        if(settings.IsBlocked(address))throw new InvalidOperationException("Unblock this player before messaging.");
         using var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         await c.Send(new() { Type = "dm", Name = settings.Name, Text = Clean(text, 2000) });
         using var timeout = new CancellationTokenSource(3000);
         if ((await c.Read(timeout.Token))?.Type != "ack") throw new IOException("Message was not acknowledged.");
+    }
+    static string NormalizeNickname(string name)=>new string(name.Where(c=>!char.IsControl(c)).Take(40).ToArray()).Trim();
+    public async Task SetNickname(string name)
+    {
+        string nickname=NormalizeNickname(name);if(nickname.Length==0)throw new InvalidOperationException("Enter a nickname.");
+        lock(gate){settings.Name=nickname;settings.Save();if(IsHost&&Current!=null){Current.Host=nickname;var player=Current.Players.FirstOrDefault(p=>p.Id==LocalId);if(player!=null)player.Name=nickname;}}
+        if(IsHost)await BroadcastState();
+        else if(upstream!=null)await upstream.Send(new(){Type="nickname",Name=nickname});
+        Changed?.Invoke();
+    }
+    public async Task SetBlocked(string name,string address,bool blocked)
+    {
+        if(!IPAddress.TryParse(address,out var ip)||ip.AddressFamily!=AddressFamily.InterNetwork||address==Address)throw new InvalidOperationException("Choose another player's VPN address.");
+        Player[] affected;
+        lock(gate)
+        {
+            if(transferring)throw new InvalidOperationException("Wait for host transfer to finish.");
+            settings.BlockedUsers=settings.BlockedUsers.Where(p=>p.Address!=address).Concat(blocked?new[]{new Friend(Clean(name,40),address)}:Array.Empty<Friend>()).ToArray();
+            settings.Save();affected=Current?.Players.Where(p=>p.Address==address).ToArray()??[];
+        }
+        if(blocked&&affected.Length>0)
+        {
+            if(IsHost){foreach(var player in affected)await Kick(player.Id);}
+            else{Leave();Notice?.Invoke("Left the shared room after blocking this player.");}
+        }
+        Changed?.Invoke();
     }
     void ApplyPlacement(string id,string mapPath,int? spot,int? team,int? color)
     {
@@ -290,7 +328,7 @@ public sealed partial class PeerService : IDisposable
         }
         await BroadcastState();
     }
-    bool CanSee(string remote) => Current?.FriendsOnly!=true || settings.Friends.Any(f=>f.Address==remote);
+    bool CanSee(string remote) => !settings.IsBlocked(remote)&&(Current?.FriendsOnly!=true || settings.Friends.Any(f=>f.Address==remote));
     public async Task EditRoom(Room draft)
     {
         draft.Match.Validate();

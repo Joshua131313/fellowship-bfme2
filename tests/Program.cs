@@ -296,3 +296,52 @@ using(var isolatedHost=new PeerService(new(){Name="Large room"}))
  finally{foreach(var peer in crowd)peer.Dispose();}
  Console.WriteLine("PASS larger room capacity, discovery and chat");
 }
+
+using(var blockedHost=new PeerService(Settings.InMemory()))
+using(var blockedGuest=new PeerService(Settings.InMemory()))
+{
+ blockedHost.Start("127.0.0.70");blockedGuest.Start("127.0.0.71");blockedHost.Host(new(){Title="Block test"});
+ await blockedGuest.Join("127.0.0.70");await Until(()=>blockedGuest.Current?.Players.Count==2,"block test joined");
+ bool delivered=false,discoveredBlocked=false;blockedHost.PrivateMessage+=(_,_,_)=>delivered=true;
+ blockedGuest.Discovered+=ip=>{if(ip=="127.0.0.70")discoveredBlocked=true;};
+ await blockedHost.SetBlocked("Guest","127.0.0.71",true);
+ await Until(()=>blockedGuest.Current==null&&blockedHost.Current!.Players.Count==1,"blocking disconnects existing guest");
+ async Task Denied(Func<Task> action){bool denied=false;try{await action();}catch(Exception e) when(e is IOException or SocketException or InvalidOperationException){denied=true;}if(!denied)throw new Exception("Blocked action succeeded");}
+ await Denied(async()=>{await PeerService.QueryPeer("127.0.0.70","127.0.0.71");});
+ await Denied(()=>blockedGuest.Join("127.0.0.70"));await Denied(()=>blockedGuest.SendPrivate("127.0.0.70","blocked message"));
+ await Denied(()=>blockedHost.SendPrivate("127.0.0.71","outgoing blocked"));
+ await blockedGuest.Discover("127.0.0.70",presence:true);await Task.Delay(250);
+ if(delivered||discoveredBlocked)throw new Exception("Blocked peer received discovery or delivered DM");
+ await blockedHost.SetBlocked("Guest","127.0.0.71",false);await blockedGuest.Join("127.0.0.70");
+ await Until(()=>blockedGuest.Current?.Players.Count==2,"unblock restores joining");
+ await blockedGuest.SendPrivate("127.0.0.70","allowed");if(!delivered)throw new Exception("Unblock failed to restore messaging");
+ Console.WriteLine("PASS persisted blocking enforcement: existing guest removal, discovery, query, joins, both DM directions and unblock");
+}
+
+using(var sharedHost=new PeerService(Settings.InMemory()))
+using(var blockingGuest=new PeerService(Settings.InMemory()))
+using(var otherGuest=new PeerService(Settings.InMemory()))
+{
+ sharedHost.Start("127.0.0.72");blockingGuest.Start("127.0.0.73");otherGuest.Start("127.0.0.74");sharedHost.Host(new(){Title="Shared",Capacity=6});
+ await blockingGuest.Join("127.0.0.72");await otherGuest.Join("127.0.0.72");
+ await Until(()=>blockingGuest.Current?.Players.Count==3,"shared room roster");
+ await blockingGuest.SetBlocked("Other","127.0.0.74",true);
+ await Until(()=>blockingGuest.Current==null&&sharedHost.Current?.Players.Count==2,"blocking as guest leaves shared room");
+ await blockingGuest.Join("127.0.0.72");await Task.Delay(200);
+ if(blockingGuest.Current!=null)throw new Exception("Blocked player admitted through third-party room");
+ Console.WriteLine("PASS third-party rooms cannot bypass local block policy");
+}
+
+var nicknameSettings=Settings.InMemory();
+using(var nameHost=new PeerService(nicknameSettings))
+using(var nameGuest=new PeerService(Settings.InMemory()))
+{
+ nameHost.Start("127.0.0.75");nameGuest.Start("127.0.0.76");nameHost.Host(new(){Title="Names"});await nameGuest.Join("127.0.0.75");
+ await Until(()=>nameGuest.Current?.Players.Count==2,"nickname room joined");await nameGuest.SetReady(true);
+ await nameHost.SetNickname("New Host");await nameGuest.SetNickname("New Guest");
+ await Until(()=>nameHost.Current!.Players.Any(p=>p.Name=="New Guest")&&nameGuest.Current?.Host=="New Host","nicknames update across current room");
+ if(!nameHost.Current!.Players.All(p=>p.Ready))throw new Exception("Nickname changed readiness");
+ if(System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(nicknameSettings))!.Name!="New Host")throw new Exception("Nickname did not persist");
+ if((await PeerService.QueryPeer("127.0.0.75","127.0.0.76")).Name!="New Host")throw new Exception("Discovery nickname stale");
+ Console.WriteLine("PASS nickname persistence, live guest/host roster and discovery without readiness reset");
+}

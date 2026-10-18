@@ -29,6 +29,7 @@ public sealed partial class PeerService
                 var packet=await discovery!.ReceiveAsync(stop.Token);
                 if(packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==Address)continue;
                 var remote=packet.RemoteEndPoint.Address.ToString();
+                if(settings.IsBlocked(remote))continue;
                 var text=Encoding.ASCII.GetString(packet.Buffer);
                 if(text==PresenceProbe)
                 {
@@ -71,7 +72,7 @@ public sealed partial class PeerService
             }
             foreach(var friend in settings.Friends)destinations.Add(friend.Address);
         }
-        foreach(var destination in destinations)
+        foreach(var destination in destinations.Where(d=>!settings.IsBlocked(d)))
             try{await discovery.SendAsync(Encoding.ASCII.GetBytes(presence?PresenceProbe:Probe),new IPEndPoint(IPAddress.Parse(destination),DiscoveryPort),stop.Token);}
             catch(Exception e) when(e is SocketException or OperationCanceledException or ObjectDisposedException or FormatException){}
     }

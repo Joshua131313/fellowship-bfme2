@@ -27,6 +27,8 @@ public sealed class Settings
     public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }
     public List<Friend> Friends { get; set; } = [];
+    public Friend[] BlockedUsers { get; set; } = [];
+    public bool IsBlocked(string address)=>BlockedUsers.Any(p=>p.Address==address);
     public static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fellowship");
     public static Settings Load()
     {

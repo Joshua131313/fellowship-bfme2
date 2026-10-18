@@ -42,6 +42,11 @@ class Program
   for(int i=0;i<3;i++)guard.Observe(null,false,true);
   if(!Stable(456)||guard.Generation!=3)throw new Exception("Third lobby did not reconnect");
   Console.WriteLine("PASS repeated lobbies, reused addresses, countdown protection and transient-read rejection");
+  // Recreated native lobbies must reset every remembered write, including color.
+  guard.Observe(null,true);guard.Observe(null,false,true);
+  if(!Stable(789)||guard.Generation!=4)throw new Exception("Post-match lobby did not re-arm");
+  var blockedPreferences=Settings.InMemory();blockedPreferences.BlockedUsers=[new("Blocked player","26.1.2.3")];
+  if(!System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(blockedPreferences))!.IsBlocked("26.1.2.3"))throw new Exception("Block preference did not persist");
   var preferences=Settings.InMemory();
   var remembered=new Room{Map="Rhûn",MapPath=GameMap.Rhun.Path,Capacity=6,Match=new(){Resources=2000,CommandPoints=400,CustomHeroes=true},Players=[new(){Id="host",Team=3,Spot=2,Color=7}]};
   preferences.RememberHost(remembered);
@@ -127,12 +132,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.41-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.41/Fellowship-0.1.41-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.41",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.42-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.42/Fellowship-0.1.42-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.42",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.41","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.41",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.42","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.42",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
@@ -179,7 +184,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.41"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.41/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.42"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.42/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(browser.CreateSettingsWindow(),"dist/preview-settings.png");
