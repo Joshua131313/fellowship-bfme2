@@ -55,19 +55,63 @@ public static class UI
     {
         var window=new Window{Owner=owner};var body=Shell(window,title,480,430);body.Children.Add(Scroll(new Border{Padding=new Thickness(24),Child=Text(text,14)}));window.ShowDialog();
     }
+    sealed class MenuCommand(Action action,Func<bool>? enabled) : ICommand
+    {
+        public bool CanExecute(object? parameter)=>enabled?.Invoke()??true;
+        public void Execute(object? parameter){if(!CanExecute(parameter))return;try{action();}catch(Exception error){Error(error.Message);}}
+        public event EventHandler? CanExecuteChanged {add=>CommandManager.RequerySuggested+=value;remove=>CommandManager.RequerySuggested-=value;}
+    }
     public static MenuItem MenuAction(string title,Action action,Func<bool>? enabled=null)
     {
-        var item=new MenuItem{Header=title};item.Click+=(_,_)=>{try{action();}catch(Exception error){Error(error.Message);}};
-        if(enabled!=null)item.Command=new ValidAction(enabled);
+        var item=new MenuItem{Header=title,Command=new MenuCommand(action,enabled)};
+        KeyGesture? gesture=title switch
+        {
+            "Host room" or "Add friend"=>new(Key.N,ModifierKeys.Control),
+            "Settings"=>new(Key.OemComma,ModifierKeys.Control),
+            "Hide to tray"=>new(Key.H,ModifierKeys.Control),
+            "Quit Fellowship"=>new(Key.Q,ModifierKeys.Control),
+            "Clear room filter"=>new(Key.L,ModifierKeys.Control),
+            "Refresh rooms" or "Refresh presence"=>new(Key.F5),
+            "Active players"=>new(Key.P,ModifierKeys.Control|ModifierKeys.Shift),
+            "Friends list" or "Friends"=>new(Key.F,ModifierKeys.Control|ModifierKeys.Shift),
+            "Getting started" or "Game setup guide"=>new(Key.F1),
+            "Launch mine"=>new(Key.F9),
+            "Leave room" or "Close window"=>new(Key.W,ModifierKeys.Control),
+            "Room browser"=>new(Key.B,ModifierKeys.Control),
+            "Send message"=>new(Key.M,ModifierKeys.Control),
+            _=>null
+        };
+        if(gesture!=null){item.Resources["Shortcut"]=gesture;item.InputGestureText=gesture.GetDisplayStringForCulture(System.Globalization.CultureInfo.CurrentUICulture);}
         return item;
     }
     public static MenuItem MenuGroup(string title,params MenuItem[] items)
-    {var group=new MenuItem{Header=title,Style=(Style)Application.Current.FindResource("AppMenuHeading")};foreach(var item in items)group.Items.Add(item);return group;}
+    {
+        var group=new MenuItem{Header=title,Style=(Style)Application.Current.FindResource("AppMenuHeading")};
+        foreach(var item in items)group.Items.Add(item);
+        group.Loaded+=(_,_)=>
+        {
+            group.ApplyTemplate();
+            if(group.Template.FindName("PART_Popup",group) is System.Windows.Controls.Primitives.Popup popup)
+            {
+                popup.PlacementTarget=group;
+                popup.Placement=System.Windows.Controls.Primitives.PlacementMode.Custom;
+                popup.CustomPopupPlacementCallback=(popupSize,targetSize,offset)=>new[]{
+                    new System.Windows.Controls.Primitives.CustomPopupPlacement(new Point(0,targetSize.Height),System.Windows.Controls.Primitives.PopupPrimaryAxis.Horizontal),
+                    new System.Windows.Controls.Primitives.CustomPopupPlacement(new Point(0,-popupSize.Height),System.Windows.Controls.Primitives.PopupPrimaryAxis.Horizontal)};
+            }
+        };
+        return group;
+    }
     public static void Menus(Window window,params MenuItem[] groups)
     {
         var root=(DockPanel)((Border)window.Content).Child;
         var menu=new Menu{Background=Brush("#151A21"),Padding=new(10,2,10,2)};
-        foreach(var group in groups)menu.Items.Add(group);
+        foreach(var group in groups)
+        {
+            menu.Items.Add(group);
+            foreach(var item in group.Items.OfType<MenuItem>())
+                if(item.Resources["Shortcut"] is KeyGesture gesture)window.InputBindings.Add(new KeyBinding(item.Command,gesture));
+        }
         DockPanel.SetDock(menu,Dock.Top);root.Children.Insert(1,menu);
     }
     public static void OpenGuide()=>Process.Start(new ProcessStartInfo("https://github.com/Joshua131313/fellowship-bfme2#readme"){UseShellExecute=true});
@@ -182,7 +226,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.34   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.35   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);

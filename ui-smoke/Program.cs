@@ -120,12 +120,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.35-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.35/Fellowship-0.1.35-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.35",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.36-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.36/Fellowship-0.1.36-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.36",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.35","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.35",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.36","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.36",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
@@ -153,6 +153,17 @@ class Program
   Console.WriteLine("PASS action guards and full IPv4 validation");
   var menuHeading=UI.MenuGroup("File",UI.MenuAction("Example",()=>{}));menuHeading.ApplyTemplate();
   if(menuHeading.Template.FindName("PART_Popup",menuHeading) is not System.Windows.Controls.Primitives.Popup)throw new Exception("Menu dropdown missing");
+  menuHeading.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+  var headingPopup=(System.Windows.Controls.Primitives.Popup)menuHeading.Template.FindName("PART_Popup",menuHeading);
+  var positions=headingPopup.CustomPopupPlacementCallback(new Size(220,120),new Size(60,30),new Point());
+  if(positions[0].Point!=new Point(0,30))throw new Exception("Menu is not anchored below its heading");
+  bool canRun=true;int runs=0;
+  var refreshItem=UI.MenuAction("Refresh rooms",()=>runs++,()=>canRun);
+  var menuTestWindow=new Window();UI.Shell(menuTestWindow,"Menu test",400,300);UI.Menus(menuTestWindow,UI.MenuGroup("View",refreshItem));
+  if(menuTestWindow.InputBindings.Count!=1||refreshItem.InputGestureText!="F5")throw new Exception("Menu shortcut label/binding missing");
+  refreshItem.Command.Execute(null);canRun=false;refreshItem.Command.Execute(null);
+  if(runs!=1||refreshItem.Command.CanExecute(null))throw new Exception("Menu shortcut ignored enabled state");
+  Console.WriteLine("PASS menu left-edge placement, shortcut labels/bindings and disabled commands");
   Console.WriteLine("PASS application menu dropdown template");
   var demoSettings=Settings.InMemory();demoSettings.Name="Frodo";
   var browser=new BrowserWindow(demoSettings);
