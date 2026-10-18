@@ -58,7 +58,11 @@ public sealed class MapPreview : Border
             using(var dc=visual.RenderOpen())
             {
                 dc.DrawRectangle(new RadialGradientBrush(Color.FromRgb(222,205,157),Color.FromRgb(126,108,70)),null,new Rect(0,0,size,size));
+                // BFME2 displays the overhead art with the texture V axis reversed.
+                // Keep this separate from world-to-preview conversion for start spots.
+                dc.PushTransform(new ScaleTransform(1,-1,0,size/2.0));
                 dc.DrawImage(terrain,new Rect(0,0,size,size));
+                dc.Pop();
                 foreach(var spot in spots)
                 {
                     var center=new Point(spot.X*size,spot.Y*size);
