@@ -4,7 +4,7 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Download and run `Fellowship-0.1.20-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Download and run `Fellowship-0.1.21-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
 New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher saves the selected map preference under the current Windows account. Rules are applied when the native LAN lobby opens. Open Multiplayer → Network → Create Game. Guest players open Network and join the host. Fellowship waits for the matching native lobby and applies each local player's selected team and spot through native LAN functions. The sync helper requests administrator permission only when BFME2 itself runs elevated. Teams and spots synchronize automatically in both directions. The host's map, resources, command-point multiplier, Custom Heroes and Ring Heroes also synchronize both ways. There is no Apply button.
 
@@ -78,4 +78,8 @@ The battle-room X and Leave button leave the room. A departing host hands it to 
 
 Version 0.1.9 fixes Windows update ZIP cleanup. If an older updater cannot complete installation, download 0.1.9 manually once. Each shipped change receives a new version and a published GitHub release; source-only pushes do not update installed apps.
 
-Build the installer after publishing to `dist/Fellowship-0.1.20`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
+Build the installer after publishing to `dist/Fellowship-0.1.21`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
+
+### Troubleshooting startup while a room is open
+
+Settings → Live BFME2 synchronization can be switched off before launching. This keeps Fellowship rooms and chat connected without starting the game sync helper. While off, configure the native game manually. It can be re-enabled after the native LAN lobby opens. This isolates reported DirectX startup failures; it is not a confirmed graphics fix.

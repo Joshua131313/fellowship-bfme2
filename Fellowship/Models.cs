@@ -24,6 +24,7 @@ public sealed class Settings
     public string GamePath { get; set; } = "";
     public string BindAddress { get; set; } = "";
     public bool MessageSounds { get; set; } = true;
+    public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }
     public List<Friend> Friends { get; set; } = [];
     public static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fellowship");

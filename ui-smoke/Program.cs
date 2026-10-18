@@ -79,6 +79,11 @@ class Program
     if(!File.Exists(exe)||File.Exists(Path.Combine(Path.GetDirectoryName(exe)!,"update.zip")))throw new Exception("Update extraction/cleanup failed");
     Console.WriteLine("PASS real GitHub update download, checksum, extraction, version validation and ZIP cleanup");return;
   }
+  if(!Settings.InMemory().LiveGameSync)throw new Exception("Existing default sync behavior changed");
+  var pausedSettings=Settings.InMemory();pausedSettings.LiveGameSync=false;
+  var pausedCopy=System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(pausedSettings))!;
+  if(pausedCopy.LiveGameSync)throw new Exception("Sync pause setting did not persist");
+  Console.WriteLine("PASS sync enabled by default and explicit pause retained");
   var launchPath=Path.Combine(Path.GetTempPath(),"BFME2 test","lotrbfme2.exe");
   var gameStart=LaunchContext.Game(launchPath);
   if(!gameStart.UseShellExecute||gameStart.FileName!=launchPath||gameStart.WorkingDirectory!=Path.GetDirectoryName(launchPath)||gameStart.Verb!=""||gameStart.ArgumentList.Count!=0||gameStart.Arguments!="")throw new Exception("Game launch must preserve default shell behavior without forced elevation or arguments");
@@ -101,12 +106,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.21-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.21/Fellowship-0.1.21-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.21",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.22-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.22/Fellowship-0.1.22-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.22",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.21","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.21",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.22","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.22",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
@@ -123,6 +128,12 @@ class Program
   browser.Peer.Host(new Room{Title="Inline rules test"});
   if(browser.Peer.Current!.Spots.Count>0)browser.Peer.SelectPlacement(browser.Peer.Current.Spots[0].Number,1).GetAwaiter().GetResult();
   var roomWindow=new RoomWindow(browser);
+  var syncCommand=typeof(RoomWindow).GetMethod("SyncCommand",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!;
+  browser.Settings.LiveGameSync=false;
+  if(syncCommand.Invoke(roomWindow,null)!=null)throw new Exception("Disabled sync still produces game commands");
+  browser.Settings.LiveGameSync=true;
+  if(syncCommand.Invoke(roomWindow,null)==null)throw new Exception("Enabled sync failed to resume commands");
+  Console.WriteLine("PASS disabling live sync suppresses commands while room stays open; enabling resumes");
   if(browser.Peer.Current.Spots.Count>1)
   {
     var map=(MapPreview)typeof(RoomWindow).GetField("mapPreview",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(roomWindow)!;

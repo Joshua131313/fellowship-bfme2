@@ -138,7 +138,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.20   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.21   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -207,13 +207,15 @@ public sealed class BrowserWindow : Window
         p.Children.Add(network);
         var info = UI.Text("Choose Radmin VPN on both PCs. Interface changes need an app restart. BFME2's Network IP should use the same adapter.",12,UI.Muted); info.Margin = new(0,12,0,18); p.Children.Add(info);
         var sounds=new CheckBox{Content="Play a sound for incoming private messages",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,20)};p.Children.Add(sounds);
+        var liveSync=new CheckBox{Content="Live BFME2 synchronization",IsChecked=Settings.LiveGameSync,Margin=new(0,0,0,8)};p.Children.Add(liveSync);
+        var syncHint=UI.Text("Turn off to diagnose game startup errors. Rooms and chat stay connected; game settings must be set manually while off. You can enable it again after the BFME2 LAN lobby opens.",11,UI.Muted);syncHint.Margin=new(0,0,0,18);p.Children.Add(syncHint);
         var startup=new CheckBox{Content="Launch Fellowship at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,Margin=new(0,0,0,10)};p.Children.Add(startup);
         p.Children.Add(UI.Text(Installation.IsInstalled?"Starts quietly in the system tray.":"Install Fellowship to enable launch at sign-in.",11,UI.Muted));
         p.Children.Add(UI.Button("Open preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);Process.Start(new ProcessStartInfo(Settings.Folder){UseShellExecute=true});}));
         p.Children.Add(UI.Button("Save settings",() =>
         {
             if(name.Text.Trim().Length==0 || network.SelectedIndex<0){UI.Error("Enter a name and choose a network interface.");return;}
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();w.Close();EnsureOnline();
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();w.Close();EnsureOnline();
         },true)); p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null)); w.ShowDialog();
     }
     async Task Refresh()
@@ -397,7 +399,7 @@ public sealed class RoomWindow : Window
     }
     LivePlacement.Command? SyncCommand()
     {
-        if(syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
+        if(!app.Settings.LiveGameSync||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
         return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot),app.Peer.IsHost?NativeSetup.From(room):null);
     }
@@ -409,6 +411,11 @@ public sealed class RoomWindow : Window
         {
             while(!syncLifetime.IsCancellationRequested)
             {
+                if(!app.Settings.LiveGameSync)
+                {
+                    attempted=0;liveStatus.Text="Live sync is off in Settings. Set game rules, team and spot in BFME2 manually.";
+                    await Task.Delay(400,syncLifetime.Token);continue;
+                }
                 int pid=0;
                 foreach(var process in System.Diagnostics.Process.GetProcessesByName("game.dat").Concat(System.Diagnostics.Process.GetProcessesByName("game")))
                     using(process){pid=process.Id;break;}
@@ -565,7 +572,7 @@ public sealed class RoomWindow : Window
             Append("SYSTEM",preset?"Launching BFME2. Your rules will sync when the LAN lobby opens.":"Launching BFME2…");
             var current=app.Peer.Current??throw new IOException("Join a Fellowship room first.");
             await GameLauncher.Launch(app.Settings.GamePath,current,preset,false,app.Peer.LocalId,false);
-            Append("SYSTEM","Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.");
+            Append("SYSTEM",app.Settings.LiveGameSync?"Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.":"Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens.");
         }
         catch(Exception e){UI.Error(e.Message);}
         finally{launching=false;Refresh();}
