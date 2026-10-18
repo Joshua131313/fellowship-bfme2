@@ -138,7 +138,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.18   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.19   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -150,7 +150,7 @@ public sealed class BrowserWindow : Window
         search.TextChanged += (_,_) => RenderRooms();
         rooms.SelectionChanged += (_,_) => { if(rooms.SelectedItem is RoomEntry r) address.Text = r.Address; };
         rooms.MouseDoubleClick += async (_,_) => { if(rooms.SelectedItem != null) try { await Join(); } catch(Exception e){ UI.Error(e.Message); } };
-        Peer.Changed += () => Dispatcher.InvokeAsync(() => { roomWindow?.Refresh(); if(Peer.Current != null && roomWindow == null) ShowRoom(); RenderRooms(); });
+        Peer.Changed += () => Dispatcher.InvokeAsync(() => { roomWindow?.Refresh(); if(!closingRoom && Peer.Current != null && roomWindow == null) ShowRoom(); RenderRooms(); });
         Peer.Notice += text => Dispatcher.InvokeAsync(() => status.Text = text);
         Peer.LaunchRequested += () => Dispatcher.InvokeAsync(() => roomWindow?.HandleLaunch());
         Peer.PrivateMessage += (ip,name,text) => Dispatcher.InvokeAsync(() =>
@@ -252,13 +252,14 @@ public sealed class BrowserWindow : Window
     bool closingRoom;
     public async Task CloseRoom()
     {
-        if(closingRoom)throw new InvalidOperationException("Leaving the room is already in progress.");closingRoom=true;
+        if(closingRoom)return;closingRoom=true;
         try{await Peer.LeaveRoom();var old=roomWindow;roomWindow=null;if(old!=null){old.AllowClose=true;old.Close();}}
         finally{closingRoom=false;}
     }
     public void OpenCurrentRoom(){if(Peer.Current!=null)ShowRoom();}
     void ShowRoom()
     {
+        if(closingRoom)return;
         if(roomWindow!=null){UI.Reveal(roomWindow);return;}
         // Non-modal windows are peers: ownership would force them above the browser.
         roomWindow=new(this);roomWindow.Closed+=(_,_)=>{roomWindow=null;};roomWindow.Show();
@@ -377,10 +378,19 @@ public sealed class RoomWindow : Window
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);if(HostPreset.Matches(app.Peer.Current))HostPreset.ValidateBinary(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.Players.All(p=>p.Ready)==true);
         var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),UI.Button("Launch mine",LaunchLocal),launch);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
         Append("SYSTEM","Welcome to the room. Match patches with your friends, agree on the settings, then ready up.");
-        Closing+=async(_,e)=>
+        bool leaveQueued=false;
+        Closing+=(_,e)=>
         {
             if(!AllowClose&&Application.Current is App {IsQuitting:false})
-            {e.Cancel=true;try{await app.CloseRoom();}catch(Exception ex){UI.Error(ex.Message);}}
+            {
+                e.Cancel=true;if(leaveQueued)return;leaveQueued=true;
+                // LeaveRoom can finish synchronously. Close only after this Closing event returns.
+                Dispatcher.BeginInvoke(new Action(async()=>
+                {
+                    try{await app.CloseRoom();}catch(Exception ex){UI.Error(ex.Message);}
+                    finally{leaveQueued=false;}
+                }));
+            }
         };
         app.Peer.Chat+=OnChat;Closed+=(_,_)=>{app.Peer.Chat-=OnChat;syncLifetime.Cancel();};Refresh();
         Loaded+=async(_,_)=>await WatchNative();

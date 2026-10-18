@@ -4,7 +4,7 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Download and run `Fellowship-0.1.18-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Download and run `Fellowship-0.1.19-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
 New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher applies the native Rhûn preference and session-only rule defaults. Open Multiplayer → Network → Create Game. Guest players open Network and join the host. Fellowship waits for the matching native lobby and applies each local player's selected team and spot through native LAN functions. Approve the helper prompt. Teams and spots synchronize automatically in both directions. The host's map, resources, command-point multiplier, Custom Heroes and Ring Heroes also synchronize both ways. There is no Apply button.
 
@@ -16,7 +16,7 @@ Closing the browser hides it and keeps Fellowship connected. Closing a battle ro
 - Compact match summary, automatic/manual preset indicator, collapsible settings, default-rule reset and ready-player count.
 - Incoming private messages keep your current window focused, show an unread count in their window title, and play an optional alert sound. Toggle sound in Settings.
 - Connection retries recover after port conflicts; discovery distinguishes unreachable peers from peers with no hosted room.
-- Public room discovery over UDP 28743, direct-IP fallback, and private rooms restricted to the host's saved friend addresses.
+- Public room discovery recovers from offline-peer UDP errors without restarting the app. Discovery uses UDP 28743, direct-IP fallback, and private rooms restricted to the host's saved friend addresses.
 - Host map/rule selectors at creation and editing, installed-map catalog, dynamic executable detection, room preview, player info, and online/offline friend groups.
 - Live roster counts, four-second room refresh, and TCP keepalive for lost VPN connections.
 - Host-owned rooms, player limit, roster, room chat, and readiness.
@@ -78,4 +78,4 @@ The battle-room X and Leave button leave the room. A departing host hands it to 
 
 Version 0.1.9 fixes Windows update ZIP cleanup. If an older updater cannot complete installation, download 0.1.9 manually once. Each shipped change receives a new version and a published GitHub release; source-only pushes do not update installed apps.
 
-Build the installer after publishing to `dist/Fellowship-0.1.18`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
+Build the installer after publishing to `dist/Fellowship-0.1.19`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.

@@ -63,6 +63,9 @@ using(var outsider=new PeerService(new(){Name="Outsider"}))
     await privateHost.EditRoom(edited);
     await Until(()=>allowed.Current?.Match.Resources==2000&&allowed.Current.Title=="Updated","typed rules and room edits synchronize");
     string found="";outsider.Discovered+=ip=>found=ip;
+    // An offline peer sends an ICMP port-unreachable response on Windows. It must
+    // not permanently terminate discovery of every other room.
+    await outsider.Discover("127.0.0.7");await Task.Delay(250);
     await outsider.Discover("127.0.0.4");await Until(()=>found=="127.0.0.4","public UDP discovery without friendship");
     await outsider.Join("127.0.0.4");
     await Until(()=>outsider.Current?.Players.Count==3&&allowed.Current?.Players.Count==3,"public stranger joins and all roster counts update");

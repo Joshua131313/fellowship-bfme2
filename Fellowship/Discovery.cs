@@ -21,9 +21,9 @@ public sealed partial class PeerService
     }
     async Task DiscoverLoop()
     {
-        try
+        while(!stop.IsCancellationRequested)
         {
-            while(!stop.IsCancellationRequested)
+            try
             {
                 var packet=await discovery!.ReceiveAsync(stop.Token);
                 if(packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==Address)continue;
@@ -36,8 +36,17 @@ public sealed partial class PeerService
                 }
                 else if(text==Reply)Discovered?.Invoke(remote);
             }
+            catch(OperationCanceledException){break;}
+            catch(ObjectDisposedException){break;}
+            catch(SocketException)
+            {
+                // Windows reports ICMP errors (including an offline peer's closed
+                // port) on ReceiveAsync. They do not invalidate the UDP socket.
+                // Keep listening instead of losing all discovery until restart.
+                try{await Task.Delay(100,stop.Token);}
+                catch(OperationCanceledException){break;}
+            }
         }
-        catch(Exception e) when(e is SocketException or OperationCanceledException or ObjectDisposedException){}
     }
     public async Task Discover(string? target=null)
     {
