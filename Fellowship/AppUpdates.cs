@@ -32,12 +32,12 @@ public static class AppUpdates
     public static async Task<Release?> Check()
     {
         using var response=await Client.GetAsync("https://api.github.com/repos/Joshua131313/fellowship-bfme2/releases/latest");
-        if(response.StatusCode==System.Net.HttpStatusCode.NotFound)return null;
+        if(response.StatusCode==System.Net.HttpStatusCode.NotFound)throw new IOException("No published release is available yet.");
         response.EnsureSuccessStatusCode();return Parse(await response.Content.ReadAsStringAsync());
     }
-    public static async Task<string> Download(Release release)
+    public static async Task<string> Download(Release release,string? stagingRoot=null)
     {
-        var folder=Path.Combine(Settings.Folder,"versions",release.Version.ToString(3),Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
+        var folder=Path.Combine(stagingRoot??Path.Combine(Settings.Folder,"versions"),release.Version.ToString(3),Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
         var zip=Path.Combine(folder,"update.zip");
         using(var response=await Client.GetAsync(release.Url,HttpCompletionOption.ResponseHeadersRead))
         {
@@ -46,10 +46,13 @@ public static class AppUpdates
             while((read=await source.ReadAsync(buffer))>0){total+=read;if(total>250_000_000)throw new InvalidDataException("Update package too large");await target.WriteAsync(buffer.AsMemory(0,read));}
         }
         using(var stream=File.OpenRead(zip))if(!Convert.ToHexString(await SHA256.HashDataAsync(stream)).Equals(release.Digest,StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Update checksum failed. Your current version has not changed.");
-        using var archive=ZipFile.OpenRead(zip);
+        var exe=Path.Combine(folder,"Fellowship.exe");
+        using(var archive=ZipFile.OpenRead(zip))
+        {
         var entry=archive.GetEntry($"Fellowship-{release.Version.ToString(3)}/Fellowship.exe")??throw new InvalidDataException("Update executable missing");
         if(entry.Length>350_000_000)throw new InvalidDataException("Update executable too large");
-        var exe=Path.Combine(folder,"Fellowship.exe");entry.ExtractToFile(exe);
+        entry.ExtractToFile(exe);
+        }
         if(FileVersionInfo.GetVersionInfo(exe).FileVersion is not {} version||new Version(version)!=new Version(release.Version.Major,release.Version.Minor,release.Version.Build,0))throw new InvalidDataException("Update version mismatch");
         File.Delete(zip);return exe;
     }

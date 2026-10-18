@@ -173,5 +173,37 @@ try
     Console.WriteLine("PASS invalid selections rejected, releases, disconnect and map changes");
 }
 finally{Directory.Delete(fixture,true);}
+using(var original=new PeerService(new(){Name="Original"}))
+using(var successor=new PeerService(new(){Name="Successor"}))
+using(var remaining=new PeerService(new(){Name="Remaining"}))
+{
+    original.Start("127.0.0.20");successor.Start("127.0.0.21");remaining.Start("127.0.0.22");
+    original.Host(new(){Title="Handoff test",Match=new(){Resources=2000,CommandPoints=400}});
+    await successor.Join("127.0.0.20");await remaining.Join("127.0.0.20");
+    await Until(()=>remaining.Current?.Players.Count==3&&successor.Current?.Players.Count==3,"handoff roster ready");
+    await successor.SelectPlacement(team:3);await remaining.SelectPlacement(team:4);
+    var roomId=original.Current!.Id;
+    try{await remaining.Kick("host");throw new Exception("Guest kick allowed");}catch(InvalidOperationException){}
+    try{await remaining.Promote("host");throw new Exception("Guest promotion allowed");}catch(InvalidOperationException){}
+    await original.Promote(successor.LocalId);
+    await Until(()=>successor.IsHost&&!original.IsHost&&original.Current?.Players.Count==3&&remaining.Current?.Host=="Successor","manual promotion reconnects all players");
+    if(successor.Current?.Id!=roomId||successor.Current.Match.Resources!=2000||successor.Current.Players.Single(p=>p.Name=="Remaining").Team!=4||successor.Current.Players.Single(p=>p.Id=="host").Team!=3)throw new Exception("Handoff lost room/rules/teams");
+    if(await PeerService.Query("127.0.0.20")!=null)throw new Exception("Former host still advertises");
+    await successor.LeaveRoom();
+    await Until(()=>original.IsHost&&remaining.Current?.Host=="Original"&&original.Current?.Players.Count==2&&successor.Current==null,"host leave promotes next player");
+    await original.Kick(remaining.LocalId);
+    await Until(()=>remaining.Current==null&&original.Current?.Players.Count==1,"host kick disconnects only selected guest");
+    await original.LeaveRoom();if(original.Current!=null)throw new Exception("Last host leave failed");
+    Console.WriteLine("PASS host-only permissions, room preservation, promotion, leave and kick");
+}
+using(var readyHost=new PeerService(new(){Name="Host"}))
+using(var noListener=new PeerService(new(){Name="Needs listener"}))
+{
+    readyHost.Start("127.0.0.30");readyHost.Host(new());await noListener.Join("127.0.0.30");
+    await Until(()=>readyHost.Current?.Players.Count==2,"handoff preflight roster");
+    try{await readyHost.LeaveRoom();throw new Exception("Handoff accepted a peer without a listener");}catch(InvalidOperationException){}
+    if(!readyHost.IsHost||readyHost.Current?.Players.Count!=2)throw new Exception("Failed preflight discarded room");
+    Console.WriteLine("PASS failed handoff preflight preserves existing room");
+}
 Console.WriteLine("ALL PROTOCOL CHECKS PASSED");
 

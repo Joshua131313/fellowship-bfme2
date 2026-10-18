@@ -49,6 +49,7 @@ public sealed class Player
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Address { get; set; } = "";
+    public bool CanHostTransfer { get; set; }
     public int Spot { get; set; }
     public int Team { get; set; }
     public bool Ready { get; set; }
@@ -56,6 +57,9 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public bool CanHostTransfer { get; set; }
+    public string Token { get; set; } = "";
+    public Dictionary<string,string>? Tickets { get; set; }
     public int? Spot { get; set; }
     public int? Team { get; set; }
     public string MapPath { get; set; } = "";

@@ -77,18 +77,28 @@ public sealed partial class PeerService : IDisposable
                 PrivateMessage?.Invoke(remote, Clean(hello.Name, 40), Clean(hello.Text, 2000));
                 await c.Send(new() { Type = "ack" }); return;
             }
-            if (hello.Type != "join") return;
+            if(hello.Type=="resume")
+            {
+                lock(gate)
+                {
+                    if(IsHost&&Current!=null&&resumeTickets.TryGetValue(hello.Id,out var ticket)&&ticket==hello.Token&&Current.Players.Any(p=>p.Id==hello.Id&&p.Address==remoteAddress)&&!guests.ContainsKey(hello.Id))
+                    {id=hello.Id;resumeTickets.Remove(id);guests[id]=c;joined=true;}
+                }
+                if(!joined){await c.Send(new(){Type="error",Text="Room handoff expired or was not authorized."});return;}
+            }
+            else if (hello.Type != "join") return;
             if (hello.Version != "1.00") { await c.Send(new() { Type = "error", Text = "Only BFME2 1.00 is supported by this build." }); return; }
             string error = "";
-            lock (gate)
+            if(!joined)lock (gate)
             {
-                if (!IsHost || Current == null) error = "This peer is not hosting a room.";
+                if (transferring) error="Host transfer in progress. Try again shortly.";
+                else if (!IsHost || Current == null) error = "This peer is not hosting a room.";
                 else if (!CanSee(remoteAddress)) error = "This room is for the host's saved friends only.";
                 else if (Current.Players.Count >= Current.Capacity) error = "The room is full.";
                 else
                 {
                     guests[id] = c;
-                    Current.Players.Add(new() { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress });
+                    Current.Players.Add(new() { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer });
                     joined = true;
                 }
             }
@@ -97,7 +107,11 @@ public sealed partial class PeerService : IDisposable
             await BroadcastState();
             while (await c.Read(stop.Token) is { } msg)
             {
-                if (msg.Type == "chat")
+                if(msg.Type=="handoff-ready")
+                {
+                    if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
+                }
+                else if (msg.Type == "chat")
                 {
                     string? name;
                     lock (gate) name = Current?.Players.FirstOrDefault(p => p.Id == id)?.Name;
@@ -124,7 +138,7 @@ public sealed partial class PeerService : IDisposable
         catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or JsonException or InvalidDataException) { }
         finally
         {
-            if (joined)
+            if (joined&&guests.TryGetValue(id,out var active)&&ReferenceEquals(active,c))
             {
                 guests.TryRemove(id, out _);
                 lock (gate) Current?.Players.RemoveAll(p => p.Id == id);
@@ -143,7 +157,7 @@ public sealed partial class PeerService : IDisposable
             IsHost = true; LocalId = "host"; Current = room;
             room.Spots=GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
-            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true }];
+            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null }];
         }
         Changed?.Invoke();
     }
@@ -153,7 +167,7 @@ public sealed partial class PeerService : IDisposable
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         try
         {
-            await c.Send(new() { Type = "join", Name = settings.Name });
+            await c.Send(new() { Type = "join", Name = settings.Name,CanHostTransfer=listener!=null });
             using var timeout = new CancellationTokenSource(5000);
             var welcome = await c.Read(timeout.Token);
             if (welcome?.Type != "welcome") throw new IOException(welcome?.Text ?? "No response from host.");
@@ -172,6 +186,21 @@ public sealed partial class PeerService : IDisposable
                 // A disposed connection can still finish a buffered read after switching rooms.
                 // Never let its final messages replace the new room or launch its game.
                 if(!ReferenceEquals(upstream,c))break;
+                if(msg.Type=="become-host")
+                {
+                    if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
+                    lock(gate){upstream=null;Current=msg.Room;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);}
+                    await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId});
+                    Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
+                }
+                if(msg.Type=="redirect")
+                {
+                    upstream=null;Current=null;c.Dispose();
+                    try{await ResumeRoom(msg.Text,msg.Id,msg.Token);}catch(Exception ex){Notice?.Invoke("Could not reconnect to the new host: "+ex.Message);Changed?.Invoke();}
+                    return;
+                }
+                if(msg.Type=="kicked")
+                {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
                 if (msg.Type == "room") { Current = msg.Room;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
                 if (msg.Type == "chat") Chat?.Invoke(msg.Text);
@@ -208,6 +237,7 @@ public sealed partial class PeerService : IDisposable
         lock(gate)
         {
             if(!IsHost||Current==null)throw new InvalidOperationException("The room is closed.");
+            if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(mapPath!=Current.MapPath)throw new InvalidOperationException("The map changed. Choose a spot on the new map.");
             var player=Current.Players.FirstOrDefault(p=>p.Id==id)??throw new InvalidOperationException("Player is no longer in the room.");
             if(team is <0 or >4)throw new InvalidOperationException("Choose no team or team 1–4.");
@@ -243,6 +273,7 @@ public sealed partial class PeerService : IDisposable
         lock (gate)
         {
             if (!IsHost || Current == null) return;
+            if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             Current.Map = Clean(map, 100); Current.Patch = Clean(patch, 40); Current.Rules = Clean(rules, 1000);
             foreach (var p in Current.Players) p.Ready = p.Id == "host";
         }
@@ -256,6 +287,7 @@ public sealed partial class PeerService : IDisposable
         lock(gate)
         {
             if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can edit this room.");
+            if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(draft.Capacity<Current.Players.Count)throw new InvalidOperationException("The player limit cannot be lower than the current roster.");
             if(Current.MapPath!=draft.MapPath)
             {
@@ -282,6 +314,7 @@ public sealed partial class PeerService : IDisposable
         lock (gate)
         {
             if (!IsHost || Current == null) return;
+            if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if (Current.Players.Any(p => !p.Ready)) throw new InvalidOperationException("Every player must be ready before launching.");
             Current.Phase = "Game launched • room stays open";
         }

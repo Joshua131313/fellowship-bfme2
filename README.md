@@ -4,7 +4,7 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Extract `dist/Fellowship-0.1.8-win-x64.zip` on each Windows 10/11 x64 PC and run `Fellowship.exe`. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Extract `dist/Fellowship-0.1.9-win-x64.zip` on each Windows 10/11 x64 PC and run `Fellowship.exe`. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
 New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher applies the native Rhûn preference and session-only rule defaults. Open Multiplayer → Network → Create Game, then assign three players to each team. Guest players open Network and join the host. Map and rule selections also apply through the verified host preset helper; team assignment remains manual.
 
@@ -32,7 +32,7 @@ Closing the browser or battle-room window hides it and keeps Fellowship connecte
 - Experimental navigation can be enabled in Settings for the captured English 16:9 menus: host creation and guest navigation to Network. Live testing confirmed navigation through Multiplayer to Network. The updated Create Game step still needs live confirmation. Guest room selection/joining and team assignment remain manual. Active-match recovery is not implemented.
 - No claim that BFME2 can restore a player's army after quitting an ongoing match. Relaunching and rejoining the **Fellowship room** is supported; active-game recovery is not.
 - Public rooms use UDP discovery on the selected VPN interface. Broadcast delivery depends on the VPN and firewall; direct host IP remains available. There is no Internet-wide directory.
-- No user accounts, host migration, offline messaging or durable chat history.
+- No user accounts, crash-driven host recovery, offline messaging or durable chat history.
 - Trust the VPN peers. Names are self-asserted, and this prototype has no application-level authentication or encryption. Use it on a private Radmin network with people you know.
 - Executable version checking is a basic 1.00 compatibility gate, not a guarantee that mods or map archives match. Both players must use the same game files/patch.
 - Unsigned test build; not an installer or a commercial GameRanger replacement.
@@ -60,7 +60,7 @@ Configuration lives in `%LOCALAPPDATA%\Fellowship\settings.json`; the latest sel
 
 ## Downloads and updates
 
-[Download the latest Windows build](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). From version 0.1.8 onward, use Settings > Check for updates. Download & restart verifies the GitHub SHA-256 digest and launches the updated copy under LocalAppData/Fellowship/versions. Settings and friends are preserved. Existing shortcuts still open their original copy.
+[Download the latest Windows build](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). From version 0.1.9 onward, use Settings > Check for updates. Download & restart verifies the GitHub SHA-256 digest and launches the updated copy under LocalAppData/Fellowship/versions. Settings and friends are preserved. Existing shortcuts still open their original copy.
 
 The lobby provides inline map/rule controls, explicit room-name/privacy confirmation, and previews read from the local game installation. No game assets are bundled.
 
@@ -69,3 +69,9 @@ Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release` for offscreen UI a
 ## Spot and team selection
 
 In a room, click an empty map circle to claim a starting spot, and choose your team. Click your own spot again or Clear my spot to release it. The host resolves conflicting claims; map changes clear spots, disconnects release them, and placement changes reset readiness. Use the same version on all PCs. These are Fellowship lobby preferences only: guests must still join BFME2 manually and players must apply spots/teams in its lobby. Next integration stages are guest auto-joining, then automatic spot/team assignment with manual recovery.
+
+## Room host controls
+
+The battle-room X and Leave button leave the room. A departing host hands it to the next player; right-click a player to promote or kick them. Everyone must use 0.1.9+ and have their VPN listener active. Planned handoff preserves the room, rules, spots and teams, and resets guest readiness. Sudden host crashes are not automatically recovered. If handoff fails after activation, reconnect to the new host address shown. Closing the main browser still minimizes it to the tray.
+
+Version 0.1.9 fixes Windows update ZIP cleanup. If an older updater cannot complete installation, download 0.1.9 manually once. Each shipped change receives a new version and a published GitHub release; source-only pushes do not update installed apps.
