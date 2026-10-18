@@ -32,7 +32,7 @@ public static class NativePlacement
     internal static string Extract()
     {
         var folder=Path.Combine(Settings.Folder,"native",AppUpdates.VersionText);Directory.CreateDirectory(folder);
-        foreach(var name in new[]{"Fellowship.NativeHost.exe","Fellowship.Native.v014a.dll"})
+        foreach(var name in new[]{"Fellowship.NativeHost.exe","Fellowship.Native.v015a.dll"})
         {
             using var resource=Assembly.GetExecutingAssembly().GetManifestResourceStream("Fellowship.Native."+name)??throw new IOException("Native bridge is missing from this build.");
             using var bytes=new MemoryStream();resource.CopyTo(bytes);var payload=bytes.ToArray();var path=Path.Combine(folder,name);

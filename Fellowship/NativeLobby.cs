@@ -42,6 +42,13 @@ public sealed class NativeLobby : IDisposable
         return data;
     }
     public Snapshot? Current() => Decode(Read,imageBase);
+    public bool Starting()
+    {
+        uint setup=BitConverter.ToUInt32(Read(imageBase+0xdfe1f4-0x400000,4));
+        if(setup==0)return false;
+        // Native countdown flags and deadline, set by the LAN start path.
+        return Read(setup+0x2c2,2).Any(b=>b!=0)||BitConverter.ToUInt32(Read(setup+0x2c4,4))!=0;
+    }
     public static Snapshot? Decode(Func<long,int,byte[]> read,long imageBase)
     {
         long Address(int va)=>imageBase+va-0x400000;
@@ -60,6 +67,7 @@ public sealed class NativeLobby : IDisposable
         uint adapter=U(setup+0x58);
         if(adapter==0||U(adapter)!=Address(0xc3a9a8)||adapter+0xc!=setup)return null;
         if(read(setup+0x2c2,2).Any(b=>b!=0))return null;
+        if(U(setup+0x2c4)!=0)return null;
         var local=read(network+0x48,6);
         var mapPointer=U(lobby+0x40);
         Require(mapPointer!=0);

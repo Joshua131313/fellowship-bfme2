@@ -37,7 +37,7 @@ static class LiveProbe
             var command=new LivePlacement.Command("setup-probe",initial.Map,initial.HostAddress,choice,original);
             try
             {
-                await Tick(command);
+                for(int settle=0;settle<3;settle++){await Tick(command);await Task.Delay(400);}
                 var changed=command with{Map=edited.Map,Setup=edited,Choice=new(choice.Team,0)};
                 await Tick(changed);
                 if(reader.Current()?.Setup!=edited)throw new Exception("Live native map/rule write mismatch");
@@ -75,7 +75,8 @@ static class LiveProbe
             if(await Task.WhenAny(connected,helper.WaitForExitAsync(timeout.Token))!=connected)throw new Exception(File.ReadAllText(NativePlacement.LogPath));
             await connected;
             var command=new LivePlacement.Command("connection-probe",initial.Map,initial.HostAddress,new(initial.Local.Team+1,initial.Local.Spot+1));
-            await LivePlacement.Send(pipe,command,timeout.Token);var reply=await LivePlacement.Receive<LivePlacement.Reply>(pipe,timeout.Token);
+            LivePlacement.Reply reply=new("Waiting");
+            for(int settle=0;settle<3;settle++){await LivePlacement.Send(pipe,command,timeout.Token);reply=await LivePlacement.Receive<LivePlacement.Reply>(pipe,timeout.Token);await Task.Delay(400);}
             if(reply.Observed!=command.Choice)throw new Exception("Connection did not return matching native state");
             pipe.Dispose();await helper.WaitForExitAsync(timeout.Token);
             File.WriteAllText(output,"PASS normal client to elevated helper connection and native state reply");
@@ -115,6 +116,7 @@ static class LiveProbe
             }
             try
             {
+                await Tick(command);await Task.Delay(400);await Tick(command);await Task.Delay(400);
                 var baseline=await Tick(command);if(baseline.Observed!=original)throw new Exception("Initial read mismatch");
                 var applied=await Tick(command with{Choice=edited});var actual=reader.Current()!;
                 if(applied.Observed!=edited||actual.Local.Team+1!=edited.Team||actual.Local.Spot+1!=edited.Spot)throw new Exception("Outbound apply failed");

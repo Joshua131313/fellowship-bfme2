@@ -47,7 +47,7 @@ static int Apply(Request* r){
  if(lobby!=r->lobby||!Readable(lobby,0xf40)||Value(lobby)!=0xc3ae60||!*(U8*)(lobby+0x10))return -4;
  if(!Readable(adapter,4)||Value(adapter)!=0xc3a9a8||adapter+0xc!=setup||Value(0xc3a9a8+0x30)!=0x84361b||Value(0xc3a9a8+0x34)!=0x843374)return -5;
  // A pending start/close transition is not an editable setup session.
- if(*(U8*)(setup+0x2c2)||*(U8*)(setup+0x2c3))return -6;
+ if(*(U8*)(setup+0x2c2)||*(U8*)(setup+0x2c3)||Value(setup+0x2c4))return -6;
  U32 map=Value(lobby+0x40);if(!Readable(map,8))return -7;U16 len=*(U16*)(map+4);
  if(!len||len>=512||!Readable(map+8,len)||r->map[len]!=0||!Equal((void*)(map+8),r->map,len))return -7;
  U32 slot=Value(lobby+0x18+r->row*4);

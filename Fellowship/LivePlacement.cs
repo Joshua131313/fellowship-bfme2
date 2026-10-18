@@ -7,12 +7,26 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Fellowship;
 
-// One request at a time. Only local-player team/spot values cross this pipe.
+// One request at a time; the host may also synchronize the shared setup.
 public static class LivePlacement
 {
     public sealed record Choice(int Team,int Spot);
     public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null);
-    public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false);
+    public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
+    // Once an observed lobby goes away, never re-arm writes against recycled pointers.
+    public sealed class SessionGuard
+    {
+        uint? identity; int stable;
+        public bool Stopped { get; private set; }
+        public bool Observe(uint? next,bool starting)
+        {
+            if(Stopped)return false;
+            if(starting||(identity.HasValue&&next!=identity)){Stopped=true;return false;}
+            if(next==null)return false;
+            identity=next;
+            return ++stable>=3;
+        }
+    }
     public sealed class Reconciler
     {
         Choice? desired, observed;
@@ -34,6 +48,7 @@ public static class LivePlacement
         byte[] bytes=new byte[length];await stream.ReadExactlyAsync(bytes,token);
         return JsonSerializer.Deserialize<T>(bytes)??throw new IOException("Missing sync message.");
     }
+    static string SessionLog(string name)=>Path.Combine(Settings.Folder,"native-sync-"+Guid.ParseExact(name["Fellowship.Sync.".Length..],"N").ToString("N")+".log");
     public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token)
     {
         string name="Fellowship.Sync."+Guid.NewGuid().ToString("N");
@@ -46,7 +61,7 @@ public static class LivePlacement
         {
             connect.CancelAfter(TimeSpan.FromSeconds(45));var connected=pipe.WaitForConnectionAsync(connect.Token);
             if(await Task.WhenAny(connected,helper.WaitForExitAsync(connect.Token))!=connected)
-                throw new IOException(File.Exists(NativePlacement.LogPath)?File.ReadAllText(NativePlacement.LogPath):"Live sync could not start.");
+                throw new IOException(File.Exists(SessionLog(name))?File.ReadAllText(SessionLog(name)):"Live sync could not start.");
             await connected;
         }
         if(!GetNamedPipeClientProcessId(pipe.SafePipeHandle,out uint client)||client!=helper.Id)throw new IOException("Unexpected sync client.");
@@ -55,7 +70,9 @@ public static class LivePlacement
             using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(12));
             Reply reply;
             try{await Send(pipe,command,timeout.Token);reply=await Receive<Reply>(pipe,timeout.Token);}
-            catch(IOException){throw new IOException(File.Exists(NativePlacement.LogPath)?File.ReadAllText(NativePlacement.LogPath):"The game sync connection ended.");}
+            catch(EndOfStreamException){status("BFME2 sync disconnected. No further changes will be sent.");return;}
+            catch(IOException){throw new IOException("The game sync connection ended. No further changes will be sent.");}
+            if(reply.Done){status(reply.Status);return;}
             // A user edit or host/map transition wins over an older incoming observation.
             if(current()==command)
             {
@@ -68,9 +85,11 @@ public static class LivePlacement
     }
     public static async Task<int> Run(string gamePath,int gamePid,int parentPid,string pipeName)
     {
+        string? log=null;
         try
         {
             if(!pipeName.StartsWith("Fellowship.Sync.",StringComparison.Ordinal)||!Guid.TryParseExact(pipeName["Fellowship.Sync.".Length..],"N",out _))throw new IOException("Invalid sync pipe name.");
+            log=SessionLog(pipeName);
             using var parent=Process.GetProcessById(parentPid);using var game=Process.GetProcessById(gamePid);
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
@@ -79,7 +98,7 @@ public static class LivePlacement
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
-            string? room=null,context=null;var reconcile=new Reconciler();NativeSetup? desiredSetup=null,observedSetup=null;
+            string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
             {
@@ -88,11 +107,18 @@ public static class LivePlacement
                 room??=command.Room;if(room!=command.Room)break;
                 if(command.Choice.Team is <0 or >4||command.Choice.Spot is <0 or >8)throw new IOException("Invalid team or spot.");
                 NativeLobby.Snapshot? snapshot;
-                try{snapshot=reader.Current();}catch(InvalidDataException){snapshot=null;}
-                Reply reply;
-                if(snapshot==null||snapshot.HostAddress!=command.Host||command.Setup==null&&!snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase))
+                bool starting=reader.Starting();
+                try{snapshot=starting?null:reader.Current();}catch(InvalidDataException){snapshot=null;}
+                bool editable=session.Observe(snapshot?.Identity,starting);
+                if(session.Stopped)
                 {
-                    context=null;reconcile=new();desiredSetup=observedSetup=null;reply=new("Waiting for the matching BFME2 LAN setup lobby…");
+                    await Send(pipe,new Reply("Live sync stopped for the match/lobby transition. Reopen the Fellowship room before the next game to reconnect.",Done:true),timeout.Token);
+                    return 0;
+                }
+                Reply reply;
+                if(!editable||snapshot==null||snapshot.HostAddress!=command.Host||command.Setup==null&&!snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase))
+                {
+                    reply=new("Waiting for the matching BFME2 LAN setup lobby…");
                 }
                 else
                 {
@@ -148,9 +174,10 @@ public static class LivePlacement
             }
             return 0;
         }
+        catch(EndOfStreamException){return 0;}
         catch(Exception error)
         {
-            File.WriteAllText(NativePlacement.LogPath,"Live sync stopped: "+error.Message);return 1;
+            if(log!=null)File.WriteAllText(log,error.Message);return 1;
         }
     }
     static async Task Execute(string host,int pid,NativeLobby.Snapshot snapshot,byte[] bytes,int expected,CancellationToken token)
