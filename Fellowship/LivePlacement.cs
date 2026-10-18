@@ -67,9 +67,10 @@ public static class LivePlacement
     {
         string name="Fellowship.Sync."+Guid.NewGuid().ToString("N");
         using var pipe=new NamedPipeServerStream(name,PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous|PipeOptions.CurrentUserOnly);
-        var start=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=true,Verb="runas"};
+        bool elevated=LaunchContext.IsElevated(gamePid);
+        var start=LaunchContext.Worker(Environment.ProcessPath!,elevated);
         foreach(string arg in new[]{"--native-sync",gamePath,gamePid.ToString(),Environment.ProcessId.ToString(),name})start.ArgumentList.Add(arg);
-        status("Approve Windows permission for live team and spot sync.");
+        status(elevated?"BFME2 is running as administrator. Approve Windows permission for live sync.":"Connecting live game sync…");
         using var helper=Process.Start(start)??throw new IOException("Could not start live sync.");
         using(var connect=CancellationTokenSource.CreateLinkedTokenSource(token))
         {

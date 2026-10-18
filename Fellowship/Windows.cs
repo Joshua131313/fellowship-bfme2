@@ -138,7 +138,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.19   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.20   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -345,7 +345,7 @@ public sealed class RoomWindow : Window
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams and spots sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve Windows permission once per game session.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams and spots sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Windows permission is needed only if BFME2 runs as administrator.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -562,7 +562,7 @@ public sealed class RoomWindow : Window
         try
         {
             bool preset=app.Peer.IsHost&&HostPreset.Matches(app.Peer.Current);
-            Append("SYSTEM",preset?"Preparing host preset. Approve the Windows permission prompt if shown.":"Launching BFME2…");
+            Append("SYSTEM",preset?"Launching BFME2. Your rules will sync when the LAN lobby opens.":"Launching BFME2…");
             var current=app.Peer.Current??throw new IOException("Join a Fellowship room first.");
             await GameLauncher.Launch(app.Settings.GamePath,current,preset,false,app.Peer.LocalId,false);
             Append("SYSTEM","Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.");
@@ -688,19 +688,22 @@ public static class GameLauncher
         Directory.CreateDirectory(Settings.Folder);File.WriteAllText(Path.Combine(Settings.Folder,"last-session.json"),System.Text.Json.JsonSerializer.Serialize(room));
         try
         {
-            if(preset||navigate||applyOnly)
+            if(preset && room!=null)
             {
                 HostPreset.ValidateBinary(path);
-                var start=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=true,Verb="runas",WorkingDirectory=AppContext.BaseDirectory};
-                start.ArgumentList.Add(applyOnly?(preset?"--host-placement":"--guest-placement"):navigate?(preset?"--host-navigation":"--guest-navigation"):"--host-preset");start.ArgumentList.Add(path);start.ArgumentList.Add(Convert.ToBase64String(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(room)));start.ArgumentList.Add(localId);
-                using var helper=Process.Start(start)??throw new InvalidOperationException("Could not start the preset helper.");
-                await helper.WaitForExitAsync();
-                if(helper.ExitCode!=0)throw new InvalidOperationException("Game setup or navigation failed. "+(File.Exists(HostPreset.LogPath)?File.ReadAllText(HostPreset.LogPath):"No diagnostic was written."));
-                return;
+                var profile=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"My Battle for Middle-earth(tm) II Files");
+                if(Directory.Exists(profile))
+                {
+                    var pref=Path.Combine(profile,"NetworkPref.ini");
+                    var original=File.Exists(pref)?File.ReadAllText(pref):"";
+                    File.WriteAllText(Path.Combine(Settings.Folder,"NetworkPref-"+DateTime.Now.ToString("yyyyMMdd-HHmmssfff")+".bak"),original);
+                    File.WriteAllText(pref,ProfilePreset.MapPreferences(original,room.MapPath),new System.Text.UTF8Encoding(false));
+                }
             }
-            // The Windows shell handles executables marked as requiring elevation.
-            // Fellowship itself stays unelevated; each player approves their own UAC prompt.
-            Process.Start(new ProcessStartInfo(path){WorkingDirectory=Path.GetDirectoryName(path)!,UseShellExecute=true});
+            // Launch as the interactive user, never from the elevated sync worker.
+            // Native lobby sync applies rules after the game has initialized.
+            Process.Start(LaunchContext.Game(path));
+            await Task.CompletedTask;
         }
         catch (System.ComponentModel.Win32Exception e) when (e.NativeErrorCode == 1223)
         {

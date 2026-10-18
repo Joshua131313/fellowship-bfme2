@@ -79,6 +79,12 @@ class Program
     if(!File.Exists(exe)||File.Exists(Path.Combine(Path.GetDirectoryName(exe)!,"update.zip")))throw new Exception("Update extraction/cleanup failed");
     Console.WriteLine("PASS real GitHub update download, checksum, extraction, version validation and ZIP cleanup");return;
   }
+  var launchPath=Path.Combine(Path.GetTempPath(),"BFME2 test","lotrbfme2.exe");
+  var gameStart=LaunchContext.Game(launchPath);
+  if(!gameStart.UseShellExecute||gameStart.FileName!=launchPath||gameStart.WorkingDirectory!=Path.GetDirectoryName(launchPath)||gameStart.Verb!=""||gameStart.ArgumentList.Count!=0||gameStart.Arguments!="")throw new Exception("Game launch must preserve default shell behavior without forced elevation or arguments");
+  if(LaunchContext.Worker(launchPath,false).Verb!="open"||LaunchContext.Worker(launchPath,true).Verb!="runas")throw new Exception("Worker elevation policy mismatch");
+  _=LaunchContext.IsElevated(Environment.ProcessId);
+  Console.WriteLine("PASS direct game launch, conditional helper elevation and process token query");
   var nativeSnapshot=new NativeLobby.Snapshot(123,"maps\\test.map","127.0.0.1",[new NativeLobby.Slot(0,6,1,2,true)]);
   var command=NativePlacement.RequestBytes(1234,nativeSnapshot,4,1);
   if(command.Length!=1100||BitConverter.ToInt32(command,4)!=2||BitConverter.ToInt32(command,20)!=3||BitConverter.ToInt32(command,24)!=0||BitConverter.ToInt32(command,28)!=0||System.Text.Encoding.ASCII.GetString(command,56,13)!="maps\\test.map")throw new Exception("Native placement ABI mismatch");
@@ -95,12 +101,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.20-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.20/Fellowship-0.1.20-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.20",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.21-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.21/Fellowship-0.1.21-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.21",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.20","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.20",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.21","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.21",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
