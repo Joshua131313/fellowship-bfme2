@@ -29,7 +29,7 @@ Closing the browser hides it and keeps Fellowship connected. Closing a battle ro
 
 ## Current limits
 
-- Experimental navigation can be enabled in Settings for the captured English 16:9 menus: host creation and guest navigation to Network. Live testing confirmed navigation through Multiplayer to Network. The updated Create Game step still needs live confirmation. Guest room selection/joining and team assignment remain manual. Active-match recovery is not implemented.
+- Native lobby creation and guest joining remain manual. Direct team/spot assignment is verified on the host; native guest synchronization still needs a two-PC test. Cursor navigation is not included. Active-match recovery is not implemented.
 - No claim that BFME2 can restore a player's army after quitting an ongoing match. Relaunching and rejoining the **Fellowship room** is supported; active-game recovery is not.
 - Public rooms use UDP discovery on the selected VPN interface. Broadcast delivery depends on the VPN and firewall; direct host IP remains available. There is no Internet-wide directory.
 - No user accounts, crash-driven host recovery, offline messaging or durable chat history.
