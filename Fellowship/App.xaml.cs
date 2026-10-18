@@ -4,6 +4,7 @@ using System.Security.Principal;
 namespace Fellowship;
 public partial class App : Application
 {
+    void InputsChanged(object sender,RoutedEventArgs e)=>System.Windows.Input.CommandManager.InvalidateRequerySuggested();
     void SelectMouseWheel(object sender,System.Windows.Input.MouseWheelEventArgs e)
     {
         if(sender is not System.Windows.Controls.ComboBox {IsDropDownOpen:false} box)return;

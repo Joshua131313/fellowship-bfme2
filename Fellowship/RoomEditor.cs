@@ -73,7 +73,7 @@ public sealed class RoomEditor : Window
             var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;DialogResult=true;
-        },true);save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
+        },true);UI.Require(save,()=>!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&capacity.SelectedItem!=null&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0);save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
     }
     sealed record Factor(int Value){public override string ToString()=>$"{Value/100.0:0.##}×";}
 }
