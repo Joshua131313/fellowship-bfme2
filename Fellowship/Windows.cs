@@ -235,7 +235,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.37   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.38   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -329,7 +329,6 @@ public sealed class BrowserWindow : Window
         var options=new StackPanel();
         var sounds=new CheckBox{Content="Message sounds",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,14)};options.Children.Add(sounds);
         var liveSync=new CheckBox{Content="Live BFME2 synchronization",IsChecked=Settings.LiveGameSync,Margin=new(0,0,0,14),ToolTip="Synchronize map, rules, team, starting spot and color in the native LAN lobby."};options.Children.Add(liveSync);
-        var isolate=new CheckBox{Content="Isolate new rooms (experimental)",IsChecked=Settings.RoomIsolation,Margin=new(0,0,0,14),ToolTip="Only your Fellowship room members can exchange BFME2 LAN packets. Disable for new rooms to roll back; restart BFME2 after leaving an isolated room."};options.Children.Add(isolate);
         var startup=new CheckBox{Content="Start in the tray at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,ToolTip=Installation.IsInstalled?"Fellowship starts quietly in the system tray.":"Install Fellowship to enable startup."};options.Children.Add(startup);ToolTipService.SetShowOnDisabled(startup,true);
         var optionCard=UI.Card(options,"#171C24",16);optionCard.Margin=new(0,20,0,0);p.Children.Add(optionCard);
         p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null));
@@ -337,7 +336,7 @@ public sealed class BrowserWindow : Window
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);Process.Start(new ProcessStartInfo(Settings.Folder){UseShellExecute=true});});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
         var save=UI.Require(UI.Button("Save settings",()=>
         {
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.RoomIsolation=isolate.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();w.Close();EnsureOnline();
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();roomWindow?.RetryLiveSync();w.Close();EnsureOnline();
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return w;
     }
@@ -560,10 +559,13 @@ public sealed class RoomWindow : Window
     }
     LivePlacement.Command? SyncCommand()
     {
-        if((!app.Settings.LiveGameSync&&app.Peer.Current?.Isolated!=true)||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
+        if((!app.Settings.LiveGameSync)||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
-        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),app.Peer.IsHost?NativeSetup.From(room):null,room.Isolated?RoomIsolation.For(room,app.Peer.Address):null,app.Settings.LiveGameSync);
+        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),app.Peer.IsHost?NativeSetup.From(room):null);
     }
+    bool syncPaused;
+    public void RetryLiveSync()=>syncPaused=false;
+    void PauseLiveSync()=>syncPaused=true;
     async Task WatchNative()
     {
         if(watchingNative)return;watchingNative=true;
@@ -572,11 +574,12 @@ public sealed class RoomWindow : Window
         {
             while(!syncLifetime.IsCancellationRequested)
             {
-                if(!app.Settings.LiveGameSync&&app.Peer.Current?.Isolated!=true)
+                if(!app.Settings.LiveGameSync)
                 {
                     attempted=0;liveStatus.Text="Live sync is off in Settings. Set game rules, team and spot in BFME2 manually.";
                     await Task.Delay(400,syncLifetime.Token);continue;
                 }
+                if(syncPaused){await Task.Delay(400,syncLifetime.Token);continue;}
                 int pid=0;
                 foreach(var process in System.Diagnostics.Process.GetProcessesByName("game.dat").Concat(System.Diagnostics.Process.GetProcessesByName("game")))
                     using(process){pid=process.Id;break;}
@@ -609,9 +612,9 @@ public sealed class RoomWindow : Window
                     {
                         syncPrepared.TrySetResult(false);
                         liveStatus.Text="Live sync paused. Native lobby remains available.";
-                        Append("SYSTEM","Live sync stopped: "+error.Message+" Turn live sync off and on in Settings to retry. You can correct selections in BFME2 manually.");
+                        Append("SYSTEM","Live sync stopped: "+error.Message+" Save Settings with live sync enabled to retry. You can correct selections in BFME2 manually.");
                         // Do not repeatedly reopen UAC after a refusal or setup error.
-                        app.Settings.LiveGameSync=false;app.Settings.Save();
+                        PauseLiveSync();attempted=0;
                     }
                     finally{syncPrepared=null;}
                 }
@@ -690,7 +693,7 @@ public sealed class RoomWindow : Window
         placementStatus.Text=changingPlacement?"Confirming with host…":room.Spots.Count==0?"Starting spots unavailable for this map.":$"Your spot: {(self?.Spot>0?self.Spot.ToString():"not selected")} · {(self?.Team>0?"Team "+self.Team:"No team")}";
         if(lastRoomName!=room.Title){roomName.Text=room.Title;lastRoomName=room.Title;}
         if(lastPrivacy!=room.FriendsOnly){privacyChoice.SelectedIndex=room.FriendsOnly?1:0;lastPrivacy=room.FriendsOnly;}
-        title.Text=room.Title;phase.Text=$"●  {room.Phase}   ·   Hosted by {room.Host}"+(room.Isolated?"   ·   Isolated BFME2":"");playerCount.Text=$"PLAYERS   {room.Players.Count} / {room.Capacity}";
+        title.Text=room.Title;phase.Text=$"●  {room.Phase}   ·   Hosted by {room.Host}";playerCount.Text=$"PLAYERS   {room.Players.Count} / {room.Capacity}";
         players.Items.Clear();
         foreach(var p in room.Players)
         {
@@ -741,15 +744,17 @@ public sealed class RoomWindow : Window
             var current=app.Peer.Current??throw new IOException("Join a Fellowship room first.");
             GameLauncher.Validate(app.Settings.GamePath);
             if(GameLauncher.IsRunning())throw new IOException("BFME2 is already running. Exit it before launching again.");
-            if(app.Settings.LiveGameSync||app.Peer.Current?.Isolated==true)
+            if(app.Settings.LiveGameSync)
             {
+                if(syncPaused)throw new IOException("Live sync is paused. Save Settings with live sync enabled to retry, or disable it to launch manually.");
                 using var preparationTimeout=System.Threading.CancellationTokenSource.CreateLinkedTokenSource(syncLifetime.Token);
                 preparationTimeout.CancelAfter(TimeSpan.FromSeconds(60));
                 // The game must not start until the permission dialog is finished
                 // and the authenticated helper has answered its first request.
-                while(syncPrepared==null&&(app.Settings.LiveGameSync||app.Peer.Current?.Isolated==true))
+                while(syncPrepared==null&&app.Settings.LiveGameSync&&!syncPaused)
                     await Task.Delay(100,preparationTimeout.Token);
-                if((app.Settings.LiveGameSync||app.Peer.Current?.Isolated==true)&&syncPrepared!=null&&
+                if(syncPaused)throw new IOException("Sync preparation failed. Save Settings to retry or disable live sync to launch manually.");
+                if((app.Settings.LiveGameSync)&&syncPrepared!=null&&
                    !await syncPrepared.Task.WaitAsync(preparationTimeout.Token))
                     throw new IOException("Sync preparation failed. Turn live sync off in Settings to launch without it.");
             }

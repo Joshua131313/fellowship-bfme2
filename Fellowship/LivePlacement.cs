@@ -11,13 +11,13 @@ namespace Fellowship;
 public static class LivePlacement
 {
     public sealed record Choice(int Team,int Spot,int Color=0);
-    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,RoomIsolation.Policy? Isolation=null,bool SyncEnabled=true);
+    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null);
     public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
     // A countdown or missing snapshot suspends writes. Only a confirmed destroyed
     // or inactive room followed by a stable new lobby can resume writes.
     public sealed class SessionGuard
     {
-        uint? identity,candidate; int stable,absentSamples; bool departed;
+        uint? identity,candidate; int stable; bool departed;
         public bool Stopped { get; private set; }
         public int Generation { get; private set; }
         public bool Observe(uint? next,bool starting,bool setupClosed=false)
@@ -27,17 +27,18 @@ public static class LivePlacement
             {
                 if(setupClosed)
                 {
-                    if(++absentSamples>=3)departed=true;
+                    // SetupClosed is positive native lifecycle evidence, not a failed read.
+                    // A quick Network -> Create cycle may be visible for only one poll.
+                    departed=true;
                     candidate=null;stable=0;return false;
                 }
-                absentSamples=0;
                 if(!departed||starting||next==null){candidate=null;stable=0;return false;}
             }
             else if(identity.HasValue)return true;
             if(next==null){candidate=null;stable=0;return false;}
             if(candidate!=next){candidate=next;stable=0;}
             if(++stable<5)return false;
-            identity=next;Stopped=false;departed=false;absentSamples=0;Generation++;
+            identity=next;Stopped=false;departed=false;Generation++;
             return true;
         }
     }
@@ -85,12 +86,12 @@ public static class LivePlacement
             using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(12));
             Reply reply;
             try{await Send(pipe,command,timeout.Token);reply=await Receive<Reply>(pipe,timeout.Token);}
-            catch(EndOfStreamException){status("BFME2 sync disconnected. No further changes will be sent.");return;}
+            catch(EndOfStreamException){if(helper.HasExited&&GameLauncher.IsRunning())throw new IOException("The sync helper disconnected while BFME2 is still running.");status("BFME2 sync disconnected. Waiting for the next game.");return;}
             catch(IOException){throw new IOException("The game sync connection ended. No further changes will be sent.");}
             if(reply.Done){status(reply.Status);return;}
             prepared?.Invoke();prepared=null;
             // A user edit or host/map transition wins over an older incoming observation.
-            if(JsonSerializer.Serialize(current())==JsonSerializer.Serialize(command))
+            if(current()==command)
             {
                 status(reply.Status);
                 if(reply.ImportSetup&&reply.Setup is {} setup)await importSetup(setup);
@@ -136,7 +137,6 @@ public static class LivePlacement
             using var game=Process.GetProcessById(gamePid);
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
-            string? isolationKey=null;
             int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
@@ -144,19 +144,6 @@ public static class LivePlacement
                 using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 var command=await Receive<Command>(pipe,timeout.Token);
                 room??=command.Room;if(room!=command.Room)break;
-                if(command.Isolation is {} policy)
-                {
-                    string key=JsonSerializer.Serialize(policy);
-                    if(key!=isolationKey)
-                    {
-                        int result=await RoomIsolation.Apply(host,gamePid,policy,timeout.Token);
-                        if(result is -21 or -25){await Send(pipe,new Reply("Room isolation waiting for BFME2's engine window…"),timeout.Token);continue;}
-                        if(result!=4)throw new IOException("Room isolation could not attach ("+result+"). Close BFME2 and retry; do not enter Network without isolation.");
-                        isolationKey=key;File.AppendAllText(log,$"{DateTime.UtcNow:O} isolation enabled={policy.Enabled} members={policy.Members.Length}\n");
-                    }
-                }
-                string isolationPrefix=command.Isolation?.Enabled==true?"Room isolation active · ":"";
-                if(!command.SyncEnabled){await Send(pipe,new Reply("Room isolation active · game-setting sync is off"),timeout.Token);continue;}
                 if(command.Choice.Color is <0 or >10||command.Choice.Team is <0 or >4||command.Choice.Spot is <0 or >8)throw new IOException("Invalid team or spot.");
                 NativeLobby.Snapshot? snapshot=null;
                 bool starting=false,closed=false;
@@ -252,7 +239,7 @@ public static class LivePlacement
                         reply=new(placementNotice??(command.Setup==null?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,changed);
                     }
                 }
-                await Send(pipe,reply with{Status=isolationPrefix+reply.Status},timeout.Token);
+                await Send(pipe,reply,timeout.Token);
                 }
                 catch(NativeRefreshException)
                 {
