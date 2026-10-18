@@ -12,6 +12,7 @@ public sealed class MapPreview : Border
     readonly Canvas mapCanvas=new(){Width=320,Height=320};
     readonly Canvas selectionLayer=new(){Width=320,Height=320};
     readonly Viewbox mapView=new(){Height=220,Stretch=Stretch.Uniform};
+    public double PreviewHeight { get=>mapView.Height; set=>mapView.Height=value; }
     public event Action<int>? SpotSelected;
     readonly TextBlock fallback=UI.Text("Map preview unavailable",11,UI.Muted);
     string last="";

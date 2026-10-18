@@ -1,44 +1,80 @@
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 namespace Fellowship;
 public sealed class RoomEditor : Window
 {
     public Room? Result { get; private set; }
     public RoomEditor(Window owner,Settings settings,Room initial)
     {
-        Owner=owner;var body=UI.Shell(this,"Room settings",560,740);WindowStartupLocation=WindowStartupLocation.CenterOwner;
-        var panel=new StackPanel{Margin=new(24)};body.Children.Add(UI.Scroll(panel));
-        panel.Children.Add(UI.Text("Set up your battle",24,"#F1F3F8",true));
-        var name=UI.Field(panel,"ROOM NAME",initial.Title,80);
-        ComboBox Choice(string title,object[] values,object selected)
+        Owner=owner;var body=UI.Shell(this,"Create room",620,510);WindowStartupLocation=WindowStartupLocation.CenterOwner;
+        var work=SystemParameters.WorkArea;
+        Width=Math.Min(620,work.Width);Height=Math.Min(510,work.Height);
+        MinWidth=Width;MinHeight=Height;
+        // Keep the entire form visible on smaller/high-DPI desktops as well.
+        var panel=new Grid{Width=576,Height=416};
+        body.Children.Add(new Viewbox{Margin=new(20),Stretch=Stretch.Uniform,StretchDirection=StretchDirection.DownOnly,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Top,Child=panel});
+        foreach(double height in new[]{48d,232,38,48,50})panel.RowDefinitions.Add(new(){Height=new(height)});
+        var heading=UI.Stack(UI.Text("Create a room",21,"#F1F3F8",true),UI.Text("Choose a map and set the rules for your next match.",11,UI.Muted));
+        panel.Children.Add(heading);
+        var setup=new Grid();setup.ColumnDefinitions.Add(new(){Width=new(368)});setup.ColumnDefinitions.Add(new(){Width=new(20)});setup.ColumnDefinitions.Add(new(){Width=new(188)});Grid.SetRow(setup,1);panel.Children.Add(setup);
+        var form=new Grid();for(int i=0;i<4;i++)form.RowDefinitions.Add(new(){Height=new(58)});setup.Children.Add(form);
+        StackPanel Field(Panel parent,string title)
         {
-            var label=UI.Text(title,10,UI.Muted,true);label.Margin=new(0,16,0,7);panel.Children.Add(label);
-            ComboBox combo=title.StartsWith("MAP")?new SearchableMapBox():new ComboBox();combo.ItemsSource=values;combo.SelectedItem=selected;panel.Children.Add(combo);return combo;
+            var field=new StackPanel();parent.Children.Add(field);
+            var label=UI.Text(title,9,UI.Muted,true);label.Margin=new(0,0,0,5);field.Children.Add(label);return field;
         }
-        var maps=GameInstallation.Maps(settings.GamePath);
-        var map=Choice("MAP · FROM YOUR BFME2 INSTALLATION",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path==initial.MapPath)??maps[0]);
-        var preview=new MapPreview();panel.Children.Add(preview);
-        void UpdatePreview(){if(map.SelectedItem is GameMap selected)preview.ShowMap(settings.GamePath,selected.Path);}
-        map.SelectionChanged+=(_,_)=>UpdatePreview();UpdatePreview();
-        var capacity=Choice("PLAYER LIMIT",Enumerable.Range(2,7).Cast<object>().ToArray(),initial.Capacity);
-        var resources=Choice("STARTING RESOURCES",MatchRules.ResourceValues.Cast<object>().ToArray(),initial.Match.Resources);
-        var factors=MatchRules.CommandValues.Select(n=>new Factor(n)).ToArray();
-        var command=Choice("COMMAND POINTS",factors.Cast<object>().ToArray(),factors.First(f=>f.Value==initial.Match.CommandPoints));
-        var custom=new CheckBox{Content="Allow Custom Heroes",IsChecked=initial.Match.CustomHeroes,Margin=new(0,18,0,12)};
-        var ring=new CheckBox{Content="Allow Ring Heroes",IsChecked=initial.Match.RingHeroes,Margin=new(0,0,0,18)};
-        panel.Children.Add(custom);panel.Children.Add(ring);
-        var privacy=Choice("VISIBILITY",new object[]{"Public · everyone on this VPN","Private · host's friends only"},initial.FriendsOnly?"Private · host's friends only":"Public · everyone on this VPN");
-        var hint=UI.Text("Private rooms are visible and joinable only from VPN addresses saved in the host's friends list.",11,UI.Muted);hint.Margin=new(0,10,0,16);panel.Children.Add(hint);
-        panel.Children.Add(UI.Button("Save room",()=>
+        Grid Pair(int row)
         {
-            if(string.IsNullOrWhiteSpace(name.Text)){UI.Error("Enter a room name.");return;}
+            var pair=new Grid();pair.ColumnDefinitions.Add(new());pair.ColumnDefinitions.Add(new(){Width=new(12)});pair.ColumnDefinitions.Add(new());Grid.SetRow(pair,row);form.Children.Add(pair);return pair;
+        }
+        var nameField=Field(form,"ROOM NAME");Grid.SetRow(nameField,0);
+        var name=new TextBox{Text=initial.Title,MaxLength=80,Height=34,FontSize=12,Padding=new(9,5,9,5)};nameField.Children.Add(name);
+        System.Windows.Automation.AutomationProperties.SetName(name,"Room name");
+        ComboBox Choice(Panel parent,string title,object[] values,object selected,int column=0,bool searchable=false)
+        {
+            var field=Field(parent,title);Grid.SetColumn(field,column);
+            ComboBox combo=searchable?new SearchableMapBox():new ComboBox();
+            combo.ItemsSource=values;combo.SelectedItem=selected;combo.Height=34;combo.FontSize=12;combo.Padding=new(9,5,28,5);
+            combo.ItemContainerStyle=new Style(typeof(ComboBoxItem),(Style)Application.Current.FindResource(typeof(ComboBoxItem)));
+            combo.ItemContainerStyle.Setters.Add(new Setter(Control.PaddingProperty,new Thickness(9,6,9,6)));
+            combo.ItemContainerStyle.Setters.Add(new Setter(Control.FontSizeProperty,12d));
+            System.Windows.Automation.AutomationProperties.SetName(combo,title);field.Children.Add(combo);return combo;
+        }
+        var mapRow=new Grid();Grid.SetRow(mapRow,1);form.Children.Add(mapRow);
+        var maps=GameInstallation.Maps(settings.GamePath);
+        var map=Choice(mapRow,"MAP",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path==initial.MapPath)??maps[0],searchable:true);
+        var limits=Pair(2);
+        var capacity=Choice(limits,"PLAYERS",Enumerable.Range(2,7).Cast<object>().ToArray(),initial.Capacity);
+        var resources=Choice(limits,"STARTING RESOURCES",MatchRules.ResourceValues.Cast<object>().ToArray(),initial.Match.Resources,2);
+        var options=Pair(3);
+        var factors=MatchRules.CommandValues.Select(n=>new Factor(n)).ToArray();
+        var command=Choice(options,"COMMAND POINTS",factors.Cast<object>().ToArray(),factors.First(f=>f.Value==initial.Match.CommandPoints));
+        var privacy=Choice(options,"VISIBILITY",new object[]{"Public on VPN","Friends only"},initial.FriendsOnly?"Friends only":"Public on VPN",2);
+        var preview=new MapPreview{PreviewHeight=166,Padding=new(6),Margin=new(0,5,0,8)};
+        var mapName=UI.Text("",12,"#EDF1F8",true);
+        var previewPanel=UI.Stack(UI.Text("MAP PREVIEW",9,UI.Muted,true),preview,mapName,UI.Text("BFME2 1.00 · Radmin VPN",10,UI.Muted));
+        Grid.SetColumn(previewPanel,2);setup.Children.Add(previewPanel);
+        void UpdatePreview(){if(map.SelectedItem is GameMap selected){preview.ShowMap(settings.GamePath,selected.Path);mapName.Text=selected.Name;map.ToolTip=selected.Name;}}
+        map.SelectionChanged+=(_,_)=>UpdatePreview();UpdatePreview();
+        var custom=new CheckBox{Content="Custom Heroes",IsChecked=initial.Match.CustomHeroes,FontSize=12,Margin=new(0,0,26,0)};
+        var ring=new CheckBox{Content="Ring Heroes",IsChecked=initial.Match.RingHeroes,FontSize=12};
+        var heroes=UI.Row(custom,ring);Grid.SetRow(heroes,2);panel.Children.Add(heroes);
+        var hint=UI.Text("",11,UI.Muted);hint.Margin=new(0,4,0,12);Grid.SetRow(hint,3);panel.Children.Add(hint);
+        void UpdateVisibility()=>hint.Text=privacy.SelectedIndex==1?"Only players saved in your friends list can see and join this room.":"Everyone connected to your VPN can see and join this room.";
+        privacy.SelectionChanged+=(_,_)=>UpdateVisibility();UpdateVisibility();
+        var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
+        var cancel=UI.Button("Cancel",()=>DialogResult=false);cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
+        var save=UI.Button("Create room",()=>
+        {
+            if(string.IsNullOrWhiteSpace(name.Text)){name.Focus();UI.Error("Enter a room name.");return;}
             Result=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(initial))!;
             Result.Title=name.Text.Trim();Result.Capacity=(int)capacity.SelectedItem;Result.FriendsOnly=privacy.SelectedIndex==1;
             var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;DialogResult=true;
-        },true));
+        },true);save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
     }
     sealed record Factor(int Value){public override string ToString()=>$"{Value/100.0:0.##}×";}
 }
