@@ -147,6 +147,17 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   Render(browser,"dist/preview-browser.png");
+  var searchPlayers=(System.Windows.Controls.TextBox)typeof(BrowserWindow).GetField("playerSearch",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(browser)!;
+  searchPlayers.Text="Aragorn";
+  var playerRows=(System.Windows.Controls.StackPanel)typeof(BrowserWindow).GetField("activePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(browser)!;
+  if(playerRows.Children.Count!=1||playerRows.Children[0] is not System.Windows.Controls.Button)throw new Exception("Player search failed");
+  searchPlayers.Text="";
+  for(int i=4;i<=30;i++)browser.Presence.Success("26.1.1."+i,"Player "+i,null,DateTimeOffset.UtcNow);
+  typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
+  var playerPopup=(System.Windows.Controls.Primitives.Popup)typeof(BrowserWindow).GetField("playersPopup",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(browser)!;
+  var popupChild=playerPopup.Child;playerPopup.Child=null;
+  Render(new Window{Width=340,Height=400,Content=popupChild},"dist/preview-players-dropdown.png");
+  Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   var editor=new RoomEditor(null,new Settings{GamePath=GameInstallation.Find()},new Room{Title="Battle for Rhun"});
   Render(editor,"dist/preview-room-settings.png");
   browser.Peer.Host(new Room{Title="Inline rules test"});

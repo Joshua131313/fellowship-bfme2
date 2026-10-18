@@ -114,7 +114,10 @@ public sealed class BrowserWindow : Window
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
     public PeerDirectory Presence { get; }=new();
-    readonly WrapPanel activePlayers=new(){Margin=new(22,0,22,12)};
+    readonly StackPanel activePlayers=new();
+    readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Margin=new(0,0,0,10),MaxLength=80};
+    readonly Button playersButton=new(){Content="Active players: 1",Padding=new(12,7,12,7),Margin=new(22,0,0,12),HorizontalAlignment=HorizontalAlignment.Left};
+    readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Top};
     public BrowserWindow(Settings? settings=null)
     {
         Settings=settings??Settings.Load();
@@ -141,7 +144,17 @@ public sealed class BrowserWindow : Window
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
         var hint = UI.Text("v0.1.27   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
-        var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=100;UI.At(body,playerScroll,4);
+        UI.At(body,playersButton,4);
+        var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
+        var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
+        ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
+        var popupCard=UI.Card(popupBody,"#1B222D",14);popupCard.Width=320;popupCard.Margin=new(6);
+        popupCard.Effect=new System.Windows.Media.Effects.DropShadowEffect{BlurRadius=12,ShadowDepth=3,Opacity=.3};
+        playersPopup.Child=popupCard;playersPopup.PlacementTarget=playersButton;
+        playersButton.Click+=(_,_)=>{playersPopup.IsOpen=!playersPopup.IsOpen;if(playersPopup.IsOpen){playerSearch.Clear();RenderActivePlayers();playerSearch.Focus();}};
+        playerSearch.TextChanged+=(_,_)=>RenderActivePlayers();
+        playerSearch.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){playersPopup.IsOpen=false;playersButton.Focus();e.Handled=true;}};
+        Closed+=(_,_)=>playersPopup.IsOpen=false;
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -249,14 +262,20 @@ public sealed class BrowserWindow : Window
     {
         activePlayers.Children.Clear();
         var peers=Presence.Active(DateTimeOffset.UtcNow).ToArray();
-        var label=UI.Text($"Active players: {peers.Length+1}",10,UI.Muted,true);label.Margin=new(0,0,14,0);activePlayers.Children.Add(label);
-        var me=UI.Badge(Settings.Name+" · You",UI.Green);me.Margin=new(0,0,8,6);activePlayers.Children.Add(me);
-        foreach(var peer in peers)
+        playersButton.Content=UI.Row(UI.Text($"Active players: {peers.Length+1}",11),new System.Windows.Shapes.Path{Data=Geometry.Parse("M 0,0 L 4,4 L 8,0"),Stroke=UI.Brush(UI.Muted),StrokeThickness=1.5,Margin=new(10,0,0,0),VerticalAlignment=VerticalAlignment.Center});
+        string query=playerSearch.Text.Trim();
+        if(SearchableMapBox.Matches(Settings.Name+" You",query))
         {
-            var button=UI.Button((peer.Reconnecting?"◌ ":"● ")+peer.Name,()=>OpenChat(peer.Address,peer.Name));
-            button.FontSize=11;button.Padding=new(10,5,10,5);button.Margin=new(0,0,8,6);
-            button.ToolTip=peer.Address+(peer.Reconnecting?" · Reconnecting":" · Send message");activePlayers.Children.Add(button);
+            var me=UI.Row(UI.Avatar(Settings.Name,28),UI.Text(Settings.Name+" · You",12,UI.Green));me.Margin=new(8,6,8,10);activePlayers.Children.Add(me);
         }
+        foreach(var peer in peers.Where(p=>SearchableMapBox.Matches(p.Name+" "+p.Address,query)))
+        {
+            var details=UI.Stack(UI.Text(peer.Name,12,bold:true),UI.Text(peer.Reconnecting?"Reconnecting":peer.Address,10,peer.Reconnecting?UI.Muted:UI.Green));
+            var button=UI.Button("",()=>{playersPopup.IsOpen=false;OpenChat(peer.Address,peer.Name);});
+            button.Content=UI.Row(UI.Avatar(peer.Name,28),details);button.HorizontalContentAlignment=HorizontalAlignment.Left;
+            button.Padding=new(8);button.Margin=new(0,0,0,4);button.ToolTip="Send message";activePlayers.Children.Add(button);
+        }
+        if(activePlayers.Children.Count==0){var empty=UI.Text("No players match your search",12,UI.Muted);empty.Margin=new(8,14,8,14);activePlayers.Children.Add(empty);}
     }
     async Task Join()
     {
