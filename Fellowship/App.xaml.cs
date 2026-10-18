@@ -18,6 +18,11 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if(e.Args.Length==5&&e.Args[0]=="--native-sync"&&int.TryParse(e.Args[2],out var syncGame)&&int.TryParse(e.Args[3],out var syncParent))
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            Shutdown(await LivePlacement.Run(e.Args[1],syncGame,syncParent,e.Args[4]));return;
+        }
         if(e.Args.Length is 5 or 6&&(e.Args[0] is "--native-apply" or "--native-wait")&&int.TryParse(e.Args[4],out var placementParent))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;

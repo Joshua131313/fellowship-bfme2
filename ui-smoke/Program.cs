@@ -7,6 +7,22 @@ class Program
 {
  [STAThread] static void Main(string[] args)
  {
+  if(args.Length==4&&args[0]=="--live-probe")
+  {LiveProbe.Run(args[1],int.Parse(args[2]),args[3]).GetAwaiter().GetResult();return;}
+  var sync=new LivePlacement.Reconciler();
+  var first=new LivePlacement.Choice(3,2);var edited=new LivePlacement.Choice(4,1);
+  if(!sync.ShouldWrite(first))throw new Exception("Initial selection must apply");
+  sync.Remember(first,first);
+  if(sync.ShouldWrite(first)||sync.Changed(first))throw new Exception("Unchanged state echoed");
+  if(!sync.Changed(edited))throw new Exception("Native edit not detected");
+  sync.Imported(edited);
+  if(sync.ShouldWrite(edited)||sync.Changed(edited))throw new Exception("Imported native edit echoed");
+  if(!sync.ShouldWrite(first))throw new Exception("Later Fellowship edit not detected");
+  using(var badFrame=new MemoryStream(BitConverter.GetBytes(4097)))
+  {
+   try{LivePlacement.Receive<LivePlacement.Command>(badFrame,default).GetAwaiter().GetResult();throw new Exception("Oversized IPC accepted");}catch(IOException){}
+  }
+  Console.WriteLine("PASS live sync initial apply, both edit directions, echo suppression and IPC size bound");
   if(args.Length==3&&args[0]=="--native-read")
   {
    try{using var reader=new NativeLobby(int.Parse(args[1]));File.WriteAllText(args[2],System.Text.Json.JsonSerializer.Serialize(reader.Current()));}
@@ -37,12 +53,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.13-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.13/Fellowship-0.1.13-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.13",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.14-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.14/Fellowship-0.1.14-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.14",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.13","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.13",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.14","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.14",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}

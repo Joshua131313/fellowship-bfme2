@@ -67,3 +67,10 @@ Verified live on the installed 1.00 host: Team 3 / spot 2 -> Team 4 / spot 1 -> 
 MSIX file virtualization initially caused the extracted DLL path to be invisible to BFME2. GetFinalPathNameByHandle now resolves both helper and request files before crossing process boundaries. No ACL or security-policy change was needed.
 
 Windows hook requirements and thread semantics: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexw and https://devblogs.microsoft.com/oldnewthing/20180926-00/?p=99825 .
+
+
+## 0.1.13 live team and spot synchronization
+
+The room automatically starts one elevated listener for a running BFME2 process. A bounded, current-user-only named pipe validates client/server process IDs and carries only room/map/host identity and local team/spot choices. Reads occur about twice per second; writes use the existing bounded native LAN callback only when the confirmed Fellowship choice changes. Native edits are imported through PeerService, with normal host validation and readiness reset. Imported observations are acknowledged without echoing writes. In-flight observations are discarded if the Fellowship command changed. The listener pauses outside a matching editable LAN setup, closes with its room/app/game, and stops on rejected updates. The Apply button is removed. Live map/rule sync is not included.
+
+Live verification on the installed host passed outbound team and spot changes with independent readback, detection of a separate native-setter change (simulating a game-side edit without UI automation), import acknowledgement without a loop, wrong-map suspension, and worker exit on pipe closure. Original Team 3 / spot 2 was restored. Protocol and offscreen UI tests passed. Actual manual-click interaction and two-PC native guest acceptance remain user validation items.

@@ -21,7 +21,7 @@ public static class NativePlacement
         for(int i=0;i<6;i++)writer.Write(0);
         writer.Write(map);writer.Write(new byte[512-map.Length]);return stream.ToArray();
     }
-    static string Extract()
+    internal static string Extract()
     {
         var folder=Path.Combine(Settings.Folder,"native",AppUpdates.VersionText);Directory.CreateDirectory(folder);
         foreach(var name in new[]{"Fellowship.NativeHost.exe","Fellowship.Native.v012a.dll"})
@@ -110,7 +110,7 @@ public static class NativePlacement
                 }
                 if(!wait)break;await Task.Delay(500);
             }
-            throw new IOException("No matching BFME2 LAN lobby became available. Open/create or join the lobby, then click Apply team & spot.");
+            throw new IOException("No matching BFME2 LAN lobby became available. Open/create or join the matching lobby.");
         }
         catch(Exception error){File.WriteAllText(LogPath,error.Message+"\nNo navigation was used. The native lobby remains open for manual correction.");return 1;}
     }
