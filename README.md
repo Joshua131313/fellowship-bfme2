@@ -4,7 +4,7 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Download and run `Fellowship-0.1.23-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Download and run `Fellowship-0.1.24-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
 New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher saves the selected map preference under the current Windows account. Rules are applied when the native LAN lobby opens. Open Multiplayer → Network → Create Game. Guest players open Network and join the host. Fellowship waits for the matching native lobby and applies each local player's selected team and spot through native LAN functions. With sync enabled, Fellowship prepares its helper before launching BFME2. Approve the Windows prompt before the game opens; the helper waits for the configured game and editable LAN lobby. This keeps the approval dialog out of graphics initialization. If opening the game manually, wait for “Sync ready” first. Teams and spots synchronize automatically in both directions. The host's map, resources, command-point multiplier, Custom Heroes and Ring Heroes also synchronize both ways. There is no Apply button.
 
@@ -20,7 +20,7 @@ Closing the browser hides it and keeps Fellowship connected. Closing a battle ro
 - Host map/rule selectors at creation and editing, installed-map catalog, dynamic executable detection, room preview, player info, and online/offline friend groups.
 - Live roster counts, four-second room refresh, and TCP keepalive for lost VPN connections.
 - Host-owned rooms, player limit, roster, room chat, and readiness.
-- Map/rule synchronization; changing settings clears guest readiness.
+- Map/rule synchronization; editing settings preserves Fellowship readiness.
 - Host launch requests invoke each ready player's locally selected executable. A peer never supplies executable paths or shell commands to another PC.
 - Individual launch/relaunch at any time. Exiting the game does not end the launcher room.
 - A guest can disconnect and rejoin a launched room without automatically starting their game.
@@ -70,7 +70,7 @@ Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release` for offscreen UI a
 
 ## Spot and team selection
 
-In a room, click an empty map circle to claim a starting spot, and choose your team. Click your own spot again or Clear my spot to release it. The host resolves conflicting claims; map changes clear spots, disconnects release them, and placement changes reset readiness. Use the same version on all PCs. An elevated local listener starts automatically when BFME2 is running and a Fellowship room is open. It waits for the matching native LAN setup lobby, applies the local player's choices, and monitors both directions about twice per second. Native edits update Fellowship; confirmed Fellowship edits call the native LAN setters. The Fellowship host must also be the BFME2 host: host map/rule edits use the native map setter and rule-commit callback, including normal readiness reset and LAN broadcast. Guests receive those settings through the host. It pauses outside the matching lobby and stops when the room, app, or game closes. The bridge rejects occupied spots, wrong maps/hosts, invalid choices, non-local slots, and unsupported game binaries. The listener uses a current-user-only local pipe, validates both process identities, and accepts only bounded lobby setting commands. A rejected selection pauses the listener rather than repeatedly overriding manual corrections. Reopen the Fellowship room to reconnect after a failure. On failure, the BFME2 lobby stays open for manual correction. Each guest still joins BFME2 manually.
+In a room, click an empty map circle to claim a starting spot, and choose your team. Click your own spot again or Clear my spot to release it. The host resolves conflicting claims; map changes clear spots, disconnects release them, and placement changes preserve Fellowship readiness. Use the same version on all PCs. An elevated local listener starts automatically when BFME2 is running and a Fellowship room is open. It waits for the matching native LAN setup lobby, applies the local player's choices, and monitors both directions about twice per second. Native edits update Fellowship; confirmed Fellowship edits call the native LAN setters. The Fellowship host must also be the BFME2 host: host map/rule edits use the native map setter and rule-commit callback, including normal readiness reset and LAN broadcast. Guests receive those settings through the host. It pauses outside the matching lobby and stops when the room, app, or game closes. The bridge rejects occupied spots, wrong maps/hosts, invalid choices, non-local slots, and unsupported game binaries. The listener uses a current-user-only local pipe, validates both process identities, and accepts only bounded lobby setting commands. An occupied spot is rejected without disconnecting sync or repeatedly overriding manual corrections. Conflicting native spots pause writes until corrected. Reopen the Fellowship room to reconnect after a failure. On failure, the BFME2 lobby stays open for manual correction. Each guest still joins BFME2 manually.
 
 ## Room host controls
 
@@ -78,10 +78,28 @@ The battle-room X and Leave button leave the room. A departing host hands it to 
 
 Version 0.1.9 fixes Windows update ZIP cleanup. If an older updater cannot complete installation, download 0.1.9 manually once. Each shipped change receives a new version and a published GitHub release; source-only pushes do not update installed apps.
 
-Build the installer after publishing to `dist/Fellowship-0.1.23`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
+Build the installer after publishing to `dist/Fellowship-0.1.24`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
 
 ### Troubleshooting startup while a room is open
 
 Settings → Live BFME2 synchronization can be switched off before launching. This keeps Fellowship rooms and chat connected without starting the game sync helper. While off, configure the native game manually. It can be re-enabled after the native LAN lobby opens. This isolates reported DirectX startup failures; it is not a confirmed graphics fix.
 
 Version 0.1.22 moves sync preparation ahead of game launch. Launch mine and Launch all wait for the authenticated helper to acknowledge readiness. A cancelled or failed preparation disables live sync rather than repeatedly showing permission prompts. The helper cannot launch games or arbitrary commands and exits when its room connection closes. Windows approval is still required; no persistent elevated service or UAC bypass is installed.
+
+
+### Lobby conflicts and saved selections
+
+Fellowship readiness stays unchanged when teams, spots, maps, rules, names or privacy are edited. BFME2 manages its own native readiness separately.
+
+| Situation | Behavior |
+| --- | --- |
+| Two Fellowship players claim one spot | The room host accepts the first valid claim and rejects the other. |
+| Native player or AI already occupies a spot | Fellowship keeps the local native spot and reports the conflict; it never moves that occupant. |
+| Players arrive from separate Fellowship rooms | Native occupancy is checked; BFME2 remains the final network authority. Detected duplicate native spots pause writes for manual correction. |
+| Native host or guest map does not match | Sync waits without applying placements. Only the matching native host can apply shared map/rules. |
+| Saved spot belongs to another map or no longer exists | Spot defaults to Random. Saved host placement is scoped to its saved map; there is no per-map preference library yet. |
+| Map changes | Fellowship clears spots, retaining teams and readiness. Stale requests for the previous map are rejected. |
+| Player joins BFME2 directly | BFME2 controls that player; occupied spots are respected, but they do not appear in Fellowship's roster or Launch all. |
+| Match begins or native state is unsafe | Sync pauses; the native lobby remains available for manual corrections. |
+
+Validation includes TCP concurrency tests, stale room snapshot rejection, readiness preservation, map-scoped preferences, native occupancy policies and lifecycle regression checks. Simultaneous claims from separate computers still need real multiplayer testing; these checks cannot guarantee that BFME2 never crashes.

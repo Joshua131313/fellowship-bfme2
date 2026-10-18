@@ -112,7 +112,7 @@ catch (InvalidOperationException) { Console.WriteLine("PASS unready launch block
 await guest.SetReady(true);
 await Until(() => host.Current!.Players.All(p => p.Ready), "ready state delivery");
 await host.UpdateRoom("Buckland", "1.00", "No custom heroes");
-await Until(() => guest.Current?.Map == "Buckland" && !guest.Current.Players.Single(p => p.Id != "host").Ready, "settings sync revokes readiness");
+await Until(() => guest.Current?.Map == "Buckland" && guest.Current.Players.Single(p => p.Id != "host").Ready, "settings changes preserve readiness");
 await guest.SetReady(true);
 await Until(() => host.Current!.Players.All(p => p.Ready), "renewed readiness");
 int launches = 0; guest.LaunchRequested += () => launches++;
@@ -147,6 +147,20 @@ try
         void Big(int value){var bytes=new byte[4];System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(bytes,value);writer.Write(bytes);}
         writer.Write(System.Text.Encoding.ASCII.GetBytes("BIGF"));Big(24+entry.Length+ini.Length);Big(1);Big(24+entry.Length);Big(24+entry.Length);Big(ini.Length);writer.Write(entry);writer.Write(ini);
     }
+    var savedSettings=Settings.InMemory();savedSettings.GamePath=Path.Combine(fixture,"lotrbfme2.exe");
+    using(var savedHost=new PeerService(savedSettings))
+    {
+        savedSettings.LastHostedSetup=new("Other","maps\\other.map",6,4000,200,false,false,3,2);
+        savedHost.Host(new(){MapPath=@"maps\test.map"});
+        if(savedHost.Current!.Players[0].Spot!=0||savedHost.Current.Players[0].Team!=3)throw new Exception("A saved spot from another map was restored");
+        savedSettings.LastHostedSetup=savedSettings.LastHostedSetup with{MapPath=@"maps\test.map",Spot=2};
+        savedHost.Host(new(){MapPath=@"maps\test.map"});
+        if(savedHost.Current!.Players[0].Spot!=2)throw new Exception("Valid same-map saved spot was lost");
+        savedSettings.LastHostedSetup=savedSettings.LastHostedSetup with{Spot=8};
+        savedHost.Host(new(){MapPath=@"maps\test.map"});
+        if(savedHost.Current!.Players[0].Spot!=0)throw new Exception("Invalid saved spot was restored");
+        Console.WriteLine("PASS saved spots are map-specific and validated against current map metadata");
+    }
     using var placementHost=new PeerService(new(){Name="Placement host",GamePath=Path.Combine(fixture,"lotrbfme2.exe")});
     using var first=new PeerService(new(){Name="First"});using var second=new PeerService(new(){Name="Second"});
     placementHost.Start("127.0.0.10");placementHost.Host(new(){Map="Test",MapPath=@"maps\test.map"});
@@ -161,17 +175,23 @@ try
     await Until(()=>first.Current!.Players.Any(p=>p.Spot==2&&p.Team==2),"spot and team broadcast");
     await first.SetReady(true);await second.SetReady(true);await Until(()=>placementHost.Current!.Players.All(p=>p.Ready),"placement players ready");
     await winner.SelectPlacement(team:2);
-    await Until(()=>placementHost.Current!.Players.Where(p=>p.Id!="host").All(p=>!p.Ready),"placement changes revoke readiness");
+    await Until(()=>placementHost.Current!.Players.All(p=>p.Ready),"team changes preserve everyone’s readiness");
     try{await loser.SelectPlacement(8);throw new Exception("Invalid map spot accepted");}catch(InvalidOperationException){}
     try{await loser.SelectPlacement(team:5);throw new Exception("Invalid team accepted");}catch(InvalidOperationException){}
     await loser.SelectPlacement(team:4);
     if(placementHost.Current!.Players.Single(p=>p.Id==loser.LocalId).Team!=4)throw new Exception("Team 4 rejected");
     await winner.SelectPlacement(0);await loser.SelectPlacement(1);
+    if(placementHost.Current!.Players.Any(p=>!p.Ready))throw new Exception("Spot changes reset readiness");
+    var oldMap=placementHost.Current.MapPath;
+    try{await winner.SelectPlacement(2,expectedMap:"maps\\stale.map");throw new Exception("Stale-map selection accepted");}catch(InvalidOperationException){}
+    if(placementHost.Current.Players.Single(p=>p.Id==winner.LocalId).Spot!=0)throw new Exception("Rejected stale request mutated placement");
+    Console.WriteLine("PASS spot edits preserve readiness; stale-map imports are rejected without mutation");
     if(placementHost.Current!.Players.Single(p=>p.Id==loser.LocalId).Spot!=1)throw new Exception("Released spot unavailable");
     loser.Leave();await Until(()=>placementHost.Current!.Players.Count==2,"disconnect releases claimed spot");
     await winner.SelectPlacement(1);
     await placementHost.EditRoom(new(){Map="Other",MapPath=@"maps\other.map"});
     await Until(()=>winner.Current?.Spots.Count==0&&winner.Current.Players.All(p=>p.Spot==0),"map changes clear spots and retain teams");
+    if(placementHost.Current!.Players.Any(p=>!p.Ready))throw new Exception("Map edit reset readiness");
     if(winner.Current!.Players.Single(p=>p.Id==winner.LocalId).Team!=2)throw new Exception("Map change lost team");
     Console.WriteLine("PASS invalid selections rejected, releases, disconnect and map changes");
 }
@@ -208,5 +228,8 @@ using(var noListener=new PeerService(new(){Name="Needs listener"}))
     if(!readyHost.IsHost||readyHost.Current?.Players.Count!=2)throw new Exception("Failed preflight discarded room");
     Console.WriteLine("PASS failed handoff preflight preserves existing room");
 }
+var latest=new Room{Id="ordered",Revision=10};
+if(Room.AcceptsUpdate(latest,new(){Id="ordered",Revision=9})||!Room.AcceptsUpdate(latest,new(){Id="ordered",Revision=11})||!Room.AcceptsUpdate(latest,new(){Id="new-room",Revision=0}))throw new Exception("Room revision guard failed");
+Console.WriteLine("PASS stale room snapshots cannot overwrite newer selections");
 Console.WriteLine("ALL PROTOCOL CHECKS PASSED");
 

@@ -8,15 +8,15 @@ public sealed class RoomEditor : Window
     public Room? Result { get; private set; }
     public RoomEditor(Window owner,Settings settings,Room initial)
     {
-        Owner=owner;var body=UI.Shell(this,"Create room",620,510);WindowStartupLocation=WindowStartupLocation.CenterOwner;
+        Owner=owner;var body=UI.Shell(this,"Create room",620,478);WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var work=SystemParameters.WorkArea;
-        Width=Math.Min(620,work.Width);Height=Math.Min(510,work.Height);
+        Width=Math.Min(620,work.Width);Height=Math.Min(478,work.Height);
         MinWidth=Width;MinHeight=Height;
         // Keep the entire form visible on smaller/high-DPI desktops as well.
-        var panel=new Grid{Width=576,Height=416};
+        var panel=new Grid{Width=576,Height=384};
         body.Children.Add(new Viewbox{Margin=new(20),Stretch=Stretch.Uniform,StretchDirection=StretchDirection.DownOnly,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Top,Child=panel});
-        foreach(double height in new[]{48d,232,38,48,50})panel.RowDefinitions.Add(new(){Height=new(height)});
-        var heading=UI.Stack(UI.Text("Create a room",21,"#F1F3F8",true),UI.Text("Choose a map and set the rules for your next match.",11,UI.Muted));
+        foreach(double height in new[]{48d,232,38,16,50})panel.RowDefinitions.Add(new(){Height=new(height)});
+        var heading=UI.Text("Create a room",21,"#F1F3F8",true);
         panel.Children.Add(heading);
         var setup=new Grid();setup.ColumnDefinitions.Add(new(){Width=new(368)});setup.ColumnDefinitions.Add(new(){Width=new(20)});setup.ColumnDefinitions.Add(new(){Width=new(188)});Grid.SetRow(setup,1);panel.Children.Add(setup);
         var form=new Grid();for(int i=0;i<4;i++)form.RowDefinitions.Add(new(){Height=new(58)});setup.Children.Add(form);
@@ -30,7 +30,7 @@ public sealed class RoomEditor : Window
             var pair=new Grid();pair.ColumnDefinitions.Add(new());pair.ColumnDefinitions.Add(new(){Width=new(12)});pair.ColumnDefinitions.Add(new());Grid.SetRow(pair,row);form.Children.Add(pair);return pair;
         }
         var nameField=Field(form,"ROOM NAME");Grid.SetRow(nameField,0);
-        var name=new TextBox{Text=initial.Title,MaxLength=80,Height=34,FontSize=12,Padding=new(9,5,9,5)};nameField.Children.Add(name);
+        var name=new TextBox{Text=initial.Title,MaxLength=80,Height=34,FontSize=12,Padding=new(9,4,9,4),AcceptsReturn=false,TextWrapping=TextWrapping.NoWrap,VerticalScrollBarVisibility=ScrollBarVisibility.Hidden,HorizontalScrollBarVisibility=ScrollBarVisibility.Hidden};nameField.Children.Add(name);
         System.Windows.Automation.AutomationProperties.SetName(name,"Room name");
         ComboBox Choice(Panel parent,string title,object[] values,object selected,int column=0,bool searchable=false)
         {
@@ -54,15 +54,14 @@ public sealed class RoomEditor : Window
         var privacy=Choice(options,"VISIBILITY",new object[]{"Public on VPN","Friends only"},initial.FriendsOnly?"Friends only":"Public on VPN",2);
         var preview=new MapPreview{PreviewHeight=166,Padding=new(6),Margin=new(0,5,0,8)};
         var mapName=UI.Text("",12,"#EDF1F8",true);
-        var previewPanel=UI.Stack(UI.Text("MAP PREVIEW",9,UI.Muted,true),preview,mapName,UI.Text("BFME2 1.00 · Radmin VPN",10,UI.Muted));
+        var previewPanel=UI.Stack(UI.Text("MAP PREVIEW",9,UI.Muted,true),preview,mapName);
         Grid.SetColumn(previewPanel,2);setup.Children.Add(previewPanel);
         void UpdatePreview(){if(map.SelectedItem is GameMap selected){preview.ShowMap(settings.GamePath,selected.Path);mapName.Text=selected.Name;map.ToolTip=selected.Name;}}
         map.SelectionChanged+=(_,_)=>UpdatePreview();UpdatePreview();
         var custom=new CheckBox{Content="Custom Heroes",IsChecked=initial.Match.CustomHeroes,FontSize=12,Margin=new(0,0,26,0)};
         var ring=new CheckBox{Content="Ring Heroes",IsChecked=initial.Match.RingHeroes,FontSize=12};
         var heroes=UI.Row(custom,ring);Grid.SetRow(heroes,2);panel.Children.Add(heroes);
-        var hint=UI.Text("",11,UI.Muted);hint.Margin=new(0,4,0,12);Grid.SetRow(hint,3);panel.Children.Add(hint);
-        void UpdateVisibility()=>hint.Text=privacy.SelectedIndex==1?"Only players saved in your friends list can see and join this room.":"Everyone connected to your VPN can see and join this room.";
+        void UpdateVisibility()=>privacy.ToolTip=privacy.SelectedIndex==1?"Only your saved friends can see and join.":"Everyone on your VPN can see and join.";
         privacy.SelectionChanged+=(_,_)=>UpdateVisibility();UpdateVisibility();
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
         var cancel=UI.Button("Cancel",()=>DialogResult=false);cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);

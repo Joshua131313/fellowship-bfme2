@@ -94,7 +94,7 @@ public sealed class NativeLobby : IDisposable
             uint slot=U(lobby+0x18+4*row);
             Require(slot==lobby+0xb0+0x1d0*row);
             int state=I(slot+4),spot=I(slot+0x10),team=I(slot+0x1c);
-            Require(state is >=0 and <=6&&spot is >=-1 and <=8&&team is >=-1 and <=3);
+            Require(state is >=0 and <=6&&spot is >=-1 and <=7&&team is >=-1 and <=3);
             var address=read(slot+0x38,6);
             bool isLocal=state==6&&address.Take(4).SequenceEqual(local.Take(4))&&
                 (BitConverter.ToUInt16(address,4)==BitConverter.ToUInt16(local,4)||

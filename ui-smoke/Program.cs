@@ -93,6 +93,18 @@ class Program
   _=LaunchContext.IsElevated(Environment.ProcessId);
   Console.WriteLine("PASS direct game launch, conditional helper elevation and process token query");
   var nativeSnapshot=new NativeLobby.Snapshot(123,"maps\\test.map","127.0.0.1",[new NativeLobby.Slot(0,6,1,2,true)]);
+  var outsiderLobby=new NativeLobby.Snapshot(123,"maps\\test.map","26.1.2.3",[
+    new(0,6,0,0,false),new(1,6,1,0,true),new(2,3,2,1,false)]);
+  var guestCommand=new LivePlacement.Command("room","maps\\test.map","26.1.2.3",new(4,1));
+  if(!LivePlacement.MatchesLobby(guestCommand,outsiderLobby)||LivePlacement.MatchesLobby(guestCommand with{Host="26.9.9.9"},outsiderLobby)||LivePlacement.MatchesLobby(guestCommand with{Map="maps\\other.map"},outsiderLobby))throw new Exception("Wrong host/map lobby was eligible");
+  if(LivePlacement.MatchesLobby(guestCommand with{Setup=new("maps\\test.map",4000,200,false,false)},outsiderLobby))throw new Exception("Native guest allowed shared host-rule writes");
+  if(LivePlacement.ResolveOccupiedSpot(outsiderLobby,new(4,1))!=new LivePlacement.Choice(4,2)||LivePlacement.ResolveOccupiedSpot(outsiderLobby,new(4,3))!=new LivePlacement.Choice(4,2))throw new Exception("External player or AI spot would be overwritten");
+  if(LivePlacement.ResolveOccupiedSpot(outsiderLobby,new(4,4))!=new LivePlacement.Choice(4,4)||LivePlacement.ResolveOccupiedSpot(outsiderLobby,new(4,0))!=new LivePlacement.Choice(4,0))throw new Exception("Free/random spot rejected");
+  var duplicates=outsiderLobby with{Slots=[new(0,6,0,0,false),new(1,6,0,0,true)]};
+  if(!LivePlacement.HasDuplicateSpots(duplicates)||LivePlacement.HasDuplicateSpots(outsiderLobby))throw new Exception("Native duplicate spot detection failed");
+  var rejected=new LivePlacement.Reconciler();rejected.Remember(new(4,1),new(4,2));
+  if(rejected.ShouldWrite(new(4,1))||!rejected.ShouldWrite(new(4,4)))throw new Exception("Rejected spot retries without a new user choice");
+  Console.WriteLine("PASS native external-player/AI collisions, duplicate slots, wrong host/map, host-role checks and rejected-choice retry suppression");
   var command=NativePlacement.RequestBytes(1234,nativeSnapshot,4,1);
   if(command.Length!=1100||BitConverter.ToInt32(command,4)!=2||BitConverter.ToInt32(command,20)!=3||BitConverter.ToInt32(command,24)!=0||BitConverter.ToInt32(command,28)!=0||System.Text.Encoding.ASCII.GetString(command,56,13)!="maps\\test.map")throw new Exception("Native placement ABI mismatch");
   var setupBytes=NativePlacement.SetupRequestBytes(1234,nativeSnapshot,new("maps\\test.map",4000,200,false,true));
@@ -108,12 +120,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.24-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.24/Fellowship-0.1.24-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.24",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.25-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.25/Fellowship-0.1.25-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.25",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.24","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.24",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.25","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.25",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}

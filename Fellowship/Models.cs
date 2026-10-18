@@ -46,6 +46,8 @@ public sealed record MapSpot(int Number,double X,double Y);
 public sealed class Room
 {
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
+    public long Revision { get; set; }
+    public static bool AcceptsUpdate(Room? current,Room? incoming)=>current==null||incoming==null||current.Id!=incoming.Id||incoming.Revision>=current.Revision;
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Title { get; set; } = "Middle-earth gathering";
     public string Host { get; set; } = "";

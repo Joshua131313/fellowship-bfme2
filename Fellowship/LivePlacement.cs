@@ -63,7 +63,7 @@ public static class LivePlacement
         return JsonSerializer.Deserialize<T>(bytes)??throw new IOException("Missing sync message.");
     }
     static string SessionLog(string name)=>Path.Combine(Settings.Folder,"native-sync-"+Guid.ParseExact(name["Fellowship.Sync.".Length..],"N").ToString("N")+".log");
-    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null)
+    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,string,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null)
     {
         string name="Fellowship.Sync."+Guid.NewGuid().ToString("N");
         using var pipe=new NamedPipeServerStream(name,PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous|PipeOptions.CurrentUserOnly);
@@ -94,7 +94,11 @@ public static class LivePlacement
             {
                 status(reply.Status);
                 if(reply.ImportSetup&&reply.Setup is {} setup)await importSetup(setup);
-                if(reply.Import&&reply.Observed is {} choice)await import(choice);
+                if(reply.Import&&reply.Observed is {} choice)
+                {
+                    try{await import(choice,command.Map);}
+                    catch(InvalidOperationException error){status("Selection conflict: "+error.Message+" Choose a free spot; live sync remains connected.");}
+                }
             }
             await Task.Delay(400,token);
         }
@@ -132,7 +136,7 @@ public static class LivePlacement
             using var game=Process.GetProcessById(gamePid);
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
-            int generation=0;string? lastTrace=null;string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
+            int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
             {
@@ -167,14 +171,20 @@ public static class LivePlacement
                 try
                 {
                 Reply reply;
-                if(!editable||snapshot==null||snapshot.HostAddress!=command.Host||command.Setup==null&&!snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase))
+                if(!editable||snapshot==null||!MatchesLobby(command,snapshot))
                 {
                     reply=new("Waiting for the matching BFME2 LAN setup lobby…");
                 }
                 else
                 {
-                    string nextContext=$"{snapshot.Identity}|{snapshot.HostAddress}";
-                    if(context!=nextContext){context=nextContext;reconcile=new();desiredSetup=observedSetup=null;}
+                    if(HasDuplicateSpots(snapshot))
+                    {
+                        await Send(pipe,new Reply("BFME2 has conflicting starting spots. Resolve them in the native lobby; sync is paused."),timeout.Token);
+                        continue;
+                    }
+                    string nextContext=$"{snapshot.Identity}|{snapshot.HostAddress}|{snapshot.Local.Row}";
+                    if(context!=nextContext){context=nextContext;reconcile=new();desiredSetup=observedSetup=null;placementNotice=null;}
+                    if(placementMap!=snapshot.Map){placementMap=snapshot.Map;reconcile=new();placementNotice=null;}
                     if(command.Setup is {} requestedSetup)
                     {
                         if(snapshot.Local.Row!=0)throw new IOException("Fellowship's host must also host the BFME2 lobby to sync map and rules.");
@@ -204,25 +214,34 @@ public static class LivePlacement
                     var actual=new Choice(snapshot.Local.Team+1,snapshot.Local.Spot+1);
                     if(reconcile.ShouldWrite(command.Choice))
                     {
-                        if(actual!=command.Choice)
+                        placementNotice=null;
+                        var desired=ResolveOccupiedSpot(snapshot,command.Choice);
+                        if(desired!=command.Choice)placementNotice="That spot is occupied in BFME2. Your native spot was kept; choose another spot.";
+                        if(actual!=desired)
                         {
-                                await Execute(host,gamePid,snapshot,NativePlacement.RequestBytes(gamePid,snapshot,command.Choice.Team,command.Choice.Spot),2,timeout.Token);
+                                try{await Execute(host,gamePid,snapshot,NativePlacement.RequestBytes(gamePid,snapshot,desired.Team,desired.Spot),2,timeout.Token);}
+                                catch(PlacementRejectedException error){placementNotice=error.Message;}
                                 var confirmed=ReadAfterWrite(reader);
                                 if(confirmed==null||confirmed.Identity!=snapshot.Identity)throw new NativeTransitionException();
+                                if(!confirmed.Map.Equals(snapshot.Map,StringComparison.OrdinalIgnoreCase)||confirmed.Local.Row!=snapshot.Local.Row||HasDuplicateSpots(confirmed))throw new NativeRefreshException();
                                 actual=new(confirmed.Local.Team+1,confirmed.Local.Spot+1);
                         }
                         reconcile.Remember(command.Choice,actual);
-                        bool correction=actual!=command.Choice;if(correction)reconcile.Imported(actual);
-                        reply=new(command.Setup==null?"Live team & spot sync connected":"Live map, rules, team & spot sync connected",actual,correction);
+                        bool correction=actual!=command.Choice;
+                        reply=new(placementNotice??(command.Setup==null?"Live team & spot sync connected":"Live map, rules, team & spot sync connected"),actual,correction);
                     }
                     else
                     {
                         bool changed=reconcile.Changed(actual);
                         if(changed)reconcile.Imported(actual);else reconcile.Remember(command.Choice,actual);
-                        reply=new(command.Setup==null?"Live team & spot sync connected":"Live map, rules, team & spot sync connected",actual,changed);
+                        reply=new(placementNotice??(command.Setup==null?"Live team & spot sync connected":"Live map, rules, team & spot sync connected"),actual,changed);
                     }
                 }
                 await Send(pipe,reply,timeout.Token);
+                }
+                catch(NativeRefreshException)
+                {
+                    await Send(pipe,new Reply("Native map or player changed. Waiting for a matching lobby…"),timeout.Token);
                 }
                 catch(NativeTransitionException)
                 {
@@ -253,6 +272,16 @@ public static class LivePlacement
         }
         return 0;
     }
+    public static bool MatchesLobby(Command command,NativeLobby.Snapshot snapshot)=>
+        snapshot.HostAddress==command.Host&&(command.Setup!=null&&snapshot.Local.Row==0||
+        command.Setup==null&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
+    public static bool HasDuplicateSpots(NativeLobby.Snapshot snapshot)=>snapshot.Slots
+        .Where(s=>s.State>1&&s.Spot>=0).GroupBy(s=>s.Spot).Any(g=>g.Count()>1);
+    public static Choice ResolveOccupiedSpot(NativeLobby.Snapshot snapshot,Choice desired)=>
+        desired.Spot>0&&snapshot.Slots.Any(s=>!s.Local&&s.State>1&&s.Spot==desired.Spot-1)
+            ?desired with{Spot=snapshot.Local.Spot+1}:desired;
+    sealed class PlacementRejectedException(string message) : IOException(message) { }
+    sealed class NativeRefreshException : IOException { }
     sealed class NativeTransitionException : IOException { }
     static NativeLobby.Snapshot? ReadAfterWrite(NativeLobby reader)
     {
@@ -267,6 +296,8 @@ public static class LivePlacement
             using var bridge=Process.Start(launch)??throw new IOException("Could not start native bridge.");
             await bridge.WaitForExitAsync(token);int code=BitConverter.ToInt32(File.ReadAllBytes(request),32);
             if(code is -3 or -4 or -6)throw new NativeTransitionException();
+            if(code is -7 or -8)throw new NativeRefreshException();
+            if(code is -9 or -10)throw new PlacementRejectedException(NativePlacement.Describe(code));
             if(bridge.ExitCode!=0||code!=expected)throw new IOException(NativePlacement.Describe(code));
             await Task.Delay(300,token);
         }

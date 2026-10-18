@@ -204,7 +204,7 @@ public sealed partial class PeerService : IDisposable
                 }
                 if(msg.Type=="kicked")
                 {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
-                if (msg.Type == "room") { Current = msg.Room;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
+                if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room)) { Current = msg.Room;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
                 if (msg.Type == "chat") Chat?.Invoke(msg.Text);
                 if (msg.Type == "launch") LaunchRequested?.Invoke();
@@ -248,18 +248,19 @@ public sealed partial class PeerService : IDisposable
             if(spot>0&&Current.Players.Any(p=>p.Id!=id&&p.Spot==spot))throw new InvalidOperationException("Another player has claimed this spot. Choose another.");
             if((!spot.HasValue||spot==player.Spot)&&(!team.HasValue||team==player.Team))return;
             if(spot.HasValue)player.Spot=spot.Value;if(team.HasValue)player.Team=team.Value;
-            foreach(var p in Current.Players)p.Ready=p.Id=="host";
+
         }
     }
-    public async Task SelectPlacement(int? spot=null,int? team=null)
+    public async Task SelectPlacement(int? spot=null,int? team=null,string? expectedMap=null)
     {
         var room=Current??throw new InvalidOperationException("Join a room first.");
-        if(IsHost){ApplyPlacement("host",room.MapPath,spot,team);await BroadcastState();return;}
+        var mapPath=expectedMap??room.MapPath;
+        if(IsHost){ApplyPlacement("host",mapPath,spot,team);await BroadcastState();return;}
         var connection=upstream??throw new InvalidOperationException("Disconnected from host.");
         var id=Guid.NewGuid().ToString("N");var completion=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);placementRequests[id]=completion;
         try
         {
-            await connection.Send(new(){Type="placement",RequestId=id,MapPath=room.MapPath,Spot=spot,Team=team});
+            await connection.Send(new(){Type="placement",RequestId=id,MapPath=mapPath,Spot=spot,Team=team});
             string failure=await completion.Task.WaitAsync(TimeSpan.FromSeconds(5));
             if(failure.Length>0)throw new InvalidOperationException(failure);
         }
@@ -278,7 +279,7 @@ public sealed partial class PeerService : IDisposable
             if (!IsHost || Current == null) return;
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             Current.Map = Clean(map, 100); Current.Patch = Clean(patch, 40); Current.Rules = Clean(rules, 1000);
-            foreach (var p in Current.Players) p.Ready = p.Id == "host";
+
         }
         await BroadcastState();
     }
@@ -299,7 +300,7 @@ public sealed partial class PeerService : IDisposable
             }
             Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
             Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
-            foreach(var p in Current.Players) p.Ready=p.Id=="host";
+
             foreach(var p in Current.Players.Where(p=>p.Id!="host"&&!CanSee(p.Address)).ToArray())
                 if(guests.TryGetValue(p.Id,out var c))c.Dispose();
         }
@@ -332,7 +333,11 @@ public sealed partial class PeerService : IDisposable
     async Task BroadcastState()
     {
         Room? snapshot;
-        lock (gate) snapshot = Current == null ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
+        lock (gate)
+        {
+            if(Current!=null)Current.Revision++;
+            snapshot = Current == null ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
+        }
         Changed?.Invoke();
         await Broadcast(new() { Type = "room", Room = snapshot });
     }
