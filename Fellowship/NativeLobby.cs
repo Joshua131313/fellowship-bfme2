@@ -42,7 +42,19 @@ public sealed class NativeLobby : IDisposable
         return data;
     }
     public Snapshot? Current() => Decode(Read,imageBase);
-    public bool SetupClosed()=>BitConverter.ToUInt32(Read(imageBase+0xdfe1f4-0x400000,4))==0;
+    public bool SetupClosed()=>DecodeClosed(Read,imageBase);
+    public static bool DecodeClosed(Func<long,int,byte[]> read,long imageBase)
+    {
+        long Address(int va)=>imageBase+va-0x400000;
+        uint U(long a)=>BitConverter.ToUInt32(read(a,4));
+        if(U(Address(0xdfe1f4))==0)return true;
+        // BFME2 may keep its setup UI allocated while no LAN room is active.
+        uint network=U(Address(0xdf9800));if(network==0)return true;
+        if(U(network)!=Address(0xc3afb8))return false;
+        uint lobby=U(network+0x44);if(lobby==0)return true;
+        if(U(lobby)!=Address(0xc3ae60))return false;
+        return read(lobby+0x10,1)[0]==0;
+    }
     public bool Starting()
     {
         uint setup=BitConverter.ToUInt32(Read(imageBase+0xdfe1f4-0x400000,4));

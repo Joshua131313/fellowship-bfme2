@@ -13,6 +13,20 @@ class Program
   {LiveProbe.Connection(args[1],int.Parse(args[2]),args[3],args[4]).GetAwaiter().GetResult();return;}
   if(args.Length==4&&args[0]=="--live-probe")
   {LiveProbe.Run(args[1],int.Parse(args[2]),args[3]).GetAwaiter().GetResult();return;}
+  var nativeMemory=new Dictionary<long,byte[]>();
+  void Put(long address,uint value)=>nativeMemory[address]=BitConverter.GetBytes(value);
+  byte[] ReadMemory(long address,int size)=>nativeMemory[address].Take(size).ToArray();
+  Put(0xdfe1f4,0x1000);Put(0xdf9800,0x2000);Put(0x2000,0xc3afb8);Put(0x2044,0x3000);Put(0x3000,0xc3ae60);Put(0x3010,0);
+  if(!NativeLobby.DecodeClosed(ReadMemory,0x400000))throw new Exception("Inactive LAN room with retained setup UI was not closed");
+  Put(0x3010,1);
+  if(NativeLobby.DecodeClosed(ReadMemory,0x400000))throw new Exception("Active LAN room treated as closed");
+  Put(0x3000,0);Put(0x3010,0);
+  if(NativeLobby.DecodeClosed(ReadMemory,0x400000))throw new Exception("Unknown native object treated as closed");
+  Put(0x2044,0);
+  if(!NativeLobby.DecodeClosed(ReadMemory,0x400000))throw new Exception("Recorded room-null transition with retained setup was not recognized");
+  Put(0xdfe1f4,0);
+  if(!NativeLobby.DecodeClosed(ReadMemory,0x400000))throw new Exception("Destroyed setup not recognized");
+  Console.WriteLine("PASS native room teardown with retained UI, active-room rejection and unknown-pointer rejection");
   var guard=new LivePlacement.SessionGuard();
   bool Stable(uint id){bool result=false;for(int i=0;i<5;i++)result=guard.Observe(id,false);return result;}
   if(guard.Observe(null,false)||guard.Stopped||!Stable(123))throw new Exception("Initial stability gate failed");
@@ -81,12 +95,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.18-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.18/Fellowship-0.1.18-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.18",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.19-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.19/Fellowship-0.1.19-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.19",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.18","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.18",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.19","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.19",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}

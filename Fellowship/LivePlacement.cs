@@ -14,7 +14,7 @@ public static class LivePlacement
     public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null);
     public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
     // A countdown or missing snapshot suspends writes. Only a confirmed destroyed
-    // setup followed by a stable new lobby can resume them (addresses may be reused).
+    // or inactive room followed by a stable new lobby can resume writes.
     public sealed class SessionGuard
     {
         uint? identity,candidate; int stable,absentSamples; bool departed;
@@ -112,7 +112,7 @@ public static class LivePlacement
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
-            int generation=0;string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
+            int generation=0;string? lastTrace=null;string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
             {
@@ -129,6 +129,12 @@ public static class LivePlacement
                 }
                 catch(IOException){ /* A raced read is not proof that the setup was destroyed. */ }
                 bool editable=session.Observe(snapshot?.Identity,starting,closed);
+                string trace=$"closed={closed} starting={starting} lobby={snapshot?.Identity} paused={session.Stopped} generation={session.Generation} desiredTeam={command.Choice.Team} desiredSpot={command.Choice.Spot}";
+                if(trace!=lastTrace)
+                {
+                    if(new FileInfo(log).Exists&&new FileInfo(log).Length>262144)File.WriteAllText(log,"");
+                    File.AppendAllText(log,$"{DateTime.UtcNow:O} {trace}\n");lastTrace=trace;
+                }
                 if(session.Stopped)
                 {
                     await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…"),timeout.Token);
