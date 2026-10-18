@@ -115,8 +115,8 @@ public sealed class BrowserWindow : Window
     readonly HashSet<string> discoveredAddresses=[];
     public PeerDirectory Presence { get; }=new();
     readonly StackPanel activePlayers=new();
-    readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Margin=new(0,0,0,10),MaxLength=80};
-    readonly Button playersButton=new(){Content="Active players: 1",Padding=new(12,7,12,7),Margin=new(22,0,0,12),HorizontalAlignment=HorizontalAlignment.Left};
+    readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Height=34,Padding=new(10,5,10,5),Margin=new(0,0,0,10),MaxLength=80};
+    readonly Button playersButton=new(){Content="Active players: 1",Padding=new(12,7,12,7),Margin=new(12,0,0,0),HorizontalAlignment=HorizontalAlignment.Left};
     readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Top};
     public BrowserWindow(Settings? settings=null)
     {
@@ -124,7 +124,7 @@ public sealed class BrowserWindow : Window
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
         var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
-        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto,UI.Auto);
+        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         var headings = UI.Stack(UI.Text("Game rooms",25,"#F3F4F8",true), UI.Text("A good game starts with good company.",12,UI.Muted)); headings.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0)); toolbar.Children.Add(headings);
         var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,0);
@@ -141,10 +141,9 @@ public sealed class BrowserWindow : Window
         var tableCard = UI.Card(table,"#171A20",0); tableCard.Margin = new(22,0,22,0); UI.At(body,tableCard,2);
         var footer = new Grid { Margin = new(22,14,14,18) }; footer.ColumnDefinitions.Add(new()); footer.ColumnDefinitions.Add(new() { Width = UI.Auto });
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
-        count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
+        count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.27   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
-        UI.At(body,playersButton,4);
+        var hint = UI.Text("v0.1.28   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
