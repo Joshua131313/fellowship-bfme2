@@ -8,7 +8,7 @@ using Microsoft.Win32.SafeHandles;
 namespace Fellowship;
 
 // Read-only adapter for the exact BFME2 1.00 binary validated by HostPreset.
-// Selection changes must go through the game's UI so its LAN messages are sent.
+// Selection changes use the native LAN setters through NativePlacement.
 public sealed class NativeLobby : IDisposable
 {
     public sealed record Slot(int Row,int State,int Spot,int Team,bool Local);

@@ -18,6 +18,11 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if(e.Args.Length is 5 or 6&&(e.Args[0] is "--native-apply" or "--native-wait")&&int.TryParse(e.Args[4],out var placementParent))
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            Shutdown(await NativePlacement.Run(e.Args[1],e.Args[2],e.Args[3],e.Args[0]=="--native-wait",placementParent,e.Args.Length==6?e.Args[5]:null));return;
+        }
         if(e.Args.Length==3&&e.Args[0]=="--install-update"&&int.TryParse(e.Args[2],out var updatePid))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;

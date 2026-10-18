@@ -4,9 +4,9 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Download and run `Fellowship-0.1.11-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Download and run `Fellowship-0.1.12-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
-New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher applies the native Rhûn preference and session-only rule defaults. Open Multiplayer → Network → Create Game, then assign three players to each team. Guest players open Network and join the host. Map and rule selections also apply through the verified host preset helper; team assignment remains manual.
+New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher applies the native Rhûn preference and session-only rule defaults. Open Multiplayer → Network → Create Game. Guest players open Network and join the host. Fellowship waits for the matching native lobby and applies each local player's selected team and spot through native LAN functions. Approve the helper prompt. Changes made later can be sent with **Apply team & spot**.
 
 Closing the browser hides it and keeps Fellowship connected. Closing a battle room leaves it. Use the tray icon to reopen Rooms, Friends, or the current room. Use **Leave** to leave a room, and **Quit Fellowship** in the tray menu to exit completely. Windows may initially place the icon in the hidden-icons area.
 
@@ -39,11 +39,11 @@ Closing the browser hides it and keeps Fellowship connected. Closing a battle ro
 
 ## Native game integration
 
-Cursor navigation was removed in 0.1.11. Map and rule presets still use game data, but players must open/join the native LAN lobby and set teams/spots themselves. Fellowship selections are shared preferences until the direct native setters are safely integrated and tested.
+Cursor navigation was removed in 0.1.11. Map and rule presets use game data. Version 0.1.12 also calls BFME2's native LAN team/spot setters on its game thread, then reads back the result. Players still open/join the native LAN lobby themselves. No cursor, key presses, or menu navigation are used. Direct host assignment was verified live; cross-PC native guest synchronization still requires a two-computer test.
 
 ## Development
 
-Requires .NET 9 SDK with Windows desktop targeting support.
+Requires .NET 9 SDK with Windows desktop targeting support, Visual Studio C++ x86 tools and Windows SDK libraries. The native bridge builds automatically before the WPF project; it has no external runtime dependency.
 
 ```powershell
 dotnet build Fellowship/Fellowship.csproj -c Release
@@ -68,7 +68,7 @@ Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release` for offscreen UI a
 
 ## Spot and team selection
 
-In a room, click an empty map circle to claim a starting spot, and choose your team. Click your own spot again or Clear my spot to release it. The host resolves conflicting claims; map changes clear spots, disconnects release them, and placement changes reset readiness. Use the same version on all PCs. These are Fellowship lobby preferences only: guests must still join BFME2 manually and players must apply spots/teams in its lobby. Next integration stages are guest auto-joining, then automatic spot/team assignment with manual recovery.
+In a room, click an empty map circle to claim a starting spot, and choose your team. Click your own spot again or Clear my spot to release it. The host resolves conflicting claims; map changes clear spots, disconnects release them, and placement changes reset readiness. Use the same version on all PCs. Launch waits up to five minutes for a matching native LAN lobby, then applies the local player's choices. Later edits require **Apply team & spot**. The bridge rejects occupied spots, wrong maps/hosts, invalid choices, non-local slots, and unsupported game binaries. Closing Fellowship or changing its room/choices cancels a pending operation. On failure, the BFME2 lobby stays open for manual correction. Each guest still joins BFME2 manually.
 
 ## Room host controls
 
@@ -76,4 +76,4 @@ The battle-room X and Leave button leave the room. A departing host hands it to 
 
 Version 0.1.9 fixes Windows update ZIP cleanup. If an older updater cannot complete installation, download 0.1.9 manually once. Each shipped change receives a new version and a published GitHub release; source-only pushes do not update installed apps.
 
-Build the installer after publishing to `dist/Fellowship-0.1.11`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
+Build the installer after publishing to `dist/Fellowship-0.1.12`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.

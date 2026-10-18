@@ -137,7 +137,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.11   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.12   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -340,7 +340,7 @@ public sealed class RoomWindow : Window
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);var placementHint=UI.Text("Click an empty spot to claim it. Colored spots are claimed. These choices are shared in Fellowship. Set the same team and spot manually in BFME2 until direct integration is verified.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        right.Children.Add(placementStatus);var placementHint=UI.Text("Click an empty spot to claim it. Colored spots are claimed. These choices are shared in Fellowship. Launch waits for the native lobby, then applies these choices through game data. Use Apply team & spot after later changes.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -364,14 +364,14 @@ public sealed class RoomWindow : Window
         var privacyLabel=UI.Text("VISIBILITY",10,UI.Muted,true);privacyLabel.Margin=new(0,16,0,8);customSetup.Children.Add(privacyLabel);
         customSetup.Children.Add(privacyChoice);var confirmPrivacy=UI.AsyncButton("Confirm privacy",()=>SaveRoomDetails(true));confirmPrivacy.Margin=new(0,10,0,0);confirmPrivacy.HorizontalAlignment=HorizontalAlignment.Stretch;customSetup.Children.Add(confirmPrivacy);
         right.Children.Add(customSetup);
-        var guide=UI.Stack(UI.Text("IN BFME2",10,UI.Muted,true),UI.Text("1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Choose teams and starting positions",12,"#B5C0D3"));guide.Margin=new(0,20,0,0);guide.Children[1].SetValue(MarginProperty,new Thickness(0,8,0,0));right.Children.Add(guide);
-        var note=UI.Text("Selected maps and rules apply at the next host launch. With navigation enabled, your spot and team apply after the native lobby opens. Guests still join manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
+        var guide=UI.Stack(UI.Text("IN BFME2",10,UI.Muted,true),UI.Text("1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Fellowship applies your team and spot",12,"#B5C0D3"));guide.Margin=new(0,20,0,0);guide.Children[1].SetValue(MarginProperty,new Thickness(0,8,0,0));right.Children.Add(guide);
+        var note=UI.Text("Selected maps and rules apply at the next host launch. Your spot and team apply through native LAN functions once the matching lobby opens. Guests still join manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
         var settingsCard=UI.Card(UI.Scroll(right),"#191D24",16);Grid.SetColumn(settingsCard,1);columns.Children.Add(settingsCard);UI.At(body,columns,1);
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var state=UI.Stack(consent,readySummary,UI.Text("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);if(HostPreset.Matches(app.Peer.Current))HostPreset.ValidateBinary(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.Players.All(p=>p.Ready)==true);
-        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),UI.Button("Launch mine",LaunchLocal),launch);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
+        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),UI.Button("Launch mine",LaunchLocal),UI.AsyncButton("Apply team & spot",()=>LaunchLocalCore(true)),launch);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
         Append("SYSTEM","Welcome to the room. Match patches with your friends, agree on the settings, then ready up.");
         Closing+=async(_,e)=>
         {
@@ -491,8 +491,13 @@ public sealed class RoomWindow : Window
         {
             bool preset=app.Peer.IsHost&&HostPreset.Matches(app.Peer.Current);
             Append("SYSTEM",preset?"Preparing host preset. Approve the Windows permission prompt if shown.":"Launching BFME2…");
-            await GameLauncher.Launch(app.Settings.GamePath,app.Peer.Current,preset,false,app.Peer.LocalId,false);
-            Append("SYSTEM",preset?"Selected map and rules applied. Open Multiplayer → Network → Create Game, then assign teams for 3v3.":"BFME2 launched. Open Multiplayer → Network. This room stays open.");
+            var current=app.Peer.Current??throw new IOException("Join a Fellowship room first.");
+            var selected=current.Players.Single(p=>p.Id==app.Peer.LocalId);int team=selected.Team,spot=selected.Spot;string mapPath=current.MapPath,roomId=current.Id;
+            var snapshot=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(current))!;
+            if(!applyOnly)await GameLauncher.Launch(app.Settings.GamePath,current,preset,false,app.Peer.LocalId,false);
+            Append("SYSTEM",applyOnly?"Applying your team and spot through native game data…":"Open Multiplayer → Network and create/join the host lobby. Waiting to apply your team and spot; no navigation is used.");
+            await NativePlacement.Apply(app.Settings.GamePath,snapshot,app.Peer.LocalId,!applyOnly,()=>app.Peer.Current is {} r&&r.Id==roomId&&r.MapPath==mapPath&&r.Players.Any(p=>p.Id==app.Peer.LocalId&&p.Team==team&&p.Spot==spot));
+            Append("SYSTEM","Team and starting spot verified in BFME2. Review the lobby before starting.");
         }
         catch(Exception e){UI.Error(e.Message);}
         finally{launching=false;Refresh();}

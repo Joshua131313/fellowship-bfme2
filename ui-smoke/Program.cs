@@ -23,6 +23,13 @@ class Program
     if(!File.Exists(exe)||File.Exists(Path.Combine(Path.GetDirectoryName(exe)!,"update.zip")))throw new Exception("Update extraction/cleanup failed");
     Console.WriteLine("PASS real GitHub update download, checksum, extraction, version validation and ZIP cleanup");return;
   }
+  var nativeSnapshot=new NativeLobby.Snapshot(123,"maps\\test.map","127.0.0.1",[new NativeLobby.Slot(0,6,1,2,true)]);
+  var command=NativePlacement.RequestBytes(1234,nativeSnapshot,4,1);
+  if(command.Length!=568||BitConverter.ToInt32(command,20)!=3||BitConverter.ToInt32(command,24)!=0||BitConverter.ToInt32(command,28)!=0||System.Text.Encoding.ASCII.GetString(command,56,13)!="maps\\test.map")throw new Exception("Native placement ABI mismatch");
+  var random=NativePlacement.RequestBytes(1234,nativeSnapshot,0,0,true);
+  if(BitConverter.ToInt32(random,20)!=-1||BitConverter.ToInt32(random,24)!=-1||BitConverter.ToInt32(random,28)!=1)throw new Exception("Native random selection encoding failed");
+  try{NativePlacement.RequestBytes(1234,nativeSnapshot,5,1);throw new Exception("Invalid native team accepted");}catch(InvalidDataException){}
+  Console.WriteLine("PASS native bridge layout, zero-based conversion, unset choices and bounds");
   if(!SearchableMapBox.Matches("Rhûn","rhun")||!SearchableMapBox.Matches("Woody End","END")||SearchableMapBox.Matches("Rhûn","mordor"))throw new Exception("Map search matching failed");
   var spots=MapPreview.ParseSpots("MapCache maps_5Ctest_2Emap\n extentMin = X:100 Y:200 Z:0\n extentMax = X:1100 Y:2200 Z:0\n numPlayers = 2\n Player_1_Start = X:350 Y:700 Z:0\n Player_2_Start = X:850 Y:1700 Z:0\nEND",@"maps\test.map");
   if(spots.Count!=2||spots[0].X!=0.25||spots[0].Y!=0.75||spots[1].X!=0.75||spots[1].Y!=0.25)throw new Exception("Map spot coordinate normalization failed");
@@ -30,12 +37,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.12-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.12/Fellowship-0.1.12-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.12",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.13-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.13/Fellowship-0.1.13-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.13",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.12","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.12",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.13","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.13",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}

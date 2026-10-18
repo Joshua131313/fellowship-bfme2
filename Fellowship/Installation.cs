@@ -27,8 +27,8 @@ public static class Installation
     {
         var worker=Path.Combine(Path.GetDirectoryName(package)!,"installer-worker.exe");
         File.Copy(Environment.ProcessPath!,worker,true);
-        var start=new ProcessStartInfo(worker){UseShellExecute=true};
-        start.ArgumentList.Add("--install-update");start.ArgumentList.Add(package);start.ArgumentList.Add(Environment.ProcessId.ToString());
+        var start=new ProcessStartInfo(NativePlacement.PhysicalPath(worker)){UseShellExecute=true};
+        start.ArgumentList.Add("--install-update");start.ArgumentList.Add(NativePlacement.PhysicalPath(package));start.ArgumentList.Add(Environment.ProcessId.ToString());
         _ = Process.Start(start) ?? throw new IOException("Could not start the installer helper.");
     }
     public static async Task<int> RunUpdate(string package,int previousPid)
