@@ -295,7 +295,7 @@ public sealed class RoomWindow : Window
     readonly Button launch;
     readonly Border setupBanner;
     readonly StackPanel inlineRules=new();
-    readonly ComboBox resourceChoice=new(), commandChoice=new(), mapChoice=new(), capacityChoice=new();
+    readonly ComboBox resourceChoice=new(), commandChoice=new(), mapChoice=new SearchableMapBox(), capacityChoice=new();
     readonly CheckBox customChoice=new(){Content="Custom Heroes"}, ringChoice=new(){Content="Ring Heroes"};
     readonly TextBlock ruleStatus=UI.Text("Changes save automatically",10,UI.Muted);
     bool syncingRules, savingRules;
@@ -343,9 +343,9 @@ public sealed class RoomWindow : Window
         ruleStatus.Margin=new(0,12,0,8);inlineRules.Children.Add(ruleStatus);right.Children.Add(inlineRules);
         customSetup.Margin=new(0,18,0,0);
         customSetup.Children.Add(UI.Text("ROOM NAME",10,UI.Muted,true));roomName.Margin=new(0,8,0,8);customSetup.Children.Add(roomName);
-        customSetup.Children.Add(UI.AsyncButton("Confirm name",()=>SaveRoomDetails(false)));
+        var confirmName=UI.AsyncButton("Confirm name",()=>SaveRoomDetails(false));confirmName.Margin=new(0,4,0,0);confirmName.HorizontalAlignment=HorizontalAlignment.Stretch;customSetup.Children.Add(confirmName);
         var privacyLabel=UI.Text("VISIBILITY",10,UI.Muted,true);privacyLabel.Margin=new(0,16,0,8);customSetup.Children.Add(privacyLabel);
-        customSetup.Children.Add(privacyChoice);customSetup.Children.Add(UI.AsyncButton("Confirm privacy",()=>SaveRoomDetails(true)));
+        customSetup.Children.Add(privacyChoice);var confirmPrivacy=UI.AsyncButton("Confirm privacy",()=>SaveRoomDetails(true));confirmPrivacy.Margin=new(0,10,0,0);confirmPrivacy.HorizontalAlignment=HorizontalAlignment.Stretch;customSetup.Children.Add(confirmPrivacy);
         right.Children.Add(customSetup);
         var guide=UI.Stack(UI.Text("IN BFME2",10,UI.Muted,true),UI.Text("1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Choose teams and starting positions",12,"#B5C0D3"));guide.Margin=new(0,20,0,0);guide.Children[1].SetValue(MarginProperty,new Thickness(0,8,0,0));right.Children.Add(guide);
         var note=UI.Text("Selected maps and rules apply at the next host launch. Players choose their teams in BFME2.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);

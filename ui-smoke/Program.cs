@@ -7,6 +7,7 @@ class Program
 {
  [STAThread] static void Main()
  {
+  if(!SearchableMapBox.Matches("Rhûn","rhun")||!SearchableMapBox.Matches("Woody End","END")||SearchableMapBox.Matches("Rhûn","mordor"))throw new Exception("Map search matching failed");
   var landmarks=GameNavigation.LoadLandmarks();
   foreach(var (file,expected) in new[]{("main","Main"),("network","Network"),("host","HostLobby"),("multiplayer","Multiplayer")})
   {
@@ -42,6 +43,9 @@ class Program
   Console.WriteLine("PASS installed map preview and update version/source validation");
   Directory.CreateDirectory("dist");
   var app=new App();app.InitializeComponent();
+  var picker=new SearchableMapBox{ItemsSource=new[]{"Rhûn","Woody End"},SelectedItem="Rhûn"};
+  picker.ApplyTemplate();
+  if(picker.Template.FindName("PART_MapSearch",picker) is not System.Windows.Controls.TextBox {Visibility:Visibility.Visible})throw new Exception("Map search template missing");
   var browser=new BrowserWindow();
   Render(browser,"dist/preview-browser.png");
   var editor=new RoomEditor(null,new Settings{GamePath=GameInstallation.Find()},new Room{Title="Battle for Rhun"});

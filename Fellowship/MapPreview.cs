@@ -15,7 +15,7 @@ public sealed class MapPreview : Border
     public void ShowMap(string executable,string map)
     {
         var key=executable+"|"+map;if(last==key)return;last=key;
-        image.Source=Load(executable,map);image.ToolTip="Starting locations — numbers are map slots, not player assignments";Child=image.Source==null?fallback:image;
+        image.Source=Load(executable,map);image.ToolTip="Starting locations — preview only";Child=image.Source==null?fallback:image;
     }
     public sealed record StartSpot(int Number,double X,double Y);
     public static List<StartSpot> ParseSpots(string cache,string map)
@@ -66,9 +66,15 @@ public sealed class MapPreview : Border
                 foreach(var spot in spots)
                 {
                     var center=new Point(spot.X*size,spot.Y*size);
-                    dc.DrawEllipse(Brushes.Black,new Pen(UI.Brush("#D3AC39"),2.5),center,14,14);
-                    var label=new FormattedText(spot.Number.ToString(),System.Globalization.CultureInfo.InvariantCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),15,Brushes.White,1);
-                    dc.DrawText(label,new Point(center.X-label.Width/2,center.Y-label.Height/2));
+                    var shadowCenter=new Point(center.X+1.5,center.Y+3);
+                    var shadow=new RadialGradientBrush();
+                    shadow.GradientStops.Add(new GradientStop(Color.FromArgb(170,0,0,0),0.65));
+                    shadow.GradientStops.Add(new GradientStop(Color.FromArgb(75,0,0,0),0.83));
+                    shadow.GradientStops.Add(new GradientStop(Colors.Transparent,1));
+                    dc.DrawEllipse(shadow,null,shadowCenter,25,25);
+                    var gold=new LinearGradientBrush(Color.FromRgb(241,207,85),Color.FromRgb(150,112,11),90);
+                    dc.DrawEllipse(Brushes.Black,new Pen(UI.Brush("#654B08"),6),center,18,18);
+                    dc.DrawEllipse(Brushes.Black,new Pen(gold,4),center,18,18);
                 }
             }
             var result=new RenderTargetBitmap(size,size,96,96,PixelFormats.Pbgra32);result.Render(visual);result.Freeze();return result;

@@ -14,7 +14,7 @@ public sealed class RoomEditor : Window
         ComboBox Choice(string title,object[] values,object selected)
         {
             var label=UI.Text(title,10,UI.Muted,true);label.Margin=new(0,16,0,7);panel.Children.Add(label);
-            var combo=new ComboBox{ItemsSource=values,SelectedItem=selected};panel.Children.Add(combo);return combo;
+            ComboBox combo=title.StartsWith("MAP")?new SearchableMapBox():new ComboBox();combo.ItemsSource=values;combo.SelectedItem=selected;panel.Children.Add(combo);return combo;
         }
         var maps=GameInstallation.Maps(settings.GamePath);
         var map=Choice("MAP · FROM YOUR BFME2 INSTALLATION",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path==initial.MapPath)??maps[0]);
