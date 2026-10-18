@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>Fellowship</AssemblyName><Version>0.1.16</Version><ApplicationIcon>Assets/Fellowship.ico</ApplicationIcon></PropertyGroup>
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>Fellowship</AssemblyName><Version>0.1.17</Version><ApplicationIcon>Assets/Fellowship.ico</ApplicationIcon></PropertyGroup>
   <ItemGroup><Using Remove="System.Windows.Forms"/><Using Remove="System.Drawing"/></ItemGroup>
   <ItemGroup><EmbeddedResource Include="Assets/message.wav" /><Resource Include="Assets/Fellowship.ico" /></ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../native/bin/Fellowship.NativeHost.exe" LogicalName="Fellowship.Native.Fellowship.NativeHost.exe" />
-    <EmbeddedResource Include="../native/bin/Fellowship.Native.v015a.dll" LogicalName="Fellowship.Native.Fellowship.Native.v015a.dll" />
+    <EmbeddedResource Include="../native/bin/Fellowship.Native.v017a.dll" LogicalName="Fellowship.Native.Fellowship.Native.v017a.dll" />
   </ItemGroup>
   <Target Name="BuildNativeBridge" BeforeTargets="PrepareForBuild"
           Inputs="../native/bridge.cpp;../native/host.cpp;../native/bridge.h;../native/build.ps1"
-          Outputs="../native/bin/Fellowship.NativeHost.exe;../native/bin/Fellowship.Native.v015a.dll">
+          Outputs="../native/bin/Fellowship.NativeHost.exe;../native/bin/Fellowship.Native.v017a.dll">
     <Exec Command="powershell.exe -NoProfile -File &quot;$(MSBuildProjectDirectory)/../native/build.ps1&quot;" />
   </Target>
 </Project>
