@@ -140,7 +140,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.26   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.27   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=100;UI.At(body,playerScroll,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
@@ -249,7 +249,7 @@ public sealed class BrowserWindow : Window
     {
         activePlayers.Children.Clear();
         var peers=Presence.Active(DateTimeOffset.UtcNow).ToArray();
-        var label=UI.Text($"ACTIVE ON VPN  {peers.Length+1}",10,UI.Muted,true);label.Margin=new(0,0,14,0);activePlayers.Children.Add(label);
+        var label=UI.Text($"Active players: {peers.Length+1}",10,UI.Muted,true);label.Margin=new(0,0,14,0);activePlayers.Children.Add(label);
         var me=UI.Badge(Settings.Name+" · You",UI.Green);me.Margin=new(0,0,8,6);activePlayers.Children.Add(me);
         foreach(var peer in peers)
         {
