@@ -101,8 +101,8 @@ public sealed class BrowserWindow : Window
     readonly DataGrid rooms = new();
     readonly TextBlock status = UI.Text("Not connected", 11, UI.Muted);
     readonly TextBlock count = UI.Text("0 rooms", 12, UI.Muted);
-    readonly TextBox address = new() { Width = 185, MaxLength = 15, ToolTip = "Host's Radmin IPv4 address" };
-    readonly TextBox search = new() { Width = 230, ToolTip = "Filter rooms by name, host or map" };
+    readonly TextBox address = new() { Width = 180, Height=34, Padding=new(10,5,10,5), MaxLength = 15, ToolTip = "Host's Radmin IPv4 address" };
+    readonly TextBox search = new() { Width = 220, Height=34, Padding=new(10,5,10,5), ToolTip = "Filter rooms by name, host or map" };
     readonly Border empty;
     readonly TextBlock emptyTitle=UI.Text("Your next battle is out there",19,"#DCE2ED",true);
     readonly TextBlock emptyHint=UI.Text("Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.",13,UI.Muted);
@@ -116,7 +116,7 @@ public sealed class BrowserWindow : Window
     public PeerDirectory Presence { get; }=new();
     readonly StackPanel activePlayers=new();
     readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Height=34,Padding=new(10,5,10,5),Margin=new(0,0,0,10),MaxLength=80};
-    readonly Button playersButton=new(){Content="Active players: 1",Padding=new(12,7,12,7),Margin=new(12,0,0,0),HorizontalAlignment=HorizontalAlignment.Left};
+    readonly Button playersButton=new(){Content="Active players: 1",Height=34,Padding=new(12,5,12,5),Margin=new(12,0,0,0),HorizontalAlignment=HorizontalAlignment.Left};
     readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Top};
     public BrowserWindow(Settings? settings=null)
     {
@@ -127,7 +127,7 @@ public sealed class BrowserWindow : Window
         UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         var headings = UI.Stack(UI.Text("Game rooms",25,"#F3F4F8",true), UI.Text("A good game starts with good company.",12,UI.Muted)); headings.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0)); toolbar.Children.Add(headings);
-        var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,0);
+        var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,0);
         var filters = new Grid { Margin = new(22,0,22,14) }; filters.ColumnDefinitions.Add(new()); filters.ColumnDefinitions.Add(new() { Width = UI.Auto });
         filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), UI.Text("    Radmin VPN",12,UI.Muted)));
         var filterRight = UI.Row(UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,1);
@@ -140,10 +140,12 @@ public sealed class BrowserWindow : Window
         empty = new Border { Child = emptyContent, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false, Margin = new(0,38,0,0) }; table.Children.Add(empty);
         var tableCard = UI.Card(table,"#171A20",0); tableCard.Margin = new(22,0,22,0); UI.At(body,tableCard,2);
         var footer = new Grid { Margin = new(22,14,14,18) }; footer.ColumnDefinitions.Add(new()); footer.ColumnDefinitions.Add(new() { Width = UI.Auto });
-        var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
+        var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0);
+        foreach(var button in direct.Children.OfType<Button>()){button.Height=34;button.MinWidth=90;button.Padding=new(12,5,12,5);}
+        footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.30   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.31   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
