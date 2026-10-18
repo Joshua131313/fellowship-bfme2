@@ -329,7 +329,7 @@ public sealed class RoomWindow : Window
         setupSummary.Margin=new(0,12,0,0);setupSummary.LineHeight=22;
         var banner=setupBanner=UI.Card(UI.Stack(UI.Text("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#252F43",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
         right.Children.Add(presetStatus);right.Children.Add(mapPreview);
-        right.Children.Add(UI.Text("YOUR TEAM",10,UI.Muted,true));teamChoice.ItemsSource=Enumerable.Range(0,9).Select(n=>new TeamOption(n)).ToArray();teamChoice.Margin=new(0,6,0,8);right.Children.Add(teamChoice);
+        right.Children.Add(UI.Text("YOUR TEAM",10,UI.Muted,true));teamChoice.ItemsSource=Enumerable.Range(0,5).Select(n=>new TeamOption(n)).ToArray();teamChoice.Margin=new(0,6,0,8);right.Children.Add(teamChoice);
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);

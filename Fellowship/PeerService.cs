@@ -210,7 +210,7 @@ public sealed partial class PeerService : IDisposable
             if(!IsHost||Current==null)throw new InvalidOperationException("The room is closed.");
             if(mapPath!=Current.MapPath)throw new InvalidOperationException("The map changed. Choose a spot on the new map.");
             var player=Current.Players.FirstOrDefault(p=>p.Id==id)??throw new InvalidOperationException("Player is no longer in the room.");
-            if(team is <0 or >8)throw new InvalidOperationException("Choose no team or team 1–8.");
+            if(team is <0 or >4)throw new InvalidOperationException("Choose no team or team 1–4.");
             if(spot.HasValue&&spot!=0&&!Current.Spots.Any(s=>s.Number==spot))throw new InvalidOperationException("That starting spot is unavailable on this map.");
             if(spot>0&&Current.Players.Any(p=>p.Id!=id&&p.Spot==spot))throw new InvalidOperationException("Another player has claimed this spot. Choose another.");
             if((!spot.HasValue||spot==player.Spot)&&(!team.HasValue||team==player.Team))return;

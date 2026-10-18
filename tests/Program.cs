@@ -160,7 +160,9 @@ try
     await winner.SelectPlacement(team:2);
     await Until(()=>placementHost.Current!.Players.Where(p=>p.Id!="host").All(p=>!p.Ready),"placement changes revoke readiness");
     try{await loser.SelectPlacement(8);throw new Exception("Invalid map spot accepted");}catch(InvalidOperationException){}
-    try{await loser.SelectPlacement(team:9);throw new Exception("Invalid team accepted");}catch(InvalidOperationException){}
+    try{await loser.SelectPlacement(team:5);throw new Exception("Invalid team accepted");}catch(InvalidOperationException){}
+    await loser.SelectPlacement(team:4);
+    if(placementHost.Current!.Players.Single(p=>p.Id==loser.LocalId).Team!=4)throw new Exception("Team 4 rejected");
     await winner.SelectPlacement(0);await loser.SelectPlacement(1);
     if(placementHost.Current!.Players.Single(p=>p.Id==loser.LocalId).Spot!=1)throw new Exception("Released spot unavailable");
     loser.Leave();await Until(()=>placementHost.Current!.Players.Count==2,"disconnect releases claimed spot");

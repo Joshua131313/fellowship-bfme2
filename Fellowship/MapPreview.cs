@@ -21,7 +21,7 @@ public sealed class MapPreview : Border
         var key=executable+"|"+map;if(last==key)return;last=key;
         image.Source=Load(executable,map);image.ToolTip="Starting locations — preview only";Child=image.Source==null?fallback:mapView;
     }
-    public static string TeamColor(int team)=>team switch{1=>"#73ACFF",2=>"#ED8585",3=>"#C598F4",4=>"#72D6AB",5=>"#F3BE65",6=>"#74DCE3",7=>"#F49CD0",8=>"#CED487",_=>"#B3BCCB"};
+    public static string TeamColor(int team)=>team switch{1=>"#73ACFF",2=>"#ED8585",3=>"#C598F4",4=>"#72D6AB",_=>"#B3BCCB"};
     public void ShowSelections(Room room,string localId,bool enabled)
     {
         selectionLayer.Children.Clear();
