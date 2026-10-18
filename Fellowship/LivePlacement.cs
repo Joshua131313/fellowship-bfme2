@@ -87,7 +87,7 @@ public static class LivePlacement
             Reply reply;
             try{await Send(pipe,command,timeout.Token);reply=await Receive<Reply>(pipe,timeout.Token);}
             catch(EndOfStreamException){if(helper.HasExited&&GameLauncher.IsRunning())throw new IOException("The sync helper disconnected while BFME2 is still running.");status("BFME2 sync disconnected. Waiting for the next game.");return;}
-            catch(IOException){throw new IOException("The game sync connection ended. No further changes will be sent.");}
+            catch(IOException){if(!GameLauncher.IsRunning()){status("BFME2 closed. Waiting for the next game.");return;}throw new IOException("The game sync connection ended. No further changes will be sent.");}
             if(reply.Done){status(reply.Status);return;}
             prepared?.Invoke();prepared=null;
             // A user edit or host/map transition wins over an older incoming observation.
