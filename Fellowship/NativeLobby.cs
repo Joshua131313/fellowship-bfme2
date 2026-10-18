@@ -42,6 +42,7 @@ public sealed class NativeLobby : IDisposable
         return data;
     }
     public Snapshot? Current() => Decode(Read,imageBase);
+    public bool SetupClosed()=>BitConverter.ToUInt32(Read(imageBase+0xdfe1f4-0x400000,4))==0;
     public bool Starting()
     {
         uint setup=BitConverter.ToUInt32(Read(imageBase+0xdfe1f4-0x400000,4));

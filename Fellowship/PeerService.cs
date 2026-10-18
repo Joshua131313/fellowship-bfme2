@@ -157,7 +157,10 @@ public sealed partial class PeerService : IDisposable
             IsHost = true; LocalId = "host"; Current = room;
             room.Spots=GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
-            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null }];
+            var saved=settings.LastHostedSetup;
+            int team=saved?.Team is >=0 and <=4?saved.Team:0;
+            int spot=saved!=null&&saved.MapPath==room.MapPath&&room.Spots.Any(s=>s.Number==saved.Spot)?saved.Spot:0;
+            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null,Team=team,Spot=spot }];
         }
         Changed?.Invoke();
     }

@@ -96,7 +96,7 @@ public static class UI
 
 public sealed class BrowserWindow : Window
 {
-    public Settings Settings { get; } = Settings.Load();
+    public Settings Settings { get; }
     public PeerService Peer { get; }
     readonly DataGrid rooms = new();
     readonly TextBlock status = UI.Text("Not connected", 11, UI.Muted);
@@ -113,8 +113,9 @@ public sealed class BrowserWindow : Window
     bool online,refreshing;
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
-    public BrowserWindow()
+    public BrowserWindow(Settings? settings=null)
     {
+        Settings=settings??Settings.Load();
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
         var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
@@ -137,7 +138,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.15   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.16   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -243,7 +244,8 @@ public sealed class BrowserWindow : Window
     async void CreateRoom()
     {
         if(!EnsureOnline() || !CanLeave())return;
-        var editor=new RoomEditor(this,Settings,new(){Title=Settings.Name+"'s room"});
+        var draft=Settings.NewHostedRoom();draft.Title=Settings.Name+"'s room";
+        var editor=new RoomEditor(this,Settings,draft);
         if(editor.ShowDialog()==true&&editor.Result is {} room){try{await CloseRoom();Peer.Host(room);ShowRoom();}catch(Exception e){UI.Error(e.Message);}}
     }
 
@@ -487,6 +489,12 @@ public sealed class RoomWindow : Window
     {
         var room=app.Peer.Current;
         if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
+        if(app.Peer.IsHost)
+        {
+            try{app.Settings.RememberHost(room);}
+            catch(IOException e){Append("SYSTEM","Could not save last selections: "+e.Message);}
+            catch(UnauthorizedAccessException e){Append("SYSTEM","Could not save last selections: "+e.Message);}
+        }
         mapPreview.ShowMap(app.Settings.GamePath,room.MapPath);mapPreview.IsEnabled=!launching&&!changingPlacement;
         mapPreview.ShowSelections(room,app.Peer.LocalId,!launching&&!changingPlacement);
         var self=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);

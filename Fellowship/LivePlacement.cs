@@ -13,18 +13,32 @@ public static class LivePlacement
     public sealed record Choice(int Team,int Spot);
     public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null);
     public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
-    // Once an observed lobby goes away, never re-arm writes against recycled pointers.
+    // A countdown or missing snapshot suspends writes. Only a confirmed destroyed
+    // setup followed by a stable new lobby can resume them (addresses may be reused).
     public sealed class SessionGuard
     {
-        uint? identity; int stable;
+        uint? identity,candidate; int stable,absentSamples; bool departed;
         public bool Stopped { get; private set; }
-        public bool Observe(uint? next,bool starting)
+        public int Generation { get; private set; }
+        public bool Observe(uint? next,bool starting,bool setupClosed=false)
         {
-            if(Stopped)return false;
-            if(starting||(identity.HasValue&&next!=identity)){Stopped=true;return false;}
-            if(next==null)return false;
-            identity=next;
-            return ++stable>=3;
+            if(starting||(identity.HasValue&&next!=identity))Stopped=true;
+            if(Stopped)
+            {
+                if(setupClosed)
+                {
+                    if(++absentSamples>=3)departed=true;
+                    candidate=null;stable=0;return false;
+                }
+                absentSamples=0;
+                if(!departed||starting||next==null){candidate=null;stable=0;return false;}
+            }
+            else if(identity.HasValue)return true;
+            if(next==null){candidate=null;stable=0;return false;}
+            if(candidate!=next){candidate=next;stable=0;}
+            if(++stable<5)return false;
+            identity=next;Stopped=false;departed=false;absentSamples=0;Generation++;
+            return true;
         }
     }
     public sealed class Reconciler
@@ -98,7 +112,7 @@ public static class LivePlacement
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
-            string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
+            int generation=0;string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
             {
@@ -106,15 +120,26 @@ public static class LivePlacement
                 var command=await Receive<Command>(pipe,timeout.Token);
                 room??=command.Room;if(room!=command.Room)break;
                 if(command.Choice.Team is <0 or >4||command.Choice.Spot is <0 or >8)throw new IOException("Invalid team or spot.");
-                NativeLobby.Snapshot? snapshot;
-                bool starting=reader.Starting();
-                try{snapshot=starting?null:reader.Current();}catch(InvalidDataException){snapshot=null;}
-                bool editable=session.Observe(snapshot?.Identity,starting);
+                NativeLobby.Snapshot? snapshot=null;
+                bool starting=false,closed=false;
+                try
+                {
+                    closed=reader.SetupClosed();starting=!closed&&reader.Starting();
+                    snapshot=starting||closed?null:reader.Current();
+                }
+                catch(IOException){ /* A raced read is not proof that the setup was destroyed. */ }
+                bool editable=session.Observe(snapshot?.Identity,starting,closed);
                 if(session.Stopped)
                 {
-                    await Send(pipe,new Reply("Live sync stopped for the match/lobby transition. Reopen the Fellowship room before the next game to reconnect.",Done:true),timeout.Token);
-                    return 0;
+                    await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…"),timeout.Token);
+                    continue;
                 }
+                if(editable&&generation!=session.Generation)
+                {
+                    generation=session.Generation;context=null;reconcile=new();desiredSetup=observedSetup=null;
+                }
+                try
+                {
                 Reply reply;
                 if(!editable||snapshot==null||snapshot.HostAddress!=command.Host||command.Setup==null&&!snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase))
                 {
@@ -133,8 +158,9 @@ public static class LivePlacement
                             if(snapshot.Setup!=requestedSetup)
                             {
                                 await Execute(host,gamePid,snapshot,NativePlacement.SetupRequestBytes(gamePid,snapshot,requestedSetup),3,timeout.Token);
-                                var updated=reader.Current();
-                                if(updated==null||updated.Identity!=snapshot.Identity||updated.Setup!=requestedSetup)throw new IOException("BFME2 did not retain the map and rules.");
+                                var updated=ReadAfterWrite(reader);
+                                if(updated==null||updated.Identity!=snapshot.Identity)throw new NativeTransitionException();
+                                if(updated.Setup!=requestedSetup)throw new IOException("BFME2 did not retain the map and rules.");
                                 if(updated.Map!=snapshot.Map)reconcile=new();snapshot=updated;
                             }
                             desiredSetup=requestedSetup;observedSetup=snapshot.Setup;
@@ -155,8 +181,8 @@ public static class LivePlacement
                         if(actual!=command.Choice)
                         {
                                 await Execute(host,gamePid,snapshot,NativePlacement.RequestBytes(gamePid,snapshot,command.Choice.Team,command.Choice.Spot),2,timeout.Token);
-                                var confirmed=reader.Current();
-                                if(confirmed==null||confirmed.Identity!=snapshot.Identity)throw new IOException("Native lobby changed during sync.");
+                                var confirmed=ReadAfterWrite(reader);
+                                if(confirmed==null||confirmed.Identity!=snapshot.Identity)throw new NativeTransitionException();
                                 actual=new(confirmed.Local.Team+1,confirmed.Local.Spot+1);
                         }
                         reconcile.Remember(command.Choice,actual);
@@ -171,6 +197,12 @@ public static class LivePlacement
                     }
                 }
                 await Send(pipe,reply,timeout.Token);
+                }
+                catch(NativeTransitionException)
+                {
+                    session.Observe(null,true);
+                    await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…"),timeout.Token);
+                }
             }
             return 0;
         }
@@ -180,6 +212,11 @@ public static class LivePlacement
             if(log!=null)File.WriteAllText(log,error.Message);return 1;
         }
     }
+    sealed class NativeTransitionException : IOException { }
+    static NativeLobby.Snapshot? ReadAfterWrite(NativeLobby reader)
+    {
+        try{return reader.Current();}catch(IOException){throw new NativeTransitionException();}
+    }
     static async Task Execute(string host,int pid,NativeLobby.Snapshot snapshot,byte[] bytes,int expected,CancellationToken token)
     {
         string request=Path.Combine(Settings.Folder,"native","live-"+Guid.NewGuid().ToString("N")+".bin");
@@ -188,6 +225,7 @@ public static class LivePlacement
             File.WriteAllBytes(request,bytes);var launch=new ProcessStartInfo(host){UseShellExecute=false,CreateNoWindow=true};launch.ArgumentList.Add(NativePlacement.PhysicalPath(request));
             using var bridge=Process.Start(launch)??throw new IOException("Could not start native bridge.");
             await bridge.WaitForExitAsync(token);int code=BitConverter.ToInt32(File.ReadAllBytes(request),32);
+            if(code is -3 or -4 or -6)throw new NativeTransitionException();
             if(bridge.ExitCode!=0||code!=expected)throw new IOException(NativePlacement.Describe(code));
             await Task.Delay(300,token);
         }

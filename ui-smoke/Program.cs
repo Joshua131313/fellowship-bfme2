@@ -14,14 +14,27 @@ class Program
   if(args.Length==4&&args[0]=="--live-probe")
   {LiveProbe.Run(args[1],int.Parse(args[2]),args[3]).GetAwaiter().GetResult();return;}
   var guard=new LivePlacement.SessionGuard();
-  if(guard.Observe(null,false)||guard.Stopped)throw new Exception("Waiting for initial lobby must not stop sync");
-  if(guard.Observe(123,false)||guard.Observe(123,false)||!guard.Observe(123,false))throw new Exception("Initial lobby stability gate failed");
-  if(guard.Observe(null,true)||!guard.Stopped||guard.Observe(123,false))throw new Exception("Start transition re-armed sync");
-  var closedGuard=new LivePlacement.SessionGuard();closedGuard.Observe(123,false);
-  if(closedGuard.Observe(null,false)||closedGuard.Observe(123,false)||!closedGuard.Stopped)throw new Exception("Closed lobby re-armed sync");
-  var replacedGuard=new LivePlacement.SessionGuard();replacedGuard.Observe(123,false);
-  if(replacedGuard.Observe(456,false)||!replacedGuard.Stopped)throw new Exception("Replaced lobby re-armed sync");
-  Console.WriteLine("PASS sync waits for stable lobby and never re-arms after start, close or pointer replacement");
+  bool Stable(uint id){bool result=false;for(int i=0;i<5;i++)result=guard.Observe(id,false);return result;}
+  if(guard.Observe(null,false)||guard.Stopped||!Stable(123))throw new Exception("Initial stability gate failed");
+  if(guard.Observe(null,true)||!guard.Stopped||Stable(123))throw new Exception("Countdown re-armed sync");
+  // A transient read failure or a different pointer cannot establish a new session.
+  guard.Observe(null,false);if(Stable(456))throw new Exception("Pointer change bypassed teardown gate");
+  guard.Observe(null,false,true);if(Stable(123))throw new Exception("Transient null setup bypassed teardown gate");
+  for(int i=0;i<3;i++)guard.Observe(null,false,true);
+  if(!Stable(123)||guard.Stopped||guard.Generation!=2)throw new Exception("Reused-address new lobby did not reconnect");
+  guard.Observe(null,true);
+  for(int i=0;i<3;i++)guard.Observe(null,false,true);
+  if(!Stable(456)||guard.Generation!=3)throw new Exception("Third lobby did not reconnect");
+  Console.WriteLine("PASS repeated lobbies, reused addresses, countdown protection and transient-read rejection");
+  var preferences=Settings.InMemory();
+  var remembered=new Room{Map="Rhûn",MapPath=GameMap.Rhun.Path,Capacity=6,Match=new(){Resources=2000,CommandPoints=400,CustomHeroes=true},Players=[new(){Id="host",Team=3,Spot=2}]};
+  preferences.RememberHost(remembered);
+  var restored=System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(preferences))!;
+  var nextRoom=restored.NewHostedRoom();
+  if(nextRoom.MapPath!=remembered.MapPath||nextRoom.Match.Resources!=2000||nextRoom.Match.CommandPoints!=400||!nextRoom.Match.CustomHeroes||restored.LastHostedSetup?.Team!=3||restored.LastHostedSetup?.Spot!=2||nextRoom.Players.Count!=0)throw new Exception("Last selections did not survive preferences roundtrip");
+  nextRoom.Match.Resources=1000;
+  if(restored.NewHostedRoom().Match.Resources!=2000)throw new Exception("Room draft mutated saved rules");
+  Console.WriteLine("PASS saved host map, rules, team and spot; independent next-room draft");
   var sync=new LivePlacement.Reconciler();
   var first=new LivePlacement.Choice(3,2);var edited=new LivePlacement.Choice(4,1);
   if(!sync.ShouldWrite(first))throw new Exception("Initial selection must apply");
@@ -68,12 +81,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.16-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.16/Fellowship-0.1.16-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.16",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.17-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.17/Fellowship-0.1.17-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.17",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.16","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.16",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.17","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.17",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
@@ -83,7 +96,7 @@ class Program
   var picker=new SearchableMapBox{ItemsSource=new[]{"Rhûn","Woody End"},SelectedItem="Rhûn"};
   picker.ApplyTemplate();
   if(picker.Template.FindName("PART_MapSearch",picker) is not System.Windows.Controls.TextBox {Visibility:Visibility.Visible})throw new Exception("Map search template missing");
-  var browser=new BrowserWindow();
+  var browser=new BrowserWindow(Settings.InMemory());
   Render(browser,"dist/preview-browser.png");
   var editor=new RoomEditor(null,new Settings{GamePath=GameInstallation.Find()},new Room{Title="Battle for Rhun"});
   Render(editor,"dist/preview-room-settings.png");

@@ -4,7 +4,7 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Download and run `Fellowship-0.1.15-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Download and run `Fellowship-0.1.16-win-x64.msi` on each Windows 10/11 x64 PC. It installs for your Windows account in `%LOCALAPPDATA%\Programs\Fellowship`, adds a Start menu shortcut and an entry in Installed apps, and starts quietly in the tray at sign-in. Settings lets you disable startup and open the preferences folder. A portable ZIP is also available. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
 New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher applies the native Rhûn preference and session-only rule defaults. Open Multiplayer → Network → Create Game. Guest players open Network and join the host. Fellowship waits for the matching native lobby and applies each local player's selected team and spot through native LAN functions. Approve the helper prompt. Teams and spots synchronize automatically in both directions. The host's map, resources, command-point multiplier, Custom Heroes and Ring Heroes also synchronize both ways. There is no Apply button.
 
@@ -29,7 +29,7 @@ Closing the browser hides it and keeps Fellowship connected. Closing a battle ro
 
 ## Current limits
 
-- Live sync stops when the native match countdown begins, the lobby closes, or its identity changes. Reopen the Fellowship room before the next match to reconnect. Version 0.1.15 adds transition guards following a reported Start crash; a full match-start confirmation is still pending.
+- Live sync pauses during the match and reconnects after observing the native setup close and a stable new lobby open. It reapplies the current Fellowship selections. If teardown was not observed, it stays paused rather than guessing. Host map, rules, capacity, team and valid map spot are remembered for new Fellowship rooms. The 0.1.15 Start-crash safeguard was confirmed by a user test; repeated-match reconnection in 0.1.16 still needs a live test.
 
 - Native lobby creation and guest joining remain manual. Direct team/spot assignment is verified on the host; native guest synchronization still needs a two-PC test. Cursor navigation is not included. Active-match recovery is not implemented.
 - No claim that BFME2 can restore a player's army after quitting an ongoing match. Relaunching and rejoining the **Fellowship room** is supported; active-game recovery is not.
@@ -41,7 +41,7 @@ Closing the browser hides it and keeps Fellowship connected. Closing a battle ro
 
 ## Native game integration
 
-Cursor navigation was removed in 0.1.11. Map and rule presets use game data. Version 0.1.15 also calls BFME2's native LAN team/spot setters on its game thread, then reads back the result. Players still open/join the native LAN lobby themselves. No cursor, key presses, or menu navigation are used. Direct host assignment was verified live; cross-PC native guest synchronization still requires a two-computer test.
+Cursor navigation was removed in 0.1.11. Map and rule presets use game data. Version 0.1.16 also calls BFME2's native LAN team/spot setters on its game thread, then reads back the result. Players still open/join the native LAN lobby themselves. No cursor, key presses, or menu navigation are used. Direct host assignment was verified live; cross-PC native guest synchronization still requires a two-computer test.
 
 ## Development
 
@@ -78,4 +78,4 @@ The battle-room X and Leave button leave the room. A departing host hands it to 
 
 Version 0.1.9 fixes Windows update ZIP cleanup. If an older updater cannot complete installation, download 0.1.9 manually once. Each shipped change receives a new version and a published GitHub release; source-only pushes do not update installed apps.
 
-Build the installer after publishing to `dist/Fellowship-0.1.15`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
+Build the installer after publishing to `dist/Fellowship-0.1.16`: `dotnet build installer/Fellowship.wixproj -c Release`. WiX SDK 5.0.2 is restored through NuGet.
