@@ -177,6 +177,14 @@ try
     await loser.SelectPlacement(2,2);
     await Until(()=>first.Current!.Players.Any(p=>p.Spot==2&&p.Team==2),"spot and team broadcast");
     await first.SetReady(true);await second.SetReady(true);await Until(()=>placementHost.Current!.Players.All(p=>p.Ready),"placement players ready");
+    async Task<bool> ClaimColor(PeerService peer){try{await peer.SelectPlacement(color:3);return true;}catch(InvalidOperationException){return false;}}
+    var colorClaims=await Task.WhenAll(ClaimColor(first),ClaimColor(second));
+    if(colorClaims.Count(x=>x)!=1||placementHost.Current!.Players.Count(p=>p.Color==3)!=1)throw new Exception("Concurrent duplicate colors accepted");
+    await Until(()=>first.Current!.Players.Count(p=>p.Color==3)==1&&second.Current!.Players.Count(p=>p.Color==3)==1,"color broadcasts to both guests");
+    try{await loser.SelectPlacement(color:11);throw new Exception("Invalid color accepted");}catch(InvalidOperationException){}
+    await first.SelectPlacement(color:0);await second.SelectPlacement(color:0);
+    if(placementHost.Current!.Players.Any(p=>!p.Ready||p.Color!=0))throw new Exception("Random colors or readiness preservation failed");
+    Console.WriteLine("PASS simultaneous color claims, shared random colors, bounds and readiness preservation");
     await winner.SelectPlacement(team:2);
     await Until(()=>placementHost.Current!.Players.All(p=>p.Ready),"team changes preserve everyone’s readiness");
     try{await loser.SelectPlacement(8);throw new Exception("Invalid map spot accepted");}catch(InvalidOperationException){}

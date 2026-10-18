@@ -6,7 +6,7 @@ public sealed class Settings
 {
     bool persist=true;
     public static Settings InMemory()=>new(){persist=false};
-    public sealed record SavedSetup(string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int Team,int Spot);
+    public sealed record SavedSetup(string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int Team,int Spot,int Color=0);
     public SavedSetup? LastHostedSetup { get; set; }
     public Room NewHostedRoom()=>LastHostedSetup is {} saved ? new Room
     {
@@ -16,7 +16,7 @@ public sealed class Settings
     public void RememberHost(Room room)
     {
         var host=room.Players.FirstOrDefault(p=>p.Id=="host");if(host==null)return;
-        var saved=new SavedSetup(room.Map,room.MapPath,room.Capacity,room.Match.Resources,room.Match.CommandPoints,room.Match.CustomHeroes,room.Match.RingHeroes,host.Team,host.Spot);
+        var saved=new SavedSetup(room.Map,room.MapPath,room.Capacity,room.Match.Resources,room.Match.CommandPoints,room.Match.CustomHeroes,room.Match.RingHeroes,host.Team,host.Spot,host.Color);
         if(LastHostedSetup==saved)return;
         LastHostedSetup=saved;Save();
     }
@@ -72,6 +72,7 @@ public sealed class Player
     public bool CanHostTransfer { get; set; }
     public int Spot { get; set; }
     public int Team { get; set; }
+    public int Color { get; set; }
     public bool Ready { get; set; }
     public override string ToString() => $"{(Ready ? "● READY" : "○ WAITING")}    {Name}";
 }
@@ -82,6 +83,7 @@ public sealed class Wire
     public Dictionary<string,string>? Tickets { get; set; }
     public int? Spot { get; set; }
     public int? Team { get; set; }
+    public int? Color { get; set; }
     public string MapPath { get; set; } = "";
     public string RequestId { get; set; } = "";
     public string Version { get; set; } = "1.00";

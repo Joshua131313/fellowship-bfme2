@@ -31,8 +31,10 @@ public sealed class MapPreview : Border
         {
             var occupant=room.Players.FirstOrDefault(p=>p.Spot==spot.Number);bool mine=occupant?.Id==localId;
             string label=occupant==null?$"Spot {spot.Number} · click to claim":$"Spot {spot.Number} · {occupant.Name} · {(occupant.Team==0?"No team":"Team "+occupant.Team)}"+(mine?" · click to release":"");
-            var ring=new System.Windows.Shapes.Ellipse{Width=34,Height=34,Fill=occupant==null?Brushes.Transparent:UI.Brush(TeamColor(occupant.Team)),Stroke=mine?Brushes.White:Brushes.Transparent,StrokeThickness=3,Opacity=occupant==null?1:0.9};
-            var button=new Button{Content=ring,Width=42,Height=42,Padding=new(0),Margin=new(0),Background=Brushes.Transparent,BorderThickness=new(0),ToolTip=label,IsEnabled=enabled&&(occupant==null||mine)};
+            var ring=new System.Windows.Shapes.Ellipse{Width=34,Height=34,Fill=occupant==null?Brushes.Transparent:UI.Brush(PlayerColors.Get(occupant.Color).Hex),Stroke=mine?Brushes.White:Brushes.Transparent,StrokeThickness=3,Opacity=occupant==null?1:0.9};
+            var marker=new Grid();marker.Children.Add(ring);
+            if(mine){var mineText=UI.Text("YOU",10,"#FFFFFF",true);mineText.HorizontalAlignment=HorizontalAlignment.Center;mineText.VerticalAlignment=VerticalAlignment.Center;mineText.Effect=new System.Windows.Media.Effects.DropShadowEffect{Color=Colors.Black,BlurRadius=3,ShadowDepth=1,Opacity=1};marker.Children.Add(mineText);}
+            var button=new Button{Style=(Style)Application.Current.FindResource("MapSpotButton"),Content=marker,Width=42,Height=42,Padding=new(0),Margin=new(0),Background=Brushes.Transparent,BorderThickness=new(0),ToolTip=label,IsEnabled=enabled&&(occupant==null||mine)};
             System.Windows.Automation.AutomationProperties.SetName(button,label);
             button.Click+=(_,_)=>SpotSelected?.Invoke(mine?0:spot.Number);
             Canvas.SetLeft(button,spot.X*320-21);Canvas.SetTop(button,spot.Y*320-21);selectionLayer.Children.Add(button);

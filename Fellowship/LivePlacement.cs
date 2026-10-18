@@ -10,7 +10,7 @@ namespace Fellowship;
 // One request at a time; the host may also synchronize the shared setup.
 public static class LivePlacement
 {
-    public sealed record Choice(int Team,int Spot);
+    public sealed record Choice(int Team,int Spot,int Color=0);
     public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null);
     public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
     // A countdown or missing snapshot suspends writes. Only a confirmed destroyed
@@ -97,7 +97,7 @@ public static class LivePlacement
                 if(reply.Import&&reply.Observed is {} choice)
                 {
                     try{await import(choice,command.Map);}
-                    catch(InvalidOperationException error){status("Selection conflict: "+error.Message+" Choose a free spot; live sync remains connected.");}
+                    catch(InvalidOperationException error){status("Selection conflict: "+error.Message+" Choose a free spot or color; live sync remains connected.");}
                 }
             }
             await Task.Delay(400,token);
@@ -143,7 +143,7 @@ public static class LivePlacement
                 using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 var command=await Receive<Command>(pipe,timeout.Token);
                 room??=command.Room;if(room!=command.Room)break;
-                if(command.Choice.Team is <0 or >4||command.Choice.Spot is <0 or >8)throw new IOException("Invalid team or spot.");
+                if(command.Choice.Color is <0 or >10||command.Choice.Team is <0 or >4||command.Choice.Spot is <0 or >8)throw new IOException("Invalid team or spot.");
                 NativeLobby.Snapshot? snapshot=null;
                 bool starting=false,closed=false;
                 try
@@ -207,34 +207,35 @@ public static class LivePlacement
                             if(!maps.Contains(actualSetup.Map))throw new IOException("Native map is not in Fellowship's installed-map catalog.");
                             if(observedSetup?.Map!=actualSetup.Map)reconcile=new();
                             desiredSetup=observedSetup=actualSetup;
-                            await Send(pipe,new Reply("Live map, rules, team & spot sync connected",Setup:actualSetup,ImportSetup:true),timeout.Token);
+                            await Send(pipe,new Reply("Live map, rules, team, spot & color sync connected",Setup:actualSetup,ImportSetup:true),timeout.Token);
                             continue;
                         }
                     }
-                    var actual=new Choice(snapshot.Local.Team+1,snapshot.Local.Spot+1);
+                    var actual=new Choice(snapshot.Local.Team+1,snapshot.Local.Spot+1,snapshot.Local.Color+1);
                     if(reconcile.ShouldWrite(command.Choice))
                     {
                         placementNotice=null;
                         var desired=ResolveOccupiedSpot(snapshot,command.Choice);
-                        if(desired!=command.Choice)placementNotice="That spot is occupied in BFME2. Your native spot was kept; choose another spot.";
+                        desired=ResolveOccupiedColor(snapshot,desired);
+                        if(desired!=command.Choice)placementNotice="That spot or color is occupied in BFME2. Your native selection was kept; choose another.";
                         if(actual!=desired)
                         {
-                                try{await Execute(host,gamePid,snapshot,NativePlacement.RequestBytes(gamePid,snapshot,desired.Team,desired.Spot),2,timeout.Token);}
+                                try{await Execute(host,gamePid,snapshot,NativePlacement.RequestBytes(gamePid,snapshot,desired.Team,desired.Spot,color:desired.Color),2,timeout.Token);}
                                 catch(PlacementRejectedException error){placementNotice=error.Message;}
                                 var confirmed=ReadAfterWrite(reader);
                                 if(confirmed==null||confirmed.Identity!=snapshot.Identity)throw new NativeTransitionException();
                                 if(!confirmed.Map.Equals(snapshot.Map,StringComparison.OrdinalIgnoreCase)||confirmed.Local.Row!=snapshot.Local.Row||HasDuplicateSpots(confirmed))throw new NativeRefreshException();
-                                actual=new(confirmed.Local.Team+1,confirmed.Local.Spot+1);
+                                actual=new(confirmed.Local.Team+1,confirmed.Local.Spot+1,confirmed.Local.Color+1);
                         }
                         reconcile.Remember(command.Choice,actual);
                         bool correction=actual!=command.Choice;
-                        reply=new(placementNotice??(command.Setup==null?"Live team & spot sync connected":"Live map, rules, team & spot sync connected"),actual,correction);
+                        reply=new(placementNotice??(command.Setup==null?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,correction);
                     }
                     else
                     {
                         bool changed=reconcile.Changed(actual);
                         if(changed)reconcile.Imported(actual);else reconcile.Remember(command.Choice,actual);
-                        reply=new(placementNotice??(command.Setup==null?"Live team & spot sync connected":"Live map, rules, team & spot sync connected"),actual,changed);
+                        reply=new(placementNotice??(command.Setup==null?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,changed);
                     }
                 }
                 await Send(pipe,reply,timeout.Token);
@@ -277,6 +278,9 @@ public static class LivePlacement
         command.Setup==null&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
     public static bool HasDuplicateSpots(NativeLobby.Snapshot snapshot)=>snapshot.Slots
         .Where(s=>s.State>1&&s.Spot>=0).GroupBy(s=>s.Spot).Any(g=>g.Count()>1);
+    public static Choice ResolveOccupiedColor(NativeLobby.Snapshot snapshot,Choice desired)=>
+        desired.Color>0&&snapshot.Slots.Any(s=>!s.Local&&s.State>1&&s.Color==desired.Color-1)
+            ?desired with{Color=snapshot.Local.Color+1}:desired;
     public static Choice ResolveOccupiedSpot(NativeLobby.Snapshot snapshot,Choice desired)=>
         desired.Spot>0&&snapshot.Slots.Any(s=>!s.Local&&s.State>1&&s.Spot==desired.Spot-1)
             ?desired with{Spot=snapshot.Local.Spot+1}:desired;
@@ -297,7 +301,7 @@ public static class LivePlacement
             await bridge.WaitForExitAsync(token);int code=BitConverter.ToInt32(File.ReadAllBytes(request),32);
             if(code is -3 or -4 or -6)throw new NativeTransitionException();
             if(code is -7 or -8)throw new NativeRefreshException();
-            if(code is -9 or -10)throw new PlacementRejectedException(NativePlacement.Describe(code));
+            if(code is -9 or -10 or -17)throw new PlacementRejectedException(NativePlacement.Describe(code));
             if(bridge.ExitCode!=0||code!=expected)throw new IOException(NativePlacement.Describe(code));
             await Task.Delay(300,token);
         }

@@ -14,12 +14,12 @@ static bool HashMatches(U32 pid){
  if(bytes)UnmapViewOfFile(bytes);if(mapping)CloseHandle(mapping);CloseHandle(file);return valid;
 }
 static int Execute(){
- if(request.magic!=0x46424d32||request.version!=2)return -1;
+ if(request.magic!=0x46424d32||request.version!=3)return -1;
  if(!HashMatches(request.pid))return -20;
  EnumWindows(Find,(I32)request.pid);if(!gameWindow)return -21;
  U32 pid=0;U32 thread=GetWindowThreadProcessId(gameWindow,&pid);if(pid!=request.pid||!thread)return -21;
  wchar_t dll[1024];U32 n=GetModuleFileNameW(0,dll,1024);if(!n||n>=990)return -22;while(n&&dll[n-1]!=L'\\')n--;
- const wchar_t* tail=L"Fellowship.Native.v017a.dll";while(*tail)dll[n++]=*tail++;dll[n]=0;
+ const wchar_t* tail=L"Fellowship.Native.v036.dll";while(*tail)dll[n++]=*tail++;dll[n]=0;
  HMODULE module=LoadLibraryW(dll);if(!module)return -22;
  void* callback=GetProcAddress(module,"_PlacementHook@12");if(!callback){FreeLibrary(module);return -22;}
  U32 nonce=0;if(BCryptGenRandom(0,(U8*)&nonce,4,2)<0){FreeLibrary(module);return -23;}

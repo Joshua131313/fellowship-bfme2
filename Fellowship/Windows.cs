@@ -195,6 +195,9 @@ public sealed class BrowserWindow : Window
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
     public PeerDirectory Presence { get; }=new();
+    readonly System.Windows.Threading.DispatcherTimer updateTimer=new(){Interval=TimeSpan.FromMinutes(30)};
+    bool checkingUpdate;
+    async Task CheckUpdateNotice(){if(checkingUpdate)return;checkingUpdate=true;try{await AppUpdates.Check();}catch{/* Offline checks stay quiet; manual checks show errors. */}finally{checkingUpdate=false;}}
     readonly StackPanel activePlayers=new();
     readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Height=34,Padding=new(10,5,10,5),Margin=new(0,0,0,10),MaxLength=80};
     readonly Button playersButton=new(){Content="Active players: 1",Height=34,Padding=new(12,5,12,5),Margin=new(12,0,0,0),HorizontalAlignment=HorizontalAlignment.Left};
@@ -205,13 +208,19 @@ public sealed class BrowserWindow : Window
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
         var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
-        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
+        UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
+        var updateText=UI.Text("",12,"#E5EBFF");var updateRow=new Grid();updateRow.ColumnDefinitions.Add(new());updateRow.ColumnDefinitions.Add(new(){Width=UI.Auto});updateRow.Children.Add(updateText);
+        var updateButton=UI.Require(UI.AsyncButton("Download & restart",async()=>{if(AppUpdates.Available is {} release)await AppUpdates.Install(release,()=>Peer.Current!=null,text=>updateText.Text=text);},true),()=>Peer.Current==null,()=>"Leave your room before downloading and restarting.");updateButton.Margin=new(16,0,0,0);Grid.SetColumn(updateButton,1);updateRow.Children.Add(updateButton);
+        var updateBanner=UI.Card(updateRow,"#24324E",12);updateBanner.Margin=new(22,12,22,0);updateBanner.Visibility=Visibility.Collapsed;UI.At(body,updateBanner,0);
+        void UpdateBanner(){updateBanner.Visibility=AppUpdates.Available==null?Visibility.Collapsed:Visibility.Visible;updateText.Text=AppUpdates.Available is {} release?$"Fellowship {release.Version.ToString(3)} is available. Update for the latest improvements.":"";}
+        AppUpdates.AvailabilityChanged+=UpdateBanner;UpdateBanner();updateTimer.Tick+=async(_,_)=>await CheckUpdateNotice();
+        Loaded+=async(_,_)=>{updateTimer.Start();await CheckUpdateNotice();};Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;};
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
-        var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,0);
+        var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
         var filters = new Grid { Margin = new(22,0,22,14) }; filters.ColumnDefinitions.Add(new()); filters.ColumnDefinitions.Add(new() { Width = UI.Auto });
         filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), UI.Text("    Radmin VPN",12,UI.Muted)));
-        var filterRight = UI.Row(UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,1);
+        var filterRight = UI.Row(UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
         var table = new Grid();
         void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, Binding = new Binding(property), MinWidth = star ? (property == "Title" ? 180 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
         Column("ROOM NAME","Title",2,true); Column("HOST","Host",1,true); Column("MAP","Map",1.25,true); Column("PLAYERS","Slots",75); Column("PATCH","Patch",75); Column("STATUS","Status",110);
@@ -219,14 +228,14 @@ public sealed class BrowserWindow : Window
         var emptyContent = UI.Stack(UI.Text("◈",42,"#5B719F",true),emptyTitle,emptyHint);
         foreach (FrameworkElement el in emptyContent.Children) { el.HorizontalAlignment = HorizontalAlignment.Center; el.Margin = new(0,0,0,12); if(el is TextBlock tb)tb.TextAlignment = TextAlignment.Center; }
         empty = new Border { Child = emptyContent, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false, Margin = new(0,38,0,0) }; table.Children.Add(empty);
-        var tableCard = UI.Card(table,"#171A20",0); tableCard.Margin = new(22,0,22,0); UI.At(body,tableCard,2);
+        var tableCard = UI.Card(table,"#171A20",0); tableCard.Margin = new(22,0,22,0); UI.At(body,tableCard,3);
         var footer = new Grid { Margin = new(22,14,14,18) }; footer.ColumnDefinitions.Add(new()); footer.ColumnDefinitions.Add(new() { Width = UI.Auto });
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.Require(UI.AsyncButton("Join room  →",Join,true),()=>UI.ValidAddress(address.Text),()=>"Select a room or enter a valid host IPv4 address, such as 26.42.214.47.")); address.Margin = new(0,0,10,0);
         foreach(var button in direct.Children.OfType<Button>()){button.Height=34;button.MinWidth=90;button.Padding=new(12,5,12,5);}
         footer.Children.Add(direct);
-        count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,3);
+        count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.35   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.36   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -295,33 +304,41 @@ public sealed class BrowserWindow : Window
             if(!quiet)UI.Error(message);return false;
         }
     }
-    public void OpenSettings()
+    public void OpenSettings()=>CreateSettingsWindow().ShowDialog();
+    public Window CreateSettingsWindow()
     {
-        var w = new Window { Owner = this }; var body = UI.Shell(w,"Settings",560,630); w.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-        var p = new StackPanel { Margin = new(24,20,24,24) }; body.Children.Add(UI.Scroll(p));
+        var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterOwner};if(IsLoaded)w.Owner=this;
+        var body=UI.Shell(w,"Settings",740,700);w.MinWidth=640;w.MinHeight=560;UI.Rows(body,UI.Star,UI.Auto);
+        var p=new StackPanel{Margin=new(24,20,24,18)};UI.At(body,UI.Scroll(p),0);
         p.Children.Add(UI.Text("Settings",23,"#F1F3F8",true));
-        var name = UI.Field(p,"DISPLAY NAME",Settings.Name,40);
-        var game = UI.Field(p,"BFME2 EXECUTABLE",Settings.GamePath);
-        var installed = @"C:\Program Files (x86)\Electronic Arts\The Battle for Middle-earth (tm) II\lotrbfme2.exe";
-        if(game.Text == "" && File.Exists(installed))game.Text = installed;
-        var browse = UI.Button("Browse files…",() => { var d = new OpenFileDialog { Filter = "Game executable (*.exe)|*.exe" }; if(d.ShowDialog(w)==true)game.Text = d.FileName; }); browse.HorizontalAlignment = HorizontalAlignment.Left; browse.Margin = new(0,8,0,0); p.Children.Add(browse);
-        var label = UI.Text("NETWORK INTERFACE",10,UI.Muted,true); label.Margin = new(0,18,0,7); p.Children.Add(label);
-        var interfaces = PeerService.Interfaces(); var network = new ComboBox { ItemsSource = interfaces.Select(i => $"{i.Name}  ·  {i.Address}").ToList() };
-        network.SelectedIndex = interfaces.FindIndex(i => i.Address == Settings.BindAddress);
-        if(network.SelectedIndex<0)network.SelectedIndex = interfaces.FindIndex(i => i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));
-        p.Children.Add(network);
-        var info = UI.Text("Choose Radmin VPN on both PCs. Interface changes need an app restart. BFME2's Network IP should use the same adapter.",12,UI.Muted); info.Margin = new(0,12,0,18); p.Children.Add(info);
-        var sounds=new CheckBox{Content="Play a sound for incoming private messages",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,20)};p.Children.Add(sounds);
-        var liveSync=new CheckBox{Content="Live BFME2 synchronization",IsChecked=Settings.LiveGameSync,Margin=new(0,0,0,8)};p.Children.Add(liveSync);
-        var syncHint=UI.Text("Turn off to diagnose game startup errors. Rooms and chat stay connected; game settings must be set manually while off. You can enable it again after the BFME2 LAN lobby opens.",11,UI.Muted);syncHint.Margin=new(0,0,0,18);p.Children.Add(syncHint);
-        var startup=new CheckBox{Content="Launch Fellowship at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,Margin=new(0,0,0,10)};p.Children.Add(startup);
-        p.Children.Add(UI.Text(Installation.IsInstalled?"Starts quietly in the system tray.":"Install Fellowship to enable launch at sign-in.",11,UI.Muted));
-        p.Children.Add(UI.Button("Open preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);Process.Start(new ProcessStartInfo(Settings.Folder){UseShellExecute=true});}));
-        p.Children.Add(UI.Require(UI.Button("Save settings",() =>
+        var profile=new Grid{Margin=new(0,16,0,0)};profile.ColumnDefinitions.Add(new());profile.ColumnDefinitions.Add(new());
+        var profileName=new StackPanel{Margin=new(0,0,12,0)};var profileNetwork=new StackPanel();Grid.SetColumn(profileNetwork,1);
+        profile.Children.Add(profileName);profile.Children.Add(profileNetwork);p.Children.Add(profile);
+        var name=UI.Field(profileName,"DISPLAY NAME",Settings.Name,40);
+        var networkLabel=UI.Text("NETWORK INTERFACE",10,UI.Muted,true);networkLabel.Margin=new(0,14,0,7);profileNetwork.Children.Add(networkLabel);
+        var interfaces=PeerService.Interfaces();
+        var network=new ComboBox{ItemsSource=interfaces.Select(i=>$"{i.Name} · {i.Address}").ToList()};
+        var networkTemplate=new DataTemplate();var networkText=new FrameworkElementFactory(typeof(TextBlock));networkText.SetBinding(TextBlock.TextProperty,new Binding());networkText.SetValue(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis);networkText.SetBinding(TextBlock.ToolTipProperty,new Binding());networkTemplate.VisualTree=networkText;network.ItemTemplate=networkTemplate;
+        network.SelectedIndex=interfaces.FindIndex(i=>i.Address==Settings.BindAddress);
+        if(network.SelectedIndex<0)network.SelectedIndex=interfaces.FindIndex(i=>i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));profileNetwork.Children.Add(network);
+        var networkHint=UI.Text("Use Radmin VPN on both PCs. Restart after changing the interface.",11,UI.Muted);networkHint.Margin=new(0,10,0,0);p.Children.Add(networkHint);
+        var game=UI.Field(p,"BFME2 EXECUTABLE",Settings.GamePath);
+        game.Height=58;game.TextWrapping=TextWrapping.Wrap;game.VerticalContentAlignment=VerticalAlignment.Center;
+        game.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;game.VerticalScrollBarVisibility=ScrollBarVisibility.Hidden;
+        var browse=UI.Button("Browse files…",()=>{var d=new OpenFileDialog{Filter="Game executable (*.exe)|*.exe"};if(d.ShowDialog(w)==true)game.Text=d.FileName;});browse.HorizontalAlignment=HorizontalAlignment.Left;browse.Margin=new(0,8,0,0);p.Children.Add(browse);
+        var options=new StackPanel();
+        var sounds=new CheckBox{Content="Message sounds",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,14)};options.Children.Add(sounds);
+        var liveSync=new CheckBox{Content="Live BFME2 synchronization",IsChecked=Settings.LiveGameSync,Margin=new(0,0,0,14),ToolTip="Synchronize map, rules, team, starting spot and color in the native LAN lobby."};options.Children.Add(liveSync);
+        var startup=new CheckBox{Content="Start in the tray at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,ToolTip=Installation.IsInstalled?"Fellowship starts quietly in the system tray.":"Install Fellowship to enable startup."};options.Children.Add(startup);ToolTipService.SetShowOnDisabled(startup,true);
+        var optionCard=UI.Card(options,"#171C24",16);optionCard.Margin=new(0,20,0,0);p.Children.Add(optionCard);
+        p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null));
+        var footer=new Grid{Margin=new(24,14,24,20)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=UI.Auto});
+        var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);Process.Start(new ProcessStartInfo(Settings.Folder){UseShellExecute=true});});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
+        var save=UI.Require(UI.Button("Save settings",()=>
         {
-            if(name.Text.Trim().Length==0 || network.SelectedIndex<0){UI.Error("Enter a name and choose a network interface.");return;}
             Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();w.Close();EnsureOnline();
-        },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.")); p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null)); w.ShowDialog();
+        },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
+        save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return w;
     }
     public async Task Refresh()
     {
@@ -427,7 +444,7 @@ public sealed class RoomWindow : Window
     readonly TextBox roomName=new(){MaxLength=80};
     readonly ComboBox privacyChoice=new(){ItemsSource=new[]{"Public on VPN","Friends only"}};
     readonly MapPreview mapPreview=new();
-    readonly ComboBox teamChoice=new();
+    readonly ComboBox teamChoice=new(), colorChoice=new();
     readonly TextBlock placementStatus=UI.Text("",11,UI.Muted);
     readonly Button clearSpot;
     bool syncingPlacement,changingPlacement,watchingNative;
@@ -474,11 +491,20 @@ public sealed class RoomWindow : Window
         setupSummary.Margin=new(0,12,0,0);setupSummary.LineHeight=22;
         var banner=setupBanner=UI.Card(UI.Stack(UI.Text("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#252F43",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
         right.Children.Add(presetStatus);right.Children.Add(mapPreview);
-        right.Children.Add(UI.Text("YOUR TEAM",10,UI.Muted,true));teamChoice.ItemsSource=Enumerable.Range(0,5).Select(n=>new TeamOption(n)).ToArray();teamChoice.Margin=new(0,6,0,8);right.Children.Add(teamChoice);
+        var choices=new Grid();choices.ColumnDefinitions.Add(new());choices.ColumnDefinitions.Add(new());
+        var teamField=new StackPanel{Margin=new(0,0,6,0)};var colorField=new StackPanel{Margin=new(6,0,0,0)};Grid.SetColumn(colorField,1);
+        teamField.Children.Add(UI.Text("TEAM",10,UI.Muted,true));colorField.Children.Add(UI.Text("COLOR",10,UI.Muted,true));
+        teamChoice.ItemsSource=Enumerable.Range(0,5).Select(n=>new TeamOption(n)).ToArray();teamChoice.Margin=new(0,6,0,8);teamField.Children.Add(teamChoice);
+        colorChoice.ItemsSource=PlayerColors.All;colorChoice.Margin=new(0,6,0,8);
+        var colorTemplate=new DataTemplate(typeof(PlayerColor));var colorRow=new FrameworkElementFactory(typeof(StackPanel));colorRow.SetValue(StackPanel.OrientationProperty,Orientation.Horizontal);
+        var swatch=new FrameworkElementFactory(typeof(Border));swatch.SetValue(Border.WidthProperty,12.0);swatch.SetValue(Border.HeightProperty,12.0);swatch.SetValue(Border.CornerRadiusProperty,new CornerRadius(3));swatch.SetValue(Border.MarginProperty,new Thickness(0,0,7,0));swatch.SetBinding(Border.BackgroundProperty,new Binding("Hex"));colorRow.AppendChild(swatch);
+        var colorName=new FrameworkElementFactory(typeof(TextBlock));colorName.SetBinding(TextBlock.TextProperty,new Binding("Name"));colorRow.AppendChild(colorName);colorTemplate.VisualTree=colorRow;colorChoice.ItemTemplate=colorTemplate;
+        colorField.Children.Add(colorChoice);choices.Children.Add(teamField);choices.Children.Add(colorField);right.Children.Add(choices);
+        colorChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&colorChoice.SelectedItem is PlayerColor color)await ChangePlacement(null,null,color.Value);};
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));UI.DisabledHint(clearSpot,()=>app.Peer.Current==null?"Join a room first.":launching||changingPlacement?"Wait for the current operation to finish.":"Select a starting spot on the map before clearing it.");clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams and spots sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -533,7 +559,7 @@ public sealed class RoomWindow : Window
     {
         if(!app.Settings.LiveGameSync||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
-        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot),app.Peer.IsHost?NativeSetup.From(room):null);
+        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),app.Peer.IsHost?NativeSetup.From(room):null);
     }
     async Task WatchNative()
     {
@@ -561,7 +587,7 @@ public sealed class RoomWindow : Window
                         await LivePlacement.Listen(app.Settings.GamePath,pid,SyncCommand,async (choice,map)=>
                         {
                             changingPlacement=true;Refresh();
-                            try{await app.Peer.SelectPlacement(choice.Spot,choice.Team,map);}
+                            try{await app.Peer.SelectPlacement(choice.Spot,choice.Team,map,choice.Color);}
                             finally{changingPlacement=false;Refresh();}
                         },async setup=>
                         {
@@ -591,11 +617,11 @@ public sealed class RoomWindow : Window
         }
         catch(OperationCanceledException){}
     }
-    async Task ChangePlacement(int? spot,int? team)
+    async Task ChangePlacement(int? spot,int? team,int? color=null)
     {
         if(changingPlacement)return;
-        changingPlacement=true;teamChoice.IsEnabled=false;clearSpot.IsEnabled=false;placementStatus.Text="Confirming with host…";
-        try{await app.Peer.SelectPlacement(spot,team);}
+        changingPlacement=true;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;placementStatus.Text="Confirming with host…";
+        try{await app.Peer.SelectPlacement(spot,team,color:color);}
         catch(Exception e){Append("SYSTEM",e.Message);}
         finally{changingPlacement=false;Refresh();}
     }
@@ -644,7 +670,7 @@ public sealed class RoomWindow : Window
     {
         CommandManager.InvalidateRequerySuggested();
         var room=app.Peer.Current;
-        if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
+        if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
         if(app.Peer.IsHost)
         {
             try{app.Settings.RememberHost(room);}
@@ -655,9 +681,9 @@ public sealed class RoomWindow : Window
         mapPreview.ShowSelections(room,app.Peer.LocalId,!launching&&!changingPlacement);
         var self=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
         syncingPlacement=true;
-        try{teamChoice.SelectedItem=teamChoice.Items.Cast<TeamOption>().FirstOrDefault(t=>t.Value==(self?.Team??0));}
+        try{colorChoice.SelectedItem=PlayerColors.Get(self?.Color??0);teamChoice.SelectedItem=teamChoice.Items.Cast<TeamOption>().FirstOrDefault(t=>t.Value==(self?.Team??0));}
         finally{syncingPlacement=false;}
-        teamChoice.IsEnabled=!launching&&!changingPlacement;clearSpot.IsEnabled=!launching&&!changingPlacement&&self?.Spot>0;
+        teamChoice.IsEnabled=!launching&&!changingPlacement;colorChoice.IsEnabled=teamChoice.IsEnabled;clearSpot.IsEnabled=!launching&&!changingPlacement&&self?.Spot>0;
         placementStatus.Text=changingPlacement?"Confirming with host…":room.Spots.Count==0?"Starting spots unavailable for this map.":$"Your spot: {(self?.Spot>0?self.Spot.ToString():"not selected")} · {(self?.Team>0?"Team "+self.Team:"No team")}";
         if(lastRoomName!=room.Title){roomName.Text=room.Title;lastRoomName=room.Title;}
         if(lastPrivacy!=room.FriendsOnly){privacyChoice.SelectedIndex=room.FriendsOnly?1:0;lastPrivacy=room.FriendsOnly;}
@@ -744,7 +770,7 @@ public sealed class FriendsWindow : Window
     {
         this.app=app;var body=UI.Shell(this,"Friends",390,620);MinWidth=360;
         UI.Menus(this,UI.MenuGroup("_Friends",UI.MenuAction("Add friend",AddFriend),UI.MenuAction("Send message",Message,()=>list.SelectedItem is ListBoxItem{Tag:Friend}),UI.MenuAction("Refresh presence",async()=>{try{await RefreshPresence();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Close window",Close)));
-        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
+        UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var me=UI.Row(UI.Avatar(app.Settings.Name,40),UI.Stack(UI.Text(app.Settings.Name,16,"#F1F3F8",true),UI.Text("●  Available on your VPN",11,UI.Green)));me.Margin=new(20,20,20,22);UI.At(body,me,0);
         var bar=new Grid{Margin=new(20,0,12,10)};bar.ColumnDefinitions.Add(new());bar.ColumnDefinitions.Add(new(){Width=UI.Auto});bar.Children.Add(summary);
         var refresh=UI.AsyncButton("↻",RefreshPresence);refresh.ToolTip="Check which friends are online";refresh.Padding=new(10,5,10,5);Grid.SetColumn(refresh,1);bar.Children.Add(refresh);UI.At(body,bar,1);

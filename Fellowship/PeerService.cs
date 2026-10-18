@@ -120,7 +120,7 @@ public sealed partial class PeerService : IDisposable
                 else if(msg.Type=="placement")
                 {
                     string failure="";
-                    try{ApplyPlacement(id,msg.MapPath,msg.Spot,msg.Team);await BroadcastState();}
+                    try{ApplyPlacement(id,msg.MapPath,msg.Spot,msg.Team,msg.Color);await BroadcastState();}
                     catch(InvalidOperationException e){failure=e.Message;}
                     await c.Send(new(){Type="placement-result",RequestId=msg.RequestId,Text=failure});
                 }
@@ -160,7 +160,7 @@ public sealed partial class PeerService : IDisposable
             var saved=settings.LastHostedSetup;
             int team=saved?.Team is >=0 and <=4?saved.Team:0;
             int spot=saved!=null&&saved.MapPath==room.MapPath&&room.Spots.Any(s=>s.Number==saved.Spot)?saved.Spot:0;
-            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null,Team=team,Spot=spot }];
+            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
         }
         Changed?.Invoke();
     }
@@ -238,7 +238,7 @@ public sealed partial class PeerService : IDisposable
         using var timeout = new CancellationTokenSource(3000);
         if ((await c.Read(timeout.Token))?.Type != "ack") throw new IOException("Message was not acknowledged.");
     }
-    void ApplyPlacement(string id,string mapPath,int? spot,int? team)
+    void ApplyPlacement(string id,string mapPath,int? spot,int? team,int? color)
     {
         lock(gate)
         {
@@ -246,24 +246,26 @@ public sealed partial class PeerService : IDisposable
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(mapPath!=Current.MapPath)throw new InvalidOperationException("The map changed. Choose a spot on the new map.");
             var player=Current.Players.FirstOrDefault(p=>p.Id==id)??throw new InvalidOperationException("Player is no longer in the room.");
+            if(color is <0 or >10)throw new InvalidOperationException("Choose a BFME2 player color.");
+            if(color>0&&Current.Players.Any(p=>p.Id!=id&&p.Color==color))throw new InvalidOperationException("Another player has claimed this color. Choose another.");
             if(team is <0 or >4)throw new InvalidOperationException("Choose no team or team 1–4.");
             if(spot.HasValue&&spot!=0&&!Current.Spots.Any(s=>s.Number==spot))throw new InvalidOperationException("That starting spot is unavailable on this map.");
             if(spot>0&&Current.Players.Any(p=>p.Id!=id&&p.Spot==spot))throw new InvalidOperationException("Another player has claimed this spot. Choose another.");
-            if((!spot.HasValue||spot==player.Spot)&&(!team.HasValue||team==player.Team))return;
-            if(spot.HasValue)player.Spot=spot.Value;if(team.HasValue)player.Team=team.Value;
+            if((!spot.HasValue||spot==player.Spot)&&(!team.HasValue||team==player.Team)&&(!color.HasValue||color==player.Color))return;
+            if(spot.HasValue)player.Spot=spot.Value;if(team.HasValue)player.Team=team.Value;if(color.HasValue)player.Color=color.Value;
 
         }
     }
-    public async Task SelectPlacement(int? spot=null,int? team=null,string? expectedMap=null)
+    public async Task SelectPlacement(int? spot=null,int? team=null,string? expectedMap=null,int? color=null)
     {
         var room=Current??throw new InvalidOperationException("Join a room first.");
         var mapPath=expectedMap??room.MapPath;
-        if(IsHost){ApplyPlacement("host",mapPath,spot,team);await BroadcastState();return;}
+        if(IsHost){ApplyPlacement("host",mapPath,spot,team,color);await BroadcastState();return;}
         var connection=upstream??throw new InvalidOperationException("Disconnected from host.");
         var id=Guid.NewGuid().ToString("N");var completion=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);placementRequests[id]=completion;
         try
         {
-            await connection.Send(new(){Type="placement",RequestId=id,MapPath=mapPath,Spot=spot,Team=team});
+            await connection.Send(new(){Type="placement",RequestId=id,MapPath=mapPath,Spot=spot,Team=team,Color=color});
             string failure=await completion.Task.WaitAsync(TimeSpan.FromSeconds(5));
             if(failure.Length>0)throw new InvalidOperationException(failure);
         }
