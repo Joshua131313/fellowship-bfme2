@@ -141,7 +141,8 @@ class Program
   wheelBox.RaiseEvent(wheel);
   if(!wheel.Handled||wheelBox.SelectedIndex!=1)throw new Exception("Closed select accepts accidental wheel changes");
   Console.WriteLine("PASS closed dropdown wheel input cannot change selection");
-  var browser=new BrowserWindow(Settings.InMemory());
+  var demoSettings=Settings.InMemory();demoSettings.Name="Frodo";
+  var browser=new BrowserWindow(demoSettings);
   browser.Presence.Success("26.1.1.2","Aragorn",null,DateTimeOffset.UtcNow);
   browser.Presence.Success("26.1.1.3","Gandalf",null,DateTimeOffset.UtcNow);
   browser.Presence.Failure("26.1.1.3");
@@ -160,7 +161,7 @@ class Program
   Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   var editor=new RoomEditor(null,new Settings{GamePath=GameInstallation.Find()},new Room{Title="Battle for Rhun"});
   Render(editor,"dist/preview-room-settings.png");
-  browser.Peer.Host(new Room{Title="Inline rules test"});
+  browser.Peer.Host(new Room{Title="Battle for Rhûn"});
   if(browser.Peer.Current!.Spots.Count>0)browser.Peer.SelectPlacement(browser.Peer.Current.Spots[0].Number,1).GetAwaiter().GetResult();
   var roomWindow=new RoomWindow(browser);
   var syncCommand=typeof(RoomWindow).GetMethod("SyncCommand",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!;
