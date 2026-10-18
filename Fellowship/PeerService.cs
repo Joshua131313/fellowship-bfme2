@@ -94,6 +94,7 @@ public sealed partial class PeerService : IDisposable
                 if (transferring) error="Host transfer in progress. Try again shortly.";
                 else if (!IsHost || Current == null) error = "This peer is not hosting a room.";
                 else if (!CanSee(remoteAddress)) error = "This room is for the host's saved friends only.";
+                else if(Current.Isolated&&!hello.SupportsIsolation)error="This isolated room requires Fellowship 0.1.37 or newer.";
                 else if (Current.Players.Count >= Current.Capacity) error = "The room is full.";
                 else
                 {
@@ -150,11 +151,12 @@ public sealed partial class PeerService : IDisposable
     {
         if (room.Patch != "1.00") throw new InvalidOperationException("Only BFME2 1.00 is supported by this build.");
         room.Match.Validate();
-        if(room.Capacity is <2 or >8 || string.IsNullOrWhiteSpace(room.Title))throw new InvalidOperationException("Enter a room name and choose between 2 and 8 players.");
+        if(room.Capacity is <2 or >64 || string.IsNullOrWhiteSpace(room.Title))throw new InvalidOperationException("Enter a room name and choose between 2 and 64 players.");
         Leave();
         lock (gate)
         {
             IsHost = true; LocalId = "host"; Current = room;
+            room.Isolated=settings.RoomIsolation;
             room.Spots=GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
             var saved=settings.LastHostedSetup;
@@ -170,7 +172,7 @@ public sealed partial class PeerService : IDisposable
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         try
         {
-            await c.Send(new() { Type = "join", Name = settings.Name,CanHostTransfer=listener!=null });
+            await c.Send(new() { Type = "join", SupportsIsolation=true, Name = settings.Name,CanHostTransfer=listener!=null });
             using var timeout = new CancellationTokenSource(5000);
             var welcome = await c.Read(timeout.Token);
             if (welcome?.Type != "welcome") throw new IOException(welcome?.Text ?? "No response from host.");
@@ -292,7 +294,7 @@ public sealed partial class PeerService : IDisposable
     public async Task EditRoom(Room draft)
     {
         draft.Match.Validate();
-        if(draft.Patch!="1.00"||draft.Capacity<2||draft.Capacity>8||string.IsNullOrWhiteSpace(draft.Title))throw new InvalidOperationException("Check the room name, patch and player limit.");
+        if(draft.Patch!="1.00"||draft.Capacity<2||draft.Capacity>64||string.IsNullOrWhiteSpace(draft.Title))throw new InvalidOperationException("Check the room name, patch and player limit.");
         lock(gate)
         {
             if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can edit this room.");

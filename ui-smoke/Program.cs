@@ -112,8 +112,12 @@ class Program
   try{NativePlacement.RequestBytes(1234,nativeSnapshot,0,0,color:11);throw new Exception("Invalid color accepted");}catch(InvalidDataException){}
   var colorSync=new LivePlacement.Reconciler();colorSync.Remember(new(1,2,1),new(1,2,1));if(!colorSync.Changed(new(1,2,2))||!colorSync.ShouldWrite(new(1,2,3)))throw new Exception("Color-only edits ignored");
   Console.WriteLine("PASS native color bounds, encoding, human/AI conflicts and bidirectional color-only edits");
+  var isolation=RoomIsolation.Request(1234,new(true,["26.1.2.3","26.4.5.6"],"26.255.255.255"));
+  if(isolation.Length!=1372||BitConverter.ToInt32(isolation,568)!=2||BitConverter.ToInt32(isolation,1104)!=1||BitConverter.ToInt32(isolation,1108)!=2||!isolation.Skip(1112).Take(4).SequenceEqual(new byte[]{26,1,2,3}))throw new Exception("Isolation ABI mismatch");
+  try{RoomIsolation.Request(1234,new(true,Enumerable.Repeat("26.1.2.3",65).ToArray(),"255.255.255.255"));throw new Exception("Oversized isolation roster accepted");}catch(InvalidDataException){}
+  Console.WriteLine("PASS isolation ABI, network-byte-order addresses and capacity bounds");
   var command=NativePlacement.RequestBytes(1234,nativeSnapshot,4,1);
-  if(command.Length!=1104||BitConverter.ToInt32(command,4)!=3||BitConverter.ToInt32(command,20)!=3||BitConverter.ToInt32(command,24)!=0||BitConverter.ToInt32(command,28)!=0||System.Text.Encoding.ASCII.GetString(command,56,13)!="maps\\test.map")throw new Exception("Native placement ABI mismatch");
+  if(command.Length!=1372||BitConverter.ToInt32(command,4)!=4||BitConverter.ToInt32(command,20)!=3||BitConverter.ToInt32(command,24)!=0||BitConverter.ToInt32(command,28)!=0||System.Text.Encoding.ASCII.GetString(command,56,13)!="maps\\test.map")throw new Exception("Native placement ABI mismatch");
   var setupBytes=NativePlacement.SetupRequestBytes(1234,nativeSnapshot,new("maps\\test.map",4000,200,false,true));
   if(BitConverter.ToInt32(setupBytes,568)!=1||BitConverter.ToInt32(setupBytes,1084)!=4000||BitConverter.ToInt32(setupBytes,1088)!=200||BitConverter.ToInt32(setupBytes,1096)!=1)throw new Exception("Native setup ABI mismatch");
   var random=NativePlacement.RequestBytes(1234,nativeSnapshot,0,0,true);
@@ -127,12 +131,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.37-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.37/Fellowship-0.1.37-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.37",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.38-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.38/Fellowship-0.1.38-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.38",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.37","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.37",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.38","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.38",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
@@ -179,7 +183,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.37"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.37/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.38"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.38/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(browser.CreateSettingsWindow(),"dist/preview-settings.png");

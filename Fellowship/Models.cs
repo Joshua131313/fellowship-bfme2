@@ -24,6 +24,7 @@ public sealed class Settings
     public string GamePath { get; set; } = "";
     public string BindAddress { get; set; } = "";
     public bool MessageSounds { get; set; } = true;
+    public bool RoomIsolation { get; set; }
     public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }
     public List<Friend> Friends { get; set; } = [];
@@ -52,6 +53,7 @@ public sealed class Room
     public string Title { get; set; } = "Middle-earth gathering";
     public string Host { get; set; } = "";
     public string HostAddress { get; set; } = "";
+    public bool Isolated { get; set; }
     public bool FriendsOnly { get; set; }
     public MatchRules Match { get; set; } = new();
     public string MapPath { get; set; } = @"maps\map wor rhun\map wor rhun.map";
@@ -78,6 +80,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public bool SupportsIsolation { get; set; }
     public bool CanHostTransfer { get; set; }
     public string Token { get; set; } = "";
     public Dictionary<string,string>? Tickets { get; set; }

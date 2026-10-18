@@ -277,3 +277,29 @@ using(var seeker=new PeerService(new(){Name="Seeker"}))
  if(peer.Name!="Idle player"||peer.Room!=null)throw new Exception("Idle identity query failed");
  Console.WriteLine("PASS idle player identity without a room or chat activity");
 }
+
+using(var isolatedHost=new PeerService(new(){Name="Isolated",RoomIsolation=true}))
+{
+ isolatedHost.Start("127.0.0.50");isolatedHost.Host(new(){Capacity=64});
+ if(!isolatedHost.Current!.Isolated)throw new Exception("Host isolation policy lost");
+ using(var legacy=new TcpClient())
+ {
+  await legacy.ConnectAsync("127.0.0.50",PeerService.Port);var stream=legacy.GetStream();
+  var bytes=System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new Wire{Type="join",Name="Old client"});
+  await stream.WriteAsync(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(bytes.Length)));await stream.WriteAsync(bytes);
+  var header=new byte[4];await stream.ReadExactlyAsync(header);var reply=new byte[IPAddress.NetworkToHostOrder(BitConverter.ToInt32(header))];await stream.ReadExactlyAsync(reply);
+  if(System.Text.Json.JsonSerializer.Deserialize<Wire>(reply)?.Type!="error")throw new Exception("Legacy client entered isolated room");
+ }
+ var crowd=new List<PeerService>();
+ try
+ {
+  for(int i=0;i<9;i++){var peer=new PeerService(new(){Name="Guest "+i});crowd.Add(peer);peer.Start("127.0.0."+(51+i));await peer.Join("127.0.0.50");}
+  await Until(()=>crowd.All(p=>p.Current?.Players.Count==10),"ten-player isolated room roster");
+  if((await PeerService.Query("127.0.0.50","127.0.0.60"))?.Players.Count!=10)throw new Exception("Isolation hid Fellowship discovery");
+  bool received=false;isolatedHost.PrivateMessage+=(_,_,text)=>received=text=="still connected";
+  await crowd[0].SendPrivate("127.0.0.50","still connected");await Until(()=>received,"private chat remains available in isolated room");
+  try{await isolatedHost.EditRoom(new(){Capacity=65});throw new Exception("Invalid room capacity accepted");}catch(InvalidOperationException){}
+ }
+ finally{foreach(var peer in crowd)peer.Dispose();}
+ Console.WriteLine("PASS isolated-room compatibility, larger room capacity, discovery and chat");
+}

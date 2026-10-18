@@ -46,7 +46,7 @@ public sealed class RoomEditor : Window
         var maps=GameInstallation.Maps(settings.GamePath);
         var map=Choice(mapRow,"MAP",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path==initial.MapPath)??maps[0],searchable:true);
         var limits=Pair(2);
-        var capacity=Choice(limits,"PLAYERS",Enumerable.Range(2,7).Cast<object>().ToArray(),initial.Capacity);
+        var capacityField=Field(limits,"ROOM LIMIT (2–64)");var capacity=new TextBox{Text=initial.Capacity.ToString(),MaxLength=2,ToolTip="Fellowship room capacity. BFME2 matches still support at most 8 players."};capacityField.Children.Add(capacity);
         var resources=Choice(limits,"STARTING RESOURCES",MatchRules.ResourceValues.Cast<object>().ToArray(),initial.Match.Resources,2);
         var options=Pair(3);
         var factors=MatchRules.CommandValues.Select(n=>new Factor(n)).ToArray();
@@ -69,11 +69,11 @@ public sealed class RoomEditor : Window
         {
             if(string.IsNullOrWhiteSpace(name.Text)){name.Focus();UI.Error("Enter a room name.");return;}
             Result=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(initial))!;
-            Result.Title=name.Text.Trim();Result.Capacity=(int)capacity.SelectedItem;Result.FriendsOnly=privacy.SelectedIndex==1;
+            Result.Title=name.Text.Trim();Result.Capacity=int.Parse(capacity.Text);Result.FriendsOnly=privacy.SelectedIndex==1;
             var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;DialogResult=true;
-        },true);UI.Require(save,()=>!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&capacity.SelectedItem!=null&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0,()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a room name.":"Select a map, player limit, resources, command points and privacy.");save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
+        },true);UI.Require(save,()=>!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out var limit)&&limit is >=2 and <=64&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0,()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a room name.":"Select a map, player limit, resources, command points and privacy.");save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
     }
     sealed record Factor(int Value){public override string ToString()=>$"{Value/100.0:0.##}×";}
 }

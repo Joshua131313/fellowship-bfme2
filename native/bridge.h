@@ -19,12 +19,12 @@ API const wchar_t* W GetCommandLineW(); API wchar_t** W CommandLineToArgvW(const
 API HANDLE W CreateFileW(const wchar_t*,U32,U32,void*,U32,U32,HANDLE);API BOOL W ReadFile(HANDLE,void*,U32,U32*,void*);API BOOL W WriteFile(HANDLE,const void*,U32,U32*,void*);API U32 W SetFilePointer(HANDLE,I32,I32*,U32);API U32 W GetFileSize(HANDLE,U32*);
 API HANDLE W OpenProcess(U32,BOOL,U32);API BOOL W QueryFullProcessImageNameW(HANDLE,U32,wchar_t*,U32*);API void W ExitProcess(U32);
 API I32 W BCryptOpenAlgorithmProvider(HANDLE*,const wchar_t*,const wchar_t*,U32);API I32 W BCryptHash(HANDLE,U8*,U32,U8*,U32,U8*,U32);API I32 W BCryptCloseAlgorithmProvider(HANDLE,U32);API I32 W BCryptGenRandom(HANDLE,U8*,U32,U32);
-struct Request { U32 magic,version,pid,lobby; I32 row,team,spot,readOnly,status,beforeTeam,beforeSpot,afterTeam,afterSpot; U32 thread; char map[512]; I32 mode; char targetMap[512]; I32 resources,commandPoints,customHeroes,ringHeroes,color; };
-static_assert(sizeof(Request)==1104,"Protocol size");
+struct Request { U32 magic,version,pid,lobby; I32 row,team,spot,readOnly,status,beforeTeam,beforeSpot,afterTeam,afterSpot; U32 thread; char map[512]; I32 mode; char targetMap[512]; I32 resources,commandPoints,customHeroes,ringHeroes,color; I32 isolate,peerCount; U32 peers[64],broadcast; };
+static_assert(sizeof(Request)==1372,"Protocol size");
 inline void Copy(void* target,const void* source,U32 n){for(U32 i=0;i<n;i++)((U8*)target)[i]=((const U8*)source)[i];}
 inline bool Equal(const void* a,const void* b,U32 n){for(U32 i=0;i<n;i++)if(((const U8*)a)[i]!=((const U8*)b)[i])return false;return true;}
 inline void MappingName(wchar_t* out,U32 game,U32 helper,U32 nonce){const wchar_t* p=L"Local\\Fellowship.Native.";int n=0;while(*p)out[n++]=*p++;U32 values[3]={game,helper,nonce};for(int v=0;v<3;v++){for(int i=7;i>=0;i--)out[n++]=L"0123456789abcdef"[(values[v]>>(i*4))&15];out[n++]=L'.';}out[n]=0;}
-inline U32 MessageId(){return RegisterWindowMessageW(L"Fellowship.BFME2.NativePlacement.v3");}
+inline U32 MessageId(){return RegisterWindowMessageW(L"Fellowship.BFME2.NativePlacement.v4");}
 
 API BOOL W PostMessageW(HWND,U32,U32,I32);API void W Sleep(U32);
 

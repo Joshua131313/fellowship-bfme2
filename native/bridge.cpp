@@ -1,4 +1,5 @@
 #include "bridge.h"
+int ConfigureIsolation(Request*);
 static bool Readable(U32 address,U32 size){MBI m;if(!address||!VirtualQuery((void*)address,&m,sizeof(m)))return false;return m.State==0x1000&&!(m.Protect&(0x100|1))&&address+size>=address&&address+size<=(U32)m.Base+m.RegionSize;}
 static U32 Value(U32 address){return *(U32*)address;}
 static bool MapEquals(U32 lobby,const char* name){U32 p=Value(lobby+0x40);if(!Readable(p,8))return false;U16 n=*(U16*)(p+4);return n>0&&n<512&&Readable(p+8,n)&&name[n]==0&&Equal((void*)(p+8),name,n);}
@@ -38,8 +39,9 @@ static int ApplySetup(Request* r,U32 lobby,U32 setup){
  return MapEquals(lobby,r->targetMap)&&(int)Value(lobby+0x60)==r->customHeroes&&(int)Value(lobby+0x68)==r->ringHeroes&&(int)Value(lobby+0x6c)==r->commandPoints&&(int)Value(lobby+0x70)==r->resources?3:-16;
 }
 static int Apply(Request* r){
- if(r->magic!=0x46424d32||r->version!=3||r->color< -1||r->color>9||r->pid!=GetCurrentProcessId()||r->row<0||r->row>=8||r->team< -1||r->team>3||r->spot< -1||r->spot>7||r->readOnly<0||r->readOnly>1||r->mode<0||r->mode>1)return -1;
+ if(r->magic!=0x46424d32||r->version!=4||r->color< -1||r->color>9||r->pid!=GetCurrentProcessId()||r->row<0||r->row>=8||r->team< -1||r->team>3||r->spot< -1||r->spot>7||r->readOnly<0||r->readOnly>1||r->mode<0||r->mode>2)return -1;
  if((U32)GetModuleHandleW(0)!=0x400000)return -2;
+ if(r->mode==2)return ConfigureIsolation(r);
  if(!Readable(0xdf9800,4)||!Readable(0xdfe1f4,4))return -2;
  U32 network=Value(0xdf9800),setup=Value(0xdfe1f4);
  if(!Readable(network,0x50)||Value(network)!=0xc3afb8||!Readable(setup,0x3b0))return -3;

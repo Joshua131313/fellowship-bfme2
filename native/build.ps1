@@ -10,7 +10,9 @@ $sdk=Join-Path $sdkVersion.FullName 'um/x86'
 New-Item -ItemType Directory -Force -Path $Output | Out-Null
 & "$compilerRoot/cl.exe" /nologo /c /Od /GS- /Zl /W4 /Fo"$Output/bridge.obj" "$PSScriptRoot/bridge.cpp"
 if($LASTEXITCODE){throw 'Native bridge compilation failed'}
-& "$compilerRoot/link.exe" /nologo /DLL /NODEFAULTLIB /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ENTRY:DllEntry /OUT:"$Output/Fellowship.Native.v036.dll" "$Output/bridge.obj" /LIBPATH:"$sdk" kernel32.lib user32.lib
+& "$compilerRoot/cl.exe" /nologo /c /Od /GS- /Zl /W4 /Fo"$Output/isolation.obj" "$PSScriptRoot/isolation.cpp"
+if($LASTEXITCODE){throw 'Isolation compilation failed'}
+& "$compilerRoot/link.exe" /nologo /DLL /NODEFAULTLIB /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ENTRY:DllEntry /OUT:"$Output/Fellowship.Native.v037.dll" "$Output/bridge.obj" "$Output/isolation.obj" /LIBPATH:"$sdk" kernel32.lib user32.lib
 if($LASTEXITCODE){throw 'Native bridge link failed'}
 & "$compilerRoot/cl.exe" /nologo /c /Od /GS- /Zl /W4 /Fo"$Output/host.obj" "$PSScriptRoot/host.cpp"
 if($LASTEXITCODE){throw 'Native host compilation failed'}
