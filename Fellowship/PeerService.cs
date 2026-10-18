@@ -313,6 +313,17 @@ public sealed partial class PeerService : IDisposable
         Chat?.Invoke(line);
         await Broadcast(new() { Type = "chat", Text = line });
     }
+    public async Task SetHostGameRunning(bool running)
+    {
+        lock(gate)
+        {
+            if(!IsHost||Current==null||transferring)return;
+            string phase=running?"Host in BFME2":"Gathering";
+            if(Current.Phase==phase)return;
+            Current.Phase=phase;
+        }
+        await BroadcastState();
+    }
     public async Task Launch()
     {
         lock (gate)
@@ -320,7 +331,7 @@ public sealed partial class PeerService : IDisposable
             if (!IsHost || Current == null) return;
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if (Current.Players.Any(p => !p.Ready)) throw new InvalidOperationException("Every player must be ready before launching.");
-            Current.Phase = "Game launched • room stays open";
+            // Presence follows the real game process, not the launch request.
         }
         await Broadcast(new() { Type = "launch" });
         LaunchRequested?.Invoke();

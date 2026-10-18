@@ -20,9 +20,16 @@
  </Track></Grid></ControlTemplate></Setter.Value></Setter>
  <Style.Triggers><Trigger Property="Orientation" Value="Horizontal"><Setter Property="Width" Value="Auto"/><Setter Property="Height" Value="6"/></Trigger></Style.Triggers>
 </Style>
-<Style TargetType="MenuItem"><Setter Property="Foreground" Value="#E5ECF8"/><Setter Property="Padding" Value="14,9"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem"><Border x:Name="MenuFrame" Padding="{TemplateBinding Padding}" Background="#202630" CornerRadius="5"><ContentPresenter ContentSource="Header"/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuFrame" Property="Background" Value="#334767"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+<Style TargetType="MenuItem">
+ <Setter Property="Foreground" Value="#DFE6F2"/><Setter Property="FontSize" Value="13"/><Setter Property="Padding" Value="12,9"/><Setter Property="Margin" Value="0,2"/><Setter Property="MinWidth" Value="190"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem"><Border x:Name="MenuFrame" Padding="{TemplateBinding Padding}" Background="Transparent" CornerRadius="5"><ContentPresenter ContentSource="Header" RecognizesAccessKey="True"/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuFrame" Property="Background" Value="#2D3B53"/><Setter Property="Foreground" Value="White"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+</Style>
+<Style TargetType="Separator"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator"><Border Height="1" Background="#303947" Margin="8,6"/></ControlTemplate></Setter.Value></Setter></Style>
 <Style TargetType="ToolTip"><Setter Property="Background" Value="#252D3B"/><Setter Property="Foreground" Value="#E8EDF7"/><Setter Property="BorderBrush" Value="#46536B"/><Setter Property="Padding" Value="10,7"/><Setter Property="MaxWidth" Value="360"/></Style>
-<Style TargetType="ContextMenu"><Setter Property="Background" Value="#202630"/><Setter Property="Foreground" Value="#E8EDF7"/><Setter Property="BorderBrush" Value="#46536B"/></Style>
+<Style TargetType="ContextMenu">
+ <Setter Property="Foreground" Value="#E8EDF7"/><Setter Property="OverridesDefaultStyle" Value="True"/><Setter Property="HasDropShadow" Value="False"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ContextMenu"><Border Background="#1B222D" BorderBrush="#3A4659" BorderThickness="1" CornerRadius="9" Padding="6" Margin="6"><Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.35"/></Border.Effect><StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/></Border></ControlTemplate></Setter.Value></Setter>
+</Style>
 <Style TargetType="Expander">
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Expander"><StackPanel>
   <ToggleButton x:Name="Toggle" IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Stretch">

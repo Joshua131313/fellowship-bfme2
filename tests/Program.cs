@@ -118,7 +118,10 @@ await Until(() => host.Current!.Players.All(p => p.Ready), "renewed readiness");
 int launches = 0; guest.LaunchRequested += () => launches++;
 await host.Launch();
 await Until(() => launches == 1, "host launch signal");
-await Until(() => guest.Current?.Phase.Contains("launched") == true, "persistent launched room");
+await host.SetHostGameRunning(true);
+await Until(() => guest.Current?.Phase == "Host in BFME2", "running status broadcast");
+await host.SetHostGameRunning(false);
+await Until(() => guest.Current?.Phase == "Gathering", "game exit status broadcast");
 guest.Leave();
 await Until(() => host.Current!.Players.Count == 1, "disconnect releases seat");
 await guest.Join("127.0.0.1");
@@ -233,3 +236,15 @@ if(Room.AcceptsUpdate(latest,new(){Id="ordered",Revision=9})||!Room.AcceptsUpdat
 Console.WriteLine("PASS stale room snapshots cannot overwrite newer selections");
 Console.WriteLine("ALL PROTOCOL CHECKS PASSED");
 
+
+using(var presenceHost=new PeerService(new(){Name="Presence host"}))
+{
+    presenceHost.Start("127.0.0.39");presenceHost.Host(new());
+    await presenceHost.SetHostGameRunning(true);
+    if(presenceHost.Current!.Phase!="Host in BFME2")throw new Exception("Running game not reflected");
+    await presenceHost.SetHostGameRunning(false);
+    if(presenceHost.Current.Phase!="Gathering")throw new Exception("Game exit left stale status");
+    await presenceHost.Launch();
+    if(presenceHost.Current.Phase!="Gathering")throw new Exception("Launch request falsely marks game running");
+    Console.WriteLine("PASS game exit clears presence and launch requests do not imply running game");
+}

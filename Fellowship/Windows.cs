@@ -138,14 +138,14 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.24   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.25   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
-        var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
+        var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
         roomMenu.Items.Add(joinItem);roomMenu.Items.Add(preview);rooms.ContextMenu=roomMenu;
         rooms.PreviewMouseRightButtonDown+=(_,e)=>{var row=ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) as DataGridRow;if(row!=null)row.IsSelected=true;};
         Peer.Discovered+=ip=>Dispatcher.InvokeAsync(()=>{if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);});
-        refreshTimer.Tick+=async(_,_)=>{if(online)try{await Refresh();}catch{}};
+        refreshTimer.Tick+=async(_,_)=>{if(online)try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch{}};
         refreshTimer.Start();
         search.TextChanged += (_,_) => RenderRooms();
         rooms.SelectionChanged += (_,_) => { if(rooms.SelectedItem is RoomEntry r) address.Text = r.Address; };
@@ -280,7 +280,7 @@ public sealed class BrowserWindow : Window
     {
         public string Title=>Room.Title; public string Host=>Room.Host; public string Map=>Room.Map;
         public string Slots=>$"{Room.Players.Count} / {Room.Capacity}";public string Patch=>Room.Patch;
-        public string Status=>Room.Phase=="Gathering"?(Room.FriendsOnly?"●  Friends only":"●  Public"):"↗  In game";
+        public string Status=>Room.Phase=="Gathering"?(Room.FriendsOnly?"●  Friends only":"●  Public"):"●  Host in BFME2";
     }
 }
 
@@ -737,6 +737,16 @@ public static class GameLauncher
         {
             throw new InvalidOperationException("BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again.", e);
         }
+    }
+    public static bool IsGameActive()
+    {
+        foreach(var name in new[]{"game","game.dat"})
+        {
+            var processes=Process.GetProcessesByName(name);
+            try { if(processes.Any(p=>!p.HasExited))return true; }
+            finally { foreach(var process in processes)process.Dispose(); }
+        }
+        return false;
     }
     public static bool IsRunning()
     {
