@@ -55,6 +55,22 @@ public static class UI
     {
         var window=new Window{Owner=owner};var body=Shell(window,title,480,430);body.Children.Add(Scroll(new Border{Padding=new Thickness(24),Child=Text(text,14)}));window.ShowDialog();
     }
+    public static MenuItem MenuAction(string title,Action action,Func<bool>? enabled=null)
+    {
+        var item=new MenuItem{Header=title};item.Click+=(_,_)=>{try{action();}catch(Exception error){Error(error.Message);}};
+        if(enabled!=null)item.Command=new ValidAction(enabled);
+        return item;
+    }
+    public static MenuItem MenuGroup(string title,params MenuItem[] items)
+    {var group=new MenuItem{Header=title,Style=(Style)Application.Current.FindResource("AppMenuHeading")};foreach(var item in items)group.Items.Add(item);return group;}
+    public static void Menus(Window window,params MenuItem[] groups)
+    {
+        var root=(DockPanel)((Border)window.Content).Child;
+        var menu=new Menu{Background=Brush("#151A21"),Padding=new(10,2,10,2)};
+        foreach(var group in groups)menu.Items.Add(group);
+        DockPanel.SetDock(menu,Dock.Top);root.Children.Insert(1,menu);
+    }
+    public static void OpenGuide()=>Process.Start(new ProcessStartInfo("https://github.com/Joshua131313/fellowship-bfme2#readme"){UseShellExecute=true});
     public static void Error(string text) => MessageBox.Show(text, "Fellowship", MessageBoxButton.OK, MessageBoxImage.Information);
     public static void Reveal(Window window)
     {
@@ -125,7 +141,7 @@ public sealed class BrowserWindow : Window
     readonly TextBox address = new() { Width = 180, Height=34, Padding=new(10,5,10,5), MaxLength = 15, ToolTip = "Host's Radmin IPv4 address" };
     readonly TextBox search = new() { Width = 220, Height=34, Padding=new(10,5,10,5), ToolTip = "Filter rooms by name, host or map" };
     readonly Border empty;
-    readonly TextBlock emptyTitle=UI.Text("Your next battle is out there",19,"#DCE2ED",true);
+    readonly TextBlock emptyTitle=UI.Text("No rooms found",19,"#DCE2ED",true);
     readonly TextBlock emptyHint=UI.Text("Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.",13,UI.Muted);
     readonly List<RoomEntry> discovered = [];
     RoomWindow? roomWindow;
@@ -147,7 +163,7 @@ public sealed class BrowserWindow : Window
         var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
         UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
-        var headings = UI.Stack(UI.Text("Game rooms",25,"#F3F4F8",true), UI.Text("A good game starts with good company.",12,UI.Muted)); headings.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0)); toolbar.Children.Add(headings);
+        toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
         var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,0);
         var filters = new Grid { Margin = new(22,0,22,14) }; filters.ColumnDefinitions.Add(new()); filters.ColumnDefinitions.Add(new() { Width = UI.Auto });
         filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), UI.Text("    Radmin VPN",12,UI.Muted)));
@@ -166,7 +182,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.33   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.34   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -175,6 +191,12 @@ public sealed class BrowserWindow : Window
         playersPopup.Child=popupCard;playersPopup.PlacementTarget=playersButton;
         playersButton.Click+=(_,_)=>{playersPopup.IsOpen=!playersPopup.IsOpen;if(playersPopup.IsOpen){playerSearch.Clear();RenderActivePlayers();playerSearch.Focus();}};
         playerSearch.TextChanged+=(_,_)=>RenderActivePlayers();
+        UI.Menus(this,
+            UI.MenuGroup("_File",UI.MenuAction("Host room",CreateRoom),UI.MenuAction("Hide to tray",Hide),UI.MenuAction("Quit Fellowship",()=>((App)Application.Current).Quit())),
+            UI.MenuGroup("_Edit",UI.MenuAction("Settings",OpenSettings),UI.MenuAction("Clear room filter",()=>search.Clear(),()=>search.Text.Length>0)),
+            UI.MenuGroup("_View",UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Active players",()=>{playersPopup.IsOpen=true;playerSearch.Clear();RenderActivePlayers();playerSearch.Focus();})),
+            UI.MenuGroup("F_riends",UI.MenuAction("Friends list",OpenFriends)),
+            UI.MenuGroup("_Help",UI.MenuAction("Getting started",UI.OpenGuide),UI.MenuAction("About Fellowship",()=>UI.Info(this,"About Fellowship","Fellowship "+System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)+"\nBFME2 1.00 · Radmin VPN"))));
         playerSearch.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){playersPopup.IsOpen=false;playersButton.Focus();e.Handled=true;}};
         Closed+=(_,_)=>playersPopup.IsOpen=false;
         var roomMenu=new ContextMenu();
@@ -206,7 +228,7 @@ public sealed class BrowserWindow : Window
         var list = discovered.Where(r => r.Address != Peer.Address).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
         string filter = search.Text.Trim();
-        emptyTitle.Text=filter.Length>0?"No matching rooms":"Your next battle is out there";
+        emptyTitle.Text=filter.Length>0?"No matching rooms":"No rooms found";
         emptyHint.Text=filter.Length>0?"Try another room name, host or map.":"Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.";
         list = list.Where(r => $"{r.Title} {r.Host} {r.Map}".Contains(filter,StringComparison.OrdinalIgnoreCase)).ToList();
         var selected=(rooms.SelectedItem as RoomEntry)?.Room.Id;
@@ -233,7 +255,7 @@ public sealed class BrowserWindow : Window
     {
         var w = new Window { Owner = this }; var body = UI.Shell(w,"Settings",560,630); w.WindowStartupLocation = WindowStartupLocation.CenterOwner;
         var p = new StackPanel { Margin = new(24,20,24,24) }; body.Children.Add(UI.Scroll(p));
-        p.Children.Add(UI.Text("Ready when you are.",23,"#F1F3F8",true)); p.Children.Add(UI.Text("Set up your player profile and local connection.",12,UI.Muted));
+        p.Children.Add(UI.Text("Settings",23,"#F1F3F8",true));
         var name = UI.Field(p,"DISPLAY NAME",Settings.Name,40);
         var game = UI.Field(p,"BFME2 EXECUTABLE",Settings.GamePath);
         var installed = @"C:\Program Files (x86)\Electronic Arts\The Battle for Middle-earth (tm) II\lotrbfme2.exe";
@@ -388,6 +410,7 @@ public sealed class RoomWindow : Window
     public RoomWindow(BrowserWindow app)
     {
         this.app=app;var body=UI.Shell(this,"Battle room",1020,760);MinWidth=900;MinHeight=660;
+        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!launching&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
         var top=new Grid{Margin=new(22,18,22,18)};top.ColumnDefinitions.Add(new());top.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var titles=UI.Stack(title,phase);phase.Margin=new(0,6,0,0);top.Children.Add(titles);
@@ -444,7 +467,7 @@ public sealed class RoomWindow : Window
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);if(HostPreset.Matches(app.Peer.Current))HostPreset.ValidateBinary(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.Players.All(p=>p.Ready)==true);
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.Players.All(p=>p.Ready),()=>launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
         var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath),()=>launching?"Wait for the current launch to finish.":app.Peer.Current==null?"Join a room before launching.":"Choose your BFME2 executable in Settings."),launch);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
-        Append("SYSTEM","Welcome to the room. Match patches with your friends, agree on the settings, then ready up.");
+
         bool leaveQueued=false;
         Closing+=(_,e)=>
         {
@@ -676,6 +699,7 @@ public sealed class FriendsWindow : Window
     public FriendsWindow(BrowserWindow app)
     {
         this.app=app;var body=UI.Shell(this,"Friends",390,620);MinWidth=360;
+        UI.Menus(this,UI.MenuGroup("_Friends",UI.MenuAction("Add friend",AddFriend),UI.MenuAction("Send message",Message,()=>list.SelectedItem is ListBoxItem{Tag:Friend}),UI.MenuAction("Refresh presence",async()=>{try{await RefreshPresence();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Close window",Close)));
         UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var me=UI.Row(UI.Avatar(app.Settings.Name,40),UI.Stack(UI.Text(app.Settings.Name,16,"#F1F3F8",true),UI.Text("●  Available on your VPN",11,UI.Green)));me.Margin=new(20,20,20,22);UI.At(body,me,0);
         var bar=new Grid{Margin=new(20,0,12,10)};bar.ColumnDefinitions.Add(new());bar.ColumnDefinitions.Add(new(){Width=UI.Auto});bar.Children.Add(summary);
@@ -704,7 +728,7 @@ public sealed class FriendsWindow : Window
             list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(f.Name),labels),Tag=f});
         }
         if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
-        if(app.Settings.Friends.Count==0)list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.Text("Your fellowship starts here.\nAdd a friend's Radmin VPN address\nto find their rooms and chat.",13,UI.Muted),Padding=new(12,30,12,12)});
+        if(app.Settings.Friends.Count==0)list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.Text("No friends added.",13,UI.Muted),Padding=new(12,30,12,12)});
     }
     async Task RefreshPresence()
     {
@@ -722,7 +746,7 @@ public sealed class FriendsWindow : Window
     void AddFriend()
     {
         var w=new Window{Owner=this};var body=UI.Shell(w,"Add friend",430,360);w.WindowStartupLocation=WindowStartupLocation.CenterOwner;
-        var p=new StackPanel{Margin=new(24)};body.Children.Add(p);p.Children.Add(UI.Text("Bring your friends along.",20,"#F1F3F8",true));
+        var p=new StackPanel{Margin=new(24)};body.Children.Add(p);p.Children.Add(UI.Text("Add friend",20,"#F1F3F8",true));
         var name=UI.Field(p,"NAME","",40);var address=UI.Field(p,"RADMIN IPv4 ADDRESS","",15);
         var add=UI.Button("Add friend",()=>
         {
