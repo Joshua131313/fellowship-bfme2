@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+.dotnet/
+dist/
+*.user
+.tools/
+
+research/
+.source-publish/
