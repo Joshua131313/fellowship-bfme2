@@ -27,14 +27,18 @@ class Program
    if(GameNavigation.Recognize(blank,landmarks)!="")throw new Exception("Navigation accepted a blank screen");
   if(!double.IsPositiveInfinity(GameNavigation.Difference([],[])))throw new Exception("Invalid navigation sample accepted");
   Console.WriteLine("PASS unknown/invalid navigation frames rejected");
+  var spots=MapPreview.ParseSpots("MapCache maps_5Ctest_2Emap\n extentMin = X:100 Y:200 Z:0\n extentMax = X:1100 Y:2200 Z:0\n numPlayers = 2\n Player_1_Start = X:350 Y:700 Z:0\n Player_2_Start = X:850 Y:1700 Z:0\nEND",@"maps\test.map");
+  if(spots.Count!=2||spots[0].X!=0.25||spots[0].Y!=0.75||spots[1].X!=0.75||spots[1].Y!=0.25)throw new Exception("Map spot coordinate normalization failed");
+  Console.WriteLine("PASS map bounds, slot numbers and vertical coordinate conversion");
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
-  if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=220))throw new Exception("Installed map preview failed");
+  if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
   string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.8-win-x64.zip",browser_download_url=url,digest}}});
   var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.8/Fellowship-0.1.8-win-x64.zip";
   if(AppUpdates.Parse(ReleaseJson("v0.1.8",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
   try{AppUpdates.Parse(ReleaseJson("v0.1.8","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
   Console.WriteLine("PASS installed map preview and update version/source validation");
   Directory.CreateDirectory("dist");
   var app=new App();app.InitializeComponent();
