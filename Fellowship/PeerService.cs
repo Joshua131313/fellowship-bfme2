@@ -13,6 +13,7 @@ public sealed partial class PeerService : IDisposable
     public const int Port = 28742;
     const int MaxFrame = 32768;
     readonly Settings settings;
+    readonly ConcurrentDictionary<string,TaskCompletionSource<string>> placementRequests=new();
     readonly object gate = new();
     readonly ConcurrentDictionary<string, Connection> guests = new();
     readonly CancellationTokenSource stop = new();
@@ -102,6 +103,13 @@ public sealed partial class PeerService : IDisposable
                     lock (gate) name = Current?.Players.FirstOrDefault(p => p.Id == id)?.Name;
                     await SendRoomChat(name ?? "Player", msg.Text);
                 }
+                else if(msg.Type=="placement")
+                {
+                    string failure="";
+                    try{ApplyPlacement(id,msg.MapPath,msg.Spot,msg.Team);await BroadcastState();}
+                    catch(InvalidOperationException e){failure=e.Message;}
+                    await c.Send(new(){Type="placement-result",RequestId=msg.RequestId,Text=failure});
+                }
                 else if (msg.Type == "ready")
                 {
                     lock (gate)
@@ -133,6 +141,7 @@ public sealed partial class PeerService : IDisposable
         lock (gate)
         {
             IsHost = true; LocalId = "host"; Current = room;
+            room.Spots=GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
             room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true }];
         }
@@ -164,6 +173,7 @@ public sealed partial class PeerService : IDisposable
                 // Never let its final messages replace the new room or launch its game.
                 if(!ReferenceEquals(upstream,c))break;
                 if (msg.Type == "room") { Current = msg.Room;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
+                if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
                 if (msg.Type == "chat") Chat?.Invoke(msg.Text);
                 if (msg.Type == "launch") LaunchRequested?.Invoke();
             }
@@ -193,6 +203,36 @@ public sealed partial class PeerService : IDisposable
         using var timeout = new CancellationTokenSource(3000);
         if ((await c.Read(timeout.Token))?.Type != "ack") throw new IOException("Message was not acknowledged.");
     }
+    void ApplyPlacement(string id,string mapPath,int? spot,int? team)
+    {
+        lock(gate)
+        {
+            if(!IsHost||Current==null)throw new InvalidOperationException("The room is closed.");
+            if(mapPath!=Current.MapPath)throw new InvalidOperationException("The map changed. Choose a spot on the new map.");
+            var player=Current.Players.FirstOrDefault(p=>p.Id==id)??throw new InvalidOperationException("Player is no longer in the room.");
+            if(team is <0 or >8)throw new InvalidOperationException("Choose no team or team 1–8.");
+            if(spot.HasValue&&spot!=0&&!Current.Spots.Any(s=>s.Number==spot))throw new InvalidOperationException("That starting spot is unavailable on this map.");
+            if(spot>0&&Current.Players.Any(p=>p.Id!=id&&p.Spot==spot))throw new InvalidOperationException("Another player has claimed this spot. Choose another.");
+            if((!spot.HasValue||spot==player.Spot)&&(!team.HasValue||team==player.Team))return;
+            if(spot.HasValue)player.Spot=spot.Value;if(team.HasValue)player.Team=team.Value;
+            foreach(var p in Current.Players)p.Ready=p.Id=="host";
+        }
+    }
+    public async Task SelectPlacement(int? spot=null,int? team=null)
+    {
+        var room=Current??throw new InvalidOperationException("Join a room first.");
+        if(IsHost){ApplyPlacement("host",room.MapPath,spot,team);await BroadcastState();return;}
+        var connection=upstream??throw new InvalidOperationException("Disconnected from host.");
+        var id=Guid.NewGuid().ToString("N");var completion=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);placementRequests[id]=completion;
+        try
+        {
+            await connection.Send(new(){Type="placement",RequestId=id,MapPath=room.MapPath,Spot=spot,Team=team});
+            string failure=await completion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            if(failure.Length>0)throw new InvalidOperationException(failure);
+        }
+        catch(TimeoutException){throw new IOException("Host did not confirm the selection. Both players need this version of Fellowship.");}
+        finally{placementRequests.TryRemove(id,out _);}
+    }
     public async Task SetReady(bool ready)
     {
         if (!IsHost && upstream != null) await upstream.Send(new() { Type = "ready", Ready = ready });
@@ -217,6 +257,11 @@ public sealed partial class PeerService : IDisposable
         {
             if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can edit this room.");
             if(draft.Capacity<Current.Players.Count)throw new InvalidOperationException("The player limit cannot be lower than the current roster.");
+            if(Current.MapPath!=draft.MapPath)
+            {
+                Current.Spots=GameMapData.Spots(settings.GamePath,draft.MapPath);
+                foreach(var p in Current.Players)p.Spot=0;
+            }
             Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
             Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
             foreach(var p in Current.Players) p.Ready=p.Id=="host";
@@ -270,6 +315,7 @@ public sealed partial class PeerService : IDisposable
     public void Leave()
     {
         var old = upstream; upstream = null; old?.Dispose();
+        foreach(var pending in placementRequests.Values)pending.TrySetResult("Disconnected from room.");placementRequests.Clear();
         lock (gate) { IsHost = false; Current = null; }
         foreach (var c in guests.Values) c.Dispose();
         guests.Clear(); Changed?.Invoke();

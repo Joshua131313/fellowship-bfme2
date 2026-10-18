@@ -8,51 +8,42 @@ using System.Windows.Media.Imaging;
 namespace Fellowship;
 public sealed class MapPreview : Border
 {
-    readonly Image image=new(){Height=220,Stretch=Stretch.Uniform};
+    readonly Image image=new(){Width=320,Height=320,Stretch=Stretch.Fill};
+    readonly Canvas mapCanvas=new(){Width=320,Height=320};
+    readonly Canvas selectionLayer=new(){Width=320,Height=320};
+    readonly Viewbox mapView=new(){Height=220,Stretch=Stretch.Uniform};
+    public event Action<int>? SpotSelected;
     readonly TextBlock fallback=UI.Text("Map preview unavailable",11,UI.Muted);
     string last="";
-    public MapPreview(){CornerRadius=new(6);Background=UI.Brush("#10151D");Padding=new(8);Margin=new(0,12,0,8);Child=image;}
+    public MapPreview(){CornerRadius=new(6);Background=UI.Brush("#10151D");Padding=new(8);Margin=new(0,12,0,8);mapCanvas.Children.Add(image);mapCanvas.Children.Add(selectionLayer);mapView.Child=mapCanvas;Child=mapView;}
     public void ShowMap(string executable,string map)
     {
         var key=executable+"|"+map;if(last==key)return;last=key;
-        image.Source=Load(executable,map);image.ToolTip="Starting locations — preview only";Child=image.Source==null?fallback:image;
+        image.Source=Load(executable,map);image.ToolTip="Starting locations — preview only";Child=image.Source==null?fallback:mapView;
     }
-    public sealed record StartSpot(int Number,double X,double Y);
-    public static List<StartSpot> ParseSpots(string cache,string map)
+    public static string TeamColor(int team)=>team switch{1=>"#73ACFF",2=>"#ED8585",3=>"#C598F4",4=>"#72D6AB",5=>"#F3BE65",6=>"#74DCE3",7=>"#F49CD0",8=>"#CED487",_=>"#B3BCCB"};
+    public void ShowSelections(Room room,string localId,bool enabled)
     {
-        var blocks=System.Text.RegularExpressions.Regex.Matches(cache,@"(?im)^MapCache\s+(\S+)\s*\r?\n([\s\S]*?)^END\s*$");
-        foreach(System.Text.RegularExpressions.Match block in blocks)
+        selectionLayer.Children.Clear();
+        if(image.Source==null)return;
+        foreach(var spot in room.Spots)
         {
-            var path=System.Text.RegularExpressions.Regex.Replace(block.Groups[1].Value,@"_([0-9a-fA-F]{2})",m=>((char)Convert.ToByte(m.Groups[1].Value,16)).ToString());
-            if(!path.Equals(map,StringComparison.OrdinalIgnoreCase))continue;
-            var text=block.Groups[2].Value;
-            (double X,double Y) Vector(string key)
-            {
-                var m=System.Text.RegularExpressions.Regex.Match(text,@"(?im)^\s*"+key+@"\s*=\s*X:([-\d.]+)\s+Y:([-\d.]+)");
-                if(!m.Success)throw new InvalidDataException("Missing map coordinates");
-                return(double.Parse(m.Groups[1].Value,System.Globalization.CultureInfo.InvariantCulture),double.Parse(m.Groups[2].Value,System.Globalization.CultureInfo.InvariantCulture));
-            }
-            var min=Vector("extentMin");var max=Vector("extentMax");
-            if(max.X<=min.X||max.Y<=min.Y)throw new InvalidDataException("Invalid map bounds");
-            var count=System.Text.RegularExpressions.Regex.Match(text,@"(?im)^\s*numPlayers\s*=\s*(\d+)");
-            int players=count.Success?Math.Min(8,int.Parse(count.Groups[1].Value)):0;
-            var result=new List<StartSpot>();
-            for(int i=1;i<=players;i++)
-            {
-                var pos=Vector("Player_"+i+"_Start");double x=(pos.X-min.X)/(max.X-min.X),y=1-(pos.Y-min.Y)/(max.Y-min.Y);
-                if(x<0||x>1||y<0||y>1)throw new InvalidDataException("Map spot outside bounds");
-                result.Add(new(i,x,y));
-            }
-            return result;
+            var occupant=room.Players.FirstOrDefault(p=>p.Spot==spot.Number);bool mine=occupant?.Id==localId;
+            string label=occupant==null?$"Spot {spot.Number} · click to claim":$"Spot {spot.Number} · {occupant.Name} · {(occupant.Team==0?"No team":"Team "+occupant.Team)}"+(mine?" · click to release":"");
+            var ring=new System.Windows.Shapes.Ellipse{Width=34,Height=34,Fill=occupant==null?Brushes.Transparent:UI.Brush(TeamColor(occupant.Team)),Stroke=mine?Brushes.White:Brushes.Transparent,StrokeThickness=3,Opacity=occupant==null?1:0.9};
+            var button=new Button{Content=ring,Width=42,Height=42,Padding=new(0),Margin=new(0),Background=Brushes.Transparent,BorderThickness=new(0),ToolTip=label,IsEnabled=enabled&&(occupant==null||mine)};
+            System.Windows.Automation.AutomationProperties.SetName(button,label);
+            button.Click+=(_,_)=>SpotSelected?.Invoke(mine?0:spot.Number);
+            Canvas.SetLeft(button,spot.X*320-21);Canvas.SetTop(button,spot.Y*320-21);selectionLayer.Children.Add(button);
         }
-        return [];
     }
+    public static List<MapSpot> ParseSpots(string cache,string map)=>GameMapData.ParseSpots(cache,map);
     public static BitmapSource? Load(string executable,string map,string suffix="_art.tga")
     {
         try
         {
-            var bytes=ReadAsset(executable,map[..^4]+suffix);if(bytes==null)return null;
-            var terrain=Decode(bytes);var cache=ReadAsset(executable,@"maps\mapcache.ini");
+            var bytes=GameMapData.ReadAsset(executable,map[..^4]+suffix);if(bytes==null)return null;
+            var terrain=Decode(bytes);var cache=GameMapData.ReadAsset(executable,@"maps\mapcache.ini");
             var spots=cache==null?[]:ParseSpots(Encoding.ASCII.GetString(cache),map);
             const int size=320;var visual=new DrawingVisual();
             using(var dc=visual.RenderOpen())
@@ -80,29 +71,6 @@ public sealed class MapPreview : Border
             var result=new RenderTargetBitmap(size,size,96,96,PixelFormats.Pbgra32);result.Render(visual);result.Freeze();return result;
         }
         catch(Exception e) when(e is IOException or ArgumentException or OverflowException or FormatException){return null;}
-    }
-    static byte[]? ReadAsset(string executable,string wanted)
-    {
-        foreach(var archive in new[]{"_WSMaps.big","Maps.big"})
-        try
-        {
-            using var stream=File.OpenRead(Path.Combine(Path.GetDirectoryName(executable)!,archive));
-            using var r=new BinaryReader(stream,Encoding.ASCII);
-            if(Encoding.ASCII.GetString(r.ReadBytes(4)) is not ("BIGF" or "BIG4"))continue;
-            r.ReadBytes(4);int count=BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));r.ReadBytes(4);
-            if(count<0||count>100000)continue;
-            for(int i=0;i<count;i++)
-            {
-                uint offset=BinaryPrimitives.ReadUInt32BigEndian(r.ReadBytes(4)),size=BinaryPrimitives.ReadUInt32BigEndian(r.ReadBytes(4));
-                var name=new StringBuilder();byte b;
-                while((b=r.ReadByte())!=0){if(name.Length>512)throw new InvalidDataException();name.Append((char)b);}
-                if(!string.Equals(name.ToString(),wanted,StringComparison.OrdinalIgnoreCase))continue;
-                if(size>16000000||offset+(long)size>stream.Length)throw new InvalidDataException();
-                stream.Position=offset;return r.ReadBytes((int)size);
-            }
-        }
-        catch(Exception e) when(e is IOException or ArgumentException or UnauthorizedAccessException or OverflowException){}
-        return null;
     }
     public static BitmapSource Decode(byte[] bytes)
     {

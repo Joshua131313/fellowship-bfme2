@@ -4,7 +4,7 @@ A Windows desktop LAN companion for **BFME2 1.00**. Native WPF windows for a roo
 
 ## Run
 
-Extract `dist/Fellowship-0.1.7-win-x64.zip` on each Windows 10/11 x64 PC and run `Fellowship.exe`. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
+Extract `dist/Fellowship-0.1.8-win-x64.zip` on each Windows 10/11 x64 PC and run `Fellowship.exe`. The build includes .NET. Neither BFME2 nor Radmin VPN is bundled. See `TEST-WITH-A-FRIEND.txt` inside the download.
 
 New rooms default to **Rhûn, six players / 3v3, 4,000 resources, 2× command points, Ring Heroes off and Custom Heroes off**. The patch is locked to 1.00. For supported map/rule selections, the host launcher applies the native Rhûn preference and session-only rule defaults. Open Multiplayer → Network → Create Game, then assign three players to each team. Guest players open Network and join the host. Map and rule selections also apply through the verified host preset helper; team assignment remains manual.
 
@@ -60,8 +60,12 @@ Configuration lives in `%LOCALAPPDATA%\Fellowship\settings.json`; the latest sel
 
 ## Downloads and updates
 
-[Download the latest Windows build](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). From version 0.1.7 onward, use Settings > Check for updates. Download & restart verifies the GitHub SHA-256 digest and launches the updated copy under LocalAppData/Fellowship/versions. Settings and friends are preserved. Existing shortcuts still open their original copy.
+[Download the latest Windows build](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). From version 0.1.8 onward, use Settings > Check for updates. Download & restart verifies the GitHub SHA-256 digest and launches the updated copy under LocalAppData/Fellowship/versions. Settings and friends are preserved. Existing shortcuts still open their original copy.
 
 The lobby provides inline map/rule controls, explicit room-name/privacy confirmation, and previews read from the local game installation. No game assets are bundled.
 
 Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release` for offscreen UI and updater metadata checks. Private reference captures under research/ are optional and excluded from the repository. Installed-game checks are skipped when BFME2 is absent.
+
+## Spot and team selection
+
+In a room, click an empty map circle to claim a starting spot, and choose your team. Click your own spot again or Clear my spot to release it. The host resolves conflicting claims; map changes clear spots, disconnects release them, and placement changes reset readiness. Use the same version on all PCs. These are Fellowship lobby preferences only: guests must still join BFME2 manually and players must apply spots/teams in its lobby. Next integration stages are guest auto-joining, then automatic spot/team assignment with manual recovery.

@@ -24,6 +24,7 @@ public sealed class Settings
         File.Move(path + ".tmp", path, true);
     }
 }
+public sealed record MapSpot(int Number,double X,double Y);
 public sealed class Room
 {
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
@@ -39,6 +40,7 @@ public sealed class Room
     public string Rules { get; set; } = DefaultRules;
     public int Capacity { get; set; } = 6;
     public string Phase { get; set; } = "Gathering";
+    public List<MapSpot> Spots { get; set; } = [];
     public List<Player> Players { get; set; } = [];
     public override string ToString() => $"{Title}\n{Map}  ·  {Players.Count}/{Capacity} players  ·  Patch {Patch}  ·  {Phase}";
 }
@@ -47,11 +49,17 @@ public sealed class Player
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Address { get; set; } = "";
+    public int Spot { get; set; }
+    public int Team { get; set; }
     public bool Ready { get; set; }
     public override string ToString() => $"{(Ready ? "● READY" : "○ WAITING")}    {Name}";
 }
 public sealed class Wire
 {
+    public int? Spot { get; set; }
+    public int? Team { get; set; }
+    public string MapPath { get; set; } = "";
+    public string RequestId { get; set; } = "";
     public string Version { get; set; } = "1.00";
     public string Type { get; set; } = "";
     public string Name { get; set; } = "";

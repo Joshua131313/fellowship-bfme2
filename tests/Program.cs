@@ -132,5 +132,44 @@ if ((await PeerService.Query("127.0.0.1")) == null) throw new Exception("Invalid
 Console.WriteLine("PASS oversized frame rejected; listener survives");
 host.Leave();
 await Until(() => guest.Current == null, "host closure disconnects guest");
+// A synthetic BIG archive keeps placement tests independent of installed game files.
+var fixture=Path.Combine(Path.GetTempPath(),"Fellowship-placement-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(fixture);
+try
+{
+    var ini=System.Text.Encoding.ASCII.GetBytes("MapCache maps_5Ctest_2Emap\n extentMin = X:0 Y:0 Z:0\n extentMax = X:100 Y:100 Z:0\n numPlayers = 2\n Player_1_Start = X:20 Y:30 Z:0\n Player_2_Start = X:80 Y:70 Z:0\nEND\n");
+    var entry=System.Text.Encoding.ASCII.GetBytes("maps\\mapcache.ini\0");
+    using(var output=File.Create(Path.Combine(fixture,"Maps.big")))
+    using(var writer=new BinaryWriter(output))
+    {
+        void Big(int value){var bytes=new byte[4];System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(bytes,value);writer.Write(bytes);}
+        writer.Write(System.Text.Encoding.ASCII.GetBytes("BIGF"));Big(24+entry.Length+ini.Length);Big(1);Big(24+entry.Length);Big(24+entry.Length);Big(ini.Length);writer.Write(entry);writer.Write(ini);
+    }
+    using var placementHost=new PeerService(new(){Name="Placement host",GamePath=Path.Combine(fixture,"lotrbfme2.exe")});
+    using var first=new PeerService(new(){Name="First"});using var second=new PeerService(new(){Name="Second"});
+    placementHost.Start("127.0.0.10");placementHost.Host(new(){Map="Test",MapPath=@"maps\test.map"});
+    await first.Join("127.0.0.10");await second.Join("127.0.0.10");
+    await Until(()=>first.Current?.Players.Count==3&&second.Current?.Spots.Count==2,"map spots synchronized to guests");
+    async Task<bool> Claim(PeerService peer){try{await peer.SelectPlacement(1,1);return true;}catch(InvalidOperationException){return false;}}
+    var claims=await Task.WhenAll(Claim(first),Claim(second));
+    if(claims.Count(x=>x)!=1||placementHost.Current!.Players.Count(p=>p.Spot==1)!=1)throw new Exception("Conflicting spot claims accepted");
+    Console.WriteLine("PASS simultaneous spot claims resolve to one player");
+    var winner=claims[0]?first:second;var loser=claims[0]?second:first;
+    await loser.SelectPlacement(2,2);
+    await Until(()=>first.Current!.Players.Any(p=>p.Spot==2&&p.Team==2),"spot and team broadcast");
+    await first.SetReady(true);await second.SetReady(true);await Until(()=>placementHost.Current!.Players.All(p=>p.Ready),"placement players ready");
+    await winner.SelectPlacement(team:2);
+    await Until(()=>placementHost.Current!.Players.Where(p=>p.Id!="host").All(p=>!p.Ready),"placement changes revoke readiness");
+    try{await loser.SelectPlacement(8);throw new Exception("Invalid map spot accepted");}catch(InvalidOperationException){}
+    try{await loser.SelectPlacement(team:9);throw new Exception("Invalid team accepted");}catch(InvalidOperationException){}
+    await winner.SelectPlacement(0);await loser.SelectPlacement(1);
+    if(placementHost.Current!.Players.Single(p=>p.Id==loser.LocalId).Spot!=1)throw new Exception("Released spot unavailable");
+    loser.Leave();await Until(()=>placementHost.Current!.Players.Count==2,"disconnect releases claimed spot");
+    await winner.SelectPlacement(1);
+    await placementHost.EditRoom(new(){Map="Other",MapPath=@"maps\other.map"});
+    await Until(()=>winner.Current?.Spots.Count==0&&winner.Current.Players.All(p=>p.Spot==0),"map changes clear spots and retain teams");
+    if(winner.Current!.Players.Single(p=>p.Id==winner.LocalId).Team!=2)throw new Exception("Map change lost team");
+    Console.WriteLine("PASS invalid selections rejected, releases, disconnect and map changes");
+}
+finally{Directory.Delete(fixture,true);}
 Console.WriteLine("ALL PROTOCOL CHECKS PASSED");
 

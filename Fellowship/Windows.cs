@@ -137,7 +137,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.7   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.8   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -286,6 +286,11 @@ public sealed class RoomWindow : Window
     readonly TextBox roomName=new(){MaxLength=80};
     readonly ComboBox privacyChoice=new(){ItemsSource=new[]{"Public on VPN","Friends only"}};
     readonly MapPreview mapPreview=new();
+    readonly ComboBox teamChoice=new();
+    readonly TextBlock placementStatus=UI.Text("",11,UI.Muted);
+    readonly Button clearSpot;
+    bool syncingPlacement,changingPlacement;
+    sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team / free for all":"Team "+Value;}
     string lastRoomName="";bool? lastPrivacy;
     readonly ListBox players=new();
     readonly TextBox map,patch,rules;
@@ -324,6 +329,11 @@ public sealed class RoomWindow : Window
         setupSummary.Margin=new(0,12,0,0);setupSummary.LineHeight=22;
         var banner=setupBanner=UI.Card(UI.Stack(UI.Text("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#252F43",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
         right.Children.Add(presetStatus);right.Children.Add(mapPreview);
+        right.Children.Add(UI.Text("YOUR TEAM",10,UI.Muted,true));teamChoice.ItemsSource=Enumerable.Range(0,9).Select(n=>new TeamOption(n)).ToArray();teamChoice.Margin=new(0,6,0,8);right.Children.Add(teamChoice);
+        teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
+        mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
+        clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
+        right.Children.Add(placementStatus);var placementHint=UI.Text("Click an empty spot to claim it. Colored spots are claimed. Apply these choices manually in BFME2 for now.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -358,6 +368,14 @@ public sealed class RoomWindow : Window
         Append("SYSTEM","Welcome to the room. Match patches with your friends, agree on the settings, then ready up.");
         Closing+=(_,e)=>{if(!AllowClose&&Application.Current is App {IsQuitting:false}){e.Cancel=true;Hide();}};
         app.Peer.Chat+=OnChat;Closed+=(_,_)=>app.Peer.Chat-=OnChat;Refresh();
+    }
+    async Task ChangePlacement(int? spot,int? team)
+    {
+        if(changingPlacement)return;
+        changingPlacement=true;teamChoice.IsEnabled=false;clearSpot.IsEnabled=false;placementStatus.Text="Confirming with host…";
+        try{await app.Peer.SelectPlacement(spot,team);}
+        catch(Exception e){Append("SYSTEM",e.Message);}
+        finally{changingPlacement=false;Refresh();}
     }
     async Task SaveRoomDetails(bool privacy)
     {
@@ -403,8 +421,15 @@ public sealed class RoomWindow : Window
     public void Refresh()
     {
         var room=app.Peer.Current;
-        if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
-        mapPreview.ShowMap(app.Settings.GamePath,room.MapPath);
+        if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
+        mapPreview.ShowMap(app.Settings.GamePath,room.MapPath);mapPreview.IsEnabled=!launching&&!changingPlacement;
+        mapPreview.ShowSelections(room,app.Peer.LocalId,!launching&&!changingPlacement);
+        var self=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
+        syncingPlacement=true;
+        try{teamChoice.SelectedItem=teamChoice.Items.Cast<TeamOption>().FirstOrDefault(t=>t.Value==(self?.Team??0));}
+        finally{syncingPlacement=false;}
+        teamChoice.IsEnabled=!launching&&!changingPlacement;clearSpot.IsEnabled=!launching&&!changingPlacement&&self?.Spot>0;
+        placementStatus.Text=changingPlacement?"Confirming with host…":room.Spots.Count==0?"Starting spots unavailable for this map.":$"Your spot: {(self?.Spot>0?self.Spot.ToString():"not selected")} · {(self?.Team>0?"Team "+self.Team:"No team")}";
         if(lastRoomName!=room.Title){roomName.Text=room.Title;lastRoomName=room.Title;}
         if(lastPrivacy!=room.FriendsOnly){privacyChoice.SelectedIndex=room.FriendsOnly?1:0;lastPrivacy=room.FriendsOnly;}
         title.Text=room.Title;phase.Text=$"●  {room.Phase}   ·   Hosted by {room.Host}";playerCount.Text=$"PLAYERS   {room.Players.Count} / {room.Capacity}";
@@ -413,7 +438,7 @@ public sealed class RoomWindow : Window
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=UI.Auto});
             row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,"#E6EAF2",true),UI.Text(p.Id=="host"?"   HOST":"",9,UI.Accent,true)));
-            var ready=UI.Text(p.Ready?"●  Ready":"○  Not ready",11,p.Ready?UI.Green:UI.Muted);Grid.SetColumn(ready,1);row.Children.Add(ready);
+            var ready=UI.Text($"{(p.Spot>0?"Spot "+p.Spot:"No spot")} · {(p.Team>0?"Team "+p.Team:"No team")}  |  "+(p.Ready?"● Ready":"○ Not ready"),10,p.Ready?UI.Green:MapPreview.TeamColor(p.Team));Grid.SetColumn(ready,1);row.Children.Add(ready);
             var item=new ListBoxItem{Content=row,Padding=new(12,6,12,6),Tag=p};
             var menu=new ContextMenu();var info=new MenuItem{Header="Player info"};info.Click+=(_,_)=>UI.Info(this,"Player info",$"{p.Name}\nVPN address: {p.Address}\n{(p.Id=="host"?"Host":"Guest")} · {(p.Ready?"Ready":"Not ready")}");menu.Items.Add(info);item.ContextMenu=menu;players.Items.Add(item);
         }
