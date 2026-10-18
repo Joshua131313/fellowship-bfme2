@@ -113,13 +113,15 @@ public sealed class BrowserWindow : Window
     bool online,refreshing;
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
+    public PeerDirectory Presence { get; }=new();
+    readonly WrapPanel activePlayers=new(){Margin=new(22,0,22,12)};
     public BrowserWindow(Settings? settings=null)
     {
         Settings=settings??Settings.Load();
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
         var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
-        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
+        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto,UI.Auto);
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         var headings = UI.Stack(UI.Text("Game rooms",25,"#F3F4F8",true), UI.Text("A good game starts with good company.",12,UI.Muted)); headings.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0)); toolbar.Children.Add(headings);
         var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,0);
@@ -138,7 +140,8 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.25   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.26   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=100;UI.At(body,playerScroll,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -218,21 +221,42 @@ public sealed class BrowserWindow : Window
             Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();w.Close();EnsureOnline();
         },true)); p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null)); w.ShowDialog();
     }
-    async Task Refresh()
+    public async Task Refresh()
     {
         if(refreshing||!EnsureOnline())return;
         refreshing=true;
         try
         {
-            await Peer.Discover();
-            var addresses=Settings.Friends.Select(f=>f.Address).Concat(discoveredAddresses).Append(address.Text.Trim()).Where(a=>a.Length>0&&a!=Peer.Address).Distinct().ToList();
-            var results=await Task.WhenAll(addresses.Select(async ip=>{try{return(ip,room:await PeerService.Query(ip,Peer.Address),reachable:true);}catch{return(ip,room:(Room?)null,reachable:false);}}));
-            discovered.Clear();foreach(var(ip,room,_)in results)if(room!=null)discovered.Add(new(ip,room));
-            foreach(var result in results.Where(r=>!r.reachable))discoveredAddresses.Remove(result.ip);
-            RenderRooms();
-            status.Text=$"●  {Peer.Address} · Discovering on VPN · {discovered.Count} room(s) · {results.Count(r=>!r.reachable)} unreachable";
+            await Peer.Discover(); // Compatibility with older room-only discovery.
+            await Peer.Discover(presence:true);
+            var addresses=Settings.Friends.Select(f=>f.Address).Concat(discoveredAddresses).Concat(Presence.Known(DateTimeOffset.UtcNow)).Append(address.Text.Trim()).Where(a=>a.Length>0&&a!=Peer.Address).Distinct().Take(256).ToArray();
+            await Task.WhenAll(addresses.Select(async ip=>
+            {
+                try {var result=await PeerService.QueryPeer(ip,Peer.Address);Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow);}
+                catch {Presence.Failure(ip);}
+            }));
+            // Keep peers in the retry set through short VPN losses. A successful null
+            // room response removes a closed/private room immediately.
+            var now=DateTimeOffset.UtcNow;
+            discovered.Clear();foreach(var peer in Presence.Active(now))if(peer.Room!=null)discovered.Add(new(peer.Address,peer.Room,peer.Reconnecting));
+            foreach(var ip in Presence.Known(now))if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);
+            RenderRooms();RenderActivePlayers();friendsWindow?.Render();
+            status.Text=$"●  {Peer.Address} · VPN discovery active · {discovered.Count} room(s)";
         }
         finally{refreshing=false;}
+    }
+    void RenderActivePlayers()
+    {
+        activePlayers.Children.Clear();
+        var peers=Presence.Active(DateTimeOffset.UtcNow).ToArray();
+        var label=UI.Text($"ACTIVE ON VPN  {peers.Length+1}",10,UI.Muted,true);label.Margin=new(0,0,14,0);activePlayers.Children.Add(label);
+        var me=UI.Badge(Settings.Name+" · You",UI.Green);me.Margin=new(0,0,8,6);activePlayers.Children.Add(me);
+        foreach(var peer in peers)
+        {
+            var button=UI.Button((peer.Reconnecting?"◌ ":"● ")+peer.Name,()=>OpenChat(peer.Address,peer.Name));
+            button.FontSize=11;button.Padding=new(10,5,10,5);button.Margin=new(0,0,8,6);
+            button.ToolTip=peer.Address+(peer.Reconnecting?" · Reconnecting":" · Send message");activePlayers.Children.Add(button);
+        }
     }
     async Task Join()
     {
@@ -276,11 +300,11 @@ public sealed class BrowserWindow : Window
         if(chats.TryGetValue(ip,out var old)){if(activate)UI.Reveal(old);return old;}
         var w=new ChatWindow(this,ip,name){ShowActivated=activate};chats[ip]=w;w.Closed+=(_,_)=>chats.Remove(ip);w.Show();return w;
     }
-    sealed record RoomEntry(string Address,Room Room)
+    sealed record RoomEntry(string Address,Room Room,bool Reconnecting=false)
     {
         public string Title=>Room.Title; public string Host=>Room.Host; public string Map=>Room.Map;
         public string Slots=>$"{Room.Players.Count} / {Room.Capacity}";public string Patch=>Room.Patch;
-        public string Status=>Room.Phase=="Gathering"?(Room.FriendsOnly?"●  Friends only":"●  Public"):"●  Host in BFME2";
+        public string Status=>Reconnecting?"◌ Reconnecting":Room.Phase=="Gathering"?(Room.FriendsOnly?"●  Friends only":"●  Public"):"●  Host in BFME2";
     }
 }
 
@@ -605,7 +629,7 @@ public sealed class FriendsWindow : Window
     readonly BrowserWindow app;
     readonly ListBox list=new();
     readonly TextBlock summary=UI.Text("YOUR FRIENDS",10,UI.Muted,true);
-    readonly Dictionary<string,bool> presence=new();
+    bool IsOnline(string address)=>app.Presence.Find(address,DateTimeOffset.UtcNow)!=null;
     readonly System.Windows.Threading.DispatcherTimer presenceTimer=new(){Interval=TimeSpan.FromSeconds(5)};
     bool checkingPresence;
     public FriendsWindow(BrowserWindow app)
@@ -620,22 +644,25 @@ public sealed class FriendsWindow : Window
         var footer=UI.Text("Double-click a friend to chat.\nDirect messages · no offline delivery",10,UI.Muted);footer.Margin=new(20,0,20,18);UI.At(body,footer,4);
         list.MouseDoubleClick+=(_,_)=>Message();
         var menu=new ContextMenu();var remove=new MenuItem{Header="Remove friend"};remove.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f}){app.Settings.Friends.Remove(f);app.Settings.Save();Render();}};var message=new MenuItem{Header="Send message"};message.Click+=(_,_)=>Message();menu.Items.Add(message);
-        var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})UI.Info(this,"Friend info",$"{f.Name}\n{f.Address}\n{(presence.GetValueOrDefault(f.Address)?"Online":"Offline / unreachable")}");};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);list.ContextMenu=menu;
+        var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})UI.Info(this,"Friend info",$"{f.Name}\n{f.Address}\n{(IsOnline(f.Address)?"Online":"Offline / unreachable")}");};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);list.ContextMenu=menu;
         list.PreviewMouseRightButtonDown+=(_,e)=>{var item=ItemsControl.ContainerFromElement(list,e.OriginalSource as DependencyObject) as ListBoxItem;if(item?.Tag is Friend)item.IsSelected=true;};
         presenceTimer.Tick+=async(_,_)=>await RefreshPresence();Loaded+=async(_,_)=>await RefreshPresence();Closed+=(_,_)=>presenceTimer.Stop();presenceTimer.Start();Render();
     }
-    void Render()
+    public void Render()
     {
+        var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
         list.Items.Clear();summary.Text=$"YOUR FRIENDS   {app.Settings.Friends.Count}";
         bool? lastGroup=null;
-        foreach(var f in app.Settings.Friends.OrderByDescending(f=>presence.GetValueOrDefault(f.Address)).ThenBy(f=>f.Name))
+        foreach(var f in app.Settings.Friends.OrderByDescending(f=>IsOnline(f.Address)).ThenBy(f=>f.Name))
         {
-            bool isOnline=presence.GetValueOrDefault(f.Address);
+            bool isOnline=IsOnline(f.Address);
             if(lastGroup!=isOnline){list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.Text(isOnline?"ONLINE":"OFFLINE / NOT REACHABLE",10,UI.Muted,true),Padding=new(12,16,12,8)});lastGroup=isOnline;}
-            string state=presence.TryGetValue(f.Address,out bool up)?(up?"●  Online":"○  Unreachable"):"○  Not checked";
+            var peer=app.Presence.Find(f.Address,DateTimeOffset.UtcNow);
+            string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":"●  Online";
             var labels=UI.Stack(UI.Text(f.Name,13,"#E4E9F2",true),UI.Text(state+"  ·  "+f.Address,10,state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
             list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(f.Name),labels),Tag=f});
         }
+        if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
         if(app.Settings.Friends.Count==0)list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.Text("Your fellowship starts here.\nAdd a friend's Radmin VPN address\nto find their rooms and chat.",13,UI.Muted),Padding=new(12,30,12,12)});
     }
     async Task RefreshPresence()
@@ -645,8 +672,7 @@ public sealed class FriendsWindow : Window
         try
         {
             var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
-            var results=await Task.WhenAll(app.Settings.Friends.ToArray().Select(async f=>{try{await PeerService.Query(f.Address,app.Peer.Address);return(f.Address,up:true);}catch{return(f.Address,up:false);}}));
-            foreach(var(ip,up)in results)presence[ip]=up;Render();
+            await app.Refresh();Render();
             if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
         }
         finally{checkingPresence=false;}

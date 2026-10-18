@@ -221,12 +221,15 @@ public sealed partial class PeerService : IDisposable
             c.Dispose();
         }
     }
-    public static async Task<Room?> Query(string address,string? source=null)
+    public static async Task<Room?> Query(string address,string? source=null)=>(await QueryPeer(address,source)).Room;
+    public static async Task<(string Name,Room? Room)> QueryPeer(string address,string? source=null)
     {
         using var c = await Connect(address,source);
         await c.Send(new() { Type = "query" });
         using var timeout = new CancellationTokenSource(3000);
-        return (await c.Read(timeout.Token))?.Room;
+        var reply=await c.Read(timeout.Token);
+        if(reply?.Type!="room")throw new IOException("Invalid peer response.");
+        return (Clean(reply.Name,40),reply.Room);
     }
     public async Task SendPrivate(string address, string text)
     {

@@ -248,3 +248,24 @@ using(var presenceHost=new PeerService(new(){Name="Presence host"}))
     if(presenceHost.Current.Phase!="Gathering")throw new Exception("Launch request falsely marks game running");
     Console.WriteLine("PASS game exit clears presence and launch requests do not imply running game");
 }
+
+var directory=new PeerDirectory();var now=DateTimeOffset.UtcNow;
+directory.Success("26.1.1.1","Idle friend",new Room(),now);
+directory.Failure("26.1.1.1");
+if(directory.Find("26.1.1.1",now.AddSeconds(5)) is not {Reconnecting:true,Room:not null})throw new Exception("Transient failure removed peer/room");
+if(directory.Find("26.1.1.1",now.AddSeconds(21))!=null)throw new Exception("Offline presence never expires");
+if(!directory.Known(now.AddSeconds(21)).Contains("26.1.1.1"))throw new Exception("Offline peer lost retry address");
+directory.Success("26.1.1.1","Idle friend",null,now.AddSeconds(22));
+if(directory.Find("26.1.1.1",now.AddSeconds(22)) is not {Reconnecting:false,Room:null})throw new Exception("Confirmed room closure not immediate");
+Console.WriteLine("PASS presence grace, expiry, retry retention, recovery and immediate room closure");
+using(var idle=new PeerService(new(){Name="Idle player"}))
+using(var seeker=new PeerService(new(){Name="Seeker"}))
+{
+ idle.Start("127.0.0.40");seeker.Start("127.0.0.41");bool seen=false;
+ seeker.Discovered+=ip=>{if(ip=="127.0.0.40")seen=true;};
+ await seeker.Discover("127.0.0.40",presence:true);
+ await Until(()=>seen,"idle non-host presence discovery");
+ var peer=await PeerService.QueryPeer("127.0.0.40","127.0.0.41");
+ if(peer.Name!="Idle player"||peer.Room!=null)throw new Exception("Idle identity query failed");
+ Console.WriteLine("PASS idle player identity without a room or chat activity");
+}

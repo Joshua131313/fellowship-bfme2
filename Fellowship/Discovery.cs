@@ -9,6 +9,7 @@ public sealed partial class PeerService
     UdpClient? discovery;
     public event Action<string>? Discovered;
     const string Probe="FELLOWSHIP_DISCOVER_1";
+    const string PresenceProbe="FELLOWSHIP_PRESENCE_1";
     const string Reply="FELLOWSHIP_PEER_1";
     void StartDiscovery()
     {
@@ -29,7 +30,12 @@ public sealed partial class PeerService
                 if(packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==Address)continue;
                 var remote=packet.RemoteEndPoint.Address.ToString();
                 var text=Encoding.ASCII.GetString(packet.Buffer);
-                if(text==Probe)
+                if(text==PresenceProbe)
+                {
+                    Discovered?.Invoke(remote);
+                    await discovery.SendAsync(Encoding.ASCII.GetBytes(Reply),packet.RemoteEndPoint,stop.Token);
+                }
+                else if(text==Probe)
                 {
                     bool respond;lock(gate)respond=IsHost&&Current!=null&&CanSee(remote);
                     if(respond)await discovery.SendAsync(Encoding.ASCII.GetBytes(Reply),packet.RemoteEndPoint,stop.Token);
@@ -48,7 +54,7 @@ public sealed partial class PeerService
             }
         }
     }
-    public async Task Discover(string? target=null)
+    public async Task Discover(string? target=null,bool presence=false)
     {
         if(discovery==null)return;
         var destinations=new HashSet<string>();
@@ -66,7 +72,7 @@ public sealed partial class PeerService
             foreach(var friend in settings.Friends)destinations.Add(friend.Address);
         }
         foreach(var destination in destinations)
-            try{await discovery.SendAsync(Encoding.ASCII.GetBytes(Probe),new IPEndPoint(IPAddress.Parse(destination),DiscoveryPort),stop.Token);}
+            try{await discovery.SendAsync(Encoding.ASCII.GetBytes(presence?PresenceProbe:Probe),new IPEndPoint(IPAddress.Parse(destination),DiscoveryPort),stop.Token);}
             catch(Exception e) when(e is SocketException or OperationCanceledException or ObjectDisposedException or FormatException){}
     }
 }
