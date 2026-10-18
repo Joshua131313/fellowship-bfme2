@@ -135,6 +135,12 @@ class Program
   var picker=new SearchableMapBox{ItemsSource=new[]{"Rhûn","Woody End"},SelectedItem="Rhûn"};
   picker.ApplyTemplate();
   if(picker.Template.FindName("PART_MapSearch",picker) is not System.Windows.Controls.TextBox {Visibility:Visibility.Visible})throw new Exception("Map search template missing");
+  var wheelBox=new System.Windows.Controls.ComboBox{ItemsSource=new[]{1,2,3},SelectedIndex=1};
+  wheelBox.Style=(Style)Application.Current.FindResource(typeof(System.Windows.Controls.ComboBox));
+  var wheel=new System.Windows.Input.MouseWheelEventArgs(System.Windows.Input.Mouse.PrimaryDevice,0,-120){RoutedEvent=System.Windows.Input.Mouse.PreviewMouseWheelEvent};
+  wheelBox.RaiseEvent(wheel);
+  if(!wheel.Handled||wheelBox.SelectedIndex!=1)throw new Exception("Closed select accepts accidental wheel changes");
+  Console.WriteLine("PASS closed dropdown wheel input cannot change selection");
   var browser=new BrowserWindow(Settings.InMemory());
   browser.Presence.Success("26.1.1.2","Aragorn",null,DateTimeOffset.UtcNow);
   browser.Presence.Success("26.1.1.3","Gandalf",null,DateTimeOffset.UtcNow);

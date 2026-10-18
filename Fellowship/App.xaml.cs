@@ -4,6 +4,21 @@ using System.Security.Principal;
 namespace Fellowship;
 public partial class App : Application
 {
+    void SelectMouseWheel(object sender,System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if(sender is not System.Windows.Controls.ComboBox {IsDropDownOpen:false} box)return;
+        e.Handled=true;
+        // A closed select never consumes wheel input as a value change.
+        // Forward it to the enclosing page; an open dropdown keeps normal scrolling.
+        for(DependencyObject? parent=System.Windows.Media.VisualTreeHelper.GetParent(box);parent!=null;parent=System.Windows.Media.VisualTreeHelper.GetParent(parent))
+        {
+            if(parent is System.Windows.Controls.ScrollViewer scroll)
+            {
+                scroll.RaiseEvent(new System.Windows.Input.MouseWheelEventArgs(e.MouseDevice,e.Timestamp,e.Delta){RoutedEvent=System.Windows.Input.Mouse.MouseWheelEvent,Source=scroll});
+                break;
+            }
+        }
+    }
     Mutex? instanceMutex;
     EventWaitHandle? activateEvent;
     RegisteredWaitHandle? activationWait;
