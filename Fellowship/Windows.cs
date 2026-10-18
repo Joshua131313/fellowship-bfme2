@@ -138,7 +138,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.21   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.22   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -302,6 +302,7 @@ public sealed class RoomWindow : Window
     readonly TextBlock placementStatus=UI.Text("",11,UI.Muted);
     readonly Button clearSpot;
     bool syncingPlacement,changingPlacement,watchingNative;
+    TaskCompletionSource<bool>? syncPrepared;
     readonly System.Threading.CancellationTokenSource syncLifetime=new();
     readonly TextBlock liveStatus=UI.Text("Live sync starts when BFME2 opens.",10,UI.Muted);
     sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team / free for all":"Team "+Value;}
@@ -347,7 +348,7 @@ public sealed class RoomWindow : Window
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams and spots sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Windows permission is needed only if BFME2 runs as administrator.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.Text("Click an empty spot to claim it. Teams and spots sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -420,9 +421,10 @@ public sealed class RoomWindow : Window
                 foreach(var process in System.Diagnostics.Process.GetProcessesByName("game.dat").Concat(System.Diagnostics.Process.GetProcessesByName("game")))
                     using(process){pid=process.Id;break;}
                 if(pid==0)attempted=0;
-                if(pid!=0&&pid!=attempted&&!launching&&SyncCommand()!=null)
+                if((pid==0||pid!=attempted)&&SyncCommand()!=null)
                 {
                     attempted=pid;
+                    syncPrepared=new(TaskCreationOptions.RunContinuationsAsynchronously);
                     try
                     {
                         await LivePlacement.Listen(app.Settings.GamePath,pid,SyncCommand,async choice=>
@@ -439,14 +441,19 @@ public sealed class RoomWindow : Window
                             savingRules=true;Refresh();
                             try{await app.Peer.EditRoom(draft);}
                             finally{savingRules=false;Refresh();}
-                        },message=>liveStatus.Text=message,syncLifetime.Token);
+                        },message=>liveStatus.Text=message,syncLifetime.Token,()=>syncPrepared.TrySetResult(true));
+                        syncPrepared.TrySetResult(false);
                     }
                     catch(OperationCanceledException) when(syncLifetime.IsCancellationRequested){break;}
                     catch(Exception error)
                     {
+                        syncPrepared.TrySetResult(false);
                         liveStatus.Text="Live sync paused. Native lobby remains available.";
-                        Append("SYSTEM","Live sync stopped: "+error.Message+" Reopen the Fellowship room to reconnect. You can correct selections in BFME2 manually.");
+                        Append("SYSTEM","Live sync stopped: "+error.Message+" Turn live sync off and on in Settings to retry. You can correct selections in BFME2 manually.");
+                        // Do not repeatedly reopen UAC after a refusal or setup error.
+                        app.Settings.LiveGameSync=false;app.Settings.Save();
                     }
+                    finally{syncPrepared=null;}
                 }
                 await Task.Delay(1000,syncLifetime.Token);
             }
@@ -571,6 +578,20 @@ public sealed class RoomWindow : Window
             bool preset=app.Peer.IsHost&&HostPreset.Matches(app.Peer.Current);
             Append("SYSTEM",preset?"Launching BFME2. Your rules will sync when the LAN lobby opens.":"Launching BFME2…");
             var current=app.Peer.Current??throw new IOException("Join a Fellowship room first.");
+            GameLauncher.Validate(app.Settings.GamePath);
+            if(GameLauncher.IsRunning())throw new IOException("BFME2 is already running. Exit it before launching again.");
+            if(app.Settings.LiveGameSync)
+            {
+                using var preparationTimeout=System.Threading.CancellationTokenSource.CreateLinkedTokenSource(syncLifetime.Token);
+                preparationTimeout.CancelAfter(TimeSpan.FromSeconds(60));
+                // The game must not start until the permission dialog is finished
+                // and the authenticated helper has answered its first request.
+                while(syncPrepared==null&&app.Settings.LiveGameSync)
+                    await Task.Delay(100,preparationTimeout.Token);
+                if(app.Settings.LiveGameSync&&syncPrepared!=null&&
+                   !await syncPrepared.Task.WaitAsync(preparationTimeout.Token))
+                    throw new IOException("Sync preparation failed. Turn live sync off in Settings to launch without it.");
+            }
             await GameLauncher.Launch(app.Settings.GamePath,current,preset,false,app.Peer.LocalId,false);
             Append("SYSTEM",app.Settings.LiveGameSync?"Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.":"Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens.");
         }

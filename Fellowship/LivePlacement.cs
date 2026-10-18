@@ -63,14 +63,14 @@ public static class LivePlacement
         return JsonSerializer.Deserialize<T>(bytes)??throw new IOException("Missing sync message.");
     }
     static string SessionLog(string name)=>Path.Combine(Settings.Folder,"native-sync-"+Guid.ParseExact(name["Fellowship.Sync.".Length..],"N").ToString("N")+".log");
-    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token)
+    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null)
     {
         string name="Fellowship.Sync."+Guid.NewGuid().ToString("N");
         using var pipe=new NamedPipeServerStream(name,PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous|PipeOptions.CurrentUserOnly);
-        bool elevated=LaunchContext.IsElevated(gamePid);
+        bool elevated=gamePid==0||LaunchContext.IsElevated(gamePid);
         var start=LaunchContext.Worker(Environment.ProcessPath!,elevated);
         foreach(string arg in new[]{"--native-sync",gamePath,gamePid.ToString(),Environment.ProcessId.ToString(),name})start.ArgumentList.Add(arg);
-        status(elevated?"BFME2 is running as administrator. Approve Windows permission for live sync.":"Connecting live game sync…");
+        status(gamePid==0?"Approve sync permission before BFME2 starts. Waiting for the game afterward…":elevated?"BFME2 is running as administrator. Approve Windows permission for live sync.":"Connecting live game sync…");
         using var helper=Process.Start(start)??throw new IOException("Could not start live sync.");
         using(var connect=CancellationTokenSource.CreateLinkedTokenSource(token))
         {
@@ -88,6 +88,7 @@ public static class LivePlacement
             catch(EndOfStreamException){status("BFME2 sync disconnected. No further changes will be sent.");return;}
             catch(IOException){throw new IOException("The game sync connection ended. No further changes will be sent.");}
             if(reply.Done){status(reply.Status);return;}
+            prepared?.Invoke();prepared=null;
             // A user edit or host/map transition wins over an older incoming observation.
             if(current()==command)
             {
@@ -105,14 +106,32 @@ public static class LivePlacement
         {
             if(!pipeName.StartsWith("Fellowship.Sync.",StringComparison.Ordinal)||!Guid.TryParseExact(pipeName["Fellowship.Sync.".Length..],"N",out _))throw new IOException("Invalid sync pipe name.");
             log=SessionLog(pipeName);
-            using var parent=Process.GetProcessById(parentPid);using var game=Process.GetProcessById(gamePid);
-            if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
-            using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
+            using var parent=Process.GetProcessById(parentPid);
+            HostPreset.ValidateBinary(gamePath);
             // The server restricts its ACL to the user. Authenticate it by PID below;
             // CurrentUserOnly on an elevated client rejects a medium-integrity owner.
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
+            if(gamePid==0)
+            {
+                // Authorize the worker before the renderer starts. Never launch the
+                // game here: it must retain the interactive user's launch context.
+                string? waitingRoom=null;
+                while(!parent.HasExited)
+                {
+                    using var waitTimeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    var waiting=await Receive<Command>(pipe,waitTimeout.Token);
+                    waitingRoom??=waiting.Room;if(waitingRoom!=waiting.Room)return 0;
+                    gamePid=FindConfiguredGame(gamePath);
+                    await Send(pipe,new Reply(gamePid==0?"Sync ready. Waiting for BFME2…":"BFME2 detected. Waiting for the LAN lobby…"),waitTimeout.Token);
+                    if(gamePid!=0)break;
+                }
+                if(gamePid==0)return 0;
+            }
+            using var game=Process.GetProcessById(gamePid);
+            if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
+            using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
             int generation=0;string? lastTrace=null;string? room=null,context=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
@@ -218,6 +237,21 @@ public static class LivePlacement
         {
             if(log!=null)File.WriteAllText(log,error.Message);return 1;
         }
+    }
+    static int FindConfiguredGame(string gamePath)
+    {
+        string expected=NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat"));
+        foreach(var candidate in Process.GetProcessesByName("game.dat").Concat(Process.GetProcessesByName("game")))
+        using(candidate)
+        {
+            try
+            {
+                if(!candidate.HasExited&&candidate.MainModule is {} module&&
+                   string.Equals(NativePlacement.PhysicalPath(module.FileName),expected,StringComparison.OrdinalIgnoreCase))return candidate.Id;
+            }
+            catch(Exception e) when(e is System.ComponentModel.Win32Exception or InvalidOperationException){ }
+        }
+        return 0;
     }
     sealed class NativeTransitionException : IOException { }
     static NativeLobby.Snapshot? ReadAfterWrite(NativeLobby reader)
