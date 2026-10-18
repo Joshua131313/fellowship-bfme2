@@ -3,7 +3,7 @@ Usage: python scripts/publish-release.py 0.1.9 path/to/package.zip path/to/notes
 Uses the existing Git credential manager; never stores or prints credentials.
 """
 import hashlib,json,pathlib,re,subprocess,sys,urllib.error,urllib.request
-version,package,notes=sys.argv[1:]
+version,package,notes,*installers=sys.argv[1:]
 if not re.fullmatch(r'\d+\.\d+\.\d+',version):raise ValueError('Use a three-part release version')
 p=pathlib.Path(package)
 if p.name!=f'Fellowship-{version}-win-x64.zip':raise ValueError('Unexpected package name')
@@ -19,10 +19,12 @@ try:release=request(base+'/releases/tags/'+tag)
 except urllib.error.HTTPError as error:
     if error.code!=404:raise
     release=request(base+'/releases',json.dumps({'tag_name':tag,'target_commitish':commit,'name':'Fellowship '+version,'body':pathlib.Path(notes).read_text(encoding='utf-8-sig'),'draft':True}).encode(),'POST')
-payload=p.read_bytes();assets=request(base+'/releases/'+str(release['id'])+'/assets')
-asset=next((a for a in assets if a['name']==p.name),None)
-if asset is None:asset=request(release['upload_url'].split('{')[0]+'?name='+p.name,payload,'POST','application/zip')
-if asset['digest']!='sha256:'+hashlib.sha256(payload).hexdigest():raise ValueError('Published package differs. Bump version; do not overwrite an existing release.')
+for p in [p]+[pathlib.Path(i) for i in installers]:
+    if p.name not in (f'Fellowship-{version}-win-x64.zip',f'Fellowship-{version}-win-x64.msi'):raise ValueError('Unexpected asset name')
+    payload=p.read_bytes();assets=request(base+'/releases/'+str(release['id'])+'/assets')
+    asset=next((a for a in assets if a['name']==p.name),None)
+    if asset is None:asset=request(release['upload_url'].split('{')[0]+'?name='+p.name,payload,'POST','application/octet-stream')
+    if asset['digest']!='sha256:'+hashlib.sha256(payload).hexdigest():raise ValueError('Published package differs. Bump version; do not overwrite an existing release.')
 release=request(base+'/releases/'+str(release['id']),json.dumps({'draft':False,'prerelease':False,'make_latest':'true'}).encode(),'PATCH')
 if request(base+'/releases/latest')['tag_name']!=tag:raise ValueError('Latest release did not update')
 print('Published and checksum verified:',release['html_url'])

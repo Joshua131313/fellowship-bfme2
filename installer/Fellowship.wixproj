@@ -1,0 +1,11 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <!-- This package deliberately supports per-user installation only. -->
+    <SuppressIces>ICE91</SuppressIces>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.1.11</ProductVersion>
+    <OutputName>Fellowship-$(ProductVersion)-win-x64</OutputName>
+    <DefineConstants>ProductVersion=$(ProductVersion);PublishDir=$(MSBuildThisFileDirectory)..\dist\Fellowship-$(ProductVersion)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup><PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" /></ItemGroup>
+</Project>

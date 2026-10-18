@@ -7,6 +7,12 @@ class Program
 {
  [STAThread] static void Main(string[] args)
  {
+  if(args.Length==3&&args[0]=="--native-read")
+  {
+   try{using var reader=new NativeLobby(int.Parse(args[1]));File.WriteAllText(args[2],System.Text.Json.JsonSerializer.Serialize(reader.Current()));}
+   catch(Exception e){File.WriteAllText(args[2],e.ToString());}
+   return;
+  }
   if(args.Contains("--download-check"))
   {
     using var http=new System.Net.Http.HttpClient();http.DefaultRequestHeaders.UserAgent.ParseAdd("Fellowship-test");
@@ -18,37 +24,20 @@ class Program
     Console.WriteLine("PASS real GitHub update download, checksum, extraction, version validation and ZIP cleanup");return;
   }
   if(!SearchableMapBox.Matches("Rhûn","rhun")||!SearchableMapBox.Matches("Woody End","END")||SearchableMapBox.Matches("Rhûn","mordor"))throw new Exception("Map search matching failed");
-  var landmarks=GameNavigation.LoadLandmarks();
-  foreach(var (file,expected) in new[]{("main","Main"),("network","Network"),("host","HostLobby"),("multiplayer","Multiplayer")})
-  {
-   var capture="research/navigation-"+file+".png";
-   if(!File.Exists(capture)){Console.WriteLine("SKIP optional local capture: "+file);continue;}
-   using var frame=new System.Drawing.Bitmap(capture);
-   var found=GameNavigation.Recognize(frame,landmarks);
-   if(found!=expected)throw new Exception($"Navigation scene {file}: expected {expected}, found {found}");
-   foreach(int width in new[]{2560,5120})
-   {
-    using var scaled=new System.Drawing.Bitmap(width,width*9/16);
-    using(var graphics=System.Drawing.Graphics.FromImage(scaled))graphics.DrawImage(frame,0,0,scaled.Width,scaled.Height);
-    if(GameNavigation.Recognize(scaled,landmarks)!=expected)throw new Exception($"Navigation failed at {width} pixels: {expected}");
-   }
-   Console.WriteLine("PASS navigation recognition at 2048, 2560 and 5120 pixels: "+expected);
-  }
-  using(var blank=new System.Drawing.Bitmap(2048,1152))
-   if(GameNavigation.Recognize(blank,landmarks)!="")throw new Exception("Navigation accepted a blank screen");
-  if(!double.IsPositiveInfinity(GameNavigation.Difference([],[])))throw new Exception("Invalid navigation sample accepted");
-  Console.WriteLine("PASS unknown/invalid navigation frames rejected");
   var spots=MapPreview.ParseSpots("MapCache maps_5Ctest_2Emap\n extentMin = X:100 Y:200 Z:0\n extentMax = X:1100 Y:2200 Z:0\n numPlayers = 2\n Player_1_Start = X:350 Y:700 Z:0\n Player_2_Start = X:850 Y:1700 Z:0\nEND",@"maps\test.map");
   if(spots.Count!=2||spots[0].X!=0.25||spots[0].Y!=0.75||spots[1].X!=0.75||spots[1].Y!=0.25)throw new Exception("Map spot coordinate normalization failed");
   Console.WriteLine("PASS map bounds, slot numbers and vertical coordinate conversion");
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.10-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.10/Fellowship-0.1.10-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.10",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.12-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.12/Fellowship-0.1.12-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.12",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.10","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  try{AppUpdates.Parse(ReleaseJson("v0.1.12","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.12",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
+  Console.WriteLine("PASS installer update selection");
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
   Console.WriteLine("PASS installed map preview and update version/source validation");
   Directory.CreateDirectory("dist");

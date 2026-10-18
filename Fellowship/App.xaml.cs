@@ -18,12 +18,17 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if(e.Args.Length is 2 or 3&&e.Args[0] is "--host-preset" or "--host-navigation" or "--guest-navigation")
+        if(e.Args.Length==3&&e.Args[0]=="--install-update"&&int.TryParse(e.Args[2],out var updatePid))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
-            Shutdown(await HostPreset.Run(e.Args[1],e.Args.Length==3?e.Args[2]:null,e.Args[0]!="--host-preset",e.Args[0]!="--guest-navigation"));
-            return;
+            Shutdown(await Installation.RunUpdate(e.Args[1],updatePid));return;
         }
+        if(e.Args.Length is >=2 and <=4&&e.Args[0]=="--host-preset")
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            Shutdown(await HostPreset.Run(e.Args[1],e.Args.Length>=3?e.Args[2]:null));return;
+        }
+        if(e.Args.Any(a=>a.EndsWith("-navigation")||a.EndsWith("-placement"))){Shutdown(1);return;}
         if(e.Args.Length==2&&e.Args[0]=="--wait-for"&&int.TryParse(e.Args[1],out var oldPid))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
@@ -39,7 +44,7 @@ public partial class App : Application
         MainWindow = main;
         ShutdownMode=ShutdownMode.OnExplicitShutdown;
         tray=new TrayIcon(main);
-        main.Show();
+        if(!e.Args.Contains("--startup"))main.Show();else main.EnsureOnline(true);
         activationWait=ThreadPool.RegisterWaitForSingleObject(activateEvent,(_,_)=>Dispatcher.BeginInvoke(()=>
         {
             if(main.WindowState==WindowState.Minimized)main.WindowState=WindowState.Normal;

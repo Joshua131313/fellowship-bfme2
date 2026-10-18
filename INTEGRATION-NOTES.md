@@ -47,3 +47,13 @@ An opt-in product helper now contains window/focus/format checks, stable menu fi
 Latest live trial confirmed Main -> Multiplayer -> Network with elevated helper input. Network label difference was 19.8, above the earlier 16 cutoff, preventing Create Game. Network and HostLobby now accept differences below 24 while retaining an eight-point separation from other labels; Main/Multiplayer remain below 16. Offline recognition checks pass at all three tested resolutions. Final host creation still needs live confirmation. Guest name matching and double-click joining are deferred at the user's request.
 
 User confirmed host navigation works. Responsiveness update: poll every 100 ms instead of 250 ms, reduce post-click pause from 500 to 150 ms, cursor settling from 120 to 60 ms. Preserve three matching frames before acting, 120 ms mouse-down hold, loading-screen gating, focus checks and timeout limits. Faster timings still need live user confirmation.
+
+## Direct LAN placement investigation (0.1.11)
+
+Cursor navigation and placement helpers have been removed at the user's request. No native team/spot write has been executed by this build. Read-only live snapshots confirm local slot identification, current map, team and spot values.
+
+For the exact SHA-256 above, preferred image base 0x400000: MP setup singleton at 0xdfe1f4 has an adapter pointer at +0x58. The LAN adapter vtable is 0xc3a9a8. Its +0x34 method (0x843374) sets team; +0x30 (0x84361b) sets starting position. Both are thiscall methods taking slot pointer and zero-based choice, with ret 8. Team writes slot +0x1c. Spot writes BOTH +0x10 and +0x14. Native methods also reset readiness/countdown, broadcast host state or send guest option requests (Team=%d / StartPos=%d), and flag host UI refresh. Therefore a raw field write alone is insufficient.
+
+LAN subsystem global 0xdf9800: +0x44 active game, +0x48 local address. Game slots are eight entries starting at +0xb0, stride 0x1d0; state +4, ready +8, IP/port +0x38. Local matching must use LAN address, since game and Fellowship names may differ. Human state is 6; no selection is -1. Team 2 / Rhun middle-left was observed as native team 1 / spot 1.
+
+Remaining: execute the native methods on the correct game thread while the LAN lobby is active; validate binary, adapter, local slot, map, occupancy and bounds; verify resulting state and host/guest synchronization on two PCs. No blind remote-thread call, memory write, spoofed network message or cursor fallback is implemented. These findings establish a candidate integration path, not working automatic assignment.

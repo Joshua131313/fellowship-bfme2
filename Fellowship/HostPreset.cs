@@ -26,12 +26,13 @@ public static class HostPreset
     }
 
     // Run in an isolated elevated instance: the network-facing UI remains unelevated.
-    public static async Task<int> Run(string path,string? encoded=null,bool navigate=false,bool host=true)
+    public static async Task<int> Run(string path,string? encoded=null,bool navigate=false,bool host=true,string localId="",bool applyOnly=false)
     {
         Directory.CreateDirectory(Settings.Folder);
         try
         {
             File.WriteAllText(LogPath,$"Preparing {(host?"host":"guest")} launch. Navigation: {(navigate?"enabled":"disabled")}.\r\n");
+            if(navigate||applyOnly)throw new InvalidOperationException("Cursor navigation is disabled. Set teams and spots in BFME2 manually.");
             ValidateBinary(path);
             var room=encoded==null?new Room():JsonSerializer.Deserialize<Room>(Convert.FromBase64String(encoded))??throw new InvalidOperationException("Invalid preset.");
             room.Match.Validate();
@@ -58,8 +59,7 @@ public static class HostPreset
                         if(module==null||!string.Equals(module.FileName,Path.Combine(Path.GetDirectoryName(path)!,"game.dat"),StringComparison.OrdinalIgnoreCase))continue;
                         if(host)ApplyDefaults(process.Id,module.BaseAddress,room.Match);
                         File.AppendAllText(LogPath,host?$"Applied: {room.Map}; {room.Match.Summary}. Process {process.Id}.\r\n":"Guest game launched.\r\n");
-                        if(navigate)await GameNavigation.Run(process.Id,host);
-                        else File.AppendAllText(LogPath,"Open Multiplayer → Network → Create Game. Assign teams and starting positions in the lobby.\r\n");
+                        File.AppendAllText(LogPath,"Open Multiplayer → Network → Create Game. Assign teams and starting positions in the lobby.\r\n");
                         return 0;
                     }
                 }

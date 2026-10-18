@@ -137,7 +137,7 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.AsyncButton("Join room  →",Join,true)); address.Margin = new(0,0,10,0); footer.Children.Add(direct);
         count.Margin = new(10,0,8,0); Grid.SetColumn(count,1); footer.Children.Add(count); UI.At(body,footer,3);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.9   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
+        var hint = UI.Text("v0.1.11   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,4);
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)UI.Info(this,"Room preview",$"{entry.Room.Title}\nHosted by {entry.Host}\n{entry.Room.Map} · {entry.Room.Players.Count}/{entry.Room.Capacity} players\n{entry.Room.Match.Summary}\n{(entry.Room.FriendsOnly?"Friends only":"Public on VPN")}\n\n"+string.Join("\n",entry.Room.Players.Select(p=>$"{p.Name} · {(p.Ready?"Ready":"Not ready")}")));};
         var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
@@ -172,12 +172,12 @@ public sealed class BrowserWindow : Window
         var selected=(rooms.SelectedItem as RoomEntry)?.Room.Id;
         rooms.ItemsSource = list;if(selected!=null)rooms.SelectedItem=list.FirstOrDefault(r=>r.Room.Id==selected); empty.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed; count.Text = $"{list.Count} room{(list.Count == 1 ? "" : "s")}";
     }
-    public bool EnsureOnline()
+    public bool EnsureOnline(bool quiet=false)
     {
         if(online)return true;
         try
         {
-            if(string.IsNullOrWhiteSpace(Settings.BindAddress)){ UI.Error("Select your Radmin VPN interface in Settings first."); return false; }
+            if(string.IsNullOrWhiteSpace(Settings.BindAddress)){ if(!quiet)UI.Error("Select your Radmin VPN interface in Settings first."); return false; }
             Peer.Start(Settings.BindAddress); online = true; status.Text = $"●  {Settings.Name}   ·   {Peer.Address}   ·   Ready to play"; status.Foreground = UI.Brush(UI.Green); return true;
         }
         catch(Exception e)
@@ -186,7 +186,7 @@ public sealed class BrowserWindow : Window
             var message=e is System.Net.Sockets.SocketException {SocketErrorCode:System.Net.Sockets.SocketError.AddressAlreadyInUse}
                 ? "This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry."
                 : "Could not connect on the selected interface. Check that Radmin VPN is connected and choose its current address in Settings.\n\n"+e.Message;
-            UI.Error(message);return false;
+            if(!quiet)UI.Error(message);return false;
         }
     }
     public void OpenSettings()
@@ -206,12 +206,13 @@ public sealed class BrowserWindow : Window
         p.Children.Add(network);
         var info = UI.Text("Choose Radmin VPN on both PCs. Interface changes need an app restart. BFME2's Network IP should use the same adapter.",12,UI.Muted); info.Margin = new(0,12,0,18); p.Children.Add(info);
         var sounds=new CheckBox{Content="Play a sound for incoming private messages",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,20)};p.Children.Add(sounds);
-        var navigation=new CheckBox{Content="Experimental navigation: Network / host lobby",IsChecked=Settings.MenuNavigation,Margin=new(0,0,0,10)};p.Children.Add(navigation);
-        p.Children.Add(UI.Text("English, 16:9 only. Keep BFME2 focused; Esc cancels. Guests still select their host manually. Not yet verified in a live run.",11,UI.Muted));
+        var startup=new CheckBox{Content="Launch Fellowship at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,Margin=new(0,0,0,10)};p.Children.Add(startup);
+        p.Children.Add(UI.Text(Installation.IsInstalled?"Starts quietly in the system tray.":"Install Fellowship to enable launch at sign-in.",11,UI.Muted));
+        p.Children.Add(UI.Button("Open preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);Process.Start(new ProcessStartInfo(Settings.Folder){UseShellExecute=true});}));
         p.Children.Add(UI.Button("Save settings",() =>
         {
             if(name.Text.Trim().Length==0 || network.SelectedIndex<0){UI.Error("Enter a name and choose a network interface.");return;}
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.MenuNavigation=navigation.IsChecked==true;Settings.Save();w.Close();EnsureOnline();
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();w.Close();EnsureOnline();
         },true)); p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null)); w.ShowDialog();
     }
     async Task Refresh()
@@ -339,7 +340,7 @@ public sealed class RoomWindow : Window
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);var placementHint=UI.Text("Click an empty spot to claim it. Colored spots are claimed. FELLOWSHIP ONLY — select spots and teams manually inside BFME2.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        right.Children.Add(placementStatus);var placementHint=UI.Text("Click an empty spot to claim it. Colored spots are claimed. These choices are shared in Fellowship. Set the same team and spot manually in BFME2 until direct integration is verified.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -364,7 +365,7 @@ public sealed class RoomWindow : Window
         customSetup.Children.Add(privacyChoice);var confirmPrivacy=UI.AsyncButton("Confirm privacy",()=>SaveRoomDetails(true));confirmPrivacy.Margin=new(0,10,0,0);confirmPrivacy.HorizontalAlignment=HorizontalAlignment.Stretch;customSetup.Children.Add(confirmPrivacy);
         right.Children.Add(customSetup);
         var guide=UI.Stack(UI.Text("IN BFME2",10,UI.Muted,true),UI.Text("1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Choose teams and starting positions",12,"#B5C0D3"));guide.Margin=new(0,20,0,0);guide.Children[1].SetValue(MarginProperty,new Thickness(0,8,0,0));right.Children.Add(guide);
-        var note=UI.Text("Selected maps and rules apply at the next host launch. Players choose their teams in BFME2.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
+        var note=UI.Text("Selected maps and rules apply at the next host launch. With navigation enabled, your spot and team apply after the native lobby opens. Guests still join manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
         var settingsCard=UI.Card(UI.Scroll(right),"#191D24",16);Grid.SetColumn(settingsCard,1);columns.Children.Add(settingsCard);UI.At(body,columns,1);
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var state=UI.Stack(consent,readySummary,UI.Text("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
@@ -480,7 +481,8 @@ public sealed class RoomWindow : Window
     }
     public void HandleLaunch(){if(app.Peer.IsHost||allowLaunch){allowLaunch=false;LaunchLocal();}}
     bool launching;
-    async void LaunchLocal()
+    async void LaunchLocal()=>await LaunchLocalCore(false);
+    async Task LaunchLocalCore(bool applyOnly)
     {
         if(launching)return;
         launching=true;
@@ -489,8 +491,8 @@ public sealed class RoomWindow : Window
         {
             bool preset=app.Peer.IsHost&&HostPreset.Matches(app.Peer.Current);
             Append("SYSTEM",preset?"Preparing host preset. Approve the Windows permission prompt if shown.":"Launching BFME2…");
-            await GameLauncher.Launch(app.Settings.GamePath,app.Peer.Current,preset,app.Settings.MenuNavigation);
-            Append("SYSTEM",app.Settings.MenuNavigation?(app.Peer.IsHost?"Native host lobby detected. Assign teams and positions manually.":"Network reached. Select your host and join manually."):preset?"Selected map and rules applied. Open Multiplayer → Network → Create Game, then assign teams for 3v3.":"BFME2 launched. Open Multiplayer → Network. This room stays open.");
+            await GameLauncher.Launch(app.Settings.GamePath,app.Peer.Current,preset,false,app.Peer.LocalId,false);
+            Append("SYSTEM",preset?"Selected map and rules applied. Open Multiplayer → Network → Create Game, then assign teams for 3v3.":"BFME2 launched. Open Multiplayer → Network. This room stays open.");
         }
         catch(Exception e){UI.Error(e.Message);}
         finally{launching=false;Refresh();}
@@ -605,18 +607,19 @@ public static class GameLauncher
         if (version.FileMajorPart != 1 || version.FileMinorPart != 0 || version.FileBuildPart != 2194 || version.FilePrivatePart != 40862)
             throw new InvalidOperationException($"This build supports BFME2 1.00 only. Found game.dat version {version.FileVersion}. Switch your installation to 1.00 first.");
     }
-    public static async Task Launch(string path,Room? room,bool preset=false,bool navigate=false)
+    public static async Task Launch(string path,Room? room,bool preset=false,bool navigate=false,string localId="",bool applyOnly=false)
     {
+        if(navigate||applyOnly)throw new InvalidOperationException("Cursor navigation is disabled.");
         Validate(path);
-        if(IsRunning())throw new InvalidOperationException("BFME2 is already running. Switch to its window, or exit before relaunching.");
+        if(!applyOnly&&IsRunning())throw new InvalidOperationException("BFME2 is already running. Switch to its window, or exit before relaunching.");
         Directory.CreateDirectory(Settings.Folder);File.WriteAllText(Path.Combine(Settings.Folder,"last-session.json"),System.Text.Json.JsonSerializer.Serialize(room));
         try
         {
-            if(preset||navigate)
+            if(preset||navigate||applyOnly)
             {
                 HostPreset.ValidateBinary(path);
                 var start=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=true,Verb="runas",WorkingDirectory=AppContext.BaseDirectory};
-                start.ArgumentList.Add(navigate?(preset?"--host-navigation":"--guest-navigation"):"--host-preset");start.ArgumentList.Add(path);start.ArgumentList.Add(Convert.ToBase64String(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(room)));
+                start.ArgumentList.Add(applyOnly?(preset?"--host-placement":"--guest-placement"):navigate?(preset?"--host-navigation":"--guest-navigation"):"--host-preset");start.ArgumentList.Add(path);start.ArgumentList.Add(Convert.ToBase64String(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(room)));start.ArgumentList.Add(localId);
                 using var helper=Process.Start(start)??throw new InvalidOperationException("Could not start the preset helper.");
                 await helper.WaitForExitAsync();
                 if(helper.ExitCode!=0)throw new InvalidOperationException("Game setup or navigation failed. "+(File.Exists(HostPreset.LogPath)?File.ReadAllText(HostPreset.LogPath):"No diagnostic was written."));

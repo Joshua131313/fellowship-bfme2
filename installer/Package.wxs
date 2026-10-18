@@ -1,0 +1,39 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="Fellowship" Manufacturer="Fellowship" Version="$(var.ProductVersion)" Language="1033"
+           UpgradeCode="D124E6E7-6C01-44D3-A5AD-8077BF46EE40" Scope="perUser">
+    <MajorUpgrade DowngradeErrorMessage="A newer Fellowship is already installed." Schedule="afterInstallInitialize" />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="FellowshipIcon" SourceFile="..\Fellowship\Assets\Fellowship.ico" />
+    <Property Id="ARPPRODUCTICON" Value="FellowshipIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Joshua131313/fellowship-bfme2" />
+    <Property Id="STARTUP_ENABLED" Value="1">
+      <RegistrySearch Id="RememberStartup" Root="HKCU" Key="Software\Fellowship\Preferences" Name="StartWithWindows" Type="raw" />
+    </Property>
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="Fellowship">
+          <Component Id="Application" Guid="9B82A71D-7380-4766-9184-040E4197783A">
+            <RemoveFolder Id="RemoveApplicationDirectory" Directory="INSTALLFOLDER" On="uninstall" />
+            <RemoveFolder Id="RemoveEmptyProgramsDirectory" Directory="ProgramsFolder" On="uninstall" />
+            <File Id="FellowshipExe" Source="$(var.PublishDir)\Fellowship.exe" />
+            <RegistryValue Root="HKCU" Key="Software\Fellowship\Installation" Name="Directory" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+          </Component>
+          <Component Id="Startup" Guid="FAED9760-E941-4A24-924C-37B132688FBE" Condition="STARTUP_ENABLED = &quot;1&quot;" Transitive="yes">
+            <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="Fellowship" Value="&quot;[INSTALLFOLDER]Fellowship.exe&quot; --startup" Type="string" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenu" Guid="96CBF9F9-BC33-423F-839B-189421D28C12">
+        <Shortcut Id="FellowshipShortcut" Name="Fellowship" Target="[INSTALLFOLDER]Fellowship.exe" WorkingDirectory="INSTALLFOLDER" Icon="FellowshipIcon" />
+        <RegistryValue Root="HKCU" Key="Software\Fellowship\Installation" Name="StartMenu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+    <Feature Id="Main" Title="Fellowship" Level="1">
+      <ComponentRef Id="Application" /><ComponentRef Id="Startup" /><ComponentRef Id="StartMenu" />
+    </Feature>
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="Notice.rtf" />
+  </Package>
+</Wix>
