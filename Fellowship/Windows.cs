@@ -272,7 +272,7 @@ public sealed partial class BrowserWindow : Window
     readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Bottom};
     public BrowserWindow(Settings? settings=null)
     {
-        Settings=settings??Settings.Load();MessageAlert.Configure(Settings);
+        Settings=settings??Settings.Load();Settings.SelectDefaultNetwork(PeerService.Interfaces());MessageAlert.Configure(Settings);
         roomSort=new[]{"Title","Mode","Host","Map","PlayerCount","Patch","Ping","Status"}.Contains(Settings.RoomSortColumn)?Settings.RoomSortColumn:"";roomSortDirection=Settings.RoomSortDescending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;
         Settings.NetworkName=PeerService.Interfaces().FirstOrDefault(i=>i.Address==Settings.BindAddress).Name??Settings.NetworkName;
         modeFilter.SelectedItem=modeFilter.Items.Contains(Settings.RoomModeFilter)?Settings.RoomModeFilter:"All modes";

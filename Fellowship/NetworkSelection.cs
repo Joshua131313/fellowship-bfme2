@@ -20,6 +20,7 @@ public sealed partial class BrowserWindow
             var choices=PeerService.Interfaces().Select(i=>new NetworkChoice(i.Name,i.Address)).ToList();
             if(!choices.Any(i=>i.Address==Settings.BindAddress)&&Settings.BindAddress.Length>0)
                 choices.Insert(0,new(Settings.NetworkName+" (unavailable)",Settings.BindAddress));
+            if(Settings.BindAddress.Length==0)choices.Insert(0,new("Radmin VPN (unavailable)",""));
             networkCaption.ItemsSource=choices;
             networkCaption.SelectedItem=choices.FirstOrDefault(i=>i.Address==Settings.BindAddress);
             networkCaption.ToolTip=(networkCaption.SelectedItem as NetworkChoice)?.Description??"Select a network";

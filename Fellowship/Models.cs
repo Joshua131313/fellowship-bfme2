@@ -31,7 +31,14 @@ public sealed class Settings
     public string RoomSortColumn { get; set; } = "";
     public bool RoomSortDescending { get; set; }
     public string RoomModeFilter { get; set; } = "All modes";
-    public string NetworkName { get; set; } = "Selected VPN";
+    public string NetworkName { get; set; } = "Radmin VPN";
+    public void SelectDefaultNetwork(IEnumerable<(string Name,string Address)> interfaces)
+    {
+        if(!string.IsNullOrWhiteSpace(BindAddress))return;
+        NetworkName="Radmin VPN";
+        var radmin=interfaces.FirstOrDefault(i=>i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));
+        if(!string.IsNullOrEmpty(radmin.Address)){NetworkName=radmin.Name;BindAddress=radmin.Address;Save();}
+    }
     public string BindAddress { get; set; } = "";
     public bool SkipRemoveFriendConfirmation { get; set; }
     public bool SkipBlockConfirmation { get; set; }

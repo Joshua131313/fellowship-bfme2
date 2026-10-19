@@ -217,6 +217,9 @@ class Program
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
   Console.WriteLine("PASS installed map preview and update version/source validation");
   Directory.CreateDirectory("dist");
+  var freshNetwork=Settings.InMemory();freshNetwork.SelectDefaultNetwork(new[]{("ZeroTier","10.0.0.1"),("Radmin VPN","26.1.2.3")});
+  if(freshNetwork.BindAddress!="26.1.2.3")throw new Exception("Fresh settings did not select Radmin");
+  freshNetwork.BindAddress="10.0.0.1";freshNetwork.SelectDefaultNetwork(new[]{("Radmin VPN","26.1.2.3")});if(freshNetwork.BindAddress!="10.0.0.1")throw new Exception("Existing network selection overwritten");
   var app=new App();app.InitializeComponent();Appearance.Apply("Dark");
   var transcript=new ChatTranscript();transcript.Append("Alice","First message");transcript.Append("Bob","Second message");transcript.SelectAll();
   if(!transcript.Selection.Text.Contains("First message")||!transcript.Selection.Text.Contains("Second message"))throw new Exception("Cross-message selection failed");
