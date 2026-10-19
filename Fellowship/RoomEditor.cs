@@ -6,7 +6,7 @@ namespace Fellowship;
 public sealed class RoomEditor : Window
 {
     public Room? Result { get; private set; }
-    public RoomEditor(Window owner,Settings settings,Room initial)
+    public RoomEditor(Window owner,Settings settings,Room initial,Func<Room,Task>? create=null)
     {
         Owner=owner;var body=UI.Shell(this,"Create room",620,478);WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var work=SystemParameters.WorkArea;
@@ -65,15 +65,31 @@ public sealed class RoomEditor : Window
         privacy.SelectionChanged+=(_,_)=>UpdateVisibility();UpdateVisibility();
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
         var cancel=UI.Button("Cancel",()=>DialogResult=false);cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
-        var save=UI.Button("Create room",()=>
+        bool creating=false;
+        Closing+=(_,e)=>{if(creating)e.Cancel=true;};
+        var progress=new ProgressBar{Height=4,Width=160,IsIndeterminate=true,Foreground=UI.Brush("#6789F5"),Background=UI.Brush("#263042"),Visibility=Visibility.Collapsed,HorizontalAlignment=HorizontalAlignment.Left};footer.Children.Add(progress);
+        var save=UI.AsyncButton("Create room",async ()=>
         {
             if(string.IsNullOrWhiteSpace(name.Text)){name.Focus();UI.Error("Enter a room name.");return;}
             Result=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(initial))!;
             Result.Title=name.Text.Trim();Result.Capacity=int.Parse(capacity.Text);Result.FriendsOnly=privacy.SelectedIndex==1;
             var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
-            Result.Rules=Result.Match.Summary;DialogResult=true;
-        },true);UI.Require(save,()=>!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out var limit)&&limit is >=2 and <=64&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0,()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a room name.":"Select a map, player limit, resources, command points and privacy.");save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
+            Result.Rules=Result.Match.Summary;
+            creating=true;setup.IsEnabled=false;heroes.IsEnabled=false;cancel.IsEnabled=false;
+            heading.Text="Creating room…";progress.Visibility=Visibility.Visible;
+            try
+            {
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                if(create!=null)await create(Result);
+                creating=false;DialogResult=true;
+            }
+            finally
+            {
+                creating=false;setup.IsEnabled=true;heroes.IsEnabled=true;cancel.IsEnabled=true;
+                heading.Text="Create a room";progress.Visibility=Visibility.Collapsed;
+            }
+        },true);UI.Require(save,()=>!creating&&!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out var limit)&&limit is >=2 and <=64&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0,()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a room name.":"Select a map, player limit, resources, command points and privacy.");save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
     }
     sealed record Factor(int Value){public override string ToString()=>$"{Value/100.0:0.##}×";}
 }

@@ -156,7 +156,7 @@ public sealed partial class PeerService : IDisposable
             }
         }
     }
-    public void Host(Room room)
+    public void Host(Room room,List<MapSpot>? preparedSpots=null)
     {
         if (room.Patch != "1.00") throw new InvalidOperationException("Only BFME2 1.00 is supported by this build.");
         room.Match.Validate();
@@ -166,7 +166,7 @@ public sealed partial class PeerService : IDisposable
         {
             IsHost = true; LocalId = "host"; Current = room;
             room.Isolated=false;
-            room.Spots=GameMapData.Spots(settings.GamePath,room.MapPath);
+            room.Spots=preparedSpots??GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
             var saved=settings.LastHostedSetup;
             int team=saved?.Team is >=0 and <=4?saved.Team:0;

@@ -236,7 +236,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.45   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.46   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -474,12 +474,17 @@ public sealed class BrowserWindow : Window
         await CloseRoom();await Peer.Join(address.Text.Trim());ShowRoom();
     }
     bool CanLeave()=>Peer.Current==null || MessageBox.Show("Leave your current room? If you host, the next player takes over.","Switch room",MessageBoxButton.YesNo)==MessageBoxResult.Yes;
-    async void CreateRoom()
+    void CreateRoom()
     {
         if(!EnsureOnline() || !CanLeave())return;
         var draft=Settings.NewHostedRoom();draft.Title=Settings.Name+"'s room";
-        var editor=new RoomEditor(this,Settings,draft);
-        if(editor.ShowDialog()==true&&editor.Result is {} room){try{await CloseRoom();Peer.Host(room);ShowRoom();}catch(Exception e){UI.Error(e.Message);}}
+        var editor=new RoomEditor(this,Settings,draft,async room=>
+        {
+            await CloseRoom();
+            var spots=await Task.Run(()=>GameMapData.Spots(Settings.GamePath,room.MapPath));
+            Peer.Host(room,spots);
+        });
+        if(editor.ShowDialog()==true)ShowRoom();
     }
 
     bool closingRoom;
