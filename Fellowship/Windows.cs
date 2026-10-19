@@ -230,6 +230,8 @@ public sealed partial class BrowserWindow : Window
     public Settings Settings { get; }
     public PeerService Peer { get; }
     readonly DataGrid rooms = new();
+    string roomSort="";
+    System.ComponentModel.ListSortDirection roomSortDirection;
     readonly TextBlock status = UI.Text("Not connected", 11, UI.Muted);
     readonly TextBlock count = UI.Text("0 rooms", 12, UI.Muted);
     readonly TextBox address = new() { Width = 180, Height=34, Padding=new(10,5,10,5), MaxLength = 15, ToolTip = "Host's selected VPN IPv4 address" };
@@ -284,7 +286,7 @@ public sealed partial class BrowserWindow : Window
         modeFilter.Margin=new(0,0,16,0);
         var searchBox=new Grid();searchBox.Children.Add(search);var searchHint=UI.Text("Search rooms…",12,UI.Muted);searchHint.Margin=new(14,0,0,0);searchHint.VerticalAlignment=VerticalAlignment.Center;searchHint.IsHitTestVisible=false;searchBox.Children.Add(searchHint);search.TextChanged+=(_,_)=>searchHint.Visibility=search.Text.Length==0?Visibility.Visible:Visibility.Collapsed;System.Windows.Automation.AutomationProperties.SetName(search,"Search rooms");var filterRight = UI.Row(modeFilter,searchBox); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
         var table = new Grid();
-        void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, Binding = new Binding(property), MinWidth = star ? (property == "Title" ? 160 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
+        void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, SortMemberPath=property=="Slots"?"PlayerCount":property, Binding = new Binding(property), MinWidth = star ? (property == "Title" ? 160 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
         var gameTemplate=new DataTemplate();var gameImage=new FrameworkElementFactory(typeof(Image));gameImage.SetBinding(Image.SourceProperty,new Binding("Icon"));gameImage.SetValue(Image.WidthProperty,28.0);gameImage.SetValue(Image.HeightProperty,28.0);gameImage.SetValue(Image.ToolTipProperty,"The Battle for Middle-earth II");gameTemplate.VisualTree=gameImage;
         rooms.Columns.Add(new DataGridTemplateColumn{Header="",Width=56,CanUserSort=false,CanUserResize=false,CellTemplate=gameTemplate});
         Column("ROOM NAME","Title",2,true); Column("HOST","Host",1,true); Column("MAP","Map",1.25,true); Column("PLAYERS","Slots",75); Column("PATCH","Patch",65); Column("STATUS","Status",110);
@@ -293,7 +295,8 @@ public sealed partial class BrowserWindow : Window
         var modeText=new FrameworkElementFactory(typeof(TextBlock));modeText.SetBinding(TextBlock.TextProperty,new Binding("Mode"));modeText.SetValue(TextBlock.ForegroundProperty,UI.Brush("#A9C1FF"));modeText.SetValue(TextBlock.FontSizeProperty,11.0);modeText.SetValue(TextBlock.FontWeightProperty,FontWeights.SemiBold);pill.AppendChild(modeText);modeTemplate.VisualTree=pill;
         rooms.Columns.Insert(2,new DataGridTemplateColumn{Header="MODE",Width=100,MinWidth=100,SortMemberPath="Mode",CellTemplate=modeTemplate});
         var pingTemplate=new DataTemplate();var pingFactory=new FrameworkElementFactory(typeof(PingBadge));pingFactory.SetBinding(PingBadge.MillisecondsProperty,new Binding("Ping"));pingTemplate.VisualTree=pingFactory;
-        rooms.Columns.Insert(7,new DataGridTemplateColumn{Header="PING",Width=90,CellTemplate=pingTemplate});
+        rooms.Columns.Insert(7,new DataGridTemplateColumn{Header="PING",Width=90,SortMemberPath="Ping",CellTemplate=pingTemplate});
+        rooms.Sorting+=(_,e)=>{e.Handled=true;var member=e.Column.SortMemberPath;if(string.IsNullOrEmpty(member))return;roomSortDirection=roomSort==member&&roomSortDirection==System.ComponentModel.ListSortDirection.Ascending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;roomSort=member;RenderRooms();};
         rooms.RowStyle=(Style)Application.Current.FindResource(typeof(DataGridRow));
         rooms.PreviewMouseLeftButtonUp+=(_,e)=>{if(ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) is DataGridRow{Item:RoomEntry entry}&&Peer.Current?.Id==entry.Room.Id)ShowRoom();};
         table.Children.Add(rooms);
@@ -308,7 +311,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.93   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.94   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -383,7 +386,7 @@ public sealed partial class BrowserWindow : Window
         emptyHint.Text=initialDiscovery&&online?"Connecting to players on your VPN…":filtered?"Try another mode, room name, host or map.":"Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.";
         list = list.Where(r => (modeFilter.SelectedIndex<=0||r.Mode.Equals(modeFilter.SelectedItem as string,StringComparison.OrdinalIgnoreCase))&& $"{r.Title} {r.Host} {r.Map} {r.Mode}".Contains(filter,StringComparison.OrdinalIgnoreCase)).ToList();
         var selected=(rooms.SelectedItem as RoomEntry)?.Room.Id;
-        rooms.ItemsSource = list;if(selected!=null)rooms.SelectedItem=list.FirstOrDefault(r=>r.Room.Id==selected); empty.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed; count.Text = $"{list.Count} room{(list.Count == 1 ? "" : "s")}";
+        rooms.ItemsSource = list;if(roomSort.Length>0){System.Windows.Data.CollectionViewSource.GetDefaultView(list).SortDescriptions.Add(new System.ComponentModel.SortDescription(roomSort,roomSortDirection));foreach(var column in rooms.Columns)column.SortDirection=column.SortMemberPath==roomSort?roomSortDirection:null;}if(selected!=null)rooms.SelectedItem=list.FirstOrDefault(r=>r.Room.Id==selected); empty.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed; count.Text = $"{list.Count} room{(list.Count == 1 ? "" : "s")}";
     }
     string? networkWarningAddress;
     string? connectionFailure;
@@ -877,6 +880,7 @@ public sealed partial class BrowserWindow : Window
     sealed record RoomEntry(string Address,Room Room,bool Reconnecting=false,long? Ping=null,ImageSource? Icon=null)
     {
         public string Mode=>Room.Mode; public string Title=>Room.Title; public string Host=>Room.Host; public string Map=>Room.Map;
+        public int PlayerCount=>Room.Players.Count;
         public string Slots=>$"{Room.Players.Count} / {Room.Capacity}";public string Patch=>Room.Patch;
         public string Status=>Reconnecting?"◌ Reconnecting":Room.Phase=="Gathering"?(Room.FriendsOnly?"●  Friends only":"●  Public"):"●  Host in BFME2";
     }

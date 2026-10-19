@@ -285,12 +285,12 @@
   </ControlTemplate.Triggers>
  </ControlTemplate></Setter.Value></Setter>
 </Style>
-<Style TargetType="Slider">
+<Style TargetType="Slider"><Setter Property="IsMoveToPointEnabled" Value="True"/><Setter Property="Cursor" Value="Hand"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider">
-  <Grid Margin="7,0"><Track x:Name="PART_Track">
+  <Grid Margin="8,0" Background="Transparent"><Track x:Name="PART_Track">
    <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Height="4" CornerRadius="2" Background="{DynamicResource Theme537BEF}"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton>
    <Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Height="4" CornerRadius="2" Background="{DynamicResource Theme343F50}"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.IncreaseRepeatButton>
-   <Track.Thumb><Thumb Width="14" Height="14"><Thumb.Template><ControlTemplate TargetType="Thumb"><Ellipse Fill="{DynamicResource Theme537BEF}" Stroke="{DynamicResource Theme83A5FF}" StrokeThickness="2"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+   <Track.Thumb><Thumb Width="16" Height="16" Cursor="Hand"><Thumb.Template><ControlTemplate TargetType="Thumb"><Grid Background="Transparent"><Ellipse Fill="{DynamicResource Theme15181E}" Stroke="{DynamicResource Theme537BEF}" StrokeThickness="2"/><Ellipse Width="6" Height="6" Fill="{DynamicResource Theme537BEF}"/></Grid></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
   </Track></Grid>
   <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger></ControlTemplate.Triggers>
  </ControlTemplate></Setter.Value></Setter>
@@ -300,7 +300,7 @@
  <Setter Property="Background" Value="{DynamicResource Theme171A20}"/><Setter Property="Foreground" Value="{DynamicResource ThemeDADEE7}"/><Setter Property="Cursor" Value="Hand"/>
  <Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource InteractionHover}"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource InteractionSelected}"/><Setter Property="Foreground" Value="{DynamicResource InteractionText}"/></Trigger></Style.Triggers>
 </Style>
-<Style TargetType="DataGridColumnHeader"><Setter Property="Background" Value="{DynamicResource Theme20242C}"/><Setter Property="Foreground" Value="{DynamicResource Theme929BAA}"/><Setter Property="Padding" Value="14,0"/><Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+<Style TargetType="DataGridColumnHeader"><Setter Property="Cursor" Value="Hand"/><Setter Property="Background" Value="{DynamicResource Theme20242C}"/><Setter Property="Foreground" Value="{DynamicResource Theme929BAA}"/><Setter Property="Padding" Value="14,0"/><Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
 <Style TargetType="DataGridCell"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="14,0"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="DataGridCell"><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"><ContentPresenter VerticalAlignment="Center"/></Border></ControlTemplate></Setter.Value></Setter><Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource InteractionSelected}"/><Setter Property="Foreground" Value="{DynamicResource InteractionText}"/></Trigger></Style.Triggers></Style>
 </Application.Resources>
 </Application>
