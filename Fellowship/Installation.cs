@@ -31,8 +31,19 @@ public static class Installation
         start.ArgumentList.Add("--install-update");start.ArgumentList.Add(NativePlacement.PhysicalPath(package));start.ArgumentList.Add(Environment.ProcessId.ToString());
         _ = Process.Start(start) ?? throw new IOException("Could not start the installer helper.");
     }
+    public const long UpdateSpaceReserve=1024L*1024*1024;
+    public static void ValidateFreeSpace(string drive,long available)
+    {
+        if(available<UpdateSpaceReserve)throw new IOException($"Not enough free space on {drive}. Free at least 1 GB for the update, then retry. Currently {available/1048576.0:0} MB is available.");
+    }
+    public static void EnsureUpdateSpace(params string[] paths)
+    {
+        foreach(var root in paths.Select(p=>Path.GetPathRoot(Path.GetFullPath(p))!).Distinct(StringComparer.OrdinalIgnoreCase))
+        {var drive=new DriveInfo(root);ValidateFreeSpace(root,drive.AvailableFreeSpace);}
+    }
     public static string InstallerError(int code)=>code switch
     {
+        112=>"The disk is full. Free space on the Windows, installation and temporary-file drives, then retry. Aim for at least 1 GB free on each required drive.",
         1618=>"Another installation is running. Let it finish, then retry.",
         1603=>"Windows Installer could not complete the update. Close other Fellowship copies and retry. The log contains the detailed cause.",
         1619 or 1620=>"Windows could not open the update package. Download the update again.",
@@ -54,6 +65,7 @@ public static class Installation
                 catch(OperationCanceledException){throw new IOException("The previous Fellowship is still running. Quit its tray icon, then retry.");}
                 // Give the former room's native worker time to observe its parent exit.
                 await Task.Delay(1500);
+                EnsureUpdateSpace(package,Executable,Path.GetTempPath(),Environment.SystemDirectory);
                 int code;var busyTimer=Stopwatch.StartNew();
                 do
                 {
@@ -73,10 +85,10 @@ public static class Installation
             }
             catch(Exception error)
             {
-                if(!File.Exists(log))File.WriteAllText(log,error.ToString());
+                try{if(!File.Exists(log))File.WriteAllText(log,error.ToString());}catch(IOException){}catch(UnauthorizedAccessException){}
                 var decision=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 EventHandler closed=(_,_)=>decision.TrySetResult(false);window.Closed+=closed;
-                window.Failure(error.Message,()=>decision.TrySetResult(true),log);
+                window.Failure(error.Message,()=>decision.TrySetResult(true),File.Exists(log)?log:null);
                 bool retry=await decision.Task;window.Closed-=closed;if(!retry)return 1;
             }
         }

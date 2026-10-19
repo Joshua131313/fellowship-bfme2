@@ -46,6 +46,7 @@ public static class AppUpdates
     }
     public static async Task<string> Download(Release release,string? stagingRoot=null,IProgress<(long Received,long? Total)>? progress=null,CancellationToken token=default)
     {
+        Installation.EnsureUpdateSpace(stagingRoot??Settings.Folder,Installation.Executable,Path.GetTempPath(),Environment.SystemDirectory);
         using var downloadTimeout=CancellationTokenSource.CreateLinkedTokenSource(token);downloadTimeout.CancelAfter(TimeSpan.FromMinutes(10));token=downloadTimeout.Token;
         var folder=Path.Combine(stagingRoot??Path.Combine(Settings.Folder,"versions"),release.Version.ToString(3),Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
         var zip=Path.Combine(folder,release.Installer?"update.msi":"update.zip");
