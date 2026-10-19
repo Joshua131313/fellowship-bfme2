@@ -131,6 +131,22 @@ class Program
   if(BitConverter.ToInt32(random,20)!=-1||BitConverter.ToInt32(random,24)!=-1||BitConverter.ToInt32(random,28)!=1)throw new Exception("Native random selection encoding failed");
   try{NativePlacement.RequestBytes(1234,nativeSnapshot,5,1);throw new Exception("Invalid native team accepted");}catch(InvalidDataException){}
   Console.WriteLine("PASS native bridge layout, zero-based conversion, unset choices and bounds");
+  var allocated=new Room{MapPath=nativeSnapshot.Map,Spots=[new(1,.2,.2),new(2,.8,.8)]};
+  allocated.Players=[new(){Id="old",Team=2,PreferredColor=3,Color=4,PreferredMapSpots=new(){{nativeSnapshot.Map,1}},LastMapSpots=new(){{nativeSnapshot.Map,2}}},new(){Id="middle",Team=3,PreferredColor=3,Color=4,PreferredMapSpots=new(){{nativeSnapshot.Map,1}},LastMapSpots=new(){{nativeSnapshot.Map,2}}},new(){Id="new",Team=4,PreferredColor=3,PreferredMapSpots=new(){{nativeSnapshot.Map,1}}}];
+  allocated.ApplyMapSpotChoices();
+  foreach(var selected in allocated.Players)
+  {
+      var choice=new LivePlacement.Choice(selected.Team,selected.Spot,selected.Color);
+      var payload=NativePlacement.RequestBytes(1234,nativeSnapshot,choice.Team,choice.Spot,color:choice.Color);
+      if(BitConverter.ToInt32(payload,20)!=choice.Team-1||BitConverter.ToInt32(payload,24)!=choice.Spot-1||BitConverter.ToInt32(payload,1100)!=choice.Color-1)throw new Exception("Allocated preference/fallback/random choice lost in native request");
+      var reconciliation=new LivePlacement.Reconciler();reconciliation.Remember(choice,choice);
+      if(reconciliation.ShouldWrite(choice))throw new Exception("Stable selection repeats writes");
+      reconciliation=new(); // Production resets on host context or native session generation changes.
+      if(!reconciliation.ShouldWrite(choice))throw new Exception("New lobby or host did not restore allocated selection");
+  }
+  if(allocated.Players[0].Spot!=0||allocated.Players[0].Color!=0||allocated.Players[1].Spot!=2||allocated.Players[1].Color!=4)throw new Exception("Preference test did not exercise fallback and empty/random choices");
+  Console.WriteLine("PASS allocated preferred/fallback/empty/random choices encode for native sync and resend after context reset");
+
   if(!SearchableMapBox.Matches("Rhûn","rhun")||!SearchableMapBox.Matches("Woody End","END")||SearchableMapBox.Matches("Rhûn","mordor"))throw new Exception("Map search matching failed");
   var spots=MapPreview.ParseSpots("MapCache maps_5Ctest_2Emap\n extentMin = X:100 Y:200 Z:0\n extentMax = X:1100 Y:2200 Z:0\n numPlayers = 2\n Player_1_Start = X:350 Y:700 Z:0\n Player_2_Start = X:850 Y:1700 Z:0\nEND",@"maps\test.map");
   if(spots.Count!=2||spots[0].X!=0.25||spots[0].Y!=0.75||spots[1].X!=0.75||spots[1].Y!=0.25)throw new Exception("Map spot coordinate normalization failed");
