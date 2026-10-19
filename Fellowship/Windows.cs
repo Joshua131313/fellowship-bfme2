@@ -235,7 +235,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.41   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.42   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -303,6 +303,20 @@ public sealed class BrowserWindow : Window
                 : "Could not connect on the selected interface. Check that Radmin VPN is connected and choose its current address in Settings.\n\n"+e.Message;
             if(!quiet)UI.Error(message);return false;
         }
+    }
+    public Window CreateProfileEditor(Window owner)
+    {
+        var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterOwner,ResizeMode=ResizeMode.NoResize};if(owner.IsLoaded)w.Owner=owner;
+        var body=UI.Shell(w,"Your profile",420,280);w.MinHeight=0;w.SizeToContent=SizeToContent.Height;
+        var panel=new StackPanel{Margin=new(22)};body.Children.Add(panel);
+        var preview=UI.Avatar(Settings.Name,42);panel.Children.Add(UI.Row(preview,UI.Text("Your profile",18,bold:true)));
+        var nickname=UI.Field(panel,"NICKNAME",Settings.Name,40);
+        nickname.TextChanged+=(_,_)=>((TextBlock)preview.Child).Text=string.IsNullOrWhiteSpace(nickname.Text)?"?":nickname.Text.Trim()[..1].ToUpperInvariant();
+        var actions=new Grid{Margin=new(0,20,0,0)};actions.ColumnDefinitions.Add(new());actions.ColumnDefinitions.Add(new(){Width=UI.Auto});
+        var cancel=UI.Button("Cancel",w.Close);cancel.HorizontalAlignment=HorizontalAlignment.Left;cancel.IsCancel=true;actions.Children.Add(cancel);
+        var save=UI.Require(UI.AsyncButton("Save profile",async()=>{await Peer.SetNickname(nickname.Text);friendsWindow?.Render();roomWindow?.Refresh();w.Close();},true),()=>!string.IsNullOrWhiteSpace(nickname.Text)&&nickname.Text.Trim()!=Settings.Name,()=>string.IsNullOrWhiteSpace(nickname.Text)?"Enter a nickname.":"Change your nickname to save.");
+        save.IsDefault=true;save.Margin=new(0);Grid.SetColumn(save,1);actions.Children.Add(save);panel.Children.Add(actions);
+        w.Loaded+=(_,_)=>{nickname.Focus();nickname.SelectAll();};return w;
     }
     public void OpenSettings()=>CreateSettingsWindow().ShowDialog();
     public Window CreateSettingsWindow()
@@ -836,6 +850,7 @@ public sealed class RoomWindow : Window
 public sealed class FriendsWindow : Window
 {
     readonly TextBlock ownNickname=UI.Text("",16,"#F1F3F8",true);
+    readonly Border ownAvatar=UI.Avatar("?",40);
     readonly BrowserWindow app;
     readonly ListBox list=new();
     readonly TextBlock summary=UI.Text("YOUR FRIENDS",10,UI.Muted,true);
@@ -847,7 +862,7 @@ public sealed class FriendsWindow : Window
         this.app=app;var body=UI.Shell(this,"Friends",390,620);MinWidth=360;
         UI.Menus(this,UI.MenuGroup("_Friends",UI.MenuAction("Add friend",AddFriend),UI.MenuAction("Blocked players",app.ShowBlockedPlayers),UI.MenuAction("Send message",Message,()=>list.SelectedItem is ListBoxItem{Tag:Friend}),UI.MenuAction("Refresh presence",async()=>{try{await RefreshPresence();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Close window",Close)));
         UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
-        var me=UI.Row(UI.Avatar(app.Settings.Name,40),UI.Stack(ownNickname,UI.Text("●  Available on your VPN",11,UI.Green)));me.Margin=new(20,20,20,22);UI.At(body,me,0);
+        var me=UI.Button("",()=>app.CreateProfileEditor(this).ShowDialog());me.Style=(Style)Application.Current.FindResource("PlayerRowButton");me.Height=double.NaN;me.Padding=new(10);me.Margin=new(10,10,10,12);me.ToolTip="Edit your profile";me.Content=UI.Row(ownAvatar,UI.Stack(ownNickname,UI.Text("●  Available on your VPN",11,UI.Green)));UI.At(body,me,0);
         var bar=new Grid{Margin=new(20,0,12,10)};bar.ColumnDefinitions.Add(new());bar.ColumnDefinitions.Add(new(){Width=UI.Auto});bar.Children.Add(summary);
         var refresh=UI.AsyncButton("↻",RefreshPresence);refresh.ToolTip="Check which friends are online";refresh.Padding=new(10,5,10,5);Grid.SetColumn(refresh,1);bar.Children.Add(refresh);UI.At(body,bar,1);
         list.Margin=new(8,0,8,0);UI.At(body,list,2);
@@ -862,7 +877,7 @@ public sealed class FriendsWindow : Window
     public void Render()
     {
         var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
-        ownNickname.Text=app.Settings.Name;list.Items.Clear();summary.Text=$"YOUR FRIENDS   {app.Settings.Friends.Count}";
+        ownNickname.Text=app.Settings.Name;((TextBlock)ownAvatar.Child).Text=string.IsNullOrWhiteSpace(app.Settings.Name)?"?":app.Settings.Name[..1].ToUpperInvariant();list.Items.Clear();summary.Text=$"YOUR FRIENDS   {app.Settings.Friends.Count}";
         bool? lastGroup=null;
         foreach(var f in app.Settings.Friends.OrderByDescending(f=>IsOnline(f.Address)).ThenBy(f=>f.Name))
         {
