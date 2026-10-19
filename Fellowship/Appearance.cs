@@ -135,10 +135,10 @@ public static class Appearance
     };
     // Shared interaction roles keep every control on the same light-mode palette.
     static readonly (string Name,string Dark,string Light)[] states=[
-        ("InteractionHover","#303640","#EDF3FF"),
-        ("InteractionSelected","#293A58","#DFE9FF"),
-        ("InteractionPressed","#24324E","#D2E0FA"),
-        ("InteractionBorder","#4B6599","#BFCEEB"),
+        ("InteractionHover","#273247","#EDF3FF"),
+        ("InteractionSelected","#30476C","#DFE9FF"),
+        ("InteractionPressed","#20304A","#D2E0FA"),
+        ("InteractionBorder","#526E99","#BFCEEB"),
         ("InteractionText","#BFD1FF","#3158B0"),
         ("InteractionFocus","#83A5FF","#3158B0")];
     static string mode="Dark";
