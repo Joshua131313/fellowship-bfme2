@@ -41,7 +41,6 @@ public sealed partial class PeerService
             snapshot.Host=target.Name;snapshot.HostAddress=address;snapshot.Phase="Gathering";
             if(leaving)snapshot.Players.RemoveAll(p=>p.Id=="host");else snapshot.Players.Single(p=>p.Id=="host").Id=oldId;
             snapshot.Players.Single(p=>p.Id==id).Id="host";
-            foreach(var player in snapshot.Players)player.Ready=player.Id=="host";
             tickets=snapshot.Players.Where(p=>p.Id!="host").ToDictionary(p=>p.Id,_=>Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)));
             handoffTarget=id;handoffId=Guid.NewGuid().ToString("N");handoffReady=new(TaskCreationOptions.RunContinuationsAsynchronously);transferring=true;
         }

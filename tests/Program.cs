@@ -218,7 +218,9 @@ using(var remaining=new PeerService(new(){Name="Remaining"}))
     original.Host(new(){Title="Handoff test",Match=new(){Resources=2000,CommandPoints=400}});
     await successor.Join("127.0.0.20");await remaining.Join("127.0.0.20");
     await Until(()=>remaining.Current?.Players.Count==3&&successor.Current?.Players.Count==3,"handoff roster ready");
-    await successor.SelectPlacement(team:3);await remaining.SelectPlacement(team:4);
+    await successor.SelectPlacement(team:3,color:2);await remaining.SelectPlacement(team:4,color:3);
+    await successor.SetReady(true);await remaining.SetReady(true);
+    await Until(()=>original.Current!.Players.All(p=>p.Ready),"handoff ready states replicated");
     var roomId=original.Current!.Id;
     try{await remaining.Kick("host");throw new Exception("Guest kick allowed");}catch(InvalidOperationException){}
     try{await remaining.Promote("host");throw new Exception("Guest promotion allowed");}catch(InvalidOperationException){}
@@ -228,9 +230,11 @@ using(var remaining=new PeerService(new(){Name="Remaining"}))
     if(!advertisedBeforeLeaving)throw new Exception("Confirmed successor room was not delivered before leaving");
     await Until(()=>successor.IsHost&&!original.IsHost&&original.Current?.Players.Count==3&&remaining.Current?.Host=="Successor","manual promotion reconnects all players");
     if(successor.Current?.Id!=roomId||successor.Current.Match.Resources!=2000||successor.Current.Players.Single(p=>p.Name=="Remaining").Team!=4||successor.Current.Players.Single(p=>p.Id=="host").Team!=3)throw new Exception("Handoff lost room/rules/teams");
+    if(!successor.Current!.Players.All(p=>p.Ready)||successor.Current.Players.Single(p=>p.Name=="Remaining").Color!=3||successor.Current.Players.Single(p=>p.Id=="host").Color!=2)throw new Exception("Handoff reset readiness or colors");
     if(await PeerService.Query("127.0.0.20")!=null)throw new Exception("Former host still advertises");
     await successor.LeaveRoom();
     await Until(()=>original.IsHost&&remaining.Current?.Host=="Original"&&original.Current?.Players.Count==2&&successor.Current==null,"host leave promotes next player");
+    if(!original.Current!.Players.All(p=>p.Ready)||original.Current.Players.Single(p=>p.Name=="Remaining").Team!=4||original.Current.Players.Single(p=>p.Name=="Remaining").Color!=3)throw new Exception("Leaving host reset player state");
     await original.Kick(remaining.LocalId);
     await Until(()=>remaining.Current==null&&original.Current?.Players.Count==1,"host kick disconnects only selected guest");
     await original.LeaveRoom();if(original.Current!=null)throw new Exception("Last host leave failed");

@@ -40,7 +40,9 @@ public static class AppUpdates
     public static async Task<Release?> Check()
     {
         using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        using var response=await Client.GetAsync("https://api.github.com/repos/Joshua131313/fellowship-bfme2/releases/latest",timeout.Token);
+        using var request=new HttpRequestMessage(HttpMethod.Get,"https://api.github.com/repos/Joshua131313/fellowship-bfme2/releases/latest");
+        request.Headers.CacheControl=new System.Net.Http.Headers.CacheControlHeaderValue{NoCache=true};
+        using var response=await Client.SendAsync(request,timeout.Token);
         if(response.StatusCode==System.Net.HttpStatusCode.NotFound)throw new IOException("No published release is available yet.");
         response.EnsureSuccessStatusCode();Available=Parse(await response.Content.ReadAsStringAsync(timeout.Token));AvailabilityChanged?.Invoke();return Available;
     }

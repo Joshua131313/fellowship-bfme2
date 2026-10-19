@@ -196,9 +196,10 @@ public sealed class BrowserWindow : Window
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
     public PeerDirectory Presence { get; }=new();
-    readonly System.Windows.Threading.DispatcherTimer updateTimer=new(){Interval=TimeSpan.FromMinutes(30)};
+    readonly System.Windows.Threading.DispatcherTimer updateTimer=new(){Interval=TimeSpan.FromMinutes(2)};
     bool checkingUpdate;
-    async Task CheckUpdateNotice(){if(checkingUpdate)return;checkingUpdate=true;try{await AppUpdates.Check();}catch{/* Offline checks stay quiet; manual checks show errors. */}finally{checkingUpdate=false;}}
+    DateTimeOffset lastUpdateCheck;
+    async Task CheckUpdateNotice(){if(checkingUpdate||AppUpdates.Installing||DateTimeOffset.UtcNow-lastUpdateCheck<TimeSpan.FromMinutes(1))return;checkingUpdate=true;lastUpdateCheck=DateTimeOffset.UtcNow;try{await AppUpdates.Check();}catch{/* Offline checks stay quiet; manual checks show errors. */}finally{checkingUpdate=false;}}
     readonly StackPanel activePlayers=new();
     readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Height=34,Padding=new(10,5,10,5),Margin=new(0,0,0,10),MaxLength=80};
     readonly Button playersButton=new(){Content="Active players: 1",Height=34,Padding=new(12,5,12,5),Margin=new(12,0,0,0),HorizontalAlignment=HorizontalAlignment.Left};
@@ -216,7 +217,9 @@ public sealed class BrowserWindow : Window
         var updateBanner=UI.Card(UI.Stack(updateRow,updateDownload),"#24324E",12);updateBanner.Margin=new(22,12,22,0);updateBanner.Visibility=Visibility.Collapsed;UI.At(body,updateBanner,0);
         void UpdateBanner(){updateBanner.Visibility=AppUpdates.Available==null?Visibility.Collapsed:Visibility.Visible;updateText.Text=AppUpdates.Available is {} release?$"Fellowship {release.Version.ToString(3)} is available. Update for the latest improvements.":"";}
         AppUpdates.AvailabilityChanged+=UpdateBanner;UpdateBanner();updateTimer.Tick+=async(_,_)=>await CheckUpdateNotice();
-        Loaded+=async(_,_)=>{updateTimer.Start();await CheckUpdateNotice();};Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;};
+        updateTimer.Start();Dispatcher.BeginInvoke(new Action(async()=>await CheckUpdateNotice()));
+        Activated+=async(_,_)=>await CheckUpdateNotice();
+        Loaded+=async(_,_)=>await CheckUpdateNotice();Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;};
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
         var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
@@ -237,7 +240,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.49   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.50   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
