@@ -297,6 +297,17 @@ public sealed partial class BrowserWindow : Window
         rooms.Columns.Insert(2,new DataGridTemplateColumn{Header="MODE",Width=100,MinWidth=100,SortMemberPath="Mode",CellTemplate=modeTemplate});
         var pingTemplate=new DataTemplate();var pingFactory=new FrameworkElementFactory(typeof(PingBadge));pingFactory.SetBinding(PingBadge.MillisecondsProperty,new Binding("Ping"));pingTemplate.VisualTree=pingFactory;
         rooms.Columns.Insert(7,new DataGridTemplateColumn{Header="PING",Width=90,SortMemberPath="Ping",CellTemplate=pingTemplate});
+        foreach(var column in rooms.Columns.Where(c=>c.CanUserResize))
+        {
+            var label=UI.Text(column.Header?.ToString()??"",11,UI.Muted,true);label.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
+            column.MinWidth=Math.Max(column.MinWidth,Math.Ceiling(label.DesiredSize.Width)+54);
+            if(Settings.RoomColumnWidths?.TryGetValue(column.SortMemberPath,out var width)==true&&double.IsFinite(width)&&width>0)column.Width=new DataGridLength(Math.Clamp(width,column.MinWidth,2000));
+        }
+        rooms.AddHandler(System.Windows.Controls.Primitives.Thumb.DragCompletedEvent,new System.Windows.Controls.Primitives.DragCompletedEventHandler((_,e)=>{
+            var source=e.OriginalSource as DependencyObject;
+            while(source!=null&&source is not System.Windows.Controls.Primitives.DataGridColumnHeader)source=VisualTreeHelper.GetParent(source);
+            if(source!=null)SaveRoomColumnWidths();
+        }),true);
         rooms.Sorting+=(_,e)=>{e.Handled=true;var member=e.Column.SortMemberPath;if(string.IsNullOrEmpty(member))return;roomSortDirection=roomSort==member&&roomSortDirection==System.ComponentModel.ListSortDirection.Ascending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;roomSort=member;Settings.RoomSortColumn=roomSort;Settings.RoomSortDescending=roomSortDirection==System.ComponentModel.ListSortDirection.Descending;Settings.Save();RenderRooms();};
         rooms.RowStyle=(Style)Application.Current.FindResource(typeof(DataGridRow));
         rooms.PreviewMouseLeftButtonUp+=(_,e)=>{if(ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) is DataGridRow{Item:RoomEntry entry}&&Peer.Current?.Id==entry.Room.Id)ShowRoom();};
@@ -312,7 +323,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.95   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.96   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -367,6 +378,11 @@ public sealed partial class BrowserWindow : Window
     }
     public event Action? RoomPreviewsChanged;
     public Room? PreviewRoom(string id)=>Peer.Current?.Id==id?Peer.Current:discovered.Where(r=>r.Room.Id==id&&!Settings.IsBlocked(r.Address)).OrderByDescending(r=>r.Room.Revision).Select(r=>r.Room).FirstOrDefault();
+    void SaveRoomColumnWidths()
+    {
+        Settings.RoomColumnWidths=rooms.Columns.Where(c=>c.CanUserResize&&c.SortMemberPath.Length>0&&double.IsFinite(c.ActualWidth)&&c.ActualWidth>0).ToDictionary(c=>c.SortMemberPath,c=>Math.Max(c.MinWidth,c.ActualWidth));
+        Settings.Save();
+    }
     void RenderRooms()
     {
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).GroupBy(r=>r.Room.Id).Select(g=>g.OrderByDescending(r=>r.Room.Revision).First()).ToList();

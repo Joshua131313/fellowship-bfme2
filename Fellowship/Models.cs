@@ -27,6 +27,7 @@ public sealed class Settings
     public int PreferredSpot(string map)=>PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(map,StringComparison.OrdinalIgnoreCase)).Value;
     public string Name { get; set; } = Environment.UserName;
     public string GamePath { get; set; } = "";
+    public Dictionary<string,double> RoomColumnWidths { get; set; } = [];
     public string RoomSortColumn { get; set; } = "";
     public bool RoomSortDescending { get; set; }
     public string RoomModeFilter { get; set; } = "All modes";
