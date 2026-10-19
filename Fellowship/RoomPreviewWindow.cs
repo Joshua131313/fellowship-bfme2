@@ -6,8 +6,14 @@ public sealed class RoomPreviewWindow : Window
 {
     public RoomPreviewWindow(Window? owner,Room room,string gamePath)
     {
-        if(owner!=null)Owner=owner;
+        if(owner?.IsLoaded==true)Owner=owner;
         var body=UI.Shell(this,"Room preview",680,590);
+        string? lastSnapshot=null;
+        void Render(Room current,bool unavailable=false)
+        {
+        var snapshot=System.Text.Json.JsonSerializer.Serialize(current)+unavailable;
+        if(snapshot==lastSnapshot)return;lastSnapshot=snapshot;
+        room=current;body.Children.Clear();
         var content=new StackPanel{Margin=new(24)};
         content.Children.Add(UI.Text(room.Title,24,bold:true));
         var subtitle=UI.Text($"Hosted by {room.Host}  ·  {room.Players.Count} / {room.Capacity} players",12,UI.Muted);subtitle.Margin=new(0,6,0,16);content.Children.Add(subtitle);
@@ -22,13 +28,23 @@ public sealed class RoomPreviewWindow : Window
         var roster=new StackPanel{Margin=new(0,8,0,0)};
         foreach(var player in room.Players)
         {
-            var row=new DockPanel{Margin=new(0,0,0,6)};
+            var row=new DockPanel{Margin=new(0,0,0,6),Background=System.Windows.Media.Brushes.Transparent};
+            if(!unavailable&&owner is BrowserWindow browser)row.ContextMenu=browser.PlayerMenu(this,player.Name,player.Address,player);
             var state=UI.Text(player.Ready?"Ready":"Not ready",11,player.Ready?UI.Green:UI.Muted);DockPanel.SetDock(state,Dock.Right);row.Children.Add(state);
             row.Children.Add(UI.Avatar(player.Name,28));row.Children.Add(UI.Text(player.Name+(player.Id=="host"?"  ·  Host":"")));roster.Children.Add(row);
         }
         content.Children.Add(roster);
-        var foot=UI.Text("Room snapshot · reopen to refresh",11,UI.Muted);foot.Margin=new(0,16,0,0);content.Children.Add(foot);
+        var foot=UI.Text(unavailable?"Room is no longer available · showing last known details":"Updates automatically",11,UI.Muted);foot.Margin=new(0,16,0,0);content.Children.Add(foot);
         body.Children.Add(UI.Scroll(content));
+        }
+        Render(room);
+        if(owner is BrowserWindow app)
+        {
+            var roomId=room.Id;
+            void Refresh(){var latest=app.PreviewRoom(roomId);Render(latest??room,latest==null);}
+            app.RoomPreviewsChanged+=Refresh;
+            Closed+=(_,_)=>app.RoomPreviewsChanged-=Refresh;
+        }
     }
 }
 

@@ -66,6 +66,18 @@ public static class UI
         body.Children.Add(new Border{Padding=new(22,20,22,20),Child=Stack(Text(title,18,bold:true),new Border{Margin=new(0,10,0,0),Child=scroll},close)});
         return window;
     }
+    public static Window Confirmation(Window? owner,string title,string description,string action,Action<bool> confirmed)
+    {
+        var window=new Window{ResizeMode=ResizeMode.NoResize};if(owner?.IsLoaded==true)window.Owner=owner;
+        var body=Shell(window,title,420,260);window.MinHeight=0;window.SizeToContent=SizeToContent.Height;
+        window.WindowStartupLocation=window.Owner==null?WindowStartupLocation.CenterScreen:WindowStartupLocation.CenterOwner;
+        var remember=new CheckBox{Content="Don't ask again",Margin=new(0,18,0,20)};
+        var cancel=Button("Cancel",window.Close);cancel.IsCancel=true;cancel.Margin=new(0,0,8,0);
+        var accept=Button(action,()=>{confirmed(remember.IsChecked==true);window.DialogResult=true;});accept.Tag="Danger";accept.Margin=new(0);
+        var buttons=Row(cancel,accept);buttons.HorizontalAlignment=HorizontalAlignment.Right;
+        body.Children.Add(new Border{Padding=new(22,20,22,20),Child=Stack(Text(title,18,bold:true),new Border{Margin=new(0,10,0,0),Child=Text(description,13,Muted)},remember,buttons)});
+        return window;
+    }
     public static Window InvitationSent(Window owner,string name)
     {
         var window=new Window{ResizeMode=ResizeMode.NoResize,WindowStartupLocation=WindowStartupLocation.CenterOwner};if(owner.IsLoaded)window.Owner=owner;
@@ -262,7 +274,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.69   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.70   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -311,10 +323,13 @@ public sealed class BrowserWindow : Window
         Closed += (_,_) => { refreshTimer.Stop();Peer.Dispose(); };
         Loaded += (_,_) => { if(string.IsNullOrEmpty(Settings.BindAddress)) OpenSettings(); else EnsureOnline(); };
     }
+    public event Action? RoomPreviewsChanged;
+    public Room? PreviewRoom(string id)=>Peer.Current?.Id==id?Peer.Current:discovered.Where(r=>r.Room.Id==id&&!Settings.IsBlocked(r.Address)).OrderByDescending(r=>r.Room.Revision).Select(r=>r.Room).FirstOrDefault();
     void RenderRooms()
     {
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).GroupBy(r=>r.Room.Id).Select(g=>g.OrderByDescending(r=>r.Room.Revision).First()).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
+        RoomPreviewsChanged?.Invoke();
         string filter = search.Text.Trim();
         discoveryProgress.Visibility=initialDiscovery&&online?Visibility.Visible:Visibility.Collapsed;
         emptyTitle.Text=initialDiscovery&&online?"Finding rooms…":filter.Length>0?"No matching rooms":"No rooms found";
@@ -403,7 +418,9 @@ public sealed class BrowserWindow : Window
             catch(Exception error){UI.Error(error.Message);}
         });
         UI.Require(restore,()=>Peer.Current==null,()=>"Leave the current room before restoring a backup.");
-        p.Children.Add(UI.Text("BACKUP & RESTORE",10,UI.Muted,true));p.Children.Add(UI.Row(export,restore));
+        var backupHeading=UI.Text("BACKUP & RESTORE",10,UI.Muted,true);backupHeading.Margin=new(0,0,0,12);
+        export.Margin=new(0,0,8,0);restore.Margin=new(0);
+        p.Children.Add(new Border{Margin=new(0,28,0,8),Child=UI.Stack(backupHeading,UI.Row(export,restore))});
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);var marker=Path.Combine(Settings.Folder,"folder-"+Guid.NewGuid().ToString("N")+".tmp");try{File.WriteAllText(marker,"");var folder=Path.GetDirectoryName(NativePlacement.PhysicalPath(marker))!;Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});}finally{File.Delete(marker);}});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
         var save=UI.Require(UI.AsyncButton("Save settings",async()=>
         {
@@ -500,12 +517,20 @@ public sealed class BrowserWindow : Window
     }
     public void ToggleFriend(string name,string ip)
     {
-        if(Settings.Friends.Any(f=>f.Address==ip)){Settings.Friends.RemoveAll(f=>f.Address==ip);Settings.Save();friendsWindow?.Render();}
+        if(Settings.Friends.Any(f=>f.Address==ip)){if(!ConfirmPlayerAction(name,false))return;Settings.Friends.RemoveAll(f=>f.Address==ip);Settings.Save();friendsWindow?.Render();}
         else AddPlayerFriend(name,ip);
         CommandManager.InvalidateRequerySuggested();
     }
+    bool ConfirmPlayerAction(string name,bool block)
+    {
+        if(block?Settings.SkipBlockConfirmation:Settings.SkipRemoveFriendConfirmation)return true;
+        var owner=Application.Current.Windows.OfType<Window>().FirstOrDefault(w=>w.IsActive)??this;
+        return UI.Confirmation(owner,block?"Block player?":"Remove friend?",block?$"Block {name}? Direct messages will be blocked and their room messages hidden. You can unblock them later.":$"Remove {name} from your friends list? You can add them again later.",block?"Block player":"Remove friend",remember=>
+        {if(block)Settings.SkipBlockConfirmation=remember;else Settings.SkipRemoveFriendConfirmation=remember;Settings.Save();}).ShowDialog()==true;
+    }
     public async Task BlockPlayer(string name,string ip,bool blocked)
     {
+        if(blocked&&!Settings.IsBlocked(ip)&&!ConfirmPlayerAction(name,true))return;
         try{await Peer.SetBlocked(name,ip,blocked);discovered.RemoveAll(p=>p.Address==ip);RenderRooms();RenderActivePlayers();friendsWindow?.Render();}
         catch(Exception error){UI.Error(error.Message);}
     }
@@ -1016,7 +1041,7 @@ public sealed class FriendsWindow : Window
         var actions=UI.Row(UI.Button("＋ Add friend",AddFriend),UI.Require(UI.Button("Message",Message,true),()=>list.SelectedItem is ListBoxItem{Tag:Friend},()=>"Select a friend to open a private chat."));actions.Margin=new(20,12,12,12);UI.At(body,actions,3);
         var footer=UI.Text("Double-click a friend to chat.\nDirect messages · no offline delivery",10,UI.Muted);footer.Margin=new(20,0,20,18);UI.At(body,footer,4);
         list.MouseDoubleClick+=(_,_)=>Message();
-        var menu=new ContextMenu();var remove=new MenuItem{Header="Remove friend",Tag="Danger"};remove.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f}){app.Settings.Friends.Remove(f);app.Settings.Save();Render();}};var message=new MenuItem{Header="Send message"};message.Click+=(_,_)=>Message();menu.Items.Add(message);
+        var menu=new ContextMenu();var remove=new MenuItem{Header="Remove friend",Tag="Danger"};remove.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f}){app.ToggleFriend(f.Name,f.Address);Render();}};var message=new MenuItem{Header="Send message"};message.Click+=(_,_)=>Message();menu.Items.Add(message);
         var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})app.CreatePlayerInfo(this,f.Name,f.Address).ShowDialog();};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);var block=new MenuItem{Header="Block player",Tag="Danger"};block.Click+=async(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})await app.BlockPlayer(f.Name,f.Address,!app.Settings.IsBlocked(f.Address));};menu.Items.Add(block);var invite=UI.MenuAction("Invite to room",async()=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})try{await app.Peer.Invite(f.Address);UI.InvitationSent(this,f.Name).ShowDialog();}catch(Exception error){UI.Error(error.Message);}},()=>app.Peer.Current!=null&&list.SelectedItem is ListBoxItem{Tag:Friend f}&&!app.Settings.IsBlocked(f.Address));menu.Items.Insert(1,invite);list.ContextMenu=menu;menu.Opened+=(_,_)=>{bool selected=list.SelectedItem is ListBoxItem{Tag:Friend};message.IsEnabled=selected;info.IsEnabled=selected;remove.IsEnabled=selected;block.IsEnabled=selected;if(list.SelectedItem is ListBoxItem{Tag:Friend f}){block.Header=app.Settings.IsBlocked(f.Address)?"Unblock player":"Block player";block.Tag=app.Settings.IsBlocked(f.Address)?null:"Danger";}};
         list.PreviewMouseRightButtonDown+=(_,e)=>{var item=ItemsControl.ContainerFromElement(list,e.OriginalSource as DependencyObject) as ListBoxItem;if(item?.Tag is Friend)item.IsSelected=true;};
         presenceTimer.Tick+=async(_,_)=>await RefreshPresence();Loaded+=async(_,_)=>await RefreshPresence();Closed+=(_,_)=>presenceTimer.Stop();presenceTimer.Start();Render();

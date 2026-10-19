@@ -28,6 +28,8 @@ public sealed class Settings
     public string Name { get; set; } = Environment.UserName;
     public string GamePath { get; set; } = "";
     public string BindAddress { get; set; } = "";
+    public bool SkipRemoveFriendConfirmation { get; set; }
+    public bool SkipBlockConfirmation { get; set; }
     public bool MessageSounds { get; set; } = true;
     public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }

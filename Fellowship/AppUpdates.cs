@@ -109,7 +109,7 @@ public static class AppUpdates
     public static FrameworkElement Controls(Func<bool> inRoom)
     {
         var panel=new StackPanel{Margin=new(0,22,0,0)};panel.Children.Add(UI.Text("FELLOWSHIP "+VersionText,11,UI.Muted,true));
-        var status=UI.Text("Updates from GitHub",11,UI.Muted);status.Margin=new(0,8,0,8);panel.Children.Add(status);
+        var status=UI.Text("Updates from GitHub",11,UI.Muted);status.Margin=new(0,8,0,12);panel.Children.Add(status);
         Release? available=Available;
         var install=UI.AsyncButton("Download & restart",async()=>
         {
@@ -124,6 +124,6 @@ public static class AppUpdates
         {
             try{status.Text="Checking GitHub…";available=await Check();install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;status.Text=available==null?"You have the latest published version.":$"Version {available.Version} is available. Restarting closes Fellowship windows.";}
             catch(Exception e){status.Text="Could not check updates: "+e.Message;}
-        }));panel.Children.Add(install);return panel;
+        }));panel.Children.Add(install);foreach(var button in panel.Children.OfType<Button>())button.HorizontalAlignment=HorizontalAlignment.Left;return panel;
     }
 }

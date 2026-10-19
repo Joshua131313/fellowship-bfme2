@@ -23,6 +23,7 @@ public static class SettingsBackup
     }
     public static void Restore(Settings target,Settings source)
     {
+        target.SkipRemoveFriendConfirmation=source.SkipRemoveFriendConfirmation;target.SkipBlockConfirmation=source.SkipBlockConfirmation;
         target.Name=source.Name;target.MessageSounds=source.MessageSounds;target.LiveGameSync=source.LiveGameSync;
         target.PreferredColor=source.PreferredColor;target.LastSelectedColor=source.LastSelectedColor;target.PreferredMapSpots=new(source.PreferredMapSpots);
         target.Friends=source.Friends.ToList();target.BlockedUsers=source.BlockedUsers.ToArray();target.RoomPresets=source.RoomPresets.Select(p=>p with{BuiltIn=false}).ToList();
