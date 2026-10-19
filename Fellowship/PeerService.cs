@@ -102,7 +102,7 @@ public sealed partial class PeerService : IDisposable
                 else
                 {
                     guests[id] = c;
-                    var player=new Player { PreferredColor=hello.Color??0,LastSelectedColor=hello.LastSelectedColor,Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
+                    var player=new Player { Team=Current.NextTeam(),PreferredColor=hello.Color??0,LastSelectedColor=hello.LastSelectedColor,Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
                     Current.ApplyPreferences(player,0,hello.Spot??0,hello.MapPath);
                     Current.ApplyColorChoice(player,player.PreferredColor,player.LastSelectedColor);
                     Current.Players.Add(player);
@@ -179,7 +179,7 @@ public sealed partial class PeerService : IDisposable
             room.Spots=preparedSpots??GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
             var saved=settings.LastHostedSetup;
-            int team=saved?.Team is >=0 and <=4?saved.Team:0;
+            int team=room.InitialTeams.Length>0?room.InitialTeams[0]:saved?.Team is >=0 and <=4?saved.Team:0;
             int spot=saved!=null&&saved.MapPath==room.MapPath&&room.Spots.Any(s=>s.Number==saved.Spot)?saved.Spot:0;
             room.Players = [new() { Id = "host",PreferredColor=settings.PreferredColor,LastSelectedColor=settings.LastSelectedColor, Name = settings.Name, Address=Address, Ready = true,PreferredMapSpots=new(settings.PreferredMapSpots),CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
             room.ApplyColorChoice(room.Players[0],settings.PreferredColor,settings.LastSelectedColor>0?settings.LastSelectedColor:room.Players[0].Color);

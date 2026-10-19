@@ -7,6 +7,7 @@ public sealed class Settings
     bool persist=true;
     public static Settings InMemory()=>new(){persist=false};
     public sealed record SavedSetup(string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int Team,int Spot,int Color=0);
+    public List<RoomPreset> RoomPresets { get; set; } = [];
     public SavedSetup? LastHostedSetup { get; set; }
     public Room NewHostedRoom()=>LastHostedSetup is {} saved ? new Room
     {
@@ -52,6 +53,8 @@ public sealed record MapSpot(int Number,double X,double Y);
 public sealed class Room
 {
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
+    public int[] InitialTeams { get; set; } = [];
+    public int NextTeam()=>InitialTeams.FirstOrDefault(team=>team>0&&Players.Count(p=>p.Team==team)<InitialTeams.Count(t=>t==team));
     public long Revision { get; set; }
     public static bool AcceptsUpdate(Room? current,Room? incoming)=>current==null||incoming==null||current.Id!=incoming.Id||incoming.Revision>=current.Revision;
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
@@ -143,4 +146,18 @@ public sealed class MatchRules
         if(!ResourceValues.Contains(Resources)||!CommandValues.Contains(CommandPoints))throw new InvalidOperationException("Choose supported BFME2 1.00 rules.");
     }
     public string Summary => $"{Resources:N0} resources · {CommandPoints/100.0:0.##}× command points · Custom Heroes {(CustomHeroes?"on":"off")} · Ring Heroes {(RingHeroes?"on":"off")}";
+}
+
+public sealed record RoomPreset(string Name,string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int[] Teams,bool BuiltIn=false)
+{
+    public override string ToString()=>Name;
+    public static List<RoomPreset> Defaults(IEnumerable<GameMap> maps)
+    {
+        RoomPreset Make(string name,string map,int count,int resources,int[] teams)
+        {
+            var installed=maps.FirstOrDefault(m=>m.Name.Equals(map,StringComparison.OrdinalIgnoreCase));
+            return new(name,map,installed?.Path??"",count,resources,200,false,false,teams,true);
+        }
+        return [Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),Make("2v2","Buckland",4,4000,[1,1,2,2]),Make("1v1 · 1,000 resources","Fords Of Isen II",2,1000,[1,2]),Make("1v1 · 4,000 resources","Fords Of Isen II",2,4000,[1,2]),Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])];
+    }
 }
