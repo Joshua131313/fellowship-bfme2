@@ -102,7 +102,7 @@ public sealed partial class PeerService : IDisposable
                 else
                 {
                     guests[id] = c;
-                    var player=new Player { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer };
+                    var player=new Player { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
                     Current.ApplyPreferences(player,hello.Color??0,hello.Spot??0,hello.MapPath);
                     Current.Players.Add(player);
                     joined = true;
@@ -117,17 +117,6 @@ public sealed partial class PeerService : IDisposable
                 if(msg.Type=="handoff-ready")
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
-                }
-                else if(msg.Type=="preferred-spot")
-                {
-                    bool applied=false;
-                    lock(gate)
-                    {
-                        var player=Current?.Players.FirstOrDefault(p=>p.Id==id);
-                        if(IsHost&&!transferring&&Current!=null&&player?.Spot==0&&Current.MapPath==msg.MapPath)
-                        {Current.ApplyPreferences(player,0,msg.Spot??0,msg.MapPath);applied=player.Spot!=0;}
-                    }
-                    if(applied)await BroadcastState();
                 }
                 else if(msg.Type=="native-setup"&&msg.Room is {} setup)
                 {
@@ -191,7 +180,7 @@ public sealed partial class PeerService : IDisposable
             var saved=settings.LastHostedSetup;
             int team=saved?.Team is >=0 and <=4?saved.Team:0;
             int spot=saved!=null&&saved.MapPath==room.MapPath&&room.Spots.Any(s=>s.Number==saved.Spot)?saved.Spot:0;
-            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
+            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,PreferredMapSpots=new(settings.PreferredMapSpots),CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
             room.ApplyPreferences(room.Players[0],settings.PreferredColor,settings.PreferredSpot(room.MapPath),room.MapPath);
         }
         Changed?.Invoke();
@@ -206,7 +195,7 @@ public sealed partial class PeerService : IDisposable
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         try
         {
-            await c.Send(new() { Type = "join", Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
+            await c.Send(new() { Type = "join", PreferredMapSpots=new(settings.PreferredMapSpots),Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
             using var timeout = new CancellationTokenSource(5000);
             var welcome = await c.Read(timeout.Token);
             if (welcome?.Type != "welcome") throw new IOException(welcome?.Text ?? "No response from host.");
@@ -244,10 +233,7 @@ public sealed partial class PeerService : IDisposable
                 {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
                 if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room))
                 {
-                    bool mapChanged=Current!=null&&msg.Room!=null&&Current.Id==msg.Room.Id&&Current.MapPath!=msg.Room.MapPath;
                     Current=msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress;
-                    if(mapChanged&&Current!=null&&settings.PreferredSpot(Current.MapPath) is >0 and var preferred)
-                        await c.Send(new(){Type="preferred-spot",MapPath=Current.MapPath,Spot=preferred});
                     Changed?.Invoke();
                 }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
@@ -401,8 +387,13 @@ public sealed partial class PeerService : IDisposable
             }
             Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
             Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
-            if(mapChanged&&Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local)
-                Current.ApplyPreferences(local,0,settings.PreferredSpot(Current.MapPath),Current.MapPath);
+            if(mapChanged)
+            {
+                if(Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local)local.PreferredMapSpots=new(settings.PreferredMapSpots);
+                // Roster order is join order; allocate newest members first, under the room lock.
+                foreach(var player in Current.Players.AsEnumerable().Reverse())
+                    Current.ApplyPreferences(player,0,player.PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(Current.MapPath,StringComparison.OrdinalIgnoreCase)).Value,Current.MapPath);
+            }
 
             foreach(var p in Current.Players.Where(p=>p.Id!="host"&&!CanSee(p.Address)).ToArray())
                 if(guests.TryGetValue(p.Id,out var c))c.Dispose();

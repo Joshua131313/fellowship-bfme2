@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 namespace Fellowship;
 public sealed record Friend(string Name, string Address);
@@ -80,6 +80,7 @@ public sealed class Player
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Address { get; set; } = "";
+    public Dictionary<string,int> PreferredMapSpots { get; set; } = new();
     public bool CanHostTransfer { get; set; }
     public int Spot { get; set; }
     public int Team { get; set; }
@@ -90,6 +91,7 @@ public sealed class Player
 public sealed class Wire
 {
     public bool SupportsIsolation { get; set; }
+    public Dictionary<string,int> PreferredMapSpots { get; set; } = new();
     public bool CanHostTransfer { get; set; }
     public string Token { get; set; } = "";
     public Dictionary<string,string>? Tickets { get; set; }

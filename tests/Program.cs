@@ -428,6 +428,6 @@ if(File.Exists(installation))
  var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(h.Current))!;
  draft.Map=map.Name;draft.MapPath=map.Path;await h.EditRoom(draft);
  await Until(()=>h.Current!.Players.Count(p=>p.Spot!=0)==2&&ga.Current!.Players.Count(p=>p.Spot!=0)==2&&gb.Current!.Players.Count(p=>p.Spot!=0)==2,"map change applies host and guest preferences with conflict resolution");
- if(h.Current!.Players[0].Spot!=spots[0].Number||h.Current.Players.Count(p=>p.Spot==spots[1].Number)!=1||h.Current.Players.Any(p=>!p.Ready))throw new Exception("Map preference claims collided or changed readiness");
+ if(h.Current!.Players[0].Spot!=spots[0].Number||h.Current.Players.Count(p=>p.Spot==spots[1].Number)!=1||h.Current.Players.First(p=>p.Id==gb.LocalId).Spot!=spots[1].Number||h.Current.Players.Any(p=>!p.Ready))throw new Exception("Map preference claims collided or changed readiness");
  ga.Leave();gb.Leave();h.Leave();
 }
