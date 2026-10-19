@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -11,8 +11,30 @@ namespace Fellowship;
 public static class LivePlacement
 {
     public sealed record Choice(int Team,int Spot,int Color=0);
-    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null);
-    public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
+    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null,bool Abort=false);
+    public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false,bool Aborted=false);
+    public sealed class Control
+    {
+        bool connected;
+        TaskCompletionSource<bool>? pending;
+        public Task<bool> Abort()
+        {
+            if(!connected)return Task.FromResult(false);
+            pending??=new(TaskCreationOptions.RunContinuationsAsynchronously);return pending.Task;
+        }
+        internal TaskCompletionSource<bool>? Pending=>pending;
+        internal IDisposable Connect(){connected=true;return new Connection(this);}
+        internal void Complete(TaskCompletionSource<bool> request,Reply reply)
+        {
+            if(pending==request)pending=null;
+            if(reply.Aborted)request.TrySetResult(true);
+            else request.TrySetException(new IOException("The live-sync helper could not stop BFME2: "+reply.Status));
+        }
+        sealed class Connection(Control owner):IDisposable
+        {
+            public void Dispose(){owner.connected=false;owner.pending?.TrySetException(new IOException("Live sync disconnected before Abort was confirmed."));owner.pending=null;}
+        }
+    }
     // A countdown or missing snapshot suspends writes. Only a confirmed destroyed
     // or inactive room followed by a stable new lobby can resume writes.
     public sealed class SessionGuard
@@ -64,7 +86,7 @@ public static class LivePlacement
         return JsonSerializer.Deserialize<T>(bytes)??throw new IOException("Missing sync message.");
     }
     static string SessionLog(string name)=>Path.Combine(Settings.Folder,"native-sync-"+Guid.ParseExact(name["Fellowship.Sync.".Length..],"N").ToString("N")+".log");
-    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,string,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null)
+    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,string,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null,Control? control=null)
     {
         string name="Fellowship.Sync."+Guid.NewGuid().ToString("N");
         using var pipe=new NamedPipeServerStream(name,PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous|PipeOptions.CurrentUserOnly);
@@ -81,6 +103,7 @@ public static class LivePlacement
             await connected;
         }
         if(!GetNamedPipeClientProcessId(pipe.SafePipeHandle,out uint client)||client!=helper.Id)throw new IOException("Unexpected sync client.");
+        using var controlConnection=control?.Connect();
         DateTimeOffset? missingSince=null;
         while(!token.IsCancellationRequested)
         {
@@ -94,10 +117,13 @@ public static class LivePlacement
             }
             missingSince=null;
             using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(12));
+            var abortRequest=control?.Pending;
+            var outgoing=abortRequest==null?command:command with{Abort=true};
             Reply reply;
-            try{await Send(pipe,command,timeout.Token);reply=await Receive<Reply>(pipe,timeout.Token);}
+            try{await Send(pipe,outgoing,timeout.Token);reply=await Receive<Reply>(pipe,timeout.Token);}
             catch(EndOfStreamException){if(helper.HasExited&&GameLauncher.IsRunning())throw new IOException("The sync helper disconnected while BFME2 is still running.");status("BFME2 sync disconnected. Waiting for the next game.");return;}
             catch(IOException){if(!GameLauncher.IsRunning()){status("BFME2 closed. Waiting for the next game.");return;}throw new IOException("The game sync connection ended. No further changes will be sent.");}
+            if(abortRequest!=null)control!.Complete(abortRequest,reply);
             if(reply.Done){status(reply.Status);return;}
             prepared?.Invoke();prepared=null;
             // A user edit or host/map transition wins over an older incoming observation.
@@ -132,6 +158,8 @@ public static class LivePlacement
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
+            while(!parent.HasExited)
+            {
             if(gamePid==0)
             {
                 // Authorize the worker before the renderer starts. Never launch the
@@ -142,13 +170,20 @@ public static class LivePlacement
                     using var waitTimeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));
                     var waiting=await Receive<Command>(pipe,waitTimeout.Token);
                     waitingRoom??=waiting.Room;if(waitingRoom!=waiting.Room)return 0;
-                    gamePid=FindConfiguredGame(gamePath);
+                    gamePid=FindConfiguredGame(gamePath,parent.SessionId);
+                    if(waiting.Abort)
+                    {
+                        GameLauncher.Abort(gamePath,parent.SessionId);
+                        gamePid=0;
+                        await Send(pipe,new Reply("BFME2 stopped. Sync permission remains ready.",Aborted:true),waitTimeout.Token);continue;
+                    }
                     await Send(pipe,new Reply(gamePid==0?"Sync ready. Waiting for BFME2…":"BFME2 detected. Waiting for the LAN lobby…"),waitTimeout.Token);
                     if(gamePid!=0)break;
                 }
                 if(gamePid==0)return 0;
             }
             using var game=Process.GetProcessById(gamePid);
+            if(game.SessionId!=parent.SessionId)throw new IOException("BFME2 belongs to another Windows session.");
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
             int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
@@ -157,7 +192,13 @@ public static class LivePlacement
             {
                 using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 var command=await Receive<Command>(pipe,timeout.Token);
-                room??=command.Room;if(room!=command.Room)break;
+                room??=command.Room;if(room!=command.Room)return 0;
+                if(command.Abort)
+                {
+                    try{if(!game.HasExited)game.Kill();}catch(InvalidOperationException){}
+                    await game.WaitForExitAsync(timeout.Token);
+                    await Send(pipe,new Reply("BFME2 stopped. Sync permission remains ready.",Aborted:true),timeout.Token);break;
+                }
                 if(command.Choice.Color is <0 or >10||command.Choice.Team is <0 or >4||command.Choice.Spot is <0 or >8)throw new IOException("Invalid team or spot.");
                 NativeLobby.Snapshot? snapshot=null;
                 bool starting=false,closed=false;
@@ -265,6 +306,8 @@ public static class LivePlacement
                     await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…"),timeout.Token);
                 }
             }
+            gamePid=0;
+            }
             return 0;
         }
         catch(EndOfStreamException){return 0;}
@@ -273,7 +316,7 @@ public static class LivePlacement
             if(log!=null)File.WriteAllText(log,error.Message);return 1;
         }
     }
-    static int FindConfiguredGame(string gamePath)
+    static int FindConfiguredGame(string gamePath,int session)
     {
         string expected=NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat"));
         foreach(var candidate in Process.GetProcessesByName("game.dat").Concat(Process.GetProcessesByName("game")))
@@ -281,7 +324,7 @@ public static class LivePlacement
         {
             try
             {
-                if(!candidate.HasExited&&candidate.MainModule is {} module&&
+                if(!candidate.HasExited&&candidate.SessionId==session&&candidate.MainModule is {} module&&
                    string.Equals(NativePlacement.PhysicalPath(module.FileName),expected,StringComparison.OrdinalIgnoreCase))return candidate.Id;
             }
             catch(Exception e) when(e is System.ComponentModel.Win32Exception or InvalidOperationException){ }

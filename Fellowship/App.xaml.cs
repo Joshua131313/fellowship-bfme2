@@ -5,9 +5,27 @@ namespace Fellowship;
 public partial class App : Application
 {
     void InputsChanged(object sender,RoutedEventArgs e)=>System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+    void SelectLoaded(object sender,RoutedEventArgs e)
+    {
+        if(sender is not System.Windows.Controls.ComboBox box)return;
+        box.ApplyTemplate();
+        if(box.Template?.FindName("PART_Popup",box) is System.Windows.Controls.Primitives.Popup popup)
+        {
+            popup.PlacementTarget=box;
+            popup.CustomPopupPlacementCallback=(size,target,offset)=>new[]{
+                new System.Windows.Controls.Primitives.CustomPopupPlacement(new Point(0,target.Height+4),System.Windows.Controls.Primitives.PopupPrimaryAxis.Horizontal),
+                new System.Windows.Controls.Primitives.CustomPopupPlacement(new Point(0,-size.Height-4),System.Windows.Controls.Primitives.PopupPrimaryAxis.Horizontal)};
+        }
+    }
     void SelectMouseWheel(object sender,System.Windows.Input.MouseWheelEventArgs e)
     {
-        if(sender is not System.Windows.Controls.ComboBox {IsDropDownOpen:false} box)return;
+        if(sender is not System.Windows.Controls.ComboBox box)return;
+        if(box.IsDropDownOpen)
+        {
+            if(box.Template?.FindName("PART_OptionsScroll",box) is System.Windows.Controls.ScrollViewer options)
+            {options.ScrollToVerticalOffset(options.VerticalOffset-e.Delta/120.0*48);e.Handled=true;}
+            return;
+        }
         e.Handled=true;
         // A closed select never consumes wheel input as a value change.
         // Forward it to the enclosing page; an open dropdown keeps normal scrolling.

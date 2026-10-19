@@ -90,12 +90,55 @@
 <MultiTrigger><MultiTrigger.Conditions><Condition Property="Tag" Value="Danger"/><Condition Property="IsMouseOver" Value="True"/></MultiTrigger.Conditions><Setter TargetName="Frame" Property="Background" Value="#AD3545"/><Setter Property="Foreground" Value="White"/></MultiTrigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
 </Style>
 <Style TargetType="TextBox"><EventSetter Event="TextChanged" Handler="InputsChanged"/><Setter Property="Height" Value="34"/><Setter Property="Background" Value="#15181E"/><Setter Property="Foreground" Value="#EFF1F5"/><Setter Property="CaretBrush" Value="White"/><Setter Property="BorderBrush" Value="#343942"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="10,5"/><Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5"><ScrollViewer x:Name="PART_ContentHost" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/></Border><ControlTemplate.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="#688FFF"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
-<Style TargetType="ComboBox"><EventSetter Event="SelectionChanged" Handler="InputsChanged"/><Setter Property="Height" Value="34"/>
+<Style TargetType="ComboBox">
+ <EventSetter Event="SelectionChanged" Handler="InputsChanged"/>
+ <EventSetter Event="Loaded" Handler="SelectLoaded"/>
  <EventSetter Event="PreviewMouseWheel" Handler="SelectMouseWheel"/>
- <Setter Property="Background" Value="#20242B"/><Setter Property="Foreground" Value="#E8EBF0"/><Setter Property="Padding" Value="10,5,30,5"/>
- <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox"><Grid><ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"><ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="#20242B" BorderBrush="#343942" BorderThickness="1" CornerRadius="5"><Path Data="M 0,0 L 5,5 L 10,0" Stroke="#A7B6CE" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" HorizontalAlignment="Right" Margin="0,0,13,0" VerticalAlignment="Center"/></Border></ControlTemplate></ToggleButton.Template></ToggleButton><ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/><Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False"><Border Background="#20242B" BorderBrush="#343942" BorderThickness="1" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" MaxHeight="260"><StackPanel><TextBox x:Name="PART_MapSearch" Visibility="Collapsed" Margin="8" Padding="10,7"/><TextBlock x:Name="PART_NoMaps" Text="No maps match your search" Visibility="Collapsed" Foreground="#919AA9" Margin="12,8"/><ScrollViewer MaxHeight="210" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><ItemsPresenter/></ScrollViewer></StackPanel></Border></Popup></Grid></ControlTemplate></Setter.Value></Setter>
+ <Setter Property="Height" Value="34"/><Setter Property="MinWidth" Value="64"/>
+ <Setter Property="FlowDirection" Value="LeftToRight"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
+ <Setter Property="Background" Value="#20242B"/><Setter Property="Foreground" Value="#E8EBF0"/>
+ <Setter Property="BorderBrush" Value="#343F50"/><Setter Property="Padding" Value="12,5,36,5"/>
+ <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
+  <Grid SnapsToDevicePixels="True">
+   <Border x:Name="SelectFrame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6"/>
+   <ToggleButton Focusable="False" Cursor="Hand" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+    <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent"><Path Data="M 0,0 L 5,5 L 10,0" Stroke="#A7B6CE" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" HorizontalAlignment="Right" Margin="0,0,13,0" VerticalAlignment="Center"/></Border></ControlTemplate></ToggleButton.Template>
+   </ToggleButton>
+   <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Stretch" ClipToBounds="True" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
+   <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Custom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+    <Border Background="#1B222D" BorderBrush="#43516A" BorderThickness="1" CornerRadius="7" Padding="4" Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" MaxHeight="300" FlowDirection="LeftToRight">
+     <StackPanel>
+      <TextBox x:Name="PART_MapSearch" Visibility="Collapsed" Margin="4,4,4,8" Padding="10,5"/>
+      <TextBlock x:Name="PART_NoMaps" Text="No maps match your search" Visibility="Collapsed" Foreground="#919AA9" TextWrapping="Wrap" Margin="10,8"/>
+      <ScrollViewer x:Name="PART_OptionsScroll" MaxHeight="240" CanContentScroll="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PanningMode="VerticalOnly">
+       <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+      </ScrollViewer>
+     </StackPanel>
+    </Border>
+   </Popup>
+  </Grid>
+  <ControlTemplate.Triggers>
+   <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="SelectFrame" Property="Background" Value="#272F3C"/><Setter TargetName="SelectFrame" Property="BorderBrush" Value="#5B6F91"/></Trigger>
+   <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="SelectFrame" Property="BorderBrush" Value="#83A5FF"/></Trigger>
+   <Trigger Property="IsDropDownOpen" Value="True"><Setter TargetName="SelectFrame" Property="BorderBrush" Value="#83A5FF"/></Trigger>
+   <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+  </ControlTemplate.Triggers>
+ </ControlTemplate></Setter.Value></Setter>
 </Style>
-<Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="#E8EBF0"/><Setter Property="Padding" Value="10"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="Frame" Padding="{TemplateBinding Padding}" Background="#20242B"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Frame" Property="Background" Value="#35425C"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+<Style TargetType="ComboBoxItem">
+ <Setter Property="Foreground" Value="#E8EBF0"/><Setter Property="Padding" Value="10,7"/><Setter Property="Margin" Value="0,1"/>
+ <Setter Property="MinHeight" Value="32"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+ <Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Cursor" Value="Hand"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem">
+  <Border x:Name="Frame" Padding="{TemplateBinding Padding}" Background="Transparent" CornerRadius="4" ClipToBounds="True"><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/></Border>
+  <ControlTemplate.Triggers>
+   <Trigger Property="IsSelected" Value="True"><Setter TargetName="Frame" Property="Background" Value="#293A58"/><Setter Property="Foreground" Value="#BFD1FF"/></Trigger>
+   <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Frame" Property="Background" Value="#34445F"/></Trigger>
+   <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+  </ControlTemplate.Triggers>
+ </ControlTemplate></Setter.Value></Setter>
+</Style>
 <Style TargetType="ListBox"><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="#EFF1F5"/><Setter Property="BorderThickness" Value="0"/><Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/></Style>
 <Style TargetType="ListBoxItem"><Setter Property="Padding" Value="12"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="Frame" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="{TemplateBinding Padding}" CornerRadius="5"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="Frame" Property="Background" Value="#29354E"/></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="#49556B"/><Setter TargetName="Frame" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
 <Style TargetType="CheckBox"><Setter Property="Foreground" Value="#D7E2F5"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox"><DockPanel><Border x:Name="CheckFrame" Width="22" Height="22" CornerRadius="6" Background="#192333" BorderBrush="#637590" BorderThickness="1" Margin="0,0,10,0"><TextBlock x:Name="CheckMark" Text="✓" Foreground="#10251D" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/></Border><ContentPresenter VerticalAlignment="Center"/></DockPanel><ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="CheckFrame" Property="Background" Value="#74D6AB"/><Setter TargetName="CheckFrame" Property="BorderBrush" Value="#8DEAC2"/><Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="CheckFrame" Property="BorderBrush" Value="#B1C9FF"/><Setter TargetName="CheckFrame" Property="BorderThickness" Value="2"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>

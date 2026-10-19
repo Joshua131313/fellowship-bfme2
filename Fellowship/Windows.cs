@@ -307,7 +307,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.87   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.88   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -851,6 +851,7 @@ public sealed class RoomWindow : Window
     readonly Button clearSpot;
     bool syncingPlacement,changingPlacement,watchingNative;
     TaskCompletionSource<bool>? syncPrepared;
+    readonly LivePlacement.Control syncControl=new();
     readonly System.Threading.CancellationTokenSource syncLifetime=new();
     readonly TextBlock liveStatus=UI.Text("Live sync starts when BFME2 opens.",10,UI.Muted);
     sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team / free for all":"Team "+Value;}
@@ -875,7 +876,7 @@ public sealed class RoomWindow : Window
     async Task AbortGame()
     {
         launchCancellation?.Cancel();
-        try{await GameLauncher.AbortWithPermission(app.Settings.GamePath);}
+        try{if(!await syncControl.Abort())await GameLauncher.AbortWithPermission(app.Settings.GamePath);}
         catch(OperationCanceledException){Append("SYSTEM","Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it.");UpdateLaunchActions();return;}
         Append("SYSTEM","BFME2 stopped. You remain in the Fellowship room.");UpdateLaunchActions();
     }
@@ -1057,7 +1058,7 @@ public sealed class RoomWindow : Window
                             savingRules=true;Refresh();
                             try{await app.Peer.SyncNativeRules(draft);}
                             finally{savingRules=false;Refresh();}
-                        },message=>liveStatus.Text=message,syncLifetime.Token,()=>syncPrepared.TrySetResult(true));
+                        },message=>liveStatus.Text=message,syncLifetime.Token,()=>syncPrepared.TrySetResult(true),syncControl);
                         attempted=0; // A reconnect must be allowed even when BFME2 keeps the same PID.
                         syncPrepared.TrySetResult(false);
                     }
@@ -1471,7 +1472,7 @@ public static class GameLauncher
         int targetSession=session??Process.GetCurrentProcess().SessionId;
         string folder=Path.GetDirectoryName(Path.GetFullPath(gamePath))!;
         var allowed=new[]{Path.Combine(folder,"lotrbfme2.exe"),Path.Combine(folder,"game.dat")};
-        foreach(var name in new[]{"lotrbfme2","game","game.dat"})
+        foreach(var name in new[]{"game.dat","game","lotrbfme2"})
         foreach(var process in Process.GetProcessesByName(name))
         using(process)
         {
@@ -1479,7 +1480,7 @@ public static class GameLauncher
             {
                 if(process.HasExited||process.SessionId!=targetSession)continue;
                 string? path=process.MainModule?.FileName;
-                if(path!=null&&allowed.Contains(path,StringComparer.OrdinalIgnoreCase)){process.Kill();if(!process.WaitForExit(3000))throw new IOException("BFME2 is still stopping. Try Abort again.");}
+                if(path!=null&&allowed.Contains(path,StringComparer.OrdinalIgnoreCase)){process.Kill();if(!process.WaitForExit(3000))throw new IOException("BFME2 is still stopping. Try Abort again.");return;}
             }
             catch(InvalidOperationException){} // The game may exit between enumeration and termination.
         }

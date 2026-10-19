@@ -15,6 +15,25 @@ class Program
   {LiveProbe.Connection(args[1],int.Parse(args[2]),args[3],args[4]).GetAwaiter().GetResult();return;}
   if(args.Length==4&&args[0]=="--live-probe")
   {LiveProbe.Run(args[1],int.Parse(args[2]),args[3]).GetAwaiter().GetResult();return;}
+  var abortControl=new LivePlacement.Control();
+  if(abortControl.Abort().GetAwaiter().GetResult())throw new Exception("Disconnected helper accepted Abort");
+  var flags=System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance;
+  var connectControl=typeof(LivePlacement.Control).GetMethod("Connect",flags)!;
+  var pendingControl=typeof(LivePlacement.Control).GetProperty("Pending",flags)!;
+  var completeControl=typeof(LivePlacement.Control).GetMethod("Complete",flags)!;
+  using(var connection=(IDisposable)connectControl.Invoke(abortControl,null)!)
+  {
+    var request=abortControl.Abort();
+    if(request.IsCompleted||!ReferenceEquals(request,abortControl.Abort()))throw new Exception("Abort did not await one helper acknowledgement");
+    completeControl.Invoke(abortControl,new[]{pendingControl.GetValue(abortControl),new LivePlacement.Reply("Stopped",Aborted:true)});
+    if(!request.GetAwaiter().GetResult())throw new Exception("Abort acknowledgement lost");
+    var second=abortControl.Abort();connection.Dispose();
+    try{second.GetAwaiter().GetResult();throw new Exception("Disconnected Abort incorrectly succeeded");}catch(IOException){}
+  }
+  var localCommand=new LivePlacement.Command("room","map","host",new(1,2));
+  var commandJson=System.Text.Json.JsonSerializer.Serialize(localCommand with{Abort=true});
+  if(localCommand.Abort||System.Text.Json.JsonSerializer.Deserialize<LivePlacement.Command>(commandJson)?.Abort!=true)throw new Exception("Abort pipe command serialization failed");
+  Console.WriteLine("PASS local helper Abort acknowledgement, deduplication, disconnect and command serialization");
   var nativeMemory=new Dictionary<long,byte[]>();
   void Put(long address,uint value)=>nativeMemory[address]=BitConverter.GetBytes(value);
   byte[] ReadMemory(long address,int size)=>nativeMemory[address].Take(size).ToArray();
@@ -169,12 +188,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.88-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.88/Fellowship-0.1.88-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.88",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.89-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.89/Fellowship-0.1.89-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.89",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.88","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.88",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.89","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.89",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -199,6 +218,19 @@ class Program
   Console.WriteLine("PASS installed map preview and update version/source validation");
   Directory.CreateDirectory("dist");
   var app=new App();app.InitializeComponent();
+  var selectPreview=new System.Windows.Controls.ComboBox{Style=(Style)app.FindResource(typeof(System.Windows.Controls.ComboBox)),Width=240,ItemsSource=new[]{"Radmin VPN","Ethernet 6","ZeroTier","Wi-Fi","Loopback"},SelectedIndex=0};
+  selectPreview.Measure(new Size(240,34));selectPreview.Arrange(new Rect(0,0,240,34));selectPreview.ApplyTemplate();
+  typeof(App).GetMethod("SelectLoaded",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(app,new object[]{selectPreview,new RoutedEventArgs()});
+  var selectPopup=(System.Windows.Controls.Primitives.Popup)selectPreview.Template.FindName("PART_Popup",selectPreview);
+  var placements=selectPopup.CustomPopupPlacementCallback(new Size(240,180),new Size(240,34),new Point());
+  if(placements[0].Point.X!=0||placements[0].Point.Y!=38||placements[1].Point.X!=0)throw new Exception("Dropdown is not left aligned with its control");
+  var menuBody=(FrameworkElement)selectPopup.Child;menuBody.Measure(new Size(240,300));menuBody.Arrange(new Rect(0,0,240,menuBody.DesiredSize.Height));menuBody.UpdateLayout();
+  if(Math.Abs(menuBody.Width-240)>1)throw new Exception("Dropdown width does not match its control");
+  var selectWheel=new System.Windows.Input.MouseWheelEventArgs(System.Windows.Input.Mouse.PrimaryDevice,0,-120){RoutedEvent=System.Windows.Input.Mouse.PreviewMouseWheelEvent};
+  selectPreview.RaiseEvent(selectWheel);
+  if(selectPreview.SelectedIndex!=0||!selectWheel.Handled)throw new Exception("Closed dropdown wheel changes selection");
+  Console.WriteLine("PASS shared dropdown left alignment, matched width and closed-wheel selection protection");
+
   var picker=new SearchableMapBox{ItemsSource=new[]{"Rhûn","Woody End"},SelectedItem="Rhûn"};
   picker.ApplyTemplate();
   if(picker.Template.FindName("PART_MapSearch",picker) is not System.Windows.Controls.TextBox {Visibility:Visibility.Visible})throw new Exception("Map search template missing");
@@ -239,7 +271,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.88"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.88/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.89"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.89/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -312,7 +344,7 @@ class Program
   Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   Render(browser.CreatePlayerInfo(browser,"Aragorn","26.42.214.47",new Player{Name="Aragorn",Team=2,Spot=3,Ready=true}),"dist/preview-player-info.png");
   Render(browser.CreateProfileEditor(browser),"dist/preview-profile-editor.png");
-  var updatePreview=new UpdateProgressWindow("0.1.88");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.89");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -321,7 +353,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.88\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.89\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
