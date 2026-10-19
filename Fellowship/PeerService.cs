@@ -17,6 +17,7 @@ public sealed partial class PeerService : IDisposable
     readonly object gate = new();
     readonly ConcurrentDictionary<string, Connection> guests = new();
     readonly CancellationTokenSource stop = new();
+    CancellationTokenSource? networkStop;
     TcpListener? listener;
     Connection? upstream;
     public Room? Current { get; private set; }
@@ -32,6 +33,7 @@ public sealed partial class PeerService : IDisposable
     public event Action<string, string, string>? PrivateMessage;
     public event Action<string,string,Room>? Invitation;
     public event Action? LaunchRequested;
+    public Func<Task<string>>? LaunchHandler { get; set; }
     public event Action<string>? Notice;
     public PeerService(Settings settings) { this.settings = settings; }
     public static List<(string Name, string Address)> Interfaces() => NetworkInterface.GetAllNetworkInterfaces()
@@ -40,22 +42,25 @@ public sealed partial class PeerService : IDisposable
         .Select(a => (n.Name, a.Address.ToString()))).ToList();
     public void Start(string address)
     {
-        if (listener != null) return;
+        if(listener!=null&&Address==address)return;
+        if(Current!=null)throw new InvalidOperationException("Leave the room before switching networks.");
         var candidate = new TcpListener(IPAddress.Parse(address), Port);
         try { candidate.Start(); }
         catch { candidate.Stop(); throw; }
+        networkStop?.Cancel();networkStop?.Dispose();listener?.Stop();discovery?.Dispose();
+        networkStop=CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
         Address = address;
         listener = candidate;
-        _ = AcceptLoop();
+        _ = AcceptLoop(candidate,networkStop.Token);
         StartDiscovery();
     }
-    async Task AcceptLoop()
+    async Task AcceptLoop(TcpListener server,CancellationToken token)
     {
-        while (!stop.IsCancellationRequested)
+        while (!token.IsCancellationRequested)
         {
-            try { var client = await listener!.AcceptTcpClientAsync(stop.Token); _ = Accept(client); }
+            try { var client = await server.AcceptTcpClientAsync(token); _ = Accept(client); }
             catch (OperationCanceledException) { break; }
-            catch (Exception e) { Notice?.Invoke(e.Message); break; }
+            catch (Exception e) { if(!token.IsCancellationRequested)Notice?.Invoke(e.Message); break; }
         }
     }
     async Task Accept(TcpClient tcp)
@@ -134,6 +139,7 @@ public sealed partial class PeerService : IDisposable
                     lock(gate){var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null)player.GameRunning=msg.GameRunning;}
                     await BroadcastState();
                 }
+                else if(msg.Type=="launch-result"){Notice?.Invoke($"{Current?.Players.FirstOrDefault(p=>p.Id==id)?.Name??"Player"}: {Clean(msg.Text,300)}");}
                 else if(msg.Type=="native-setup"&&msg.Room is {} setup)
                 {
                     try{await ApplyNativeRules(setup);}catch(InvalidOperationException){} // Invalid/stale observations cannot replace current rules.
@@ -255,7 +261,7 @@ public sealed partial class PeerService : IDisposable
                 }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
                 if (msg.Type == "chat") DeliverRoomChat(msg.Text,msg.Id);
-                if (msg.Type == "launch") LaunchRequested?.Invoke();
+                if (msg.Type == "launch") _=ReceiveLaunch(c);
             }
         }
         catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or JsonException or InvalidDataException) { }
@@ -455,6 +461,14 @@ public sealed partial class PeerService : IDisposable
         using var timeout=new CancellationTokenSource(5000);
         var reply=await connection.Read(timeout.Token);if(reply?.Type!="ack")throw new IOException(reply?.Text??"Invitation was not acknowledged.");
     }
+    async Task ReceiveLaunch(Connection connection)
+    {
+        try{await connection.Send(new(){Type="launch-result",Text="Launch request received; preparing BFME2 and waiting for any Windows permission prompt."});}catch{return;}
+        string result;
+        try{if(LaunchHandler!=null)result=await LaunchHandler();else{LaunchRequested?.Invoke();result="Launch request received.";}}
+        catch(Exception error){result="Could not launch: "+error.Message;}
+        try{await connection.Send(new(){Type="launch-result",Text=result});}catch(Exception error) when(error is IOException or SocketException or ObjectDisposedException){}
+    }
     public async Task Launch()
     {
         lock (gate)
@@ -464,7 +478,13 @@ public sealed partial class PeerService : IDisposable
             if (Current.Players.Any(p => !p.Ready)) throw new InvalidOperationException("Every player must be ready before launching.");
             // Presence follows the real game process, not the launch request.
         }
-        await Broadcast(new() { Type = "launch" });
+        var failures=new List<string>();
+        foreach(var player in Current!.Players.Where(p=>p.Id!="host").ToArray())
+        {
+            if(!guests.TryGetValue(player.Id,out var connection)){failures.Add(player.Name);continue;}
+            try{await connection.Send(new(){Type="launch"});}catch{failures.Add(player.Name);}
+        }
+        if(failures.Count>0)Notice?.Invoke("Launch could not reach: "+string.Join(", ",failures)+". Ask them to reconnect or use Launch mine.");
         LaunchRequested?.Invoke();
         await BroadcastState();
     }
@@ -487,7 +507,7 @@ public sealed partial class PeerService : IDisposable
     static string Clean(string s, int max) => new(s.Take(max).Where(c => !char.IsControl(c) || c == '\n').ToArray());
     static async Task<Connection> Connect(string address,string? source=null)
     {
-        if (!IPAddress.TryParse(address, out var ip) || ip.AddressFamily != AddressFamily.InterNetwork) throw new ArgumentException("Enter an IPv4 address from Radmin VPN.");
+        if (!IPAddress.TryParse(address, out var ip) || ip.AddressFamily != AddressFamily.InterNetwork) throw new ArgumentException("Enter the host’s IPv4 address on your selected VPN network.");
         var tcp = source==null?new TcpClient():new TcpClient(new IPEndPoint(IPAddress.Parse(source),0));
         try { using var timeout = new CancellationTokenSource(3000); await tcp.ConnectAsync(ip, Port, timeout.Token); return new(tcp); }
         catch { tcp.Dispose(); throw; }
@@ -501,7 +521,7 @@ public sealed partial class PeerService : IDisposable
         guests.Clear(); Changed?.Invoke();
         _ = Discover(presence:true);
     }
-    public void Dispose() { discovery?.Dispose(); stop.Cancel(); listener?.Stop(); Leave(); stop.Dispose(); }
+    public void Dispose() { networkStop?.Cancel();discovery?.Dispose(); stop.Cancel(); listener?.Stop(); Leave(); stop.Dispose(); }
     sealed class Connection : IDisposable
     {
         public string RemoteAddress=>((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString();

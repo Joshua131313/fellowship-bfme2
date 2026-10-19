@@ -33,6 +33,23 @@ static async Task Until(Func<bool> test, string description)
     for (int i = 0; i < 100; i++) { if (test()) { Console.WriteLine("PASS " + description); return; } await Task.Delay(50); }
     throw new Exception("FAIL " + description);
 }
+using(var switchPeer=new PeerService(MemorySettings("Switch test")))
+{
+    switchPeer.Start("127.0.0.21");switchPeer.Start("127.0.0.22");
+    if((await PeerService.QueryPeer("127.0.0.22")).Name!="Switch test")throw new Exception("New network listener not active");
+    using(var released=new TcpListener(IPAddress.Parse("127.0.0.21"),PeerService.Port)){released.Start();released.Stop();}
+    var discoveredSwitch=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    switchPeer.Discovered+=_=>discoveredSwitch.TrySetResult(true);
+    using var probe=new UdpClient(new IPEndPoint(IPAddress.Parse("127.0.0.23"),0));
+    await probe.SendAsync(System.Text.Encoding.ASCII.GetBytes("FELLOWSHIP_PRESENCE_1"),new IPEndPoint(IPAddress.Parse("127.0.0.22"),PeerService.DiscoveryPort));
+    await discoveredSwitch.Task.WaitAsync(TimeSpan.FromSeconds(3));
+    using(var occupiedSwitch=new TcpListener(IPAddress.Parse("127.0.0.24"),PeerService.Port))
+    {occupiedSwitch.Start();try{switchPeer.Start("127.0.0.24");throw new Exception("Expected bind failure");}catch(SocketException){} }
+    if((await PeerService.QueryPeer("127.0.0.22")).Name!="Switch test")throw new Exception("Failed switch lost working listener");
+    switchPeer.Start("127.0.0.21");
+    if((await PeerService.QueryPeer("127.0.0.21")).Name!="Switch test")throw new Exception("Repeated network switch failed");
+    Console.WriteLine("PASS live network rebinding, UDP discovery, old port release and failed-switch rollback");
+}
 // A failed bind must not poison retries or advertise an address that never bound.
 using(var occupied=new TcpListener(IPAddress.Parse("127.0.0.3"),PeerService.Port))
 using(var retryPeer=new PeerService(new(){Name="Retry test"}))
@@ -119,6 +136,12 @@ await Until(() => host.Current!.Players.All(p => p.Ready), "renewed readiness");
 int launches = 0; guest.LaunchRequested += () => launches++;
 await host.Launch();
 await Until(() => launches == 1, "host launch signal");
+string launchReport="";host.Notice+=text=>launchReport=text;
+guest.LaunchHandler=()=>Task.FromResult("Could not launch: test permission cancellation");
+await host.Launch();
+await Until(()=>launchReport.Contains("test permission cancellation"),"guest launch failure reported to host");
+guest.LaunchHandler=null;
+
 await Until(()=>guest.Current!.Players.All(p=>p.Ready),"launch preserves guest readiness");
 if(host.Current!.Players.Any(p=>!p.Ready))throw new Exception("Launching reset readiness");
 await host.SetHostGameRunning(true);

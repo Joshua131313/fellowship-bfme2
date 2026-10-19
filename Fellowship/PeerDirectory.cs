@@ -5,6 +5,7 @@ public sealed class PeerDirectory
 {
     public sealed record Entry(string Address,string Name,Room? Room,DateTimeOffset Seen,bool Reconnecting,bool GameRunning=false);
     readonly Dictionary<string,Entry> entries=new();
+    public void Clear()=>entries.Clear();
     public static readonly TimeSpan Grace=TimeSpan.FromSeconds(20);
     public void Success(string address,string name,Room? room,DateTimeOffset now,bool gameRunning=false)=>entries[address]=new(address,name,room,now,false,gameRunning);
     public void Failure(string address){if(entries.TryGetValue(address,out var entry))entries[address]=entry with{Reconnecting=true};}

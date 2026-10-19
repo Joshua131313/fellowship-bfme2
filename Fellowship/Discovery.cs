@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
@@ -16,30 +16,33 @@ public sealed partial class PeerService
         try
         {
             discovery=new UdpClient(new IPEndPoint(IPAddress.Parse(Address),DiscoveryPort)){EnableBroadcast=true};
-            _=DiscoverLoop();
+            var adapter=NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(n=>n.GetIPProperties().UnicastAddresses.Any(a=>a.Address.ToString()==Address));
+            if(OperatingSystem.IsWindows()&&adapter?.GetIPProperties().GetIPv4Properties() is {} ipv4)
+                discovery.Client.SetSocketOption(SocketOptionLevel.IP,(SocketOptionName)31 /* IP_UNICAST_IF */,IPAddress.HostToNetworkOrder(ipv4.Index));
+            _=DiscoverLoop(discovery,Address,networkStop!.Token);
         }
         catch(SocketException){discovery?.Dispose();discovery=null;Notice?.Invoke("Automatic discovery unavailable. Direct-IP joining still works (UDP 28743).");}
     }
-    async Task DiscoverLoop()
+    async Task DiscoverLoop(UdpClient socket,string localAddress,CancellationToken token)
     {
-        while(!stop.IsCancellationRequested)
+        while(!token.IsCancellationRequested)
         {
             try
             {
-                var packet=await discovery!.ReceiveAsync(stop.Token);
-                if(packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==Address)continue;
+                var packet=await socket.ReceiveAsync(token);
+                if(token.IsCancellationRequested||packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==localAddress)continue;
                 var remote=packet.RemoteEndPoint.Address.ToString();
                 if(settings.IsBlocked(remote)&&!settings.Friends.Any(f=>f.Address==remote))continue;
                 var text=Encoding.ASCII.GetString(packet.Buffer);
                 if(text==PresenceProbe)
                 {
                     Discovered?.Invoke(remote);
-                    await discovery.SendAsync(Encoding.ASCII.GetBytes(Reply),packet.RemoteEndPoint,stop.Token);
+                    await socket.SendAsync(Encoding.ASCII.GetBytes(Reply),packet.RemoteEndPoint,token);
                 }
                 else if(text==Probe)
                 {
                     bool respond;lock(gate)respond=IsHost&&Current!=null&&CanSee(remote);
-                    if(respond)await discovery.SendAsync(Encoding.ASCII.GetBytes(Reply),packet.RemoteEndPoint,stop.Token);
+                    if(respond)await socket.SendAsync(Encoding.ASCII.GetBytes(Reply),packet.RemoteEndPoint,token);
                 }
                 else if(text==Reply)Discovered?.Invoke(remote);
             }
@@ -50,14 +53,14 @@ public sealed partial class PeerService
                 // Windows reports ICMP errors (including an offline peer's closed
                 // port) on ReceiveAsync. They do not invalidate the UDP socket.
                 // Keep listening instead of losing all discovery until restart.
-                try{await Task.Delay(100,stop.Token);}
+                try{await Task.Delay(100,token);}
                 catch(OperationCanceledException){break;}
             }
         }
     }
     public async Task Discover(string? target=null,bool presence=false)
     {
-        if(discovery==null)return;
+        var socket=discovery;var source=Address;if(socket==null)return;
         var destinations=new HashSet<string>();
         if(target!=null)destinations.Add(target);
         else
@@ -68,12 +71,13 @@ public sealed partial class PeerService
                 if(ip.Address.ToString()!=Address||ip.IPv4Mask==null)continue;
                 var bytes=ip.Address.GetAddressBytes();var mask=ip.IPv4Mask.GetAddressBytes();
                 if(bytes.Length!=4)continue;
+                destinations.Add(IPAddress.Broadcast.ToString());
                 destinations.Add(new IPAddress(bytes.Select((b,i)=>(byte)(b|~mask[i])).ToArray()).ToString());
             }
             foreach(var friend in settings.Friends)destinations.Add(friend.Address);
         }
         foreach(var destination in destinations.Where(d=>!settings.IsBlocked(d)))
-            try{await discovery.SendAsync(Encoding.ASCII.GetBytes(presence?PresenceProbe:Probe),new IPEndPoint(IPAddress.Parse(destination),DiscoveryPort),stop.Token);}
+            try{await socket.SendAsync(Encoding.ASCII.GetBytes(presence?PresenceProbe:Probe),new IPEndPoint(IPAddress.Parse(destination),DiscoveryPort),stop.Token);}
             catch(Exception e) when(e is SocketException or OperationCanceledException or ObjectDisposedException or FormatException){}
     }
 }

@@ -217,13 +217,14 @@ public sealed partial class BrowserWindow : Window
     readonly DataGrid rooms = new();
     readonly TextBlock status = UI.Text("Not connected", 11, UI.Muted);
     readonly TextBlock count = UI.Text("0 rooms", 12, UI.Muted);
-    readonly TextBox address = new() { Width = 180, Height=34, Padding=new(10,5,10,5), MaxLength = 15, ToolTip = "Host's Radmin IPv4 address" };
+    readonly TextBox address = new() { Width = 180, Height=34, Padding=new(10,5,10,5), MaxLength = 15, ToolTip = "Host's selected VPN IPv4 address" };
     readonly ComboBox modeFilter=new(){ItemsSource=new[]{"All modes","1v1","2v2","3v3","FFA","Custom"},SelectedIndex=0,Width=116,Height=34,ToolTip="Filter rooms by mode"};
     readonly TextBox search = new() { Width = 220, Height=34, Padding=new(10,5,10,5), ToolTip = "Filter rooms by name, host or map" };
     readonly Border empty;
     readonly TextBlock emptyTitle=UI.Text("No rooms found",19,"#DCE2ED",true);
     readonly TextBlock emptyHint=UI.Text("Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.",13,UI.Muted);
-    readonly ActivityAlerts activityAlerts=new();
+    ActivityAlerts activityAlerts=new();
+    readonly TextBlock networkCaption=UI.Text("",12,UI.Muted);
     public PlayerLatency Latency { get; }=new();
     readonly List<RoomEntry> discovered = [];
     RoomWindow? roomWindow;
@@ -245,6 +246,7 @@ public sealed partial class BrowserWindow : Window
     public BrowserWindow(Settings? settings=null)
     {
         Settings=settings??Settings.Load();
+        Settings.NetworkName=PeerService.Interfaces().FirstOrDefault(i=>i.Address==Settings.BindAddress).Name??Settings.NetworkName;
         modeFilter.SelectedItem=modeFilter.Items.Contains(Settings.RoomModeFilter)?Settings.RoomModeFilter:"All modes";
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
@@ -262,7 +264,7 @@ public sealed partial class BrowserWindow : Window
         toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
         var actions = UI.Row(UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
         var filters = new Grid { Margin = new(22,0,22,14) }; filters.ColumnDefinitions.Add(new()); filters.ColumnDefinitions.Add(new() { Width = UI.Auto });
-        filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), UI.Text("    Radmin VPN",12,UI.Muted)));
+        filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), networkCaption));
         modeFilter.Margin=new(0,0,16,0);
         var filterRight = UI.Row(modeFilter,UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
         var table = new Grid();
@@ -289,7 +291,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.79   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.80   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -328,8 +330,9 @@ public sealed partial class BrowserWindow : Window
         rooms.SelectionChanged += (_,_) => { if(rooms.SelectedItem is RoomEntry r) address.Text = r.Address; };
         rooms.MouseDoubleClick += async (_,_) => { if(rooms.SelectedItem != null) try { await Join(); } catch(Exception e){ UI.Error(e.Message); } };
         Peer.Changed += () => Dispatcher.InvokeAsync(() => { roomWindow?.Refresh(); if(!closingRoom && Peer.Current != null && roomWindow == null) ShowRoom(); RenderRooms(); });
-        Peer.Notice += text => Dispatcher.InvokeAsync(() => status.Text = text);
-        Peer.LaunchRequested += () => Dispatcher.InvokeAsync(() => roomWindow?.HandleLaunch());
+        Peer.Notice += text => Dispatcher.InvokeAsync(() => {status.Text = text;roomWindow?.ShowNotice(text);});
+        Peer.LaunchHandler=async()=>await await Dispatcher.InvokeAsync(()=>{if(Peer.Current==null)return Task.FromResult("Room is disconnected.");if(roomWindow==null)ShowRoom();return roomWindow?.HandleLaunch()??Task.FromResult("Room window is unavailable.");});
+        Peer.LaunchRequested += () => {_=Peer.LaunchHandler();};
         Peer.Invitation+=(ip,name,room)=>Dispatcher.InvokeAsync(()=>ShowInvitation(ip,name,room));
         Peer.RoomMessageReceived+=()=>Dispatcher.InvokeAsync(()=>{if(Settings.MessageSounds)MessageAlert.Effect("room-message");});
         Peer.PrivateMessage += (ip,name,text) => Dispatcher.InvokeAsync(() =>
@@ -347,6 +350,7 @@ public sealed partial class BrowserWindow : Window
     {
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).GroupBy(r=>r.Room.Id).Select(g=>g.OrderByDescending(r=>r.Room.Revision).First()).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
+        networkCaption.Text="    "+Settings.NetworkName;
         RenderDashboard();
         RoomPreviewsChanged?.Invoke();
         list=list.Select(r=>r with{Ping=Latency.Get(r.Address,Peer.Address),Icon=GameIcon.Load(Settings.GamePath)}).ToList();
@@ -361,7 +365,7 @@ public sealed partial class BrowserWindow : Window
     public async Task CheckStartupConnection()
     {
         await Task.Delay(3000);
-        var warning=await Task.Run(StartupConnection.Warning);
+        var warning=await Task.Run(()=>StartupConnection.Warning(Settings));
         if(warning!=null)UI.Information(IsVisible?this:null,"Connection unavailable",warning).ShowDialog();
     }
     async void OpenActivity(ActivityAlerts.Alert alert)
@@ -391,10 +395,10 @@ public sealed partial class BrowserWindow : Window
     }
     public bool EnsureOnline(bool quiet=false)
     {
-        if(online)return true;
+        if(online&&Peer.Address==Settings.BindAddress)return true;
         try
         {
-            if(string.IsNullOrWhiteSpace(Settings.BindAddress)){ if(!quiet)UI.Error("Select your Radmin VPN interface in Settings first."); return false; }
+            if(string.IsNullOrWhiteSpace(Settings.BindAddress)){ if(!quiet)UI.Error("Select your VPN network interface in Settings first."); return false; }
             Peer.Start(Settings.BindAddress); online = true; status.Text = $"●  {Settings.Name}   ·   {Peer.Address}   ·   Ready to play"; status.Foreground = UI.Brush(UI.Green);RenderRooms();Dispatcher.BeginInvoke(new Action(async()=>{try{await Refresh();}catch(Exception error){status.Text="Discovery failed: "+error.Message;}})); return true;
         }
         catch(Exception e)
@@ -402,7 +406,7 @@ public sealed partial class BrowserWindow : Window
             status.Text="○  Connection unavailable · check Settings";status.Foreground=UI.Brush("#E5B77A");
             var message=e is System.Net.Sockets.SocketException {SocketErrorCode:System.Net.Sockets.SocketError.AddressAlreadyInUse}
                 ? "This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry."
-                : "Could not connect on the selected interface. Check that Radmin VPN is connected and choose its current address in Settings.\n\n"+e.Message;
+                : "Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings.\n\n"+e.Message;
             if(!quiet)UI.Error(message);return false;
         }
     }
@@ -441,8 +445,8 @@ public sealed partial class BrowserWindow : Window
         var network=new ComboBox{ItemsSource=interfaces.Select(i=>$"{i.Name} · {i.Address}").ToList()};
         var networkTemplate=new DataTemplate();var networkText=new FrameworkElementFactory(typeof(TextBlock));networkText.SetBinding(TextBlock.TextProperty,new Binding());networkText.SetValue(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis);networkText.SetBinding(TextBlock.ToolTipProperty,new Binding());networkTemplate.VisualTree=networkText;network.ItemTemplate=networkTemplate;
         network.SelectedIndex=interfaces.FindIndex(i=>i.Address==Settings.BindAddress);
-        if(network.SelectedIndex<0)network.SelectedIndex=interfaces.FindIndex(i=>i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));profileNetwork.Children.Add(network);
-        var networkHint=UI.Text("Use Radmin VPN on both PCs. Restart after changing the interface.",11,UI.Muted);networkHint.Margin=new(0,10,0,0);p.Children.Add(networkHint);
+        if(network.SelectedIndex<0&&string.IsNullOrWhiteSpace(Settings.BindAddress))network.SelectedIndex=interfaces.FindIndex(i=>i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));profileNetwork.Children.Add(network);
+        var networkHint=UI.Text("Select the same VPN network on both PCs. Saving switches immediately and leaves your current room.",11,UI.Muted);networkHint.Margin=new(0,10,0,0);p.Children.Add(networkHint);
         var game=UI.Field(p,"BFME2 EXECUTABLE",Settings.GamePath);
         game.Height=58;game.TextWrapping=TextWrapping.Wrap;game.VerticalContentAlignment=VerticalAlignment.Center;
         game.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;game.VerticalScrollBarVisibility=ScrollBarVisibility.Hidden;
@@ -482,7 +486,15 @@ public sealed partial class BrowserWindow : Window
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);var marker=Path.Combine(Settings.Folder,"folder-"+Guid.NewGuid().ToString("N")+".tmp");try{File.WriteAllText(marker,"");var folder=Path.GetDirectoryName(NativePlacement.PhysicalPath(marker))!;Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});}finally{File.Delete(marker);}});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
         var save=UI.Require(UI.AsyncButton("Save settings",async()=>
         {
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();
+            var selectedNetwork=interfaces[network.SelectedIndex];
+            if(Peer.Address!=selectedNetwork.Address)
+            {
+                await CloseRoom();Peer.Start(selectedNetwork.Address);online=true;
+                foreach(var ip in peerQueries.Keys.ToArray())queryVersions[ip]=queryVersions.GetValueOrDefault(ip)+1;
+                Presence.Clear();activityAlerts=new();discovered.Clear();discoveredAddresses.Clear();address.Text="";initialDiscovery=true;RenderRooms();RenderActivePlayers();
+                await Peer.Discover(presence:true);
+            }
+            Settings.NetworkName=selectedNetwork.Name;Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();await Refresh();
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);
         var sections=new Grid();sections.ColumnDefinitions.Add(new());sections.ColumnDefinitions.Add(new());
@@ -506,14 +518,14 @@ public sealed partial class BrowserWindow : Window
     }
     async Task QueryAndRender(string ip)
     {
-        var version=queryVersions.GetValueOrDefault(ip);
+        var version=queryVersions.GetValueOrDefault(ip);var source=Peer.Address;
         try
         {
-            var result=await PeerService.QueryPeer(ip,Peer.Address);
-            if(version==queryVersions.GetValueOrDefault(ip))
+            var result=await PeerService.QueryPeer(ip,source);
+            if(source==Peer.Address&&version==queryVersions.GetValueOrDefault(ip))
                 Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow,result.GameRunning);
         }
-        catch{if(version==queryVersions.GetValueOrDefault(ip))Presence.Failure(ip);}
+        catch{if(source==Peer.Address&&version==queryVersions.GetValueOrDefault(ip))Presence.Failure(ip);}
         finally{peerQueries.Remove(ip);UpdateDiscoveredRooms();}
     }
     void UpdateDiscoveredRooms()
@@ -1074,12 +1086,13 @@ public sealed class RoomWindow : Window
         consent.IsChecked=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true;
         if(consent.IsChecked!=true)allowLaunch=false;
     }
-    public void HandleLaunch(){if(app.Peer.IsHost||allowLaunch)LaunchLocal();}
+    public void ShowNotice(string text)=>Append("SYSTEM",text);
+    public Task<string> HandleLaunch()=>app.Peer.IsHost||app.Peer.Current?.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?LaunchLocalCore():Task.FromResult("Launch skipped: player is not ready.");
     bool launching;
     async void LaunchLocal()=>await LaunchLocalCore();
-    async Task LaunchLocalCore()
+    async Task<string> LaunchLocalCore()
     {
-        if(launching)return;
+        if(launching)return "BFME2 launch is already in progress.";
         launching=true;
         Refresh();
         try
@@ -1088,7 +1101,7 @@ public sealed class RoomWindow : Window
             Append("SYSTEM",preset?"Launching BFME2. Your rules will sync when the LAN lobby opens.":"Launching BFME2…");
             var current=app.Peer.Current??throw new IOException("Join a Fellowship room first.");
             GameLauncher.Validate(app.Settings.GamePath);
-            if(GameLauncher.IsRunning()){Append("SYSTEM",GameLauncher.FocusRunning()?"Returned to BFME2.":"BFME2 is starting; waiting for its window.");return;}
+            if(GameLauncher.IsRunning()){Append("SYSTEM",GameLauncher.FocusRunning()?"Returned to BFME2.":"BFME2 is starting; waiting for its window.");return "BFME2 is already running.";}
             if(app.Settings.LiveGameSync)
             {
                 // Launch is an explicit retry; never require a trip through Settings.
@@ -1107,8 +1120,9 @@ public sealed class RoomWindow : Window
             await GameLauncher.Launch(app.Settings.GamePath,current,preset,false,app.Peer.LocalId,false);
             Append("SYSTEM",app.Settings.LiveGameSync?"Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.":"Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens.");
         }
-        catch(Exception e){UI.Error(e.Message);}
+        catch(Exception e){UI.Error(e.Message);return "Could not launch BFME2: "+e.Message;}
         finally{launching=false;Refresh();}
+        return "BFME2 launch started.";
     }
 }
 

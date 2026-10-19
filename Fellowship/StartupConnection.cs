@@ -1,20 +1,21 @@
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 namespace Fellowship;
 
 public static class StartupConnection
 {
-    public static string? Warning()
+    public static string? Warning(Settings settings)
     {
         var messages=new List<string>();
         try
         {
             var adapters=NetworkInterface.GetAllNetworkInterfaces();
-            if(!adapters.Any(n=>(n.Name+" "+n.Description).Contains("Radmin",StringComparison.OrdinalIgnoreCase)&&n.OperationalStatus==OperationalStatus.Up&&n.GetIPProperties().UnicastAddresses.Any(a=>a.Address.AddressFamily==AddressFamily.InterNetwork)))
-                messages.Add("Radmin VPN is not connected or its adapter is unavailable. Open Radmin VPN and connect to your network, then refresh Fellowship.");
+            if(!string.IsNullOrWhiteSpace(settings.BindAddress)&&!adapters.Any(n=>n.OperationalStatus==OperationalStatus.Up&&n.GetIPProperties().UnicastAddresses.Any(a=>a.Address.ToString()==settings.BindAddress)))
+                messages.Add($"{settings.NetworkName} ({settings.BindAddress}) is not connected or its address has changed. Connect to your VPN network, then select its current interface in Settings.");
         }
-        catch(NetworkInformationException){messages.Add("Fellowship could not read your network adapters. Check Radmin VPN and refresh.");}
+        catch(NetworkInformationException){messages.Add($"Fellowship could not read your network adapters. Check {settings.NetworkName} and refresh.");}
+
         object? manager=null;
         try
         {
