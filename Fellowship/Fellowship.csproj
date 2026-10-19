@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>Fellowship</AssemblyName><Version>0.1.99</Version><ApplicationIcon>Assets/Fellowship.ico</ApplicationIcon></PropertyGroup>
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>Fellowship</AssemblyName><Version>0.1.100</Version><ApplicationIcon>Assets/Fellowship.ico</ApplicationIcon></PropertyGroup>
   <ItemGroup><Using Remove="System.Windows.Forms"/><Using Remove="System.Drawing"/></ItemGroup>
   <ItemGroup><EmbeddedResource Include="Assets/message.wav" /><EmbeddedResource Include="Assets/friend-online.wav" /><EmbeddedResource Include="Assets/friend-offline.wav" /><EmbeddedResource Include="Assets/sent.wav" /><EmbeddedResource Include="Assets/room-message.wav" /><EmbeddedResource Include="Assets/invite.wav" /><EmbeddedResource Include="Assets/room-join.wav" /><EmbeddedResource Include="Assets/room-leave.wav" /><Resource Include="Assets/Fellowship.ico" /></ItemGroup>
   <ItemGroup>
