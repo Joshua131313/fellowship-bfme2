@@ -222,6 +222,7 @@ public sealed class BrowserWindow : Window
     readonly Border empty;
     readonly TextBlock emptyTitle=UI.Text("No rooms found",19,"#DCE2ED",true);
     readonly TextBlock emptyHint=UI.Text("Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.",13,UI.Muted);
+    readonly ActivityAlerts activityAlerts=new();
     readonly List<RoomEntry> discovered = [];
     RoomWindow? roomWindow;
     FriendsWindow? friendsWindow;
@@ -274,7 +275,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.70   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.71   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -394,6 +395,8 @@ public sealed class BrowserWindow : Window
         var gamePreferences=UI.Button("Game preferences…",()=>new GamePreferencesWindow(w,Settings).ShowDialog());gamePreferences.HorizontalAlignment=HorizontalAlignment.Left;gamePreferences.Margin=new(0,12,0,0);p.Children.Add(gamePreferences);
         var options=new StackPanel();
         var sounds=new CheckBox{Content="Message and invitation sounds",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,14)};options.Children.Add(sounds);
+        var friendSounds=new CheckBox{Content="Friend online and offline sounds",IsChecked=Settings.FriendActivitySounds,Margin=new(0,0,0,14)};options.Children.Add(friendSounds);
+        var notifications=new CheckBox{Content="Windows notifications for friends and new rooms",IsChecked=Settings.DesktopNotifications,Margin=new(0,0,0,14)};options.Children.Add(notifications);
         var liveSync=new CheckBox{Content="Live BFME2 synchronization",IsChecked=Settings.LiveGameSync,Margin=new(0,0,0,14),ToolTip="Synchronize map, rules, team, starting spot and color in the native LAN lobby."};options.Children.Add(liveSync);
         var startup=new CheckBox{Content="Start in the tray at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,ToolTip=Installation.IsInstalled?"Fellowship starts quietly in the system tray.":"Install Fellowship to enable startup."};options.Children.Add(startup);ToolTipService.SetShowOnDisabled(startup,true);
         var optionCard=UI.Card(options,"#171C24",16);optionCard.Margin=new(0,20,0,0);p.Children.Add(optionCard);
@@ -424,7 +427,7 @@ public sealed class BrowserWindow : Window
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);var marker=Path.Combine(Settings.Folder,"folder-"+Guid.NewGuid().ToString("N")+".tmp");try{File.WriteAllText(marker,"");var folder=Path.GetDirectoryName(NativePlacement.PhysicalPath(marker))!;Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});}finally{File.Delete(marker);}});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
         var save=UI.Require(UI.AsyncButton("Save settings",async()=>
         {
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();w.Close();EnsureOnline();
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();w.Close();EnsureOnline();
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return w;
     }
@@ -474,6 +477,11 @@ public sealed class BrowserWindow : Window
             discovered.Clear();foreach(var peer in Presence.Active(now))if(peer.Room!=null&&!Settings.IsBlocked(peer.Address))discovered.Add(new(peer.Address,peer.Room,peer.Reconnecting));
             foreach(var ip in Presence.Known(now))if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);
             RenderRooms();RenderActivePlayers();friendsWindow?.Render();
+            foreach(var alert in activityAlerts.Observe(Settings,Presence.Active(now)))
+            {
+                if(Settings.FriendActivitySounds&&alert.Online is bool onlineFriend)MessageAlert.PlayPresence(onlineFriend);
+                if(Settings.DesktopNotifications&&Application.Current is App application)application.NotifyActivity(alert.Title,alert.Message);
+            }
             status.Text=$"●  {Peer.Address} · VPN discovery active · {discovered.Count} room(s)";
         }
         finally{refreshing=false;initialDiscovery=false;RenderRooms();}

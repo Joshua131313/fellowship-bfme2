@@ -17,11 +17,16 @@ public sealed class TrayIcon : IDisposable
         using var loaded=new System.Drawing.Icon(stream);
         icon=(System.Drawing.Icon)loaded.Clone();
         tray=new(){Icon=icon,Text="Fellowship · running in the background",Visible=true};
+        tray.BalloonTipClicked+=(_,_)=>Application.Current.Dispatcher.InvokeAsync(()=>UI.Reveal(browser));
         tray.MouseClick+=(_,e)=>Application.Current.Dispatcher.InvokeAsync(()=>
         {
             if(e.Button==System.Windows.Forms.MouseButtons.Left)UI.Reveal(browser);
             if(e.Button==System.Windows.Forms.MouseButtons.Right)ShowMenu();
         });
+    }
+    public void Notify(string title,string message)
+    {
+        try{tray.ShowBalloonTip(5000,title,message,System.Windows.Forms.ToolTipIcon.Info);}catch(System.ComponentModel.Win32Exception){}
     }
     void ShowMenu()
     {

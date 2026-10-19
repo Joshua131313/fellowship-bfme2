@@ -14,6 +14,18 @@ internal static class MessageAlert
         return player;
     });
 
+    static readonly Lazy<SoundPlayer> Online=new(()=>Load("friend-online"));
+    static readonly Lazy<SoundPlayer> Offline=new(()=>Load("friend-offline"));
+    static SoundPlayer Load(string name)
+    {
+        var stream=typeof(MessageAlert).Assembly.GetManifestResourceStream("Fellowship.Assets."+name+".wav")??throw new FileNotFoundException(name);
+        var player=new SoundPlayer(stream);player.Load();return player;
+    }
+    public static void PlayPresence(bool online)
+    {
+        try{(online?Online:Offline).Value.Play();}
+        catch(Exception e) when(e is InvalidOperationException or IOException or System.ComponentModel.Win32Exception){}
+    }
     public static void Play()
     {
         // An unavailable audio device must not interrupt message delivery.

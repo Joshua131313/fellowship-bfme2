@@ -30,6 +30,8 @@ public sealed class Settings
     public string BindAddress { get; set; } = "";
     public bool SkipRemoveFriendConfirmation { get; set; }
     public bool SkipBlockConfirmation { get; set; }
+    public bool FriendActivitySounds { get; set; } = true;
+    public bool DesktopNotifications { get; set; } = true;
     public bool MessageSounds { get; set; } = true;
     public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }

@@ -24,6 +24,7 @@ public partial class App : Application
     EventWaitHandle? activateEvent;
     RegisteredWaitHandle? activationWait;
     TrayIcon? tray;
+    public void NotifyActivity(string title,string message)=>tray?.Notify(title,message);
     public bool IsQuitting { get; private set; }
     bool quitPending;
     public async void Quit()

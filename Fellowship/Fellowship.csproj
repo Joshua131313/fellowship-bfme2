@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>Fellowship</AssemblyName><Version>0.1.70</Version><ApplicationIcon>Assets/Fellowship.ico</ApplicationIcon></PropertyGroup>
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>Fellowship</AssemblyName><Version>0.1.71</Version><ApplicationIcon>Assets/Fellowship.ico</ApplicationIcon></PropertyGroup>
   <ItemGroup><Using Remove="System.Windows.Forms"/><Using Remove="System.Drawing"/></ItemGroup>
-  <ItemGroup><EmbeddedResource Include="Assets/message.wav" /><Resource Include="Assets/Fellowship.ico" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Assets/message.wav" /><EmbeddedResource Include="Assets/friend-online.wav" /><EmbeddedResource Include="Assets/friend-offline.wav" /><Resource Include="Assets/Fellowship.ico" /></ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../native/bin/Fellowship.NativeHost.exe" LogicalName="Fellowship.Native.Fellowship.NativeHost.exe" />
     <EmbeddedResource Include="../native/bin/Fellowship.Native.v038.dll" LogicalName="Fellowship.Native.Fellowship.Native.v038.dll" />
