@@ -80,7 +80,7 @@ public sealed partial class PeerService : IDisposable
             {
                 Room? snapshot;
                 lock (gate) snapshot = !IsHost || Current == null || (!CanSee(remoteAddress)||settings.IsBlocked(remoteAddress)) ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
-                await c.Send(new() { Type = "room", Room = snapshot, Name=settings.Name,GameRunning=gameRunning }); return;
+                await c.Send(new() { Type = "room", Room = snapshot, Name=settings.Name,GameRunning=gameRunning,IdleSeconds=IdlePresence.Seconds() }); return;
             }
             if(hello.Type=="invite")
             {
@@ -136,7 +136,7 @@ public sealed partial class PeerService : IDisposable
                 }
                 else if(msg.Type=="game-status")
                 {
-                    lock(gate){var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null)player.GameRunning=msg.GameRunning;}
+                    lock(gate){var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null){player.GameRunning=msg.GameRunning;player.IdleSeconds=IdlePresence.Normalize(msg.IdleSeconds);}}
                     await BroadcastState();
                 }
                 else if(msg.Type=="launch-result"){Notice?.Invoke($"{Current?.Players.FirstOrDefault(p=>p.Id==id)?.Name??"Player"}: {Clean(msg.Text,300)}");}
@@ -280,14 +280,14 @@ public sealed partial class PeerService : IDisposable
         }
     }
     public static async Task<Room?> Query(string address,string? source=null)=>(await QueryPeer(address,source)).Room;
-    public static async Task<(string Name,Room? Room,bool GameRunning)> QueryPeer(string address,string? source=null)
+    public static async Task<(string Name,Room? Room,bool GameRunning,int? IdleSeconds)> QueryPeer(string address,string? source=null)
     {
         using var c = await Connect(address,source);
         await c.Send(new() { Type = "query" });
         using var timeout = new CancellationTokenSource(3000);
         var reply=await c.Read(timeout.Token);
         if(reply?.Type!="room")throw new IOException("Invalid peer response.");
-        return (Clean(reply.Name,40),reply.Room,reply.GameRunning);
+        return (Clean(reply.Name,40),reply.Room,reply.GameRunning,IdlePresence.Normalize(reply.IdleSeconds));
     }
     public async Task SendPrivate(string address, string text)
     {
@@ -441,16 +441,16 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task SetHostGameRunning(bool running)
     {
-        gameRunning=running;
+        gameRunning=running;var idle=IdlePresence.Seconds();
         lock(gate)
         {
             if(Current==null||transferring)return;
             var self=Current.Players.FirstOrDefault(p=>p.Id==LocalId);if(self==null)return;
             string phase=running?"Host in BFME2":"Gathering";
-            if(self.GameRunning==running&&(!IsHost||Current.Phase==phase))return;
-            self.GameRunning=running;if(IsHost)Current.Phase=phase;
+            if(self.GameRunning==running&&self.IdleSeconds==idle&&(!IsHost||Current.Phase==phase))return;
+            self.GameRunning=running;self.IdleSeconds=idle;if(IsHost)Current.Phase=phase;
         }
-        if(IsHost)await BroadcastState();else if(upstream!=null)await upstream.Send(new(){Type="game-status",GameRunning=running});
+        if(IsHost)await BroadcastState();else if(upstream!=null)await upstream.Send(new(){Type="game-status",GameRunning=running,IdleSeconds=idle});
     }
     public async Task Invite(string address)
     {

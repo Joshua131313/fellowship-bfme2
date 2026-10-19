@@ -98,9 +98,9 @@ public sealed partial class BrowserWindow
         foreach(var friend in contacts)
         {
             var presence=Presence.Find(friend.Address,DateTimeOffset.UtcNow);
-            string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";
+            string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.IsAfk?"AFK":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";
             var button=UI.Button("",()=>{if(!Settings.IsBlocked(friend.Address))OpenChat(friend.Address,friend.Name);});button.Style=(Style)Application.Current.FindResource("PlayerRowButton");button.Height=double.NaN;button.Padding=new(12);button.Margin=new(0,0,0,8);button.HorizontalContentAlignment=HorizontalAlignment.Stretch;
-            var name=UI.Text(friend.Name,13,bold:true);var details=UI.Text(state+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:UI.Green);details.Margin=new(0,4,0,0);
+            var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.Text(state+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:UI.Green);details.Margin=new(0,4,0,0);
             button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(name,details));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
         }
     }

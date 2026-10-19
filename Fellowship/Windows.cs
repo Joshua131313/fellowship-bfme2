@@ -261,7 +261,7 @@ public sealed partial class BrowserWindow : Window
     readonly ProgressBar discoveryProgress=new(){Width=180,Height=5,IsIndeterminate=true,Foreground=UI.Brush("#6789F5"),Background=UI.Brush("#263042"),BorderThickness=new(0),Margin=new(0,18,0,0),Visibility=Visibility.Collapsed};
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
-    public PeerDirectory Presence { get; }=new();
+    public PeerDirectory Presence { get; }
     readonly System.Windows.Threading.DispatcherTimer updateTimer=new(){Interval=TimeSpan.FromMinutes(2)};
     bool checkingUpdate;
     DateTimeOffset lastUpdateCheck;
@@ -272,7 +272,7 @@ public sealed partial class BrowserWindow : Window
     readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Bottom};
     public BrowserWindow(Settings? settings=null)
     {
-        Settings=settings??Settings.Load();Settings.SelectDefaultNetwork(PeerService.Interfaces());MessageAlert.Configure(Settings);
+        Settings=settings??Settings.Load();Presence=new(Settings);Settings.SelectDefaultNetwork(PeerService.Interfaces());MessageAlert.Configure(Settings);
         roomSort=new[]{"Title","Mode","Host","Map","PlayerCount","Patch","Ping","Status"}.Contains(Settings.RoomSortColumn)?Settings.RoomSortColumn:"";roomSortDirection=Settings.RoomSortDescending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;
         Settings.NetworkName=PeerService.Interfaces().FirstOrDefault(i=>i.Address==Settings.BindAddress).Name??Settings.NetworkName;
         modeFilter.SelectedItem=modeFilter.Items.Contains(Settings.RoomModeFilter)?Settings.RoomModeFilter:"All modes";
@@ -334,7 +334,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.101   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.102   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -656,7 +656,7 @@ public sealed partial class BrowserWindow : Window
         {
             var result=await PeerService.QueryPeer(ip,source);
             if(source==Peer.Address&&version==queryVersions.GetValueOrDefault(ip))
-                Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow,result.GameRunning);
+                Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow,result.GameRunning,result.IdleSeconds);
         }
         catch{if(source==Peer.Address&&version==queryVersions.GetValueOrDefault(ip))Presence.Failure(ip);}
         finally{peerQueries.Remove(ip);UpdateDiscoveredRooms();}
@@ -710,7 +710,7 @@ public sealed partial class BrowserWindow : Window
         string query=playerSearch.Text.Trim();
         foreach(var peer in peers.Where(p=>SearchableMapBox.Matches(p.Name+" "+p.Address,query)))
         {
-            var details=UI.Stack(UI.Text(peer.Name,12,bold:true),UI.Text(peer.Reconnecting?"Reconnecting":(peer.GameRunning?"In BFME2":"Online")+" · "+peer.Address,10,peer.Reconnecting?UI.Muted:UI.Green));
+            var details=UI.Stack(UI.Text(peer.Name,12,peer.IsAfk?UI.Muted:"#EFF1F5",true),UI.Text(peer.Reconnecting?"Reconnecting":(peer.IsAfk?"AFK":peer.GameRunning?"In BFME2":"Online")+" · "+peer.Address,10,peer.Reconnecting?UI.Muted:UI.Green));
             var button=UI.Button("",()=>{playersPopup.IsOpen=false;OpenChat(peer.Address,peer.Name);});
             button.Style=(Style)Application.Current.FindResource("PlayerRowButton");
             button.Content=UI.Row(UI.Avatar(peer.Name,28),details);button.HorizontalContentAlignment=HorizontalAlignment.Left;
@@ -774,7 +774,7 @@ public sealed partial class BrowserWindow : Window
         var presence=Presence.Find(ip,DateTimeOffset.UtcNow);
         string state=Settings.IsBlocked(ip)?"Blocked":ip==Peer.Address?"You":presence?.Reconnecting==true?"Reconnecting":player!=null||presence!=null?"Online":"Offline";
         var nameText=UI.Text(name,18,bold:true);nameText.TextWrapping=TextWrapping.Wrap;nameText.MaxWidth=280;
-        content.Children.Add(UI.Row(UI.Avatar(name,40),UI.Stack(nameText,UI.Text(state,11,state=="Offline"?UI.Muted:UI.Green))));
+        var activityHeading=UI.Text(state,11,UI.Green);content.Children.Add(UI.Row(UI.Avatar(name,40),UI.Stack(nameText,activityHeading)));
         TextBlock Detail(string label,string value)
         {
             var row=new Grid{Margin=new(0,12,0,0)};row.ColumnDefinitions.Add(new(){Width=new GridLength(100)});row.ColumnDefinitions.Add(new());
@@ -801,6 +801,10 @@ public sealed partial class BrowserWindow : Window
         }
         var pingRow=new Grid{Margin=new(0,12,0,0)};pingRow.ColumnDefinitions.Add(new(){Width=new GridLength(100)});pingRow.ColumnDefinitions.Add(new());
         pingRow.Children.Add(UI.Text("Ping",11,UI.Muted));var pingBadge=new PingBadge{Milliseconds=Latency.Get(ip,Peer.Address)};Grid.SetColumn(pingBadge,1);pingRow.Children.Add(pingBadge);content.Children.Add(pingRow);
+        var activityStatus=Detail("Activity","");var idleDuration=Detail("Idle for","");var onlineSince=Detail("Online since","");var lastSeen=Detail("Last online","");var offlineAt=Detail("Offline detected","");
+        string When(DateTimeOffset? time)=>time?.ToLocalTime().ToString("g")??"Not observed";
+        void UpdateActivity(){var now=DateTimeOffset.UtcNow;var current=Presence.Find(ip,now);var livePlayer=Peer.Current?.Players.FirstOrDefault(p=>p.Address==ip);var idle=ip==Peer.Address?IdlePresence.Seconds():current?.IdleNow(now)??livePlayer?.IdleSeconds;var afk=IdlePresence.IsAfk(idle);var history=Presence.History(ip);activityStatus.Text=current?.Reconnecting==true?"Reconnecting":ip!=Peer.Address&&current==null&&livePlayer==null?"Offline / unreachable":afk?"AFK":"Online";activityHeading.Text=activityStatus.Text;activityHeading.Foreground=UI.Brush(afk||current==null?UI.Muted:UI.Green);nameText.Foreground=UI.Brush(afk?UI.Muted:"#EFF1F5");idleDuration.Text=IdlePresence.Duration(idle);onlineSince.Text=When(ip==Peer.Address?new DateTimeOffset(Process.GetCurrentProcess().StartTime):history?.OnlineSince);lastSeen.Text=When(ip==Peer.Address?now:history?.LastSeen);offlineAt.Text=When(history?.OfflineAt);}
+        UpdateActivity();
         var infoLatency=new PlayerLatency();bool infoClosed=false;
         var pingTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromSeconds(5)};
         async Task UpdatePing()
@@ -808,7 +812,7 @@ public sealed partial class BrowserWindow : Window
             try{await infoLatency.Refresh(new[]{ip},Peer.Address);if(!infoClosed)pingBadge.Milliseconds=infoLatency.Get(ip,Peer.Address);}
             catch(Exception error){Debug.WriteLine("Player info ping: "+error.Message);}
         }
-        pingTimer.Tick+=async(_,_)=>await UpdatePing();
+        pingTimer.Tick+=async(_,_)=>{UpdateActivity();await UpdatePing();};
         w.Loaded+=async(_,_)=>{pingTimer.Start();await UpdatePing();};
         w.Closed+=(_,_)=>{infoClosed=true;pingTimer.Stop();};
         if(player!=null){Detail("Room",(player.Id=="host"?"Host":"Guest")+" · "+(player.Ready?"Ready":"Not ready"));Detail("Selection",(player.Team>0?"Team "+player.Team:"No team")+" · "+(player.Spot>0?"Spot "+player.Spot:"Random spot"));}
@@ -1251,7 +1255,7 @@ public sealed class RoomWindow : Window
         foreach(var p in room.Players)
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=UI.Auto});
-            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,"#E6EAF2",true),new PingBadge{Milliseconds=app.Latency.Get(p.Address,app.Peer.Address),Margin=new(10,0,10,0)},UI.Text(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.Text(p.GameRunning?"   IN BFME2":"   NOT IN GAME",9,p.GameRunning?UI.Green:UI.Muted),UI.Text(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
+            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,IdlePresence.IsAfk(p.IdleSeconds)?UI.Muted:"#E6EAF2",true),UI.Text(IdlePresence.IsAfk(p.IdleSeconds)?"AFK":"",10,UI.Muted,true),new PingBadge{Milliseconds=app.Latency.Get(p.Address,app.Peer.Address),Margin=new(10,0,10,0)},UI.Text(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.Text(p.GameRunning?"   IN BFME2":"   NOT IN GAME",9,p.GameRunning?UI.Green:UI.Muted),UI.Text(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
             var ready=UI.Text($"{(p.Spot>0?"Spot "+p.Spot:"No spot")} · {(p.Team>0?"Team "+p.Team:"No team")}  |  "+(p.Ready?"● Ready":"○ Not ready"),10,p.Ready?UI.Green:MapPreview.TeamColor(p.Team));Grid.SetColumn(ready,1);row.Children.Add(ready);
             var item=new ListBoxItem{Content=row,Padding=new(12,6,12,6),Tag=p};
             var menu=app.PlayerMenu(this,p.Name,p.Address,p);
@@ -1364,10 +1368,10 @@ public sealed class FriendsWindow : Window
             bool isOnline=IsOnline(f.Address);
             if(lastGroup!=isOnline){list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.Text(isOnline?"ONLINE":"OFFLINE / NOT REACHABLE",10,UI.Muted,true),Padding=new(12,16,12,8)});lastGroup=isOnline;}
             var peer=app.Presence.Find(f.Address,DateTimeOffset.UtcNow);
-            string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":peer.GameRunning?"●  In BFME2":peer.Room!=null?"●  In a room":"●  Online";
+            string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":peer.IsAfk?"◌  AFK":peer.GameRunning?"●  In BFME2":peer.Room!=null?"●  In a room":"●  Online";
             if(app.Settings.IsBlocked(f.Address))state+=" · Blocked";
             var nickname=peer?.Name??f.Name;
-            var labels=UI.Stack(UI.Text(nickname,13,"#E4E9F2",true),UI.Text(state+"  ·  "+f.Address,10,state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
+            var labels=UI.Stack(UI.Text(nickname,13,peer?.IsAfk==true?UI.Muted:"#E4E9F2",true),UI.Text(state+"  ·  "+f.Address,10,state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
             list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(nickname),labels),Tag=f});
         }
         if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);

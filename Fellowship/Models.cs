@@ -51,6 +51,7 @@ public sealed class Settings
     public List<string> MutedSounds { get; set; } = [];
     public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }
+    public Dictionary<string,PlayerActivity> PlayerActivityHistory { get; set; } = [];
     public List<Friend> Friends { get; set; } = [];
     public Friend[] BlockedUsers { get; set; } = [];
     public bool IsBlocked(string address)=>BlockedUsers.Any(p=>p.Address==address);
@@ -120,6 +121,7 @@ public sealed class Room
 }
 public sealed class Player
 {
+    public int? IdleSeconds { get; set; }
     public bool GameRunning { get; set; }
     public int PreferredColor { get; set; }
     public int LastSelectedColor { get; set; }
@@ -137,6 +139,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public int? IdleSeconds { get; set; }
     public bool GameRunning { get; set; }
     public int LastSelectedColor { get; set; }
     public bool SupportsIsolation { get; set; }

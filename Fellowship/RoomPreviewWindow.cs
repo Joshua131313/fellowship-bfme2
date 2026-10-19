@@ -31,7 +31,7 @@ public sealed class RoomPreviewWindow : Window
             var row=new DockPanel{Margin=new(0,0,0,6),Background=System.Windows.Media.Brushes.Transparent};
             if(!unavailable&&owner is BrowserWindow browser)row.ContextMenu=browser.PlayerMenu(this,player.Name,player.Address,player);
             var state=UI.Text(player.Ready?"Ready":"Not ready",11,player.Ready?UI.Green:UI.Muted);DockPanel.SetDock(state,Dock.Right);row.Children.Add(state);
-            row.Children.Add(UI.Avatar(player.Name,28));row.Children.Add(UI.Text(player.Name+(player.Id=="host"?"  ·  Host":"")));roster.Children.Add(row);
+            row.Children.Add(UI.Avatar(player.Name,28));row.Children.Add(UI.Text(player.Name+(player.Id=="host"?"  ·  Host":"")+(IdlePresence.IsAfk(player.IdleSeconds)?" · AFK":""),13,IdlePresence.IsAfk(player.IdleSeconds)?UI.Muted:"#EFF1F5"));roster.Children.Add(row);
         }
         content.Children.Add(roster);
         if(owner is BrowserWindow host)
