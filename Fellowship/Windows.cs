@@ -239,7 +239,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.61   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.62   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -646,6 +646,19 @@ public sealed class RoomWindow : Window
             choice.SelectionChanged+=async(_,_)=>await SaveInlineRules();
         }
         AddChoice("MAP",mapChoice,GameInstallation.Maps(app.Settings.GamePath).Cast<object>().ToArray());
+        var roomPresets=new RoomPresetPicker(app.Settings){Margin=new(0,0,0,10)};
+        mapField.Children.Insert(0,roomPresets);
+        roomPresets.Picked+=async preset=>
+        {
+            if(!app.Peer.IsHost||app.Peer.Current is not {} current||savingRules||launching)return;
+            if(!GameInstallation.Maps(app.Settings.GamePath).Any(m=>m.Path==preset.MapPath)){UI.Error("The preset map is not installed: "+preset.Map);return;}
+            var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(current))!;
+            draft.Map=preset.Map;draft.MapPath=preset.MapPath;draft.Match=new(){Resources=preset.Resources,CommandPoints=preset.CommandPoints,CustomHeroes=preset.CustomHeroes,RingHeroes=preset.RingHeroes};
+            savingRules=true;mapField.IsEnabled=inlineRules.IsEnabled=false;
+            try{await app.Peer.EditRoom(draft);ruleStatus.Text="Preset applied";}
+            catch(Exception error){UI.Error(error.Message);}
+            finally{savingRules=false;Refresh();}
+        };
         var capacityLabel=UI.Text("ROOM LIMIT (2–64)",10,UI.Muted,true);capacityLabel.Margin=new(0,12,0,6);inlineRules.Children.Add(capacityLabel);inlineRules.Children.Add(capacityChoice);
         capacityChoice.LostKeyboardFocus+=async(_,_)=>await SaveInlineRules();capacityChoice.KeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await SaveInlineRules();}};
         AddChoice("STARTING RESOURCES",resourceChoice,MatchRules.ResourceValues.Cast<object>().ToArray());

@@ -8,14 +8,14 @@ public sealed class RoomEditor : Window
     public Room? Result { get; private set; }
     public RoomEditor(Window owner,Settings settings,Room initial,Func<Room,Task>? create=null)
     {
-        Owner=owner;var body=UI.Shell(this,"Create room",620,610);WindowStartupLocation=WindowStartupLocation.CenterOwner;
+        Owner=owner;var body=UI.Shell(this,"Create room",620,566);WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var work=SystemParameters.WorkArea;
-        Width=Math.Min(620,work.Width);Height=Math.Min(610,work.Height);
+        Width=Math.Min(620,work.Width);Height=Math.Min(566,work.Height);
         MinWidth=Width;MinHeight=Height;
         // Keep the entire form visible on smaller/high-DPI desktops as well.
-        var panel=new Grid{Width=576,Height=516};
+        var panel=new Grid{Width=576,Height=472};
         body.Children.Add(new Viewbox{Margin=new(20),Stretch=Stretch.Uniform,StretchDirection=StretchDirection.DownOnly,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Top,Child=panel});
-        foreach(double height in new[]{180d,232,38,16,50})panel.RowDefinitions.Add(new(){Height=new(height)});
+        foreach(double height in new[]{136d,232,38,16,50})panel.RowDefinitions.Add(new(){Height=new(height)});
         var presetArea=new StackPanel();panel.Children.Add(presetArea);
         var heading=UI.Text("Create a room",21,"#F1F3F8",true);
         presetArea.Children.Add(heading);
@@ -64,37 +64,31 @@ public sealed class RoomEditor : Window
         var heroes=UI.Row(custom,ring);Grid.SetRow(heroes,2);panel.Children.Add(heroes);
         void UpdateVisibility()=>privacy.ToolTip=privacy.SelectedIndex==1?"Only your saved friends can see and join.":"Everyone on your VPN can see and join.";
         privacy.SelectionChanged+=(_,_)=>UpdateVisibility();UpdateVisibility();
-        var presetList=new ComboBox{Height=34,Margin=new(0,8,0,8),ToolTip="Choose a saved room preset"};
-        var presets=RoomPreset.Defaults(maps).Concat(settings.RoomPresets).ToList();presetList.ItemsSource=new object[]{"Choose a preset…"}.Concat(presets);presetList.SelectedIndex=0;presetArea.Children.Add(presetList);
-        var presetName=new TextBox{MaxLength=40,Width=180,ToolTip="Name for your custom preset"};
+        var presetList=new RoomPresetPicker(settings){Margin=new(0,8,0,8)};presetArea.Children.Add(presetList);
         var layouts=new[]{new TeamLayout("Manual teams",[]),new TeamLayout("1v1",[1,2]),new TeamLayout("2v2",[1,1,2,2]),new TeamLayout("3v3",[1,1,1,2,2,2]),new TeamLayout("4v4",[1,1,1,1,2,2,2,2]),new TeamLayout("FFA",[0,0,0,0,0,0,0,0])};
         var teams=new ComboBox{ItemsSource=layouts,SelectedIndex=0,Width=130,ToolTip="Starting team arrangement; players can change teams in the lobby"};
         int[] selectedTeams=[];
         teams.SelectionChanged+=(_,_)=>{if(teams.SelectedItem is TeamLayout layout)selectedTeams=layout.Teams;};
-        presetList.SelectionChanged+=(_,_)=>
+        presetList.Picked+=preset=>
         {
-            if(presetList.SelectedItem is not RoomPreset preset)return;
             var selected=maps.FirstOrDefault(m=>m.Path==preset.MapPath);
             if(selected==null){UI.Error("The preset map is not installed: "+preset.Map);return;}
             map.SelectedItem=selected;capacity.Text=preset.Capacity.ToString();resources.SelectedItem=preset.Resources;
             command.SelectedItem=factors.First(f=>f.Value==preset.CommandPoints);custom.IsChecked=preset.CustomHeroes;ring.IsChecked=preset.RingHeroes;
-            teams.SelectedItem=layouts.FirstOrDefault(l=>l.Teams.SequenceEqual(preset.Teams));selectedTeams=preset.Teams.ToArray();presetName.Text=preset.BuiltIn?"":preset.Name;
+            teams.SelectedItem=layouts.FirstOrDefault(l=>l.Teams.SequenceEqual(preset.Teams));selectedTeams=preset.Teams.ToArray();
         };
         var store=UI.Button("Save preset",()=>
         {
-            var chosen=(GameMap)map.SelectedItem;var title=presetName.Text.Trim();
+            var title=RoomPresetPicker.PromptName(this);if(title==null)return;var chosen=(GameMap)map.SelectedItem;
             settings.RoomPresets.RemoveAll(p=>p.Name.Equals(title,StringComparison.OrdinalIgnoreCase));
             var preset=new RoomPreset(title,chosen.Name,chosen.Path,int.Parse(capacity.Text),(int)resources.SelectedItem,((Factor)command.SelectedItem).Value,custom.IsChecked==true,ring.IsChecked==true,selectedTeams.ToArray());
-            settings.RoomPresets.Add(preset);settings.Save();presetList.ItemsSource=RoomPreset.Defaults(maps).Concat(settings.RoomPresets).ToList();presetList.SelectedItem=preset;
+            settings.RoomPresets.Add(preset);settings.Save();presetList.Reload();
         });
-        UI.Require(store,()=>!string.IsNullOrWhiteSpace(presetName.Text)&&map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out int n)&&n is >=2 and <=64,()=>"Enter a preset name and a valid room limit.");
-        var remove=UI.Button("Delete",()=>{if(presetList.SelectedItem is RoomPreset p&&!p.BuiltIn){settings.RoomPresets.Remove(p);settings.Save();presetList.ItemsSource=RoomPreset.Defaults(maps).Concat(settings.RoomPresets).ToList();presetName.Clear();}});
-        UI.Require(remove,()=>presetList.SelectedItem is RoomPreset{BuiltIn:false},()=>"Select a custom preset to delete.");
-        presetName.Margin=new(8,0,8,0);store.Margin=new(0,0,8,0);
-        presetArea.Children.Add(UI.Row(UI.Text("Save as",11,UI.Muted),presetName,store,remove));
+        UI.Require(store,()=>map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out int n)&&n is >=2 and <=64,()=>"Select a map and a valid room limit.");
         var teamRow=UI.Row(UI.Text("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,8,0,0);presetArea.Children.Add(teamRow);
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
         var cancel=UI.Button("Cancel",()=>DialogResult=false);cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
+        store.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(store);
         bool creating=false;
         Closing+=(_,e)=>{if(creating)e.Cancel=true;};
         var progress=new ProgressBar{Height=4,Width=160,IsIndeterminate=true,Foreground=UI.Brush("#6789F5"),Background=UI.Brush("#263042"),Visibility=Visibility.Collapsed,HorizontalAlignment=HorizontalAlignment.Left};footer.Children.Add(progress);
@@ -106,7 +100,7 @@ public sealed class RoomEditor : Window
             var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;
-            creating=true;presetArea.IsEnabled=false;setup.IsEnabled=false;heroes.IsEnabled=false;cancel.IsEnabled=false;
+            creating=true;store.Visibility=Visibility.Collapsed;presetArea.IsEnabled=false;setup.IsEnabled=false;heroes.IsEnabled=false;cancel.IsEnabled=false;
             heading.Text="Creating room…";progress.Visibility=Visibility.Visible;
             try
             {
@@ -116,7 +110,7 @@ public sealed class RoomEditor : Window
             }
             finally
             {
-                creating=false;presetArea.IsEnabled=true;setup.IsEnabled=true;heroes.IsEnabled=true;cancel.IsEnabled=true;
+                creating=false;store.Visibility=Visibility.Visible;presetArea.IsEnabled=true;setup.IsEnabled=true;heroes.IsEnabled=true;cancel.IsEnabled=true;
                 heading.Text="Create a room";progress.Visibility=Visibility.Collapsed;
             }
         },true);UI.Require(save,()=>!creating&&!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out var limit)&&limit is >=2 and <=64&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0,()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a room name.":"Select a map, player limit, resources, command points and privacy.");save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
