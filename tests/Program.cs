@@ -1,4 +1,4 @@
-using Fellowship;
+﻿using Fellowship;
 using System.Net;
 using System.Net.Sockets;
 var installation=GameInstallation.Find();
@@ -165,6 +165,13 @@ try
         savedSettings.LastHostedSetup=savedSettings.LastHostedSetup with{Spot=8};
         savedHost.Host(new(){MapPath=@"maps\test.map"});
         if(savedHost.Current!.Players[0].Spot!=0)throw new Exception("Invalid saved spot was restored");
+        savedSettings.LastHostedSetup=savedSettings.LastHostedSetup with{Spot=2,Color=4};
+        savedSettings.PreferredMapSpots[@"maps\test.map"]=1;savedSettings.PreferredColor=7;
+        savedHost.Host(new(){MapPath=@"maps\test.map"});
+        if(savedHost.Current!.Players[0].Spot!=1||savedHost.Current.Players[0].Color!=7||savedHost.Current.Players[0].Team!=3)throw new Exception("Explicit hosting preferences must override last selections");
+        savedHost.Current.Players[0].Spot=2;savedSettings.RememberHost(savedHost.Current);
+        savedHost.Host(new(){MapPath=@"maps\test.map"});
+        if(savedHost.Current!.Players[0].Spot!=1||savedSettings.PreferredSpot(@"maps\test.map")!=1)throw new Exception("Last host selection overwrote explicit preference");
         Console.WriteLine("PASS saved spots are map-specific and validated against current map metadata");
     }
     using var placementHost=new PeerService(new(){Name="Placement host",GamePath=Path.Combine(fixture,"lotrbfme2.exe")});

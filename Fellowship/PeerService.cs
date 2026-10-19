@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -181,6 +181,7 @@ public sealed partial class PeerService : IDisposable
             int team=saved?.Team is >=0 and <=4?saved.Team:0;
             int spot=saved!=null&&saved.MapPath==room.MapPath&&room.Spots.Any(s=>s.Number==saved.Spot)?saved.Spot:0;
             room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
+            room.ApplyPreferences(room.Players[0],settings.PreferredColor,settings.PreferredSpot(room.MapPath),room.MapPath);
         }
         Changed?.Invoke();
         _ = Discover(presence:true);
