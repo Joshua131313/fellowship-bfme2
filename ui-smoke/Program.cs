@@ -188,12 +188,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.91-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.91/Fellowship-0.1.91-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.91",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.92-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.92/Fellowship-0.1.92-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.92",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.91","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.91",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.92","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.92",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -217,7 +217,7 @@ class Program
   if(preview!=null){Directory.CreateDirectory("dist");var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(preview));using var output=File.Create("dist/preview-overhead.png");encoder.Save(output);}
   Console.WriteLine("PASS installed map preview and update version/source validation");
   Directory.CreateDirectory("dist");
-  var app=new App();app.InitializeComponent();
+  var app=new App();app.InitializeComponent();Appearance.Apply("Dark");
   var selectPreview=new System.Windows.Controls.ComboBox{Style=(Style)app.FindResource(typeof(System.Windows.Controls.ComboBox)),Width=240,ItemsSource=new[]{"Radmin VPN","Ethernet 6","ZeroTier","Wi-Fi","Loopback"},SelectedIndex=0};
   selectPreview.Measure(new Size(240,34));selectPreview.Arrange(new Rect(0,0,240,34));selectPreview.ApplyTemplate();
   typeof(App).GetMethod("SelectLoaded",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(app,new object[]{selectPreview,new RoutedEventArgs()});
@@ -271,7 +271,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.91"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.91/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.92"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.92/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -298,7 +298,7 @@ class Program
   var rowStyle=(Style)Application.Current.FindResource(typeof(System.Windows.Controls.DataGridRow));
   var testRow=new System.Windows.Controls.DataGridRow{Style=rowStyle};
   if(((SolidColorBrush)testRow.Background).Color.ToString()!="#FF171A20")throw new Exception("Room row is not dark");
-  testRow.IsSelected=true;if(((SolidColorBrush)testRow.Background).Color.ToString()!="#FF273750")throw new Exception("Selected room row is not dark");
+  testRow.IsSelected=true;if(((SolidColorBrush)testRow.Background).Color.ToString()!="#FF293A58")throw new Exception("Selected room row is not dark");
   var socialPreview=new BrowserWindow(demoSettings);
   typeof(BrowserWindow).GetMethod("SelectDashboard",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(socialPreview,new object[]{"Friends"});
   Render(socialPreview,"dist/preview-dashboard-friends.png");
@@ -350,7 +350,7 @@ class Program
   Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   Render(browser.CreatePlayerInfo(browser,"Aragorn","26.42.214.47",new Player{Name="Aragorn",Team=2,Spot=3,Ready=true}),"dist/preview-player-info.png");
   Render(browser.CreateProfileEditor(browser),"dist/preview-profile-editor.png");
-  var updatePreview=new UpdateProgressWindow("0.1.91");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.92");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -359,7 +359,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.91\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.92\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
@@ -437,6 +437,24 @@ class Program
   foreach(var resource in typeof(App).Assembly.GetManifestResourceNames().Where(n=>n.EndsWith(".wav")))
   {using var stream=typeof(App).Assembly.GetManifestResourceStream(resource)!;using var bytes=new MemoryStream();stream.CopyTo(bytes);scale.Invoke(null,new object[]{bytes.ToArray(),0});scale.Invoke(null,new object[]{bytes.ToArray(),50});}
   tabsSettings.Appearance="Light";Appearance.Apply("Light");
+  var interactionPanel=new System.Windows.Controls.StackPanel{Margin=new Thickness(24),Background=UI.Brush("#101216")};
+  interactionPanel.Children.Add(UI.Text("Light theme interaction states",20,bold:true));
+  var hoverKey=(DependencyPropertyKey)typeof(UIElement).GetField("IsMouseOverPropertyKey",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic)!.GetValue(null)!;
+  foreach(var label in new[]{"Normal","Hover","Selected navigation"}){
+    var button=UI.Button(label,()=>{});button.Margin=new Thickness(0,8,0,0);
+    if(label=="Hover")button.SetValue(hoverKey,true);
+    if(label=="Selected navigation")button.Tag="SelectedNavigation";
+    interactionPanel.Children.Add(button);
+  }
+  var selectedOption=new System.Windows.Controls.ComboBoxItem{Content="Selected dropdown option",IsSelected=true};interactionPanel.Children.Add(selectedOption);
+  var selectedList=new System.Windows.Controls.ListBoxItem{Content="Selected friend",IsSelected=true};interactionPanel.Children.Add(selectedList);
+  Render(new Window{Width=480,Height=320,Content=interactionPanel},"dist/preview-interactions-light.png");
+  selectedOption.ApplyTemplate();selectedList.ApplyTemplate();
+  foreach(var control in new System.Windows.Controls.Control[]{selectedOption,selectedList}){
+    var frame=(System.Windows.Controls.Border)control.Template.FindName("Frame",control);
+    if(((SolidColorBrush)frame.Background).Color.ToString()!="#FFDFE9FF")throw new Exception("Selected control palette differs");
+  }
+  if(((SolidColorBrush)testRow.Background).Color.ToString()!="#FFDFE9FF")throw new Exception("Existing selected row did not update with theme");
   var lightBrowser=new BrowserWindow(tabsSettings);SelectTab(lightBrowser,"Settings");Render(lightBrowser,"dist/preview-settings-light.png");lightBrowser.Peer.Dispose();
   var lightPrefs=new BrowserWindow(tabsSettings);SelectTab(lightPrefs,"Game preferences");Render(lightPrefs,"dist/preview-preferences-light.png");lightPrefs.Peer.Dispose();
   Appearance.Apply("Dark");

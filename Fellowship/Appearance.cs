@@ -133,6 +133,14 @@ public static class Appearance
         ["#F3F4F8"]="#182438",
         ["#FFFFFF"]="#182438",
     };
+    // Shared interaction roles keep every control on the same light-mode palette.
+    static readonly (string Name,string Dark,string Light)[] states=[
+        ("InteractionHover","#303640","#EDF3FF"),
+        ("InteractionSelected","#293A58","#DFE9FF"),
+        ("InteractionPressed","#24324E","#D2E0FA"),
+        ("InteractionBorder","#4B6599","#BFCEEB"),
+        ("InteractionText","#BFD1FF","#3158B0"),
+        ("InteractionFocus","#83A5FF","#3158B0")];
     static string mode="Dark";
     static bool isLight;
     static bool watching;
@@ -159,6 +167,16 @@ public static class Appearance
             var brush=(SolidColorBrush)Brush(pair.Key);
             brushes[pair.Key].Source.Color=(Color)ColorConverter.ConvertFromString(isLight?pair.Value:pair.Key);
             if(Application.Current!=null)Application.Current.Resources["Theme"+pair.Key[1..]]=brush;
+        }
+        if(Application.Current!=null)foreach(var state in states)
+        {
+            if(!brushes.TryGetValue(state.Name,out var entry)){
+                var source=new Swatch();var brush=new SolidColorBrush();
+                System.Windows.Data.BindingOperations.SetBinding(brush,SolidColorBrush.ColorProperty,new System.Windows.Data.Binding(nameof(Swatch.Color)){Source=source});
+                entry=(brush,source);brushes[state.Name]=entry;
+            }
+            entry.Source.Color=(Color)ColorConverter.ConvertFromString(isLight?state.Light:state.Dark);
+            Application.Current.Resources[state.Name]=entry.Brush;
         }
         if(!watching&&Application.Current!=null)
         {

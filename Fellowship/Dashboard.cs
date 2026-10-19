@@ -78,7 +78,7 @@ public sealed partial class BrowserWindow
             }
             dashboardPreferences.Children.Clear();dashboardPreferences.Children.Add(content);
         }
-        foreach(var pair in navigation){pair.Value.Background=UI.Brush(pair.Key==page?"#293853":"#151A21");pair.Value.BorderBrush=UI.Brush(pair.Key==page?"#4B6599":"#151A21");pair.Value.Foreground=UI.Brush(pair.Key==page?"#7395FF":"#EFF1F5");}
+        foreach(var pair in navigation){bool selected=pair.Key==page;pair.Value.Tag=selected?"SelectedNavigation":null;pair.Value.Background=UI.Brush("#151A21");pair.Value.BorderBrush=UI.Brush("#151A21");if(selected)pair.Value.SetResourceReference(Control.ForegroundProperty,"InteractionText");else pair.Value.Foreground=UI.Brush("#EFF1F5");}
         RenderDashboard();
     }
     void RenderDashboard()
