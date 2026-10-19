@@ -292,7 +292,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.83   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.84   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -829,8 +829,16 @@ public sealed class RoomWindow : Window
         chatScroll=UI.Scroll(messages);UI.At(chat,chatScroll,1);
         var compose=new Grid{Margin=new(12)};compose.ColumnDefinitions.Add(new());compose.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var input=new TextBox{MaxLength=2000,ToolTip="Message your room · Enter to send",Margin=new(0,0,8,0)};
-        async Task Send(){if(string.IsNullOrWhiteSpace(input.Text))return;await app.Peer.Say(input.Text);if(app.Settings.MessageSounds)MessageAlert.Effect("sent");input.Clear();}
-        input.KeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;try{await Send();}catch(Exception ex){UI.Error(ex.Message);}}};
+        bool sending=false;
+        async Task Send()
+        {
+            if(sending||string.IsNullOrWhiteSpace(input.Text))return;
+            sending=true;input.IsReadOnly=true;string text=input.Text;
+            try{await app.Peer.Say(text);if(app.Settings.MessageSounds)MessageAlert.Effect("sent");input.Clear();chatHead.Text="ROOM CHAT";}
+            catch(Exception error){chatHead.Text="Message not sent · reconnect and retry";chatHead.ToolTip=error.Message;}
+            finally{sending=false;input.IsReadOnly=false;input.Focus();}
+        }
+        input.PreviewKeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await Send();}};
         compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);UI.At(chat,compose,2);UI.At(left,UI.Card(chat,"#191D24",0),2);columns.Children.Add(left);
         var right=new StackPanel();right.Children.Add(UI.Text("MATCH SETUP",10,UI.Muted,true));
         setupSummary.Margin=new(0,12,0,0);
@@ -1246,10 +1254,30 @@ public sealed class ChatWindow : Window
         Append("SYSTEM","This conversation stays between these app windows. Messages aren't saved when you close the chat.");
         var composer=new Grid{Margin=new(18,8,18,10)};composer.ColumnDefinitions.Add(new());composer.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var input=new TextBox{MaxLength=2000,ToolTip="Write a message · Enter to send",Margin=new(0,0,8,0)};composer.Children.Add(input);
-        async Task Send(){if(string.IsNullOrWhiteSpace(input.Text))return;await app.Peer.SendPrivate(address,input.Text);if(app.Settings.MessageSounds)MessageAlert.Effect("sent");Append("You",input.Text);input.Clear();}
-        input.KeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;try{await Send();}catch(Exception ex){UI.Error(ex.Message);}}};
-        var send=UI.Require(UI.AsyncButton("Send  ↑",Send,true),()=>!string.IsNullOrWhiteSpace(input.Text)&&UI.ValidAddress(address)&&!app.Settings.IsBlocked(address),()=>app.Settings.IsBlocked(address)?"Unblock this player before messaging.":"Type a message and use a valid recipient VPN address.");send.Margin=new(0);Grid.SetColumn(send,1);composer.Children.Add(send);UI.At(body,composer,2);
-        var hint=UI.Text("ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE",9,UI.Muted);hint.Margin=new(20,0,20,16);UI.At(body,hint,3);
+        var hint=UI.Text("ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE",10,UI.Muted);hint.Margin=new(20,0,20,16);UI.At(body,hint,3);
+        bool sending=false;
+        async Task Send()
+        {
+            if(sending||string.IsNullOrWhiteSpace(input.Text))return;
+            if(app.Settings.IsBlocked(address)){hint.Text="Unblock this player before messaging.";return;}
+            if(!UI.ValidAddress(address)){hint.Text="Choose a valid recipient VPN address.";return;}
+            string text=input.Text;sending=true;input.IsReadOnly=true;
+            hint.Text="Sending…";hint.Foreground=UI.Brush(UI.Muted);hint.ToolTip=null;
+            try
+            {
+                await app.Peer.SendPrivate(address,text);
+                if(app.Settings.MessageSounds)MessageAlert.Effect("sent");Append("You",text);input.Clear();
+                hint.Text="Message sent · Enter to send";hint.Foreground=UI.Brush(UI.Green);
+            }
+            catch(Exception error)
+            {
+                hint.Text="Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry.";
+                hint.Foreground=UI.Brush("#E5B77A");hint.ToolTip=error.Message;
+            }
+            finally{sending=false;input.IsReadOnly=false;input.Focus();}
+        }
+        input.PreviewKeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await Send();}};
+        var send=UI.Require(UI.AsyncButton("Send  ↑",Send,true),()=>!sending&&!string.IsNullOrWhiteSpace(input.Text)&&UI.ValidAddress(address)&&!app.Settings.IsBlocked(address),()=>app.Settings.IsBlocked(address)?"Unblock this player before messaging.":"Type a message and use a valid recipient VPN address.");send.Margin=new(0);Grid.SetColumn(send,1);composer.Children.Add(send);UI.At(body,composer,2);
     }
     public void Receive(string name,string text)
     {
