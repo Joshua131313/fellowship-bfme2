@@ -139,7 +139,8 @@ await Task.Delay(100);
 if ((await PeerService.Query("127.0.0.1")) == null) throw new Exception("Invalid frame killed listener");
 Console.WriteLine("PASS oversized frame rejected; listener survives");
 host.Leave();
-await Until(() => guest.Current == null, "host closure disconnects guest");
+await Until(() => guest.IsHost, "lost host promotes designated successor");
+guest.Leave();
 // A synthetic BIG archive keeps placement tests independent of installed game files.
 var fixture=Path.Combine(Path.GetTempPath(),"Fellowship-placement-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(fixture);
 try
@@ -310,7 +311,7 @@ using(var blockedGuest=new PeerService(Settings.InMemory()))
  await blockedHost.SetBlocked("Guest","127.0.0.71",true);
  await Until(()=>blockedGuest.Current==null&&blockedHost.Current!.Players.Count==1,"blocking disconnects existing guest");
  async Task Denied(Func<Task> action){bool denied=false;try{await action();}catch(Exception e) when(e is IOException or SocketException or InvalidOperationException){denied=true;}if(!denied)throw new Exception("Blocked action succeeded");}
- await Denied(async()=>{await PeerService.QueryPeer("127.0.0.70","127.0.0.71");});
+ if((await PeerService.QueryPeer("127.0.0.70","127.0.0.71")).Room!=null)throw new Exception("Blocked peer can see host room");
  await Denied(()=>blockedGuest.Join("127.0.0.70"));await Denied(()=>blockedGuest.SendPrivate("127.0.0.70","blocked message"));
  await Denied(()=>blockedHost.SendPrivate("127.0.0.71","outgoing blocked"));
  await blockedGuest.Discover("127.0.0.70",presence:true);await Task.Delay(250);
@@ -329,10 +330,12 @@ using(var otherGuest=new PeerService(Settings.InMemory()))
  await blockingGuest.Join("127.0.0.72");await otherGuest.Join("127.0.0.72");
  await Until(()=>blockingGuest.Current?.Players.Count==3,"shared room roster");
  await blockingGuest.SetBlocked("Other","127.0.0.74",true);
- await Until(()=>blockingGuest.Current==null&&sharedHost.Current?.Players.Count==2,"blocking as guest leaves shared room");
+ await Until(()=>blockingGuest.Current?.Players.Count==3&&sharedHost.Current?.Players.Count==3,"blocked guests can share another host room");
+ bool hidden=false;blockingGuest.RoomChat+=(text,blocked)=>{if(text.Contains("hidden test"))hidden=blocked;};
+ await otherGuest.Say("hidden test");await Until(()=>hidden,"blocked room message marked for reveal");
  await blockingGuest.Join("127.0.0.72");await Task.Delay(200);
- if(blockingGuest.Current!=null)throw new Exception("Blocked player admitted through third-party room");
- Console.WriteLine("PASS third-party rooms cannot bypass local block policy");
+ if(blockingGuest.Current==null)throw new Exception("Shared room rejected blocked co-player");
+ Console.WriteLine("PASS shared-room blocking hides messages without removing players");
 }
 
 var nicknameSettings=Settings.InMemory();
@@ -347,4 +350,22 @@ using(var nameGuest=new PeerService(Settings.InMemory()))
  if(System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(nicknameSettings))!.Name!="New Host")throw new Exception("Nickname did not persist");
  if((await PeerService.QueryPeer("127.0.0.75","127.0.0.76")).Name!="New Host")throw new Exception("Discovery nickname stale");
  Console.WriteLine("PASS nickname persistence, live guest/host roster and discovery without readiness reset");
+}
+
+using(var failedHost=new PeerService(new(){Name="Failed host"}))
+using(var recoveryHost=new PeerService(new(){Name="Recovery host"}))
+using(var recoveryGuest=new PeerService(new(){Name="Recovery guest"}))
+{
+ failedHost.Start("127.0.0.81");recoveryHost.Start("127.0.0.82");recoveryGuest.Start("127.0.0.83");
+ failedHost.Host(new(){Title="Crash recovery",Match=new(){Resources=2000,CommandPoints=400}});
+ await recoveryHost.Join(failedHost.Address);await recoveryGuest.Join(failedHost.Address);
+ await recoveryGuest.SelectPlacement(team:3,color:4);
+ await Until(()=>recoveryHost.Current?.Players.Count==3,"recovery roster replicated");
+ var id=failedHost.Current!.Id;
+ failedHost.Leave();
+ await Until(()=>recoveryHost.IsHost&&recoveryGuest.Current?.HostAddress==recoveryHost.Address&&recoveryHost.Current?.Players.Count==2,"lost-host recovery reconnects surviving guest");
+ if(recoveryHost.Current!.Id!=id||recoveryHost.Current.Match.Resources!=2000||recoveryHost.Current.Players.Single(p=>p.Name=="Recovery guest").Team!=3)throw new Exception("Recovery lost room selections");
+ await recoveryHost.Kick(recoveryGuest.LocalId);
+ await Until(()=>recoveryGuest.Current==null,"kicked guest must not recover or recreate room");
+ recoveryHost.Leave();
 }

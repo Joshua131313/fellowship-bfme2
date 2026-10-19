@@ -21,10 +21,12 @@ public sealed partial class PeerService : IDisposable
     Connection? upstream;
     public Room? Current { get; private set; }
     public bool IsHost { get; private set; }
+    string recoveryToken="";
     public string LocalId { get; private set; } = "host";
     public string Address { get; private set; } = "";
     public event Action? Changed;
     public event Action<string>? Chat;
+    public event Action<string,bool>? RoomChat;
     public event Action<string, string, string>? PrivateMessage;
     public event Action? LaunchRequested;
     public event Action<string>? Notice;
@@ -65,11 +67,11 @@ public sealed partial class PeerService : IDisposable
             var hello = await c.Read(timeout.Token);
             if (hello == null) return;
             var remoteAddress=((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString();
-            if(settings.IsBlocked(remoteAddress)){await c.Send(new(){Type="error",Text="This peer is unavailable."});return;}
+            if(settings.IsBlocked(remoteAddress)&&hello.Type!="query"){await c.Send(new(){Type="error",Text="This peer is unavailable."});return;}
             if (hello.Type == "query")
             {
                 Room? snapshot;
-                lock (gate) snapshot = !IsHost || Current == null || !CanSee(remoteAddress) ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
+                lock (gate) snapshot = !IsHost || Current == null || (!CanSee(remoteAddress)||settings.IsBlocked(remoteAddress)) ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
                 await c.Send(new() { Type = "room", Room = snapshot, Name=settings.Name }); return;
             }
             if (hello.Type == "dm")
@@ -118,7 +120,7 @@ public sealed partial class PeerService : IDisposable
                 {
                     string? name;
                     lock (gate) name = Current?.Players.FirstOrDefault(p => p.Id == id)?.Name;
-                    await SendRoomChat(name ?? "Player", msg.Text);
+                    await SendRoomChat(name ?? "Player", msg.Text,id);
                 }
                 else if(msg.Type=="placement")
                 {
@@ -165,6 +167,7 @@ public sealed partial class PeerService : IDisposable
         lock (gate)
         {
             IsHost = true; LocalId = "host"; Current = room;
+            recoveryToken=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
             room.Isolated=false;
             room.Spots=preparedSpots??GameMapData.Spots(settings.GamePath,room.MapPath);
             room.Host = settings.Name;room.HostAddress=Address;
@@ -190,8 +193,10 @@ public sealed partial class PeerService : IDisposable
             LocalId = welcome.Id;
             upstream = c;
             _ = ReceiveHost(c);
+            while(ReferenceEquals(upstream,c)&&Current==null&&!timeout.IsCancellationRequested)await Task.Delay(25);
+            if(Current==null||!ReferenceEquals(upstream,c))throw new IOException("The host did not finish sending the room. Please retry.");
         }
-        catch { c.Dispose(); throw; }
+        catch { if(ReferenceEquals(upstream,c)){upstream=null;Current=null;}c.Dispose(); throw; }
     }
     async Task ReceiveHost(Connection c)
     {
@@ -202,11 +207,10 @@ public sealed partial class PeerService : IDisposable
                 // A disposed connection can still finish a buffered read after switching rooms.
                 // Never let its final messages replace the new room or launch its game.
                 if(!ReferenceEquals(upstream,c))break;
-                if(msg.Room?.Players.Any(p=>settings.IsBlocked(p.Address))==true){Leave();Notice?.Invoke("Left the room because a blocked player is present.");return;}
                 if(msg.Type=="become-host")
                 {
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
-                    lock(gate){upstream=null;Current=msg.Room;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);}
+                    lock(gate){upstream=null;Current=msg.Room;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);recoveryToken=msg.Token;}
                     await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId});
                     _ = Discover(presence:true);Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
                 }
@@ -218,9 +222,9 @@ public sealed partial class PeerService : IDisposable
                 }
                 if(msg.Type=="kicked")
                 {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
-                if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room)) { Current = msg.Room;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
+                if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room)) { Current = msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
-                if (msg.Type == "chat") Chat?.Invoke(msg.Text);
+                if (msg.Type == "chat") DeliverRoomChat(msg.Text,msg.Id);
                 if (msg.Type == "launch") LaunchRequested?.Invoke();
             }
         }
@@ -229,8 +233,12 @@ public sealed partial class PeerService : IDisposable
         {
             if (ReferenceEquals(upstream, c))
             {
-                upstream = null; Current = null; Changed?.Invoke();
-                Notice?.Invoke("Connection to the host ended. You can join again when the host is available.");
+                upstream = null;
+                if(!await RecoverHost())
+                {
+                    Current = null; Changed?.Invoke();
+                    Notice?.Invoke("Connection to the host ended. Rejoin from the room browser.");
+                }
             }
             c.Dispose();
         }
@@ -275,7 +283,6 @@ public sealed partial class PeerService : IDisposable
         if(blocked&&affected.Length>0)
         {
             if(IsHost){foreach(var player in affected)await Kick(player.Id);}
-            else{Leave();Notice?.Invoke("Left the shared room after blocking this player.");}
         }
         Changed?.Invoke();
     }
@@ -353,11 +360,18 @@ public sealed partial class PeerService : IDisposable
         await BroadcastState();
     }
     public Task Say(string text) => IsHost ? SendRoomChat(settings.Name, text) : upstream?.Send(new() { Type = "chat", Text = Clean(text, 2000) }) ?? Task.CompletedTask;
-    async Task SendRoomChat(string name, string text)
+    async Task SendRoomChat(string name, string text,string id="host")
     {
         var line = $"{name}   {Clean(text, 2000)}";
-        Chat?.Invoke(line);
-        await Broadcast(new() { Type = "chat", Text = line });
+        DeliverRoomChat(line,id);
+        await Broadcast(new() { Type = "chat", Text = line,Id=id });
+    }
+    void DeliverRoomChat(string text,string id)
+    {
+        var sender=Current?.Players.FirstOrDefault(p=>p.Id==id);
+        bool blocked=sender!=null?settings.IsBlocked(sender.Address):Current?.Players.Any(p=>settings.IsBlocked(p.Address)&&text.StartsWith(p.Name+"   ",StringComparison.Ordinal))==true;
+        RoomChat?.Invoke(text,blocked);
+        if(!blocked)Chat?.Invoke(text);
     }
     public async Task SetHostGameRunning(bool running)
     {
@@ -392,7 +406,7 @@ public sealed partial class PeerService : IDisposable
             snapshot = Current == null ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
         }
         Changed?.Invoke();
-        await Broadcast(new() { Type = "room", Room = snapshot });
+        await Broadcast(new() { Type = "room", Room = snapshot,Token=recoveryToken });
         await Discover(presence:true);
     }
     async Task Broadcast(Wire msg)

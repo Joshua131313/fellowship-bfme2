@@ -25,8 +25,12 @@ public partial class App : Application
     RegisteredWaitHandle? activationWait;
     TrayIcon? tray;
     public bool IsQuitting { get; private set; }
-    public void Quit()
+    bool quitPending;
+    public async void Quit()
     {
+        if(quitPending)return;quitPending=true;
+        try{if(MainWindow is BrowserWindow browser)await browser.CloseRoom();}
+        catch(Exception error){quitPending=false;UI.Error("Could not transfer the room: "+error.Message);return;}
         IsQuitting=true;
         tray?.Dispose();tray=null;
         Shutdown();

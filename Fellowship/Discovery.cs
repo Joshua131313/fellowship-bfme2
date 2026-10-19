@@ -29,7 +29,7 @@ public sealed partial class PeerService
                 var packet=await discovery!.ReceiveAsync(stop.Token);
                 if(packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==Address)continue;
                 var remote=packet.RemoteEndPoint.Address.ToString();
-                if(settings.IsBlocked(remote))continue;
+                if(settings.IsBlocked(remote)&&!settings.Friends.Any(f=>f.Address==remote))continue;
                 var text=Encoding.ASCII.GetString(packet.Buffer);
                 if(text==PresenceProbe)
                 {
