@@ -285,6 +285,10 @@
   </ControlTemplate.Triggers>
  </ControlTemplate></Setter.Value></Setter>
 </Style>
+<Style x:Key="ChatMessageText" TargetType="TextBox">
+ <Setter Property="IsReadOnly" Value="True"/><Setter Property="IsReadOnlyCaretVisible" Value="False"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="AcceptsReturn" Value="True"/><Setter Property="Cursor" Value="IBeam"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="SelectionBrush" Value="{DynamicResource InteractionSelected}"/><Setter Property="SelectionOpacity" Value="0.8"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><ScrollViewer x:Name="PART_ContentHost" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled"/></ControlTemplate></Setter.Value></Setter>
+</Style>
 <Style TargetType="Slider"><Setter Property="IsMoveToPointEnabled" Value="True"/><Setter Property="Cursor" Value="Hand"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider">
   <Grid Margin="8,0" Background="Transparent"><Track x:Name="PART_Track">

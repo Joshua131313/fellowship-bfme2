@@ -63,6 +63,15 @@ public static class UI
     }
     public static StackPanel Row(params UIElement[] items) { var p = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center }; foreach (var i in items) p.Children.Add(i); return p; }
     public static StackPanel Stack(params UIElement[] items) { var p = new StackPanel(); foreach (var i in items) p.Children.Add(i); return p; }
+    public static TextBox ChatText(string text,int size=12,string color="#DEE3ED")
+    {
+        var message=new TextBox{Text=text,Style=(Style)Application.Current.FindResource("ChatMessageText"),FontSize=size,Foreground=Brush(color)};
+        void Copy(string value){try{if(value.Length>0)Clipboard.SetText(value);}catch(System.Runtime.InteropServices.ExternalException){message.ToolTip="Clipboard is busy. Try copying again.";}}
+        var menu=new ContextMenu();menu.Items.Add(MenuAction("Copy message",()=>Copy(message.Text)));
+        menu.Items.Add(MenuAction("Copy selected text",()=>Copy(message.SelectedText),()=>message.SelectionLength>0));
+        menu.Items.Add(MenuAction("Select all",()=>{message.Focus();message.SelectAll();}));message.ContextMenu=menu;
+        return message;
+    }
     public static Border Card(UIElement child, string background = "#1B1F26", int padding = 16) => new() { Background = Brush(background), BorderBrush = Brush("#2C313B"), BorderThickness = new(1), CornerRadius = new(8), Padding = new(padding), Child = child };
     public static Border Badge(string text, string color = Accent) => new() { Background = Brush("#242D3E"), CornerRadius = new(4), Padding = new(8,4,8,4), Child = Text(text, 10, color, true), VerticalAlignment = VerticalAlignment.Center };
     public static Border Avatar(string name, int size = 34) => new() { Width = size, Height = size, CornerRadius = new(8), Background = Brush("#2C3854"), Margin = new(0,0,10,0), Child = new TextBlock { Text = string.IsNullOrWhiteSpace(name) ? "?" : name[..1].ToUpperInvariant(), FontSize = size * .42, Foreground = Brush("#B9CCFF"), FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } };
@@ -325,7 +334,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.97   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.98   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1207,14 +1216,14 @@ public sealed class RoomWindow : Window
         if(!blocked){Append(name,body);return;}
         var panel=new StackPanel{Margin=new(0,0,0,12)};
         panel.Children.Add(UI.Text(name+" · Blocked",10,UI.Muted,true));
-        var message=UI.Text(body,12);message.Visibility=Visibility.Collapsed;message.Margin=new(0,6,0,6);
+        var message=UI.ChatText(body,12);message.Visibility=Visibility.Collapsed;message.Margin=new(0,6,0,6);
         Button? reveal=null;reveal=UI.Button("Show blocked message",()=>{bool show=message.Visibility!=Visibility.Visible;message.Visibility=show?Visibility.Visible:Visibility.Collapsed;reveal!.Content=show?"Hide message":"Show blocked message";});reveal.HorizontalAlignment=HorizontalAlignment.Left;reveal.Margin=new(0,6,0,0);
         panel.Children.Add(message);panel.Children.Add(reveal);messages.Children.Add(panel);
         if(messages.Children.Count>200)messages.Children.RemoveAt(0);chatScroll?.ScrollToEnd();
     });
     void Append(string name,string text)
     {
-        var line=UI.Stack(UI.Text(name+"  ·  "+DateTime.Now.ToString("HH:mm"),10,name=="SYSTEM"?UI.Muted:UI.Accent,true),UI.Text(text,12,name=="SYSTEM"?UI.Muted:"#DEE3ED"));line.Margin=new(0,0,0,12);line.Children[1].SetValue(MarginProperty,new Thickness(0,4,0,0));messages.Children.Add(line);if(messages.Children.Count>200)messages.Children.RemoveAt(0);chatScroll?.ScrollToEnd();
+        var line=UI.Stack(UI.Text(name+"  ·  "+DateTime.Now.ToString("HH:mm"),10,name=="SYSTEM"?UI.Muted:UI.Accent,true),UI.ChatText(text,12,name=="SYSTEM"?UI.Muted:"#DEE3ED"));line.Margin=new(0,0,0,12);line.Children[1].SetValue(MarginProperty,new Thickness(0,4,0,0));messages.Children.Add(line);if(messages.Children.Count>200)messages.Children.RemoveAt(0);chatScroll?.ScrollToEnd();
     }
     HashSet<string>? soundRoster;
     public void Refresh()
@@ -1447,7 +1456,7 @@ public sealed class ChatWindow : Window
     }
     public void Append(string name,string text)
     {
-        bool mine=name=="You";var stack=UI.Stack(UI.Text(name+"  ·  "+DateTime.Now.ToString("HH:mm"),10,UI.Muted),UI.Text(text,13,"#E7EBF3"));stack.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
+        bool mine=name=="You";var stack=UI.Stack(UI.Text(name+"  ·  "+DateTime.Now.ToString("HH:mm"),10,UI.Muted),UI.ChatText(text,13,"#E7EBF3"));stack.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
         var bubble=UI.Card(stack,mine?"#263657":"#1E232C",12);bubble.Margin=new(0,0,0,12);bubble.MaxWidth=365;bubble.HorizontalAlignment=mine?HorizontalAlignment.Right:HorizontalAlignment.Left;messages.Children.Add(bubble);if(messages.Children.Count>200)messages.Children.RemoveAt(0);scroll.ScrollToEnd();
     }
 }
