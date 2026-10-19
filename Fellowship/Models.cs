@@ -97,6 +97,7 @@ public sealed class Room
 }
 public sealed class Player
 {
+    public bool GameRunning { get; set; }
     public int PreferredColor { get; set; }
     public int LastSelectedColor { get; set; }
     public string Id { get; set; } = "";
@@ -113,6 +114,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public bool GameRunning { get; set; }
     public int LastSelectedColor { get; set; }
     public bool SupportsIsolation { get; set; }
     public Dictionary<string,int> PreferredMapSpots { get; set; } = new();

@@ -159,16 +159,22 @@ class Program
   var arranged=new Room{InitialTeams=defaultPresets[0].Teams};for(int j=0;j<6;j++)arranged.Players.Add(new(){Team=arranged.NextTeam()});
   if(arranged.Players.Count(p=>p.Team==1)!=3||arranged.Players.Count(p=>p.Team==2)!=3||arranged.NextTeam()!=0)throw new Exception("Starting teams were not assigned correctly");
   Console.WriteLine("PASS default preset maps/rules, custom persistence and 3v3 team allocation");
+  presetSettings.Friends.Add(new("Friend","26.1.2.3"));presetSettings.BlockedUsers=[new("Blocked","26.1.2.4")];presetSettings.PreferredColor=7;
+  var backup=SettingsBackup.Parse(SettingsBackup.Export(presetSettings));var restoredBackup=Settings.InMemory();restoredBackup.GamePath="local-game";restoredBackup.BindAddress="26.8.8.8";SettingsBackup.Restore(restoredBackup,backup);
+  if(restoredBackup.PreferredColor!=7||restoredBackup.Friends.Count!=1||restoredBackup.BlockedUsers.Length!=1||restoredBackup.RoomPresets.Count!=1||restoredBackup.GamePath!="local-game"||restoredBackup.BindAddress!="26.8.8.8")throw new Exception("Backup restore lost data or local paths");
+  try{SettingsBackup.Parse("{\"Format\":99}");throw new Exception("Invalid backup accepted");}catch(System.IO.InvalidDataException){}
+  Console.WriteLine("PASS backup roundtrip, local path preservation and unsupported format rejection");
+
   Console.WriteLine("PASS map bounds, slot numbers and vertical coordinate conversion");
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.65-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.65/Fellowship-0.1.65-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.65",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.66-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.66/Fellowship-0.1.66-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.66",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.65","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.65",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.66","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.66",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -221,7 +227,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.65"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.65/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.66"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.66/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -240,7 +246,7 @@ class Program
   Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   Render(browser.CreatePlayerInfo(browser,"Aragorn","26.42.214.47",new Player{Name="Aragorn",Team=2,Spot=3,Ready=true}),"dist/preview-player-info.png");
   Render(browser.CreateProfileEditor(browser),"dist/preview-profile-editor.png");
-  var updatePreview=new UpdateProgressWindow("0.1.65");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.66");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});

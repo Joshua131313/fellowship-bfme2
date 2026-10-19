@@ -453,3 +453,18 @@ if(File.Exists(installation))
  room.ApplyColorChoice(colorGuest,2,3);if(colorGuest.Color!=0)throw new Exception("Conflicting colors must use random");
  Console.WriteLine("PASS color preference, last-selected fallback, random and newest-first priority");
 }
+
+{
+ var hs=Settings.InMemory();hs.Friends.Add(new("Guest","127.0.0.102"));var gs=Settings.InMemory();gs.Friends.Add(new("Host","127.0.0.101"));
+ using var h=new PeerService(hs);using var g=new PeerService(gs);h.Start("127.0.0.101");g.Start("127.0.0.102");h.Host(new());
+ Room? invitation=null;g.Invitation+=(_,_,room)=>invitation=room;await h.Invite(g.Address);
+ if(invitation?.Id!=h.Current!.Id||invitation.HostAddress!=h.Address||g.Current!=null)throw new Exception("Invitation did not preserve target or joined without consent");
+ await g.Join(h.Address);await g.SetReady(true);await g.SetHostGameRunning(true);
+ await Until(()=>h.Current!.Players.Single(p=>p.Id==g.LocalId).GameRunning,"guest game status reaches room");
+ await g.SetHostGameRunning(false);await Until(()=>!h.Current!.Players.Single(p=>p.Id==g.LocalId).GameRunning,"guest game exit clears status");
+ if(!h.Current!.Players.Single(p=>p.Id==g.LocalId).Ready)throw new Exception("Status reset readiness");
+ g.Leave();gs.BlockedUsers=[new("Host",h.Address)];invitation=null;
+ try{await h.Invite(g.Address);throw new Exception("Blocked invitation accepted");}catch(IOException){}
+ if(invitation!=null)throw new Exception("Blocked invitation displayed");
+ h.Leave();Console.WriteLine("PASS invitations, consent, blocked invitations and per-player game lifecycle");
+}

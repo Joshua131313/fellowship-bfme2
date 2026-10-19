@@ -239,7 +239,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.64   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.65   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -278,6 +278,7 @@ public sealed class BrowserWindow : Window
         Peer.Changed += () => Dispatcher.InvokeAsync(() => { roomWindow?.Refresh(); if(!closingRoom && Peer.Current != null && roomWindow == null) ShowRoom(); RenderRooms(); });
         Peer.Notice += text => Dispatcher.InvokeAsync(() => status.Text = text);
         Peer.LaunchRequested += () => Dispatcher.InvokeAsync(() => roomWindow?.HandleLaunch());
+        Peer.Invitation+=(ip,name,room)=>Dispatcher.InvokeAsync(()=>ShowInvitation(ip,name,room));
         Peer.PrivateMessage += (ip,name,text) => Dispatcher.InvokeAsync(() =>
         {
             OpenChat(ip,name,false).Receive(name,text);
@@ -360,6 +361,26 @@ public sealed class BrowserWindow : Window
         var optionCard=UI.Card(options,"#171C24",16);optionCard.Margin=new(0,20,0,0);p.Children.Add(optionCard);
         p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null));
         var footer=new Grid{Margin=new(24,14,24,20)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=UI.Auto});
+        var export=UI.Button("Export backup",()=>
+        {
+            var dialog=new Microsoft.Win32.SaveFileDialog{Filter="Fellowship backup (*.json)|*.json",FileName="Fellowship-backup.json"};
+            if(dialog.ShowDialog(w)==true)try{File.WriteAllText(dialog.FileName,SettingsBackup.Export(Settings));}catch(Exception error){UI.Error(error.Message);}
+        });
+        var restore=UI.AsyncButton("Restore backup",async ()=>
+        {
+            var dialog=new Microsoft.Win32.OpenFileDialog{Filter="Fellowship backup (*.json)|*.json"};if(dialog.ShowDialog(w)!=true)return;
+            try
+            {
+                if(new FileInfo(dialog.FileName).Length>2_000_000)throw new IOException("Backup is too large.");
+                var incoming=SettingsBackup.Parse(File.ReadAllText(dialog.FileName));
+                if(MessageBox.Show(w,"Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged.","Restore backup",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
+                File.WriteAllText(Path.Combine(Settings.Folder,"before-restore.json"),SettingsBackup.Export(Settings));
+                SettingsBackup.Restore(Settings,incoming);friendsWindow?.Close();w.Close();await Refresh();
+            }
+            catch(Exception error){UI.Error(error.Message);}
+        });
+        UI.Require(restore,()=>Peer.Current==null,()=>"Leave the current room before restoring a backup.");
+        p.Children.Add(UI.Text("BACKUP & RESTORE",10,UI.Muted,true));p.Children.Add(UI.Row(export,restore));
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);var marker=Path.Combine(Settings.Folder,"folder-"+Guid.NewGuid().ToString("N")+".tmp");try{File.WriteAllText(marker,"");var folder=Path.GetDirectoryName(NativePlacement.PhysicalPath(marker))!;Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});}finally{File.Delete(marker);}});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
         var save=UI.Require(UI.AsyncButton("Save settings",async()=>
         {
@@ -446,6 +467,7 @@ public sealed class BrowserWindow : Window
         menu.Items.Add(UI.MenuAction("Player info",()=>CreatePlayerInfo(owner,name,ip,player).ShowDialog()));
         if(ip!=Peer.Address)
         {
+            menu.Items.Add(UI.MenuAction("Invite to room",async()=>{try{await Peer.Invite(ip);UI.Info(owner,"Invitation sent","Your friend can join from their invitation.");}catch(Exception error){UI.Error(error.Message);}},()=>Peer.Current!=null&&Settings.Friends.Any(f=>f.Address==ip)&&!Settings.IsBlocked(ip)));
             menu.Items.Add(UI.MenuAction("Send message",()=>OpenChat(ip,name),()=>UI.ValidAddress(ip)));
             var friend=UI.MenuAction("Add friend",()=>ToggleFriend(name,ip),()=>UI.ValidAddress(ip)&&(Settings.Friends.Any(f=>f.Address==ip)||!Settings.IsBlocked(ip)));friend.InputGestureText="";menu.Items.Add(friend);
             var block=UI.MenuAction("Block player",async()=>await BlockPlayer(name,ip,!Settings.IsBlocked(ip)));menu.Items.Add(block);
@@ -497,6 +519,23 @@ public sealed class BrowserWindow : Window
             UI.Require(friend,()=>UI.ValidAddress(ip)&&(Settings.Friends.Any(f=>f.Address==ip)||!Settings.IsBlocked(ip)),()=>"Unblock this player to change friendship.");friend.HorizontalAlignment=HorizontalAlignment.Left;actions.Children.Add(friend);
         }
         var close=UI.Button("Close",w.Close);close.Margin=new(0);Grid.SetColumn(close,1);actions.Children.Add(close);content.Children.Add(actions);return w;
+    }
+    readonly HashSet<string> pendingInvites=[];
+    void ShowInvitation(string ip,string name,Room room)
+    {
+        if(!pendingInvites.Add(ip))return;
+        var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterScreen,ResizeMode=ResizeMode.NoResize};
+        var body=UI.Shell(w,"Room invitation",410,230);w.MinHeight=230;
+        var join=UI.AsyncButton("Join room",async()=>
+        {
+            if(joining)return;
+            var advertised=await PeerService.Query(room.HostAddress,Peer.Address);
+            if(advertised?.Id!=room.Id)throw new InvalidOperationException("This invitation has expired or the room moved. Ask for a new invitation.");
+            address.Text=room.HostAddress;await Join();if(Peer.Current?.Id==room.Id)w.Close();
+        },true);
+        UI.Require(join,()=>!joining,()=>"A room connection is already in progress.");
+        body.Children.Add(new Border{Padding=new(24),Child=UI.Stack(UI.Text(name+" invited you",17,bold:true),UI.Text(room.Title,13,UI.Muted),new Border{Margin=new(0,24,0,0),Child=UI.Row(UI.Button("Dismiss",w.Close),join)})});
+        w.Closed+=(_,_)=>pendingInvites.Remove(ip);w.Show();
     }
     bool joining;
     async Task Join()
@@ -857,7 +896,7 @@ public sealed class RoomWindow : Window
         foreach(var p in room.Players)
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=UI.Auto});
-            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,"#E6EAF2",true),UI.Text(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.Text(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
+            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,"#E6EAF2",true),UI.Text(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.Text(p.GameRunning?"   IN BFME2":"   NOT IN GAME",9,p.GameRunning?UI.Green:UI.Muted),UI.Text(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
             var ready=UI.Text($"{(p.Spot>0?"Spot "+p.Spot:"No spot")} · {(p.Team>0?"Team "+p.Team:"No team")}  |  "+(p.Ready?"● Ready":"○ Not ready"),10,p.Ready?UI.Green:MapPreview.TeamColor(p.Team));Grid.SetColumn(ready,1);row.Children.Add(ready);
             var item=new ListBoxItem{Content=row,Padding=new(12,6,12,6),Tag=p};
             var menu=app.PlayerMenu(this,p.Name,p.Address,p);
@@ -952,7 +991,7 @@ public sealed class FriendsWindow : Window
         var footer=UI.Text("Double-click a friend to chat.\nDirect messages · no offline delivery",10,UI.Muted);footer.Margin=new(20,0,20,18);UI.At(body,footer,4);
         list.MouseDoubleClick+=(_,_)=>Message();
         var menu=new ContextMenu();var remove=new MenuItem{Header="Remove friend",Tag="Danger"};remove.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f}){app.Settings.Friends.Remove(f);app.Settings.Save();Render();}};var message=new MenuItem{Header="Send message"};message.Click+=(_,_)=>Message();menu.Items.Add(message);
-        var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})app.CreatePlayerInfo(this,f.Name,f.Address).ShowDialog();};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);var block=new MenuItem{Header="Block player",Tag="Danger"};block.Click+=async(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})await app.BlockPlayer(f.Name,f.Address,!app.Settings.IsBlocked(f.Address));};menu.Items.Add(block);list.ContextMenu=menu;menu.Opened+=(_,_)=>{bool selected=list.SelectedItem is ListBoxItem{Tag:Friend};message.IsEnabled=selected;info.IsEnabled=selected;remove.IsEnabled=selected;block.IsEnabled=selected;if(list.SelectedItem is ListBoxItem{Tag:Friend f}){block.Header=app.Settings.IsBlocked(f.Address)?"Unblock player":"Block player";block.Tag=app.Settings.IsBlocked(f.Address)?null:"Danger";}};
+        var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})app.CreatePlayerInfo(this,f.Name,f.Address).ShowDialog();};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);var block=new MenuItem{Header="Block player",Tag="Danger"};block.Click+=async(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})await app.BlockPlayer(f.Name,f.Address,!app.Settings.IsBlocked(f.Address));};menu.Items.Add(block);var invite=UI.MenuAction("Invite to room",async()=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})try{await app.Peer.Invite(f.Address);UI.Info(this,"Invitation sent","Your friend can join from their invitation.");}catch(Exception error){UI.Error(error.Message);}},()=>app.Peer.Current!=null&&list.SelectedItem is ListBoxItem{Tag:Friend f}&&!app.Settings.IsBlocked(f.Address));menu.Items.Insert(1,invite);list.ContextMenu=menu;menu.Opened+=(_,_)=>{bool selected=list.SelectedItem is ListBoxItem{Tag:Friend};message.IsEnabled=selected;info.IsEnabled=selected;remove.IsEnabled=selected;block.IsEnabled=selected;if(list.SelectedItem is ListBoxItem{Tag:Friend f}){block.Header=app.Settings.IsBlocked(f.Address)?"Unblock player":"Block player";block.Tag=app.Settings.IsBlocked(f.Address)?null:"Danger";}};
         list.PreviewMouseRightButtonDown+=(_,e)=>{var item=ItemsControl.ContainerFromElement(list,e.OriginalSource as DependencyObject) as ListBoxItem;if(item?.Tag is Friend)item.IsSelected=true;};
         presenceTimer.Tick+=async(_,_)=>await RefreshPresence();Loaded+=async(_,_)=>await RefreshPresence();Closed+=(_,_)=>presenceTimer.Stop();presenceTimer.Start();Render();
     }
