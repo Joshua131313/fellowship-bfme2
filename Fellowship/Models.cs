@@ -158,6 +158,6 @@ public sealed record RoomPreset(string Name,string Map,string MapPath,int Capaci
             var installed=maps.FirstOrDefault(m=>m.Name.Equals(map,StringComparison.OrdinalIgnoreCase));
             return new(name,map,installed?.Path??"",count,resources,200,false,false,teams,true);
         }
-        return [Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),Make("2v2","Buckland",4,4000,[1,1,2,2]),Make("1v1 · 1,000 resources","Fords Of Isen II",2,1000,[1,2]),Make("1v1 · 4,000 resources","Fords Of Isen II",2,4000,[1,2]),Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])];
+        return [Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),Make("2v2","Buckland",4,4000,[1,1,2,2]),Make("1v1 · 1,000 resources","Rohan",2,1000,[1,2]),Make("1v1 · 4,000 resources","Rohan",2,4000,[1,2]),Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])];
     }
 }

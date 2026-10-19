@@ -85,6 +85,7 @@ public sealed class RoomEditor : Window
             settings.RoomPresets.Add(preset);settings.Save();presetList.Reload();
         });
         UI.Require(store,()=>map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out int n)&&n is >=2 and <=64,()=>"Select a map and a valid room limit.");
+        teams.Margin=new(12,0,0,0);
         var teamRow=UI.Row(UI.Text("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,8,0,0);presetArea.Children.Add(teamRow);
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
         var cancel=UI.Button("Cancel",()=>DialogResult=false);cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);

@@ -5,17 +5,19 @@ namespace Fellowship;
 public sealed class RoomPresetPicker : ComboBox
 {
     readonly Settings settings;
+    bool refreshing;
     public event Action<RoomPreset>? Picked;
     public RoomPresetPicker(Settings settings)
     {
         this.settings=settings;Style=(Style)Application.Current.FindResource(typeof(ComboBox));Height=34;ToolTip="Choose a saved room preset";
         DropDownOpened+=(_,_)=>Reload();
-        SelectionChanged+=(_,_)=>{if(SelectedItem is ComboBoxItem{Tag:RoomPreset preset})Picked?.Invoke(preset);};
+        SelectionChanged+=(_,_)=>{if(!refreshing&&SelectedItem is ComboBoxItem{Tag:RoomPreset preset})Picked?.Invoke(preset);};
         Reload();
     }
     public void Reload()
     {
-        Items.Clear();Items.Add(new ComboBoxItem{Content="Choose a preset…"});
+        var previous=(SelectedItem as ComboBoxItem)?.Tag as RoomPreset;refreshing=true;
+        Items.Clear();Items.Add(new ComboBoxItem{Content="Custom preset"});
         foreach(var preset in RoomPreset.Defaults(GameInstallation.Maps(settings.GamePath)).Concat(settings.RoomPresets))
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
@@ -28,7 +30,7 @@ public sealed class RoomPresetPicker : ComboBox
             }
             Items.Add(new ComboBoxItem{Tag=preset,Content=row,HorizontalContentAlignment=HorizontalAlignment.Stretch});
         }
-        SelectedIndex=0;
+        SelectedItem=Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.Tag is RoomPreset p&&p.Name==previous?.Name&&p.BuiltIn==previous.BuiltIn)??Items[0];refreshing=false;
     }
     public static string? PromptName(Window owner)
     {
