@@ -4,7 +4,10 @@ namespace Fellowship;
 
 public sealed partial class BrowserWindow
 {
-    sealed record NetworkChoice(string Name,string Address);
+    sealed record NetworkChoice(string Name,string Address)
+    {
+        public override string ToString()=>Name;
+    }
     bool loadingNetworks,switchingNetwork;
     event Action? NetworkChanged;
     void LoadNetworkChoices()
