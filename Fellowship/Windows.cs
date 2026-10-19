@@ -224,7 +224,7 @@ public sealed partial class BrowserWindow : Window
     readonly TextBlock emptyTitle=UI.Text("No rooms found",19,"#DCE2ED",true);
     readonly TextBlock emptyHint=UI.Text("Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.",13,UI.Muted);
     ActivityAlerts activityAlerts=new();
-    readonly TextBlock networkCaption=UI.Text("",12,UI.Muted);
+    readonly ComboBox networkCaption=new(){Width=180,Height=34,Margin=new(12,0,0,0),DisplayMemberPath="Name",ToolTip="Switch network · leaves your current room"};
     public PlayerLatency Latency { get; }=new();
     readonly List<RoomEntry> discovered = [];
     RoomWindow? roomWindow;
@@ -264,6 +264,7 @@ public sealed partial class BrowserWindow : Window
         toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
         var actions = UI.Row(UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
         var filters = new Grid { Margin = new(22,0,22,14) }; filters.ColumnDefinitions.Add(new()); filters.ColumnDefinitions.Add(new() { Width = UI.Auto });
+        ConfigureNetworkPicker();
         filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), networkCaption));
         modeFilter.Margin=new(0,0,16,0);
         var filterRight = UI.Row(modeFilter,UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
@@ -291,7 +292,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.82   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.83   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -350,8 +351,8 @@ public sealed partial class BrowserWindow : Window
     {
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).GroupBy(r=>r.Room.Id).Select(g=>g.OrderByDescending(r=>r.Room.Revision).First()).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
-        networkCaption.Text="    "+Settings.NetworkName;
-        if(online)
+
+        if(online&&!switchingNetwork)
         {
             int totalRooms=list.Select(r=>r.Room.Id).Distinct().Count();
             status.Text=$"●  {Peer.Address} · VPN discovery active · {totalRooms} room{(totalRooms==1?"":"s")}";
@@ -463,6 +464,7 @@ public sealed partial class BrowserWindow : Window
         var networkPlaceholder=UI.Text("Select a network…",12,UI.Muted);networkPlaceholder.Margin=new(11,0,32,0);networkPlaceholder.IsHitTestVisible=false;networkBox.Children.Add(networkPlaceholder);profileNetwork.Children.Add(networkBox);
         void NetworkPlaceholder()=>networkPlaceholder.Visibility=network.SelectedIndex<0?Visibility.Visible:Visibility.Collapsed;
         network.SelectionChanged+=(_,_)=>NetworkPlaceholder();NetworkPlaceholder();
+        NetworkChanged+=()=>{network.SelectedIndex=interfaces.FindIndex(i=>i.Address==Settings.BindAddress);NetworkPlaceholder();};
         network.DropDownOpened+=(_,_)=>
         {
             var selectedAddress=network.SelectedIndex>=0&&network.SelectedIndex<interfaces.Count?interfaces[network.SelectedIndex].Address:Settings.BindAddress;
@@ -514,13 +516,8 @@ public sealed partial class BrowserWindow : Window
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
             try
             {
-            if(Peer.Address!=selectedNetwork.Address)
-            {
-                await CloseRoom();Peer.Start(selectedNetwork.Address);online=true;
-                foreach(var ip in peerQueries.Keys.ToArray())queryVersions[ip]=queryVersions.GetValueOrDefault(ip)+1;
-                Presence.Clear();activityAlerts=new();discovered.Clear();discoveredAddresses.Clear();address.Text="";initialDiscovery=true;RenderRooms();RenderActivePlayers();friendsWindow?.Render();
-            }
-            connectionFailure=null;networkWarningAddress=null;Settings.NetworkName=selectedNetwork.Name;Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();EnsureOnline();
+            await ChangeNetwork(selectedNetwork.Name,selectedNetwork.Address);
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();EnsureOnline();
             feedback?.Invoke($"Refreshing rooms and friends on {selectedNetwork.Name}…");
             while(refreshing)await Task.Delay(50);
             // Let any old-interface queries finish, then start a full pass on the saved interface.
