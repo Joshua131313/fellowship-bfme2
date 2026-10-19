@@ -34,6 +34,12 @@ public sealed class RoomPreviewWindow : Window
             row.Children.Add(UI.Avatar(player.Name,28));row.Children.Add(UI.Text(player.Name+(player.Id=="host"?"  ·  Host":"")));roster.Children.Add(row);
         }
         content.Children.Add(roster);
+        if(owner is BrowserWindow host)
+        {
+            var join=UI.AsyncButton("Join room",()=>host.JoinPreview(room.Id),true,()=>!unavailable&&room.Players.Count<room.Capacity);
+            UI.Require(join,()=>!unavailable&&(host.Peer.Current?.Id==room.Id||room.Players.Count<room.Capacity),()=>unavailable?"This room is no longer available.":"This room is full.");
+            join.HorizontalAlignment=HorizontalAlignment.Right;join.Margin=new(0,18,0,0);content.Children.Add(join);
+        }
         var foot=UI.Text(unavailable?"Room is no longer available · showing last known details":"Updates automatically",11,UI.Muted);foot.Margin=new(0,16,0,0);content.Children.Add(foot);
         body.Children.Add(UI.Scroll(content));
         }

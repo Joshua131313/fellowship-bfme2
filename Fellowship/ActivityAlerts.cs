@@ -3,7 +3,7 @@ namespace Fellowship;
 // Observe completed discovery rounds, retaining the directory's reconnect grace period.
 public sealed class ActivityAlerts
 {
-    public sealed record Alert(string Title,string Message,bool? Online=null);
+    public sealed record Alert(string Title,string Message,bool? Online=null,string Address="",string Name="",string RoomId="");
     readonly Dictionary<string,bool> friends=new();
     readonly HashSet<string> rooms=new();
     readonly Queue<string> roomOrder=new();
@@ -17,7 +17,7 @@ public sealed class ActivityAlerts
         {
             bool online=active.Any(p=>p.Address==friend.Address);
             if(initialized&&friends.TryGetValue(friend.Address,out var previous)&&previous!=online&&!settings.IsBlocked(friend.Address))
-                result.Add(new(online?"Friend online":"Friend offline",$"{friend.Name} is now {(online?"online":"offline")}.",online));
+                result.Add(new(online?"Friend online":"Friend offline",$"{friend.Name} is now {(online?"online":"offline")}.",online,friend.Address,friend.Name));
             friends[friend.Address]=online;
         }
         foreach(var peer in active.Where(p=>!p.Reconnecting&&p.Room!=null&&!settings.IsBlocked(p.Address)))
@@ -25,7 +25,7 @@ public sealed class ActivityAlerts
             var room=peer.Room!;
             if(!rooms.Add(room.Id))continue;
             roomOrder.Enqueue(room.Id);
-            if(initialized)result.Add(new("Room created",$"{room.Host}: {room.Title}"));
+            if(initialized)result.Add(new("Room created",$"{room.Host}: {room.Title}",null,peer.Address,room.Host,room.Id));
         }
         while(roomOrder.Count>2048)rooms.Remove(roomOrder.Dequeue());
         initialized=true;return result;

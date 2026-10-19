@@ -10,6 +10,9 @@ public sealed class TrayIcon : IDisposable
     readonly System.Drawing.Icon icon;
     readonly BrowserWindow browser;
     ContextMenu? menu;
+    readonly Queue<(string Title,string Message,Action Action)> notifications=new();
+    Action? notificationAction;
+    bool notificationVisible;
     public TrayIcon(BrowserWindow browser)
     {
         this.browser=browser;
@@ -17,16 +20,29 @@ public sealed class TrayIcon : IDisposable
         using var loaded=new System.Drawing.Icon(stream);
         icon=(System.Drawing.Icon)loaded.Clone();
         tray=new(){Icon=icon,Text="Fellowship · running in the background",Visible=true};
-        tray.BalloonTipClicked+=(_,_)=>Application.Current.Dispatcher.InvokeAsync(()=>UI.Reveal(browser));
+        tray.BalloonTipClicked+=(_,_)=>
+        {
+            var action=notificationAction;notificationAction=null;
+            Application.Current.Dispatcher.InvokeAsync(()=>{try{action?.Invoke();}catch(Exception error){UI.Error(error.Message);}finally{notificationVisible=false;ShowNextNotification();}});
+        };
+        tray.BalloonTipClosed+=(_,_)=>{notificationAction=null;notificationVisible=false;ShowNextNotification();};
         tray.MouseClick+=(_,e)=>Application.Current.Dispatcher.InvokeAsync(()=>
         {
             if(e.Button==System.Windows.Forms.MouseButtons.Left)UI.Reveal(browser);
             if(e.Button==System.Windows.Forms.MouseButtons.Right)ShowMenu();
         });
     }
-    public void Notify(string title,string message)
+    public void Notify(string title,string message,Action action)
     {
-        try{tray.ShowBalloonTip(5000,title,message,System.Windows.Forms.ToolTipIcon.Info);}catch(System.ComponentModel.Win32Exception){}
+        if(notifications.Count>=32)return;
+        notifications.Enqueue((title,message,action));if(!notificationVisible)ShowNextNotification();
+    }
+    void ShowNextNotification()
+    {
+        if(!notifications.TryDequeue(out var next))return;
+        notificationAction=next.Action;notificationVisible=true;
+        try{tray.ShowBalloonTip(5000,next.Title,next.Message,System.Windows.Forms.ToolTipIcon.Info);}
+        catch(System.ComponentModel.Win32Exception){notificationAction=null;notificationVisible=false;}
     }
     void ShowMenu()
     {

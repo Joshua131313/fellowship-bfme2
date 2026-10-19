@@ -24,7 +24,7 @@ public partial class App : Application
     EventWaitHandle? activateEvent;
     RegisteredWaitHandle? activationWait;
     TrayIcon? tray;
-    public void NotifyActivity(string title,string message)=>tray?.Notify(title,message);
+    public void NotifyActivity(string title,string message,Action action)=>tray?.Notify(title,message,action);
     public bool IsQuitting { get; private set; }
     bool quitPending;
     public async void Quit()
@@ -76,6 +76,7 @@ public partial class App : Application
         MainWindow = main;
         ShutdownMode=ShutdownMode.OnExplicitShutdown;
         tray=new TrayIcon(main);
+        _=main.CheckStartupConnection();
         if(!e.Args.Contains("--startup"))main.Show();else main.EnsureOnline(true);
         activationWait=ThreadPool.RegisterWaitForSingleObject(activateEvent,(_,_)=>Dispatcher.BeginInvoke(()=>
         {
