@@ -242,7 +242,7 @@ public sealed partial class PeerService : IDisposable
                 if(msg.Type=="become-host")
                 {
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
-                    lock(gate){upstream=null;Current=msg.Room;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);recoveryToken=msg.Token;}
+                    lock(gate){upstream=null;Current=msg.Room;var hostPlayer=Current.Players.FirstOrDefault(p=>p.Id=="host");if(hostPlayer!=null)hostPlayer.Ready=true;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);recoveryToken=msg.Token;}
                     await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId});
                     _ = Discover(presence:true);Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
                 }
@@ -475,7 +475,7 @@ public sealed partial class PeerService : IDisposable
         {
             if (!IsHost || Current == null) return;
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
-            if (Current.Players.Any(p => !p.Ready)) throw new InvalidOperationException("Every player must be ready before launching.");
+            if (!Current.AllGuestsReady) throw new InvalidOperationException("Every player must be ready before launching.");
             // Presence follows the real game process, not the launch request.
         }
         var failures=new List<string>();

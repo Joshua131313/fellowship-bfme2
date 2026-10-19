@@ -72,6 +72,8 @@ public sealed class Settings
 public sealed record MapSpot(int Number,double X,double Y);
 public sealed class Room
 {
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool AllGuestsReady=>Players.Where(p=>p.Id!="host").All(p=>p.Ready);
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
     public string Mode { get; set; } = "Custom";
     public int[] InitialTeams { get; set; } = [];

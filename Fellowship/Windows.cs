@@ -334,7 +334,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.100   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.101   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -536,7 +536,7 @@ public sealed partial class BrowserWindow : Window
         var startup=new CheckBox{Content="Start in the tray at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,ToolTip=Installation.IsInstalled?"Fellowship starts quietly in the system tray.":"Install Fellowship to enable startup."};options.Children.Add(startup);ToolTipService.SetShowOnDisabled(startup,true);
         var optionCard=UI.Card(options,"#171C24",16);optionCard.Margin=new(0,20,0,0);p.Children.Add(optionCard);
         p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null));
-        var appearanceChoice=new ComboBox{ItemsSource=new[]{"Dark","Light","System"},SelectedItem=Settings.Appearance,Margin=new(0,12,0,0)};
+        var appearanceChoice=new ComboBox{ItemsSource=new[]{"Dark","Black","Light","System"},SelectedItem=Settings.Appearance,Margin=new(0,12,0,0)};
         if(appearanceChoice.SelectedIndex<0)appearanceChoice.SelectedIndex=0;
         var soundMaster=new CheckBox{Content="Enable app sounds",IsChecked=Settings.SoundsEnabled,Margin=new(0,12,0,12)};
         var volume=new Slider{Minimum=0,Maximum=100,Value=Math.Clamp(Settings.SoundVolume,0,100),TickFrequency=1,IsSnapToTickEnabled=true,Height=28,Margin=new(0,4,0,10)};
@@ -1074,8 +1074,8 @@ public sealed class RoomWindow : Window
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var state=UI.Stack(consent,readySummary,UI.Text("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
-        launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);if(HostPreset.Matches(app.Peer.Current))HostPreset.ValidateBinary(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.Players.All(p=>p.Ready)==true);
-        UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.Players.All(p=>p.Ready),()=>launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
+        launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);if(HostPreset.Matches(app.Peer.Current))HostPreset.ValidateBinary(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
+        UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
         launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
         var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),launchMine,launch,abort);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
@@ -1280,7 +1280,7 @@ public sealed class RoomWindow : Window
         int readyCount=room.Players.Count(p=>p.Ready);
         readySummary.Text=launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.";
         UpdateLaunchActions();
-        launch.IsEnabled=!launching&&room.Players.All(p=>p.Ready);
+        launch.IsEnabled=!launching&&room.AllGuestsReady;
         consent.Visibility=host?Visibility.Collapsed:Visibility.Visible;consent.IsEnabled=true;
         consent.IsChecked=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true;
         if(consent.IsChecked!=true)allowLaunch=false;

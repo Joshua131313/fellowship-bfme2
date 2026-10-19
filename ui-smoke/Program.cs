@@ -188,12 +188,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.101-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.101/Fellowship-0.1.101-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.101",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.102-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.102/Fellowship-0.1.102-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.102",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.101","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.101",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.102","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.102",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -220,6 +220,9 @@ class Program
   var freshNetwork=Settings.InMemory();freshNetwork.SelectDefaultNetwork(new[]{("ZeroTier","10.0.0.1"),("Radmin VPN","26.1.2.3")});
   if(freshNetwork.BindAddress!="26.1.2.3")throw new Exception("Fresh settings did not select Radmin");
   freshNetwork.BindAddress="10.0.0.1";freshNetwork.SelectDefaultNetwork(new[]{("Radmin VPN","26.1.2.3")});if(freshNetwork.BindAddress!="10.0.0.1")throw new Exception("Existing network selection overwritten");
+  var readinessRoom=new Room{Players=[new Player{Id="host",Ready=false},new Player{Id="guest",Ready=true}]};
+  if(!readinessRoom.AllGuestsReady)throw new Exception("Host readiness incorrectly blocks launching");
+  readinessRoom.Players[1].Ready=false;if(readinessRoom.AllGuestsReady)throw new Exception("Unready guest incorrectly allowed launching");
   var app=new App();app.InitializeComponent();Appearance.Apply("Dark");
   var transcript=new ChatTranscript();transcript.Append("Alice","First message");transcript.Append("Bob","Second message");transcript.SelectAll();
   if(!transcript.Selection.Text.Contains("First message")||!transcript.Selection.Text.Contains("Second message"))throw new Exception("Cross-message selection failed");
@@ -280,7 +283,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.101"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.101/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.102"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.102/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -385,7 +388,7 @@ class Program
   Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   Render(browser.CreatePlayerInfo(browser,"Aragorn","26.42.214.47",new Player{Name="Aragorn",Team=2,Spot=3,Ready=true}),"dist/preview-player-info.png");
   Render(browser.CreateProfileEditor(browser),"dist/preview-profile-editor.png");
-  var updatePreview=new UpdateProgressWindow("0.1.101");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.102");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -394,7 +397,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.101\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.102\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
@@ -500,6 +503,10 @@ class Program
   if(((SolidColorBrush)testRow.Background).Color.ToString()!="#FF30476C")throw new Exception("Dark selected row color differs");
   ((System.Windows.Controls.TextBlock)interactionPanel.Children[0]).Text="Dark theme interaction states";
   Render(new Window{Width=480,Height=320,Content=interactionPanel},"dist/preview-interactions-dark.png");
+  Appearance.Apply("Black");
+  if(((SolidColorBrush)UI.Brush("#101216")).Color!=Colors.Black||((SolidColorBrush)UI.Brush("#171A20")).Color!=Colors.Black)throw new Exception("Black theme surfaces are not true black");
+  customization.Appearance="Black";SettingsBackup.Restore(restoredCustomization,SettingsBackup.Parse(SettingsBackup.Export(customization)));if(restoredCustomization.Appearance!="Black")throw new Exception("Black theme backup failed");
+  tabsSettings.Appearance="Black";var blackBrowser=new BrowserWindow(tabsSettings);SelectTab(blackBrowser,"Settings");Render(blackBrowser,"dist/preview-settings-black.png");blackBrowser.Peer.Dispose();Appearance.Apply("Dark");
   Console.WriteLine("PASS customization backup, WAV volume processing, and light/dark theme rendering");
   Console.WriteLine("PASS WPF resources, icon, browser and room editor render without opening desktop windows");
  }

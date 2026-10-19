@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 namespace Fellowship;
 public sealed partial class PeerService
@@ -40,7 +40,7 @@ public sealed partial class PeerService
             snapshot=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current))!;
             snapshot.Host=target.Name;snapshot.HostAddress=address;snapshot.Phase="Gathering";
             if(leaving)snapshot.Players.RemoveAll(p=>p.Id=="host");else snapshot.Players.Single(p=>p.Id=="host").Id=oldId;
-            snapshot.Players.Single(p=>p.Id==id).Id="host";
+            var promoted=snapshot.Players.Single(p=>p.Id==id);promoted.Id="host";promoted.Ready=true;
             tickets=snapshot.Players.Where(p=>p.Id!="host").ToDictionary(p=>p.Id,_=>Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)));
             handoffTarget=id;handoffId=Guid.NewGuid().ToString("N");handoffReady=new(TaskCreationOptions.RunContinuationsAsynchronously);transferring=true;
         }
@@ -100,7 +100,7 @@ public sealed partial class PeerService
             {
                 if(Current!=room||stop.IsCancellationRequested)return true;
                 room.Players.RemoveAll(p=>p.Id=="host");
-                room.Players.Single(p=>p.Id==localId).Id="host";
+                var promoted=room.Players.Single(p=>p.Id==localId);promoted.Id="host";promoted.Ready=true;
                 room.Host=settings.Name;room.HostAddress=Address;room.Phase="Gathering";
                 IsHost=true;LocalId="host";
                 resumeTickets=room.Players.Where(p=>p.Id!="host").ToDictionary(p=>p.Id,_=>token);

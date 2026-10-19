@@ -141,6 +141,22 @@ public static class Appearance
         ("InteractionBorder","#526E99","#BFCEEB"),
         ("InteractionText","#BFD1FF","#3158B0"),
         ("InteractionFocus","#83A5FF","#3158B0")];
+    static string Resolve(string hex)
+    {
+        if(isLight)return light[hex];
+        if(mode!="Black")return hex;
+        return light[hex] switch {
+            "#F5F7FB" or "#FFFFFF"=>"#000000",
+            "#E8EDF5"=>"#101010",
+            "#D7DFEA"=>"#262626",
+            "#C3CDDC" or "#BAC6D8"=>"#383838",
+            "#E8EFFF" or "#DFE9FF"=>"#18263D",
+            "#BFCEEB"=>"#405777",
+            "#ECF8F2"=>"#071B13",
+            "#DDF3E8"=>"#10291E",
+            _=>hex
+        };
+    }
     static string mode="Dark";
     static bool isLight;
     static bool watching;
@@ -149,7 +165,7 @@ public static class Appearance
         if(!light.ContainsKey(hex))return (Brush)new BrushConverter().ConvertFromString(hex)!;
         if(!brushes.TryGetValue(hex,out var entry))
         {
-            var source=new Swatch{Color=(Color)ColorConverter.ConvertFromString(isLight?light[hex]:hex)};
+            var source=new Swatch{Color=(Color)ColorConverter.ConvertFromString(Resolve(hex))};
             var brush=new SolidColorBrush();
             System.Windows.Data.BindingOperations.SetBinding(brush,SolidColorBrush.ColorProperty,new System.Windows.Data.Binding(nameof(Swatch.Color)){Source=source});
             entry=(brush,source);brushes[hex]=entry;
@@ -158,14 +174,14 @@ public static class Appearance
     }
     public static void Apply(string value)
     {
-        mode=value is "Light" or "System"?value:"Dark";
+        mode=value is "Light" or "Black" or "System"?value:"Dark";
         bool systemLight=true;
         try{systemLight=Convert.ToInt32(Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize","AppsUseLightTheme",1))!=0;}catch{}
         isLight=mode=="Light"||mode=="System"&&systemLight;
         foreach(var pair in light)
         {
             var brush=(SolidColorBrush)Brush(pair.Key);
-            brushes[pair.Key].Source.Color=(Color)ColorConverter.ConvertFromString(isLight?pair.Value:pair.Key);
+            brushes[pair.Key].Source.Color=(Color)ColorConverter.ConvertFromString(Resolve(pair.Key));
             if(Application.Current!=null)Application.Current.Resources["Theme"+pair.Key[1..]]=brush;
         }
         if(Application.Current!=null)foreach(var state in states)
@@ -175,7 +191,7 @@ public static class Appearance
                 System.Windows.Data.BindingOperations.SetBinding(brush,SolidColorBrush.ColorProperty,new System.Windows.Data.Binding(nameof(Swatch.Color)){Source=source});
                 entry=(brush,source);brushes[state.Name]=entry;
             }
-            entry.Source.Color=(Color)ColorConverter.ConvertFromString(isLight?state.Light:state.Dark);
+            entry.Source.Color=(Color)ColorConverter.ConvertFromString(isLight?state.Light:mode=="Black"?state.Name switch {"InteractionHover"=>"#171C24","InteractionSelected"=>"#20334F","InteractionPressed"=>"#101B2C",_=>state.Dark}:state.Dark);
             Application.Current.Resources[state.Name]=entry.Brush;
         }
         if(!watching&&Application.Current!=null)
