@@ -334,7 +334,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.103   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.104   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -801,9 +801,15 @@ public sealed partial class BrowserWindow : Window
         }
         var pingRow=new Grid{Margin=new(0,12,0,0)};pingRow.ColumnDefinitions.Add(new(){Width=new GridLength(100)});pingRow.ColumnDefinitions.Add(new());
         pingRow.Children.Add(UI.Text("Ping",11,UI.Muted));var pingBadge=new PingBadge{Milliseconds=Latency.Get(ip,Peer.Address)};Grid.SetColumn(pingBadge,1);pingRow.Children.Add(pingBadge);content.Children.Add(pingRow);
-        var activityStatus=Detail("Activity","");var idleDuration=Detail("Idle for","");var onlineSince=Detail("Online since","");var lastSeen=Detail("Last online","");var offlineAt=Detail("Offline detected","");
+        var activityStatus=Detail("Activity","");var idleDuration=Detail("Idle for","");var onlineSince=Detail("Online since","");var lastSeen=Detail("Last online","");var offlineAt=Detail("Offline since","");
         string When(DateTimeOffset? time)=>time?.ToLocalTime().ToString("g")??"Not observed";
-        void UpdateActivity(){var now=DateTimeOffset.UtcNow;var current=Presence.Find(ip,now);var livePlayer=Peer.Current?.Players.FirstOrDefault(p=>p.Address==ip);var idle=ip==Peer.Address?IdlePresence.Seconds():current?.IdleNow(now)??livePlayer?.IdleSeconds;var manual=ip==Peer.Address?Settings.ManualAfk:current?.ManualAfk??livePlayer?.ManualAfk??false;var afk=IdlePresence.IsAfk(idle,manual);var history=Presence.History(ip);activityStatus.Text=current?.Reconnecting==true?"Reconnecting":ip!=Peer.Address&&current==null&&livePlayer==null?"Offline / unreachable":afk?(manual?"AFK · set manually":"AFK · idle"):"Available";activityHeading.Text=activityStatus.Text;activityHeading.Foreground=UI.Brush(afk?IdlePresence.AwayColor:current==null?UI.Muted:UI.Green);nameText.Foreground=UI.Brush(afk?UI.Muted:"#EFF1F5");idleDuration.Text=IdlePresence.Duration(idle);onlineSince.Text=When(ip==Peer.Address?new DateTimeOffset(Process.GetCurrentProcess().StartTime):history?.OnlineSince);lastSeen.Text=When(ip==Peer.Address?now:history?.LastSeen);offlineAt.Text=When(history?.OfflineAt);}
+        void UpdateActivity(){var now=DateTimeOffset.UtcNow;var current=Presence.Find(ip,now);var livePlayer=Peer.Current?.Players.FirstOrDefault(p=>p.Address==ip);var idle=ip==Peer.Address?IdlePresence.Seconds():current?.IdleNow(now)??livePlayer?.IdleSeconds;var manual=ip==Peer.Address?Settings.ManualAfk:current?.ManualAfk??livePlayer?.ManualAfk??false;var afk=IdlePresence.IsAfk(idle,manual);var history=Presence.History(ip);activityStatus.Text=current?.Reconnecting==true?"Reconnecting":ip!=Peer.Address&&current==null&&livePlayer==null?"Offline / unreachable":afk?(manual?"AFK · set manually":"AFK · idle"):"Available";activityHeading.Text=activityStatus.Text;activityHeading.Foreground=UI.Brush(afk?IdlePresence.AwayColor:current==null?UI.Muted:UI.Green);nameText.Foreground=UI.Brush(afk?UI.Muted:"#EFF1F5");idleDuration.Text=IdlePresence.Duration(idle);onlineSince.Text=When(ip==Peer.Address?new DateTimeOffset(Process.GetCurrentProcess().StartTime):history?.OnlineSince);lastSeen.Text=When(ip==Peer.Address?now:history?.LastSeen);offlineAt.Text=When(history?.OfflineAt);var connected=ip==Peer.Address||current!=null||livePlayer!=null;
+            ((FrameworkElement)onlineSince.Parent).Visibility=connected?Visibility.Visible:Visibility.Collapsed;
+            ((FrameworkElement)lastSeen.Parent).Visibility=connected?Visibility.Collapsed:Visibility.Visible;
+            ((FrameworkElement)offlineAt.Parent).Visibility=connected?Visibility.Collapsed:Visibility.Visible;
+            ((FrameworkElement)idleDuration.Parent).Visibility=connected?Visibility.Visible:Visibility.Collapsed;
+        }
+        if(ip==Peer.Address){var availability=CreateAvailabilityButton();availability.Margin=new(0,16,0,0);availability.Click+=(_,_)=>UpdateActivity();content.Children.Add(availability);}
         UpdateActivity();
         var infoLatency=new PlayerLatency();bool infoClosed=false;
         var pingTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromSeconds(5)};
@@ -1333,6 +1339,7 @@ public sealed class RoomWindow : Window
 
 public sealed class FriendsWindow : Window
 {
+    readonly TextBlock ownStatus=UI.Text("",11,UI.Green);
     readonly TextBlock ownNickname=UI.Text("",16,"#F1F3F8",true);
     readonly Border ownAvatar=UI.Avatar("?",40);
     readonly BrowserWindow app;
@@ -1346,7 +1353,7 @@ public sealed class FriendsWindow : Window
         this.app=app;var body=UI.Shell(this,"Friends",390,620);MinWidth=360;MaxWidth=460;MinHeight=440;MaxHeight=800;
         UI.Menus(this,UI.MenuGroup("_Friends",UI.MenuAction("Add friend",AddFriend),UI.MenuAction("Blocked players",app.ShowBlockedPlayers),UI.MenuAction("Send message",Message,()=>list.SelectedItem is ListBoxItem{Tag:Friend}),UI.MenuAction("Refresh presence",async()=>{try{await RefreshPresence();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Close window",Close)));
         UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
-        var me=UI.Button("",()=>app.CreateProfileEditor(this).Show());me.Style=(Style)Application.Current.FindResource("PlayerRowButton");me.Height=double.NaN;me.Padding=new(10);me.Margin=new(10,10,10,12);me.ToolTip="Edit your profile";me.Content=UI.Row(ownAvatar,UI.Stack(ownNickname,UI.Text("●  Available on your VPN",11,UI.Green)));UI.At(body,me,0);
+        var me=UI.Button("",()=>app.CreateProfileEditor(this).Show());me.Style=(Style)Application.Current.FindResource("PlayerRowButton");me.Height=double.NaN;me.Padding=new(10);me.Margin=new(10,10,10,12);me.ToolTip="Edit your profile";me.Content=UI.Row(ownAvatar,UI.Stack(ownNickname,ownStatus));var myPresence=app.CreateAvailabilityButton();myPresence.Margin=new(20,0,20,12);UI.At(body,UI.Stack(me,myPresence),0);
         var bar=new Grid{Margin=new(20,0,12,10)};bar.ColumnDefinitions.Add(new());bar.ColumnDefinitions.Add(new(){Width=UI.Auto});bar.Children.Add(summary);
         var refresh=UI.AsyncButton("↻",RefreshPresence);refresh.ToolTip="Check which friends are online";refresh.Padding=new(10,5,10,5);Grid.SetColumn(refresh,1);bar.Children.Add(refresh);UI.At(body,bar,1);
         list.Margin=new(8,0,8,0);UI.At(body,list,2);
@@ -1360,6 +1367,7 @@ public sealed class FriendsWindow : Window
     }
     public void Render()
     {
+        var away=IdlePresence.IsAfk(IdlePresence.Seconds(),app.Settings.ManualAfk);ownStatus.Text=away?"◷ AFK":"● Available";ownStatus.Foreground=UI.Brush(away?IdlePresence.AwayColor:UI.Green);
         var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
         ownNickname.Text=app.Settings.Name;((TextBlock)ownAvatar.Child).Text=string.IsNullOrWhiteSpace(app.Settings.Name)?"?":app.Settings.Name[..1].ToUpperInvariant();list.Items.Clear();summary.Text=$"YOUR FRIENDS   {app.Settings.Friends.Count}";
         bool? lastGroup=null;
@@ -1371,7 +1379,7 @@ public sealed class FriendsWindow : Window
             string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":peer.IsAfk?"◌  AFK":peer.GameRunning?"●  In BFME2":peer.Room!=null?"●  In a room":"●  Online";
             if(app.Settings.IsBlocked(f.Address))state+=" · Blocked";
             var nickname=peer?.Name??f.Name;
-            var labels=UI.Stack(UI.Row(UI.Text(nickname,13,peer?.IsAfk==true?UI.Muted:"#E4E9F2",true),peer==null?UI.Text("",10):IdlePresence.Badge(peer.IsAfk)),UI.Text(state+"  ·  "+f.Address,10,peer?.IsAfk==true?IdlePresence.AwayColor:state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
+            var labels=UI.Stack(UI.Row(UI.Text(nickname,13,peer?.IsAfk==true?UI.Muted:"#E4E9F2",true),peer==null?UI.Text("",10):IdlePresence.Badge(peer.IsAfk)),UI.Text((peer!=null&&!peer.Reconnecting&&(peer.IsAfk||state=="●  Online")?"":state+"  ·  ")+f.Address,10,peer?.IsAfk==true?IdlePresence.AwayColor:state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
             list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(nickname),labels),Tag=f});
         }
         if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
@@ -1383,7 +1391,8 @@ public sealed class FriendsWindow : Window
         checkingPresence=true;
         try
         {
-            var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
+            var away=IdlePresence.IsAfk(IdlePresence.Seconds(),app.Settings.ManualAfk);ownStatus.Text=away?"◷ AFK":"● Available";ownStatus.Foreground=UI.Brush(away?IdlePresence.AwayColor:UI.Green);
+        var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
             await app.Refresh();Render();
             if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
         }

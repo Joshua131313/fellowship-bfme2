@@ -11,6 +11,14 @@ public sealed partial class BrowserWindow
     readonly StackPanel dashboardSocial=new(){Margin=new(26)};
     readonly TextBlock profileName=UI.Text("",14,bold:true);
     readonly TextBlock dashboardNetwork=UI.Text("Connecting…",11,UI.Muted);
+    readonly List<Button> availabilityButtons=new();
+    internal Button CreateAvailabilityButton()
+    {
+        var button=UI.Button(Settings.ManualAfk?"Set available":"Set myself AFK",()=>{});
+        button.ToolTip="Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic.";
+        button.Click+=async(_,_)=>{Settings.ManualAfk=!Settings.ManualAfk;Settings.Save();RenderDashboard();try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch(Exception error){System.Diagnostics.Debug.WriteLine(error);}};
+        availabilityButtons.Add(button);button.Unloaded+=(_,_)=>availabilityButtons.Remove(button);return button;
+    }
     Button? currentRoomLink;
     readonly TextBlock currentRoomName=UI.Text("",13,UI.Green,true);
     readonly TextBlock currentRoomPlayers=UI.Text("",11,UI.Green);
@@ -50,8 +58,7 @@ public sealed partial class BrowserWindow
         UI.At(side,links,0);
         var profile=UI.Button("",()=>CreateProfileEditor(this).Show());profile.Style=(Style)Application.Current.FindResource("PlayerRowButton");profile.Height=double.NaN;profile.Margin=new(0,0,0,14);profile.Padding=new(8);profile.ToolTip="Edit your profile";
         profile.Content=UI.Row(UI.Avatar(Settings.Name,32),UI.Stack(profileName,UI.Text("Edit profile",10,UI.Muted)));
-        var availability=new ComboBox{ItemsSource=new[]{"Available (automatic)","AFK (manual)"},SelectedIndex=Settings.ManualAfk?1:0,Margin=new(0,0,0,12),ToolTip="Manual AFK stays on until you choose Available. Otherwise AFK follows five minutes of inactivity."};
-        availability.SelectionChanged+=async(_,_)=>{Settings.ManualAfk=availability.SelectedIndex==1;Settings.Save();RenderDashboard();try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch(Exception error){System.Diagnostics.Debug.WriteLine(error);}};
+        var availability=CreateAvailabilityButton();availability.Margin=new(0,0,0,12);
         var bottom=UI.Stack(profile,availability,new Border{Margin=new(10,0,0,0),Child=dashboardNetwork});UI.At(side,bottom,2);
         Grid.SetColumn(roomBody,1);dashboard.Children.Add(roomBody);
         var socialScroll=UI.Scroll(dashboardSocial);Grid.SetColumn(socialScroll,1);dashboard.Children.Add(socialScroll);
@@ -85,6 +92,7 @@ public sealed partial class BrowserWindow
     }
     void RenderDashboard()
     {
+        foreach(var button in availabilityButtons){button.Content=Settings.ManualAfk?"Set available":"Set myself AFK";button.Foreground=UI.Brush(Settings.ManualAfk?IdlePresence.AwayColor:UI.Green);}
         if(dashboardRooms==null)return;
         profileName.Text=Settings.Name;profileName.TextTrimming=TextTrimming.CharacterEllipsis;profileName.MaxWidth=105;
         dashboardNetwork.Text=online?"● VPN discovery active":"○ Not connected";dashboardNetwork.Foreground=UI.Brush(online?UI.Green:UI.Muted);
@@ -102,7 +110,7 @@ public sealed partial class BrowserWindow
             var presence=Presence.Find(friend.Address,DateTimeOffset.UtcNow);
             string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.IsAfk?"AFK":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";
             var button=UI.Button("",()=>{if(!Settings.IsBlocked(friend.Address))OpenChat(friend.Address,friend.Name);});button.Style=(Style)Application.Current.FindResource("PlayerRowButton");button.Height=double.NaN;button.Padding=new(12);button.Margin=new(0,0,0,8);button.HorizontalContentAlignment=HorizontalAlignment.Stretch;
-            var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.Text(state+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:presence.IsAfk?IdlePresence.AwayColor:UI.Green);details.Margin=new(0,4,0,0);
+            var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.Text((presence?.IsAfk==true||state=="Online"?friend.Address:state)+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:presence.IsAfk?IdlePresence.AwayColor:UI.Green);details.Margin=new(0,4,0,0);
             button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(UI.Row(name,presence==null?UI.Text("",10):IdlePresence.Badge(presence.IsAfk)),details));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
         }
     }
