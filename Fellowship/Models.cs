@@ -20,6 +20,9 @@ public sealed class Settings
         if(LastHostedSetup==saved)return;
         LastHostedSetup=saved;Save();
     }
+    public int PreferredColor { get; set; }
+    public Dictionary<string,int> PreferredMapSpots { get; set; } = new();
+    public int PreferredSpot(string map)=>PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(map,StringComparison.OrdinalIgnoreCase)).Value;
     public string Name { get; set; } = Environment.UserName;
     public string GamePath { get; set; } = "";
     public string BindAddress { get; set; } = "";
@@ -65,6 +68,11 @@ public sealed class Room
     public string Phase { get; set; } = "Gathering";
     public List<MapSpot> Spots { get; set; } = [];
     public List<Player> Players { get; set; } = [];
+    public void ApplyPreferences(Player player,int color,int spot,string map)
+    {
+        if(color is >=1 and <=10&&!Players.Any(p=>p.Id!=player.Id&&p.Color==color))player.Color=color;
+        if(MapPath.Equals(map,StringComparison.OrdinalIgnoreCase)&&Spots.Any(s=>s.Number==spot)&&!Players.Any(p=>p.Id!=player.Id&&p.Spot==spot))player.Spot=spot;
+    }
     public override string ToString() => $"{Title}\n{Map}  ·  {Players.Count}/{Capacity} players  ·  Patch {Patch}  ·  {Phase}";
 }
 public sealed class Player

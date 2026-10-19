@@ -386,3 +386,23 @@ using(var seriesGuest=new PeerService(new(){GamePath=installation}))
  if(seriesHost.Current!.Match.Resources!=2000)throw new Exception("Stale native rules replaced current setup");
  seriesGuest.Leave();seriesHost.Leave();
 }
+
+var prefA=Settings.InMemory();prefA.PreferredColor=2;prefA.PreferredMapSpots[new Room().MapPath]=1;
+var prefB=Settings.InMemory();prefB.PreferredColor=2;prefB.PreferredMapSpots[new Room().MapPath]=1;
+var roundTrip=System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(prefA))!;
+if(roundTrip.PreferredColor!=2||roundTrip.PreferredSpot(new Room().MapPath)!=1||roundTrip.PreferredSpot("other map")!=0)throw new Exception("Preferences persistence or per-map lookup failed");
+using(var preferenceHost=new PeerService(Settings.InMemory()))
+using(var preferenceA=new PeerService(prefA))
+using(var preferenceB=new PeerService(prefB))
+{
+ preferenceHost.Start("127.0.0.94");preferenceA.Start("127.0.0.95");preferenceB.Start("127.0.0.96");preferenceHost.Host(new(){Title="Preferences"});
+ preferenceHost.Current!.Spots=[new(1,.2,.2),new(2,.8,.8)];
+ await Task.WhenAll(preferenceA.Join(preferenceHost.Address),preferenceB.Join(preferenceHost.Address));
+ if(preferenceHost.Current.Players.Count(p=>p.Spot==1)!=1||preferenceHost.Current.Players.Count(p=>p.Color==2)!=1)throw new Exception("Simultaneous preferences collided");
+ var extra=new Player{Id="extra"};preferenceHost.Current.ApplyPreferences(extra,3,1,preferenceHost.Current.MapPath);
+ if(extra.Color!=3||extra.Spot!=0)throw new Exception("Occupied spot blocked independent color preference");
+ var wrongMap=new Player{Id="wrong-map"};preferenceHost.Current.ApplyPreferences(wrongMap,99,2,"different map");
+ if(wrongMap.Color!=0||wrongMap.Spot!=0)throw new Exception("Invalid preferences applied");
+ preferenceA.Leave();preferenceB.Leave();preferenceHost.Leave();
+ Console.WriteLine("PASS saved per-map preferences, simultaneous joins, occupied choices and invalid input");
+}

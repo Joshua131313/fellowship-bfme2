@@ -102,7 +102,9 @@ public sealed partial class PeerService : IDisposable
                 else
                 {
                     guests[id] = c;
-                    Current.Players.Add(new() { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer });
+                    var player=new Player { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer };
+                    Current.ApplyPreferences(player,hello.Color??0,hello.Spot??0,hello.MapPath);
+                    Current.Players.Add(player);
                     joined = true;
                 }
             }
@@ -186,11 +188,13 @@ public sealed partial class PeerService : IDisposable
     public async Task Join(string address)
     {
         if(settings.IsBlocked(address))throw new InvalidOperationException("Unblock this player before joining.");
+        var advertised=await Query(address,string.IsNullOrEmpty(Address)?null:Address);
+        if(advertised==null)throw new IOException("This room is no longer available or is private.");
         Leave();
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         try
         {
-            await c.Send(new() { Type = "join", Name = settings.Name,CanHostTransfer=listener!=null });
+            await c.Send(new() { Type = "join", Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
             using var timeout = new CancellationTokenSource(5000);
             var welcome = await c.Read(timeout.Token);
             if (welcome?.Type != "welcome") throw new IOException(welcome?.Text ?? "No response from host.");
