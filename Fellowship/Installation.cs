@@ -81,6 +81,9 @@ public static class Installation
                 if(code is not (0 or 3010))throw new IOException(InstallerError(code)+$" (Code {code})");
                 window.Report("Opening Fellowship…",code==3010?"Update installed. Windows may require a restart.":"Update installed successfully.",100);
                 if(!File.Exists(Executable))throw new IOException("Installation finished but Fellowship.exe was not found. Open the log for details.");
+                // The new app cleans again once this worker exits, releasing its file lock.
+                if(Version.TryParse(FileVersionInfo.GetVersionInfo(Executable).FileVersion,out var installedVersion))
+                    UpdateCache.Clean(Path.Combine(Settings.Folder,"versions"),installedVersion,Environment.ProcessPath!);
                 Process.Start(new ProcessStartInfo(Executable){UseShellExecute=true});window.Finish();return 0;
             }
             catch(Exception error)

@@ -66,6 +66,7 @@ public partial class App : Application
         instanceMutex=new Mutex(false,@"Local\Fellowship.UI."+identity,out bool first);
         activateEvent=new EventWaitHandle(false,EventResetMode.AutoReset,@"Local\Fellowship.Activate."+identity);
         if(!first){activateEvent.Set();Shutdown();return;}
+        _=Task.Run(async()=>{await Task.Delay(3000);UpdateCache.CleanInstalledCache();});
         var main = new BrowserWindow();
         MainWindow = main;
         ShutdownMode=ShutdownMode.OnExplicitShutdown;
