@@ -334,7 +334,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.98   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.99   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -945,8 +945,8 @@ public sealed class RoomWindow : Window
     string lastRoomName="";bool? lastPrivacy;
     readonly ListBox players=new();
     readonly TextBox map,patch,rules;
-    readonly StackPanel messages=new(){Margin=new(14,12,14,12)};
-    readonly ScrollViewer chatScroll;
+    readonly ChatTranscript messages=new();
+    readonly ChatTranscript chatScroll;
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
     readonly Button launchMine,abort;
@@ -991,7 +991,7 @@ public sealed class RoomWindow : Window
         var roster=new Grid();UI.Rows(roster,UI.Auto,UI.Star);playerCount.Margin=new(14,12,14,6);UI.At(roster,playerCount,0);UI.At(roster,players,1);UI.At(left,UI.Card(roster,"#191D24",0),0);
         var chat=new Grid();UI.Rows(chat,UI.Auto,UI.Star,UI.Auto);
         var chatHead=UI.Text("ROOM CHAT",10,UI.Muted,true);chatHead.Margin=new(14,12,0,5);UI.At(chat,chatHead,0);
-        chatScroll=UI.Scroll(messages);UI.At(chat,chatScroll,1);
+        chatScroll=messages;UI.At(chat,chatScroll,1);
         var compose=new Grid{Margin=new(12)};compose.ColumnDefinitions.Add(new());compose.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var input=new TextBox{MaxLength=2000,ToolTip="Message your room · Enter to send",Margin=new(0,0,8,0)};
         bool sending=false;
@@ -1214,17 +1214,9 @@ public sealed class RoomWindow : Window
         var split=text.IndexOf("   ",StringComparison.Ordinal);
         var name=split<0?"Room":text[..split];var body=split<0?text:text[(split+3)..];
         if(!blocked){Append(name,body);return;}
-        var panel=new StackPanel{Margin=new(0,0,0,12)};
-        panel.Children.Add(UI.Text(name+" · Blocked",10,UI.Muted,true));
-        var message=UI.ChatText(body,12);message.Visibility=Visibility.Collapsed;message.Margin=new(0,6,0,6);
-        Button? reveal=null;reveal=UI.Button("Show blocked message",()=>{bool show=message.Visibility!=Visibility.Visible;message.Visibility=show?Visibility.Visible:Visibility.Collapsed;reveal!.Content=show?"Hide message":"Show blocked message";});reveal.HorizontalAlignment=HorizontalAlignment.Left;reveal.Margin=new(0,6,0,0);
-        panel.Children.Add(message);panel.Children.Add(reveal);messages.Children.Add(panel);
-        if(messages.Children.Count>200)messages.Children.RemoveAt(0);chatScroll?.ScrollToEnd();
+        messages.AppendBlocked(name,body);
     });
-    void Append(string name,string text)
-    {
-        var line=UI.Stack(UI.Text(name+"  ·  "+DateTime.Now.ToString("HH:mm"),10,name=="SYSTEM"?UI.Muted:UI.Accent,true),UI.ChatText(text,12,name=="SYSTEM"?UI.Muted:"#DEE3ED"));line.Margin=new(0,0,0,12);line.Children[1].SetValue(MarginProperty,new Thickness(0,4,0,0));messages.Children.Add(line);if(messages.Children.Count>200)messages.Children.RemoveAt(0);chatScroll?.ScrollToEnd();
-    }
+    void Append(string name,string text)=>messages.Append(name,text);
     HashSet<string>? soundRoster;
     public void Refresh()
     {
@@ -1411,8 +1403,8 @@ public sealed class ChatWindow : Window
     readonly string contactName;
     public string ContactName=>contactName;
     int unread;
-    readonly StackPanel messages=new(){Margin=new(18)};
-    readonly ScrollViewer scroll;
+    readonly ChatTranscript messages=new();
+    readonly ChatTranscript scroll;
     public ChatWindow(BrowserWindow app,string address,string name)
     {
         contactName=name;
@@ -1420,7 +1412,7 @@ public sealed class ChatWindow : Window
         Title=name+" · Fellowship";
         Activated+=(_,_)=>{unread=0;Title=contactName+" · Fellowship";};
         var header=UI.Row(UI.Avatar(name,40),UI.Stack(UI.Text(name,19,"#F1F3F8",true),UI.Text(address+"  ·  Direct connection",11,UI.Muted)));header.Margin=new(20);UI.At(body,header,0);
-        scroll=UI.Scroll(messages);UI.At(body,scroll,1);
+        scroll=messages;UI.At(body,scroll,1);
         Append("SYSTEM","This conversation stays between these app windows. Messages aren't saved when you close the chat.");
         var composer=new Grid{Margin=new(18,8,18,10)};composer.ColumnDefinitions.Add(new());composer.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var input=new TextBox{MaxLength=2000,ToolTip="Write a message · Enter to send",Margin=new(0,0,8,0)};composer.Children.Add(input);
@@ -1456,8 +1448,7 @@ public sealed class ChatWindow : Window
     }
     public void Append(string name,string text)
     {
-        bool mine=name=="You";var stack=UI.Stack(UI.Text(name+"  ·  "+DateTime.Now.ToString("HH:mm"),10,UI.Muted),UI.ChatText(text,13,"#E7EBF3"));stack.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
-        var bubble=UI.Card(stack,mine?"#263657":"#1E232C",12);bubble.Margin=new(0,0,0,12);bubble.MaxWidth=365;bubble.HorizontalAlignment=mine?HorizontalAlignment.Right:HorizontalAlignment.Left;messages.Children.Add(bubble);if(messages.Children.Count>200)messages.Children.RemoveAt(0);scroll.ScrollToEnd();
+        messages.Append(name,text,name=="You");
     }
 }
 public static class GameLauncher
