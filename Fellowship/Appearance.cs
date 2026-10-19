@@ -13,6 +13,9 @@ public static class Appearance
     static readonly Dictionary<string,(SolidColorBrush Brush,Swatch Source)> brushes=new(StringComparer.OrdinalIgnoreCase);
     static readonly Dictionary<string,string> light=new(StringComparer.OrdinalIgnoreCase)
     {
+        ["#4B6599"]="#BFCEEB",
+        ["#193C31"]="#ECF8F2",
+        ["#32664F"]="#B8DECD",
         ["#101216"]="#F5F7FB",
         ["#10251D"]="#FFFFFF",
         ["#111419"]="#F5F7FB",
@@ -49,11 +52,11 @@ public static class Appearance
         ["#293347"]="#E8EDF5",
         ["#293448"]="#E8EDF5",
         ["#29354E"]="#DFE9FF",
-        ["#293853"]="#BAC6D8",
+        ["#293853"]="#E8EFFF",
         ["#293A58"]="#DFE9FF",
         ["#2C313B"]="#D7DFEA",
         ["#2C3854"]="#BAC6D8",
-        ["#2D3B53"]="#BAC6D8",
+        ["#2D3B53"]="#E8EFFF",
         ["#303640"]="#E8EDF5",
         ["#303945"]="#E8EDF5",
         ["#303947"]="#E8EDF5",
@@ -61,7 +64,7 @@ public static class Appearance
         ["#343E4D"]="#BAC6D8",
         ["#343F50"]="#BAC6D8",
         ["#343F51"]="#BAC6D8",
-        ["#34445F"]="#BAC6D8",
+        ["#34445F"]="#E8EFFF",
         ["#344969"]="#BAC6D8",
         ["#363B45"]="#BAC6D8",
         ["#363C48"]="#BAC6D8",

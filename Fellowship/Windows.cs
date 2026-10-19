@@ -327,8 +327,8 @@ public sealed partial class BrowserWindow : Window
         Closed+=(_,_)=>playersPopup.IsOpen=false;
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
-        var joinItem=new MenuItem{Header="Join / open room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
-        roomMenu.Opened+=(_,_)=>{joinItem.IsEnabled=rooms.SelectedItem is RoomEntry;preview.IsEnabled=joinItem.IsEnabled;};
+        var joinItem=new MenuItem{Header="Join room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
+        roomMenu.Opened+=(_,_)=>{joinItem.Header=rooms.SelectedItem is RoomEntry selectedRoom&&Peer.Current?.Id==selectedRoom.Room.Id?"Open room":"Join room";joinItem.IsEnabled=rooms.SelectedItem is RoomEntry;preview.IsEnabled=joinItem.IsEnabled;};
         roomMenu.Items.Add(joinItem);roomMenu.Items.Add(preview);rooms.ContextMenu=roomMenu;
         rooms.PreviewMouseRightButtonDown+=(_,e)=>{var row=ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) as DataGridRow;if(row!=null)row.IsSelected=true;};
         Peer.Discovered+=ip=>Dispatcher.InvokeAsync(async()=>{if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);await QueryDiscoveredPeer(ip);});

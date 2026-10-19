@@ -41,8 +41,8 @@ public sealed partial class BrowserWindow
         foreach(var page in new[]{"Game rooms","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
         currentRoomLink=Nav("▶  Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,0,0,6);currentRoomLink.Background=UI.Brush("#151A21");currentRoomLink.BorderBrush=UI.Brush("#151A21");currentRoomLink.Tag="CurrentRoom";currentRoomLink.Height=62;
         currentRoomName.TextWrapping=TextWrapping.NoWrap;currentRoomName.TextTrimming=TextTrimming.CharacterEllipsis;currentRoomPlayers.Margin=new(0,4,0,0);
-        var roomContent=new Grid();roomContent.ColumnDefinitions.Add(new(){Width=new GridLength(28)});roomContent.ColumnDefinitions.Add(new());
-        var play=new System.Windows.Shapes.Path{Data=System.Windows.Media.Geometry.Parse("M 2,1 L 17,10 L 2,19 Z"),Stroke=UI.Brush(UI.Green),StrokeThickness=2,StrokeLineJoin=System.Windows.Media.PenLineJoin.Round,Width=20,Height=22,VerticalAlignment=VerticalAlignment.Center};roomContent.Children.Add(play);
+        var roomContent=new Grid();roomContent.ColumnDefinitions.Add(new(){Width=new GridLength(40)});roomContent.ColumnDefinitions.Add(new());
+        var play=new System.Windows.Shapes.Path{Data=System.Windows.Media.Geometry.Parse("M 2,1 L 17,10 L 2,19 Z"),Stroke=UI.Brush(UI.Green),StrokeThickness=2,StrokeLineJoin=System.Windows.Media.PenLineJoin.Round,Width=20,Height=22,VerticalAlignment=VerticalAlignment.Center};var playTile=new Border{Width=32,Height=32,CornerRadius=new(9),Background=UI.Brush("#193C31"),BorderBrush=UI.Brush("#32664F"),BorderThickness=new(1),Child=play,HorizontalAlignment=HorizontalAlignment.Left};play.HorizontalAlignment=HorizontalAlignment.Center;roomContent.Children.Add(playTile);
         var roomLabels=UI.Stack(currentRoomName,currentRoomPlayers);Grid.SetColumn(roomLabels,1);roomContent.Children.Add(roomLabels);currentRoomLink.HorizontalContentAlignment=HorizontalAlignment.Stretch;currentRoomLink.Content=roomContent;
         var tools=UI.Text("TOOLS",10,UI.Muted,true);tools.Margin=new(12,22,0,12);links.Children.Add(tools);
         navigation["Game preferences"]=Nav("Game preferences",()=>SelectDashboard("Game preferences"));
@@ -78,7 +78,7 @@ public sealed partial class BrowserWindow
             }
             dashboardPreferences.Children.Clear();dashboardPreferences.Children.Add(content);
         }
-        foreach(var pair in navigation){pair.Value.Background=UI.Brush(pair.Key==page?"#293853":"#151A21");pair.Value.BorderBrush=UI.Brush(pair.Key==page?"#537BEF":"#151A21");}
+        foreach(var pair in navigation){pair.Value.Background=UI.Brush(pair.Key==page?"#293853":"#151A21");pair.Value.BorderBrush=UI.Brush(pair.Key==page?"#4B6599":"#151A21");pair.Value.Foreground=UI.Brush(pair.Key==page?"#7395FF":"#EFF1F5");}
         RenderDashboard();
     }
     void RenderDashboard()
