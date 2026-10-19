@@ -50,7 +50,9 @@ public sealed partial class BrowserWindow
         UI.At(side,links,0);
         var profile=UI.Button("",()=>CreateProfileEditor(this).Show());profile.Style=(Style)Application.Current.FindResource("PlayerRowButton");profile.Height=double.NaN;profile.Margin=new(0,0,0,14);profile.Padding=new(8);profile.ToolTip="Edit your profile";
         profile.Content=UI.Row(UI.Avatar(Settings.Name,32),UI.Stack(profileName,UI.Text("Edit profile",10,UI.Muted)));
-        var bottom=UI.Stack(profile,new Border{Margin=new(10,0,0,0),Child=dashboardNetwork});UI.At(side,bottom,2);
+        var availability=new ComboBox{ItemsSource=new[]{"Available (automatic)","AFK (manual)"},SelectedIndex=Settings.ManualAfk?1:0,Margin=new(0,0,0,12),ToolTip="Manual AFK stays on until you choose Available. Otherwise AFK follows five minutes of inactivity."};
+        availability.SelectionChanged+=async(_,_)=>{Settings.ManualAfk=availability.SelectedIndex==1;Settings.Save();RenderDashboard();try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch(Exception error){System.Diagnostics.Debug.WriteLine(error);}};
+        var bottom=UI.Stack(profile,availability,new Border{Margin=new(10,0,0,0),Child=dashboardNetwork});UI.At(side,bottom,2);
         Grid.SetColumn(roomBody,1);dashboard.Children.Add(roomBody);
         var socialScroll=UI.Scroll(dashboardSocial);Grid.SetColumn(socialScroll,1);dashboard.Children.Add(socialScroll);
         socialScroll.Visibility=Visibility.Collapsed;dashboardSocial.Tag=socialScroll;
@@ -100,8 +102,8 @@ public sealed partial class BrowserWindow
             var presence=Presence.Find(friend.Address,DateTimeOffset.UtcNow);
             string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.IsAfk?"AFK":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";
             var button=UI.Button("",()=>{if(!Settings.IsBlocked(friend.Address))OpenChat(friend.Address,friend.Name);});button.Style=(Style)Application.Current.FindResource("PlayerRowButton");button.Height=double.NaN;button.Padding=new(12);button.Margin=new(0,0,0,8);button.HorizontalContentAlignment=HorizontalAlignment.Stretch;
-            var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.Text(state+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:UI.Green);details.Margin=new(0,4,0,0);
-            button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(name,details));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
+            var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.Text(state+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:presence.IsAfk?IdlePresence.AwayColor:UI.Green);details.Margin=new(0,4,0,0);
+            button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(UI.Row(name,presence==null?UI.Text("",10):IdlePresence.Badge(presence.IsAfk)),details));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
         }
     }
 }

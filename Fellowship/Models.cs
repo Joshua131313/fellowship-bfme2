@@ -4,6 +4,7 @@ namespace Fellowship;
 public sealed record Friend(string Name, string Address);
 public sealed class Settings
 {
+    public bool ManualAfk { get; set; }
     bool persist=true;
     public static Settings InMemory()=>new(){persist=false};
     public sealed record SavedSetup(string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int Team,int Spot,int Color=0);
@@ -121,6 +122,7 @@ public sealed class Room
 }
 public sealed class Player
 {
+    public bool ManualAfk { get; set; }
     public int? IdleSeconds { get; set; }
     public bool GameRunning { get; set; }
     public int PreferredColor { get; set; }
@@ -139,6 +141,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public bool ManualAfk { get; set; }
     public int? IdleSeconds { get; set; }
     public bool GameRunning { get; set; }
     public int LastSelectedColor { get; set; }

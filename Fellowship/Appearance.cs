@@ -13,6 +13,8 @@ public static class Appearance
     static readonly Dictionary<string,(SolidColorBrush Brush,Swatch Source)> brushes=new(StringComparer.OrdinalIgnoreCase);
     static readonly Dictionary<string,string> light=new(StringComparer.OrdinalIgnoreCase)
     {
+        ["#F2BD60"]="#895100",
+        ["#3A2C16"]="#FFF0CF",
         ["#4B6599"]="#BFCEEB",
         ["#193C31"]="#ECF8F2",
         ["#32664F"]="#B8DECD",
