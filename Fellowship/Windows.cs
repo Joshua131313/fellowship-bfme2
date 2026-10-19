@@ -210,7 +210,7 @@ public static class UI
     public static ScrollViewer Scroll(UIElement content) => new() { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
 }
 
-public sealed class BrowserWindow : Window
+public sealed partial class BrowserWindow : Window
 {
     public Settings Settings { get; }
     public PeerService Peer { get; }
@@ -239,14 +239,14 @@ public sealed class BrowserWindow : Window
     async Task CheckUpdateNotice(){if(checkingUpdate||AppUpdates.Installing||DateTimeOffset.UtcNow-lastUpdateCheck<TimeSpan.FromMinutes(1))return;checkingUpdate=true;lastUpdateCheck=DateTimeOffset.UtcNow;try{await AppUpdates.Check();}catch{/* Offline checks stay quiet; manual checks show errors. */}finally{checkingUpdate=false;}}
     readonly StackPanel activePlayers=new();
     readonly TextBox playerSearch=new(){ToolTip="Search players or VPN address",Height=34,Padding=new(10,5,10,5),Margin=new(0,0,0,10),MaxLength=80};
-    readonly Button playersButton=new(){Content="Active players: 1",Height=34,Padding=new(12,5,12,5),Margin=new(12,0,0,0),HorizontalAlignment=HorizontalAlignment.Left};
-    readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Top};
+    readonly TextBlock onlineCount=UI.Text("1 online",11,UI.Green);
+    readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Bottom};
     public BrowserWindow(Settings? settings=null)
     {
         Settings=settings??Settings.Load();
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
-        var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
+        var body = UI.Shell(this,"Dashboard",1240,760); MinWidth = 1100; MinHeight = 650;
         UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var updateText=UI.Text("",12,"#E5EBFF");var updateRow=new Grid();updateRow.ColumnDefinitions.Add(new());updateRow.ColumnDefinitions.Add(new(){Width=UI.Auto});updateRow.Children.Add(updateText);
         var updateButton=UI.Require(UI.AsyncButton("Download & restart",async()=>{if(AppUpdates.Available is {} release)await AppUpdates.Install(release,()=>Peer.Current!=null,text=>updateText.Text=text);},true),()=>Peer.Current==null,()=>"Leave your room before downloading and restarting.");updateButton.Margin=new(16,0,0,0);Grid.SetColumn(updateButton,1);updateRow.Children.Add(updateButton);
@@ -258,7 +258,7 @@ public sealed class BrowserWindow : Window
         Loaded+=async(_,_)=>await CheckUpdateNotice();Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;AppUpdates.InstallationChanged-=UpdateBanner;};
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
-        var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
+        var actions = UI.Row(UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
         var filters = new Grid { Margin = new(22,0,22,14) }; filters.ColumnDefinitions.Add(new()); filters.ColumnDefinitions.Add(new() { Width = UI.Auto });
         filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), UI.Text("    Radmin VPN",12,UI.Muted)));
         var filterRight = UI.Row(UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
@@ -267,7 +267,7 @@ public sealed class BrowserWindow : Window
         Column("ROOM NAME","Title",2,true); Column("HOST","Host",1,true); Column("MAP","Map",1.25,true); Column("PLAYERS","Slots",75); Column("PATCH","Patch",75); Column("STATUS","Status",110);
         var pingTemplate=new DataTemplate();var pingFactory=new FrameworkElementFactory(typeof(PingBadge));pingFactory.SetBinding(PingBadge.MillisecondsProperty,new Binding("Ping"));pingTemplate.VisualTree=pingFactory;
         rooms.Columns.Insert(5,new DataGridTemplateColumn{Header="PING",Width=90,CellTemplate=pingTemplate});
-        var roomRowStyle=new Style(typeof(DataGridRow),(Style)Application.Current.FindResource(typeof(DataGridRow)));roomRowStyle.Setters.Add(new Setter(CursorProperty,Cursors.Hand));rooms.RowStyle=roomRowStyle;
+        rooms.RowStyle=(Style)Application.Current.FindResource(typeof(DataGridRow));
         rooms.PreviewMouseLeftButtonUp+=(_,e)=>{if(ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) is DataGridRow{Item:RoomEntry entry}&&Peer.Current?.Id==entry.Room.Id)ShowRoom();};
         table.Children.Add(rooms);
         var emptyContent = UI.Stack(UI.Text("◈",42,"#5B719F",true),emptyTitle,emptyHint,discoveryProgress);
@@ -278,24 +278,25 @@ public sealed class BrowserWindow : Window
         var direct = UI.Row(UI.Text("HOST IP  ",10,UI.Muted,true),address,UI.AsyncButton("↻  Refresh",Refresh),UI.Require(UI.AsyncButton("Join room  →",Join,true),()=>!joining&&UI.ValidAddress(address.Text),()=>joining?"Connecting to the room. Please wait.":"Select a room or enter a valid host IPv4 address, such as 26.42.214.47.")); address.Margin = new(0,0,10,0);
         foreach(var button in direct.Children.OfType<Button>()){button.Height=34;button.MinWidth=90;button.Padding=new(12,5,12,5);}
         footer.Children.Add(direct);
-        count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
+        count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.74   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.75   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
-        var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
+        var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
         var popupCard=UI.Card(popupBody,"#1B222D",14);popupCard.Width=320;popupCard.Margin=new(6);
         popupCard.Effect=new System.Windows.Media.Effects.DropShadowEffect{BlurRadius=12,ShadowDepth=3,Opacity=.3};
-        playersPopup.Child=popupCard;playersPopup.PlacementTarget=playersButton;
-        playersButton.Click+=(_,_)=>{playersPopup.IsOpen=!playersPopup.IsOpen;if(playersPopup.IsOpen){playerSearch.Clear();RenderActivePlayers();playerSearch.Focus();}};
-        playerSearch.TextChanged+=(_,_)=>RenderActivePlayers();
+        playersPopup.Child=popupCard;playersPopup.PlacementTarget=playerSearch;
+        playerSearch.TextChanged+=(_,_)=>{RenderActivePlayers();playersPopup.IsOpen=playerSearch.IsKeyboardFocused&&playerSearch.Text.Trim().Length>0;};
+        playerSearch.GotKeyboardFocus+=(_,_)=>{if(playerSearch.Text.Trim().Length>0){RenderActivePlayers();playersPopup.IsOpen=true;}};
         UI.Menus(this,
             UI.MenuGroup("_File",UI.MenuAction("Host room",CreateRoom),UI.MenuAction("Hide to tray",Hide),UI.MenuAction("Quit Fellowship",()=>((App)Application.Current).Quit())),
             UI.MenuGroup("_Edit",UI.MenuAction("Settings",OpenSettings),UI.MenuAction("Clear room filter",()=>search.Clear(),()=>search.Text.Length>0)),
-            UI.MenuGroup("_View",UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Active players",()=>{playersPopup.IsOpen=true;playerSearch.Clear();RenderActivePlayers();playerSearch.Focus();})),
+            UI.MenuGroup("_View",UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Active players",()=>{playerSearch.Focus();playerSearch.SelectAll();})),
             UI.MenuGroup("F_riends",UI.MenuAction("Friends list",OpenFriends),UI.MenuAction("Blocked players",ShowBlockedPlayers)),
             UI.MenuGroup("_Help",UI.MenuAction("Getting started",UI.OpenGuide),UI.MenuAction("About Fellowship",()=>UI.Info(this,"About Fellowship","Fellowship "+System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)+"\nBFME2 1.00 · Radmin VPN"))));
-        playerSearch.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){playersPopup.IsOpen=false;playersButton.Focus();e.Handled=true;}};
+        playerSearch.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){playersPopup.IsOpen=false;rooms.Focus();e.Handled=true;}};
+        BuildDashboard(body);
         Closed+=(_,_)=>playersPopup.IsOpen=false;
         var roomMenu=new ContextMenu();
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
@@ -336,6 +337,7 @@ public sealed class BrowserWindow : Window
     {
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).GroupBy(r=>r.Room.Id).Select(g=>g.OrderByDescending(r=>r.Room.Revision).First()).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
+        RenderDashboard();
         RoomPreviewsChanged?.Invoke();
         list=list.Select(r=>r with{Ping=Latency.Get(r.Address,Peer.Address)}).ToList();
         string filter = search.Text.Trim();
@@ -534,7 +536,7 @@ public sealed class BrowserWindow : Window
     {
         activePlayers.Children.Clear();
         var peers=Presence.Active(DateTimeOffset.UtcNow).Where(p=>!Settings.IsBlocked(p.Address)).ToArray();
-        playersButton.Content=UI.Row(UI.Text($"Active players: {peers.Length+1}",11),new System.Windows.Shapes.Path{Data=Geometry.Parse("M 0,0 L 4,4 L 8,0"),Stroke=UI.Brush(UI.Muted),StrokeThickness=1.5,Margin=new(10,0,0,0),VerticalAlignment=VerticalAlignment.Center});
+        onlineCount.Text=$"{peers.Length+1} online";
         string query=playerSearch.Text.Trim();
         foreach(var peer in peers.Where(p=>SearchableMapBox.Matches(p.Name+" "+p.Address,query)))
         {
@@ -1153,6 +1155,7 @@ public sealed class FriendsWindow : Window
 public sealed class ChatWindow : Window
 {
     readonly string contactName;
+    public string ContactName=>contactName;
     int unread;
     readonly StackPanel messages=new(){Margin=new(18)};
     readonly ScrollViewer scroll;
