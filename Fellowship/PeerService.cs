@@ -27,6 +27,7 @@ public sealed partial class PeerService : IDisposable
     public event Action? Changed;
     public event Action<string>? Chat;
     public event Action<string,bool>? RoomChat;
+    public event Action? RoomMessageReceived;
     volatile bool gameRunning;
     public event Action<string, string, string>? PrivateMessage;
     public event Action<string,string,Room>? Invitation;
@@ -417,7 +418,7 @@ public sealed partial class PeerService : IDisposable
         }
         await BroadcastState();
     }
-    public Task Say(string text) => IsHost ? SendRoomChat(settings.Name, text) : upstream?.Send(new() { Type = "chat", Text = Clean(text, 2000) }) ?? Task.CompletedTask;
+    public Task Say(string text) => Current==null?Task.FromException(new IOException("You are not connected to a room.")):IsHost ? SendRoomChat(settings.Name, text) : upstream?.Send(new() { Type = "chat", Text = Clean(text, 2000) }) ?? Task.FromException(new IOException("The room connection is unavailable."));
     async Task SendRoomChat(string name, string text,string id="host")
     {
         var line = $"{name}   {Clean(text, 2000)}";
@@ -429,6 +430,7 @@ public sealed partial class PeerService : IDisposable
         var sender=Current?.Players.FirstOrDefault(p=>p.Id==id);
         bool blocked=sender!=null?settings.IsBlocked(sender.Address):Current?.Players.Any(p=>settings.IsBlocked(p.Address)&&text.StartsWith(p.Name+"   ",StringComparison.Ordinal))==true;
         RoomChat?.Invoke(text,blocked);
+        if(!blocked&&id!=LocalId)RoomMessageReceived?.Invoke();
         if(!blocked)Chat?.Invoke(text);
     }
     public async Task SetHostGameRunning(bool running)

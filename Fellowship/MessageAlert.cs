@@ -26,6 +26,11 @@ internal static class MessageAlert
         try{(online?Online:Offline).Value.Play();}
         catch(Exception e) when(e is InvalidOperationException or IOException or System.ComponentModel.Win32Exception){}
     }
+    static readonly Dictionary<string,Lazy<SoundPlayer>> Effects=new[]{"sent","room-message","invite","room-join","room-leave"}.ToDictionary(name=>name,name=>new Lazy<SoundPlayer>(()=>Load(name)));
+    public static void Effect(string name)
+    {
+        try{Effects[name].Value.Play();}catch(Exception e) when(e is InvalidOperationException or IOException or System.ComponentModel.Win32Exception){}
+    }
     public static void Play()
     {
         // An unavailable audio device must not interrupt message delivery.
