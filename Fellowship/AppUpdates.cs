@@ -70,7 +70,7 @@ public static class AppUpdates
         if(FileVersionInfo.GetVersionInfo(exe).FileVersion is not {} version||new Version(version)!=new Version(release.Version.Major,release.Version.Minor,release.Version.Build,0))throw new InvalidDataException("Update version mismatch");
         File.Delete(zip);return exe;
     }
-    public static async Task Install(Release release,Func<bool> inRoom,Action<string> status)
+    public static async Task Install(Release release,Func<bool> inRoom,Action<string> status,Action<double?>? downloadProgress=null)
     {
         if(inRoom()){status("Leave your room before updating.");return;}
         if(Installing){status("An update is already downloading.");return;}
@@ -79,12 +79,13 @@ public static class AppUpdates
         var window=new UpdateProgressWindow(release.Version.ToString(3));window.AllowCancel(()=>cancellation.Cancel());window.Show();
         try
         {
-            status("Downloading update…");
+            status("Downloading update…");downloadProgress?.Invoke(null);
             var progress=new Progress<(long Received,long? Total)>(value=>
             {
                 double? percent=value.Total is >0?100.0*value.Received/value.Total.Value:null;
                 string text=value.Total is >0?$"{value.Received/1048576.0:0.0} / {value.Total.Value/1048576.0:0.0} MB · {percent:0}%":$"{value.Received/1048576.0:0.0} MB downloaded";
                 bool complete=value.Total is >0&&value.Received==value.Total;
+                downloadProgress?.Invoke(percent);
                 window.Report(complete?"Verifying download…":"Downloading update…",complete?"Checking the package before installation.":text,complete?null:percent);status(text);
             });
             var downloaded=await Download(release,progress:progress,token:cancellation.Token);
@@ -100,17 +101,24 @@ public static class AppUpdates
         }
         catch(OperationCanceledException) when(cancellation.IsCancellationRequested){status("Update cancelled. Your current version is unchanged.");window.Finish();}
         catch(Exception e){status("Update failed: "+e.Message);window.Failure(e.Message);}
-        finally{Installing=false;}
+        finally{Installing=false;downloadProgress?.Invoke(-1);}
+    }
+    public static void UpdateDownloadBar(ProgressBar bar,double? value)
+    {
+        bar.Visibility=value is <0?Visibility.Collapsed:Visibility.Visible;
+        bar.IsIndeterminate=value==null;
+        if(value is >=0)bar.Value=Math.Clamp(value.Value,0,100);
     }
     public static FrameworkElement Controls(Func<bool> inRoom)
     {
         var panel=new StackPanel{Margin=new(0,22,0,0)};panel.Children.Add(UI.Text("FELLOWSHIP "+VersionText,11,UI.Muted,true));
         var status=UI.Text("Updates from GitHub",11,UI.Muted);status.Margin=new(0,8,0,8);panel.Children.Add(status);
+        var downloadBar=new ProgressBar{Height=5,Margin=new(0,4,0,8),Visibility=Visibility.Collapsed};panel.Children.Add(downloadBar);
         Release? available=Available;
         var install=UI.AsyncButton("Download & restart",async()=>
         {
             if(available==null)return;
-            await Install(available,inRoom,text=>status.Text=text);
+            await Install(available,inRoom,text=>status.Text=text,value=>UpdateDownloadBar(downloadBar,value));
         },true);install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;
         install.Margin=new(0,8,0,0);
         UI.Require(install,()=>available!=null&&!inRoom(),()=>"Leave your room before downloading and restarting.");
