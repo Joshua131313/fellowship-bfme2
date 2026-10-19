@@ -20,7 +20,7 @@ except urllib.error.HTTPError as error:
     if error.code!=404:raise
     release=request(base+'/releases',json.dumps({'tag_name':tag,'target_commitish':commit,'name':'Fellowship '+version,'body':pathlib.Path(notes).read_text(encoding='utf-8-sig'),'draft':True}).encode(),'POST')
 for p in [p]+[pathlib.Path(i) for i in installers]:
-    if p.name not in (f'Fellowship-{version}-win-x64.zip',f'Fellowship-{version}-win-x64.msi'):raise ValueError('Unexpected asset name')
+    if p.name not in (f'Fellowship-{version}-win-x64.zip',f'Fellowship-{version}-win-x64.msi',f'Fellowship-Repair-{version}.exe'):raise ValueError('Unexpected asset name')
     payload=p.read_bytes();assets=request(base+'/releases/'+str(release['id'])+'/assets')
     asset=next((a for a in assets if a['name']==p.name),None)
     if asset is None:asset=request(release['upload_url'].split('{')[0]+'?name='+p.name,payload,'POST','application/octet-stream')

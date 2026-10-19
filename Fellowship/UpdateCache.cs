@@ -12,6 +12,8 @@ public static class UpdateCache
         {
             root=Path.GetFullPath(root);
             if(!Directory.Exists(root)||Linked(root))return 0;
+            HashSet<Version>? registered;
+            try{registered=InstallerRecovery.Registered().Select(p=>new Version(p.Version.ToString(3))).ToHashSet();}catch{registered=null;}
             string runningFolder=Path.GetDirectoryName(Path.GetFullPath(runningExecutable))!;
             foreach(string versionFolder in Directory.EnumerateDirectories(root))
             {
@@ -21,6 +23,7 @@ public static class UpdateCache
                     if(Linked(staging)||!Guid.TryParseExact(Path.GetFileName(staging),"N",out _)||string.Equals(Path.GetFullPath(staging),runningFolder,StringComparison.OrdinalIgnoreCase))continue;
                     foreach(string name in new[]{"update.msi","update.zip","installer-worker.exe","Fellowship.exe"})
                     {
+                        if(name=="update.msi"&&(registered==null||version>=new Version(installedVersion.ToString(3))||registered.Contains(version)))continue;
                         string file=Path.Combine(staging,name);
                         try{if(File.Exists(file)&&!Linked(file)){long size=new FileInfo(file).Length;File.Delete(file);reclaimed+=size;}}
                         catch(IOException){}catch(UnauthorizedAccessException){}

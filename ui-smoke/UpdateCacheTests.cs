@@ -11,7 +11,7 @@ static class UpdateCacheTests
         File.WriteAllText(Path.Combine(old,"install.log"),"diagnostic");File.WriteAllText(Path.Combine(old,"settings.json"),"preserve");
         string custom=Path.Combine(root,"0.1.40","custom");Directory.CreateDirectory(custom);File.WriteAllText(Path.Combine(custom,"update.msi"),"preserve");
         long reclaimed=UpdateCache.Clean(root,new Version(0,1,45),Path.Combine(running,"installer-worker.exe"));
-        if(reclaimed!=26||File.Exists(Path.Combine(old,"update.msi"))||Directory.Exists(current)||!File.Exists(Path.Combine(old,"install.log"))||!File.Exists(Path.Combine(old,"settings.json"))||!File.Exists(Path.Combine(future,"update.msi"))||!File.Exists(Path.Combine(running,"update.msi"))||!File.Exists(Path.Combine(custom,"update.msi")))throw new Exception("Update cache cleanup scope failed");
+        if(reclaimed!=19||File.Exists(Path.Combine(old,"update.msi"))||!File.Exists(Path.Combine(current,"update.msi"))||!File.Exists(Path.Combine(old,"install.log"))||!File.Exists(Path.Combine(old,"settings.json"))||!File.Exists(Path.Combine(future,"update.msi"))||!File.Exists(Path.Combine(running,"update.msi"))||!File.Exists(Path.Combine(custom,"update.msi")))throw new Exception("Update cache cleanup scope failed");
         if(UpdateCache.Clean(root,new Version(0,1,45),Path.Combine(running,"installer-worker.exe"))!=0)throw new Exception("Cleanup not idempotent");
         Console.WriteLine("PASS old update cleanup preserves logs, unknown files, future downloads and running worker");
     }

@@ -39,6 +39,14 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if(System.IO.Path.GetFileNameWithoutExtension(Environment.ProcessPath!).StartsWith("Fellowship-Repair-",StringComparison.OrdinalIgnoreCase))
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            var progress=new UpdateProgressWindow("REPAIR");progress.Show();
+            try{await InstallerRecovery.Repair((title,detail)=>progress.Report(title,detail),true);progress.Finish();UI.Information(null,"Installer repaired","Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved.").ShowDialog();Shutdown(0);}
+            catch(Exception error){progress.Finish();UI.Information(null,"Repair could not finish",error.Message).ShowDialog();Shutdown(1);}
+            return;
+        }
         if(e.Args.Length==5&&e.Args[0]=="--native-sync"&&int.TryParse(e.Args[2],out var syncGame)&&int.TryParse(e.Args[3],out var syncParent))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;

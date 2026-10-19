@@ -66,6 +66,8 @@ public static class Installation
                 // Give the former room's native worker time to observe its parent exit.
                 await Task.Delay(1500);
                 EnsureUpdateSpace(package,Executable,Path.GetTempPath(),Environment.SystemDirectory);
+                await InstallerRecovery.Repair((title,detail)=>window.Report(title,detail));
+                bool repaired=false;
                 int code;var busyTimer=Stopwatch.StartNew();
                 do
                 {
@@ -74,6 +76,11 @@ public static class Installation
                     foreach(var arg in new[]{"/i",package,"/qn","/norestart","/L*v",log})start.ArgumentList.Add(arg);
                     using var installer=Process.Start(start)??throw new IOException("Could not start Windows Installer.");
                     await installer.WaitForExitAsync();code=installer.ExitCode;
+                    if(!repaired&&InstallerRecovery.MissingSource(code,File.Exists(log)?File.ReadAllText(log):""))
+                    {
+                        repaired=true;await InstallerRecovery.Repair((title,detail)=>window.Report(title,detail),true);
+                        log=Path.Combine(Path.GetDirectoryName(package)!,"install-retry-"+DateTime.Now.ToString("yyyyMMdd-HHmmssfff")+".log");continue;
+                    }
                     if(code==1618&&busyTimer.Elapsed<TimeSpan.FromMinutes(2))
                     {window.Report("Waiting for Windows Installer…","Another installation is running. Retrying automatically…");await Task.Delay(5000);}
                     else break;
