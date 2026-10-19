@@ -280,7 +280,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.75   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.76   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -410,11 +410,16 @@ public sealed partial class BrowserWindow : Window
         save.IsDefault=true;save.Margin=new(0);Grid.SetColumn(save,1);actions.Children.Add(save);panel.Children.Add(actions);
         w.Loaded+=(_,_)=>{nickname.Focus();nickname.SelectAll();};return w;
     }
-    public void OpenSettings()=>CreateSettingsWindow().ShowDialog();
+    public void OpenSettings(){UI.Reveal(this);SelectDashboard("Settings");}
     public Window CreateSettingsWindow()
     {
         var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterOwner};if(IsLoaded)w.Owner=this;
-        var body=UI.Shell(w,"Settings",740,700);w.MinWidth=640;w.MinHeight=560;UI.Rows(body,UI.Star,UI.Auto);
+        var body=UI.Shell(w,"Settings",740,700);w.MinWidth=640;w.MinHeight=560;
+        body.Children.Add(CreateSettingsContent(w,w.Close,w.Close));return w;
+    }
+    public Grid CreateSettingsContent(Window w,Action saved,Action restored)
+    {
+        var body=new Grid();UI.Rows(body,UI.Star,UI.Auto);
         var p=new StackPanel{Margin=new(24,20,24,18)};UI.At(body,UI.Scroll(p),0);
         p.Children.Add(UI.Text("Settings",23,"#F1F3F8",true));
         var profile=new Grid{Margin=new(0,16,0,0)};profile.ColumnDefinitions.Add(new());profile.ColumnDefinitions.Add(new());
@@ -432,7 +437,7 @@ public sealed partial class BrowserWindow : Window
         game.Height=58;game.TextWrapping=TextWrapping.Wrap;game.VerticalContentAlignment=VerticalAlignment.Center;
         game.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;game.VerticalScrollBarVisibility=ScrollBarVisibility.Hidden;
         var browse=UI.Button("Browse files…",()=>{var d=new OpenFileDialog{Filter="Game executable (*.exe)|*.exe"};if(d.ShowDialog(w)==true)game.Text=d.FileName;});browse.HorizontalAlignment=HorizontalAlignment.Left;browse.Margin=new(0,8,0,0);p.Children.Add(browse);
-        var gamePreferences=UI.Button("Game preferences…",()=>new GamePreferencesWindow(w,Settings).ShowDialog());gamePreferences.HorizontalAlignment=HorizontalAlignment.Left;gamePreferences.Margin=new(0,12,0,0);p.Children.Add(gamePreferences);
+        var gamePreferences=UI.Button("Game preferences…",()=>SelectDashboard("Game preferences"));gamePreferences.HorizontalAlignment=HorizontalAlignment.Left;gamePreferences.Margin=new(0,12,0,0);p.Children.Add(gamePreferences);
         var options=new StackPanel();
         var sounds=new CheckBox{Content="Chat, invitation and room activity sounds",IsChecked=Settings.MessageSounds,Margin=new(0,0,0,14)};options.Children.Add(sounds);
         var friendSounds=new CheckBox{Content="Player online and offline sounds",IsChecked=Settings.FriendActivitySounds,Margin=new(0,0,0,14)};options.Children.Add(friendSounds);
@@ -456,7 +461,7 @@ public sealed partial class BrowserWindow : Window
                 var incoming=SettingsBackup.Parse(File.ReadAllText(dialog.FileName));
                 if(MessageBox.Show(w,"Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged.","Restore backup",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
                 File.WriteAllText(Path.Combine(Settings.Folder,"before-restore.json"),SettingsBackup.Export(Settings));
-                SettingsBackup.Restore(Settings,incoming);friendsWindow?.Close();w.Close();await Refresh();
+                SettingsBackup.Restore(Settings,incoming);friendsWindow?.Close();restored();await Refresh();
             }
             catch(Exception error){UI.Error(error.Message);}
         });
@@ -467,9 +472,9 @@ public sealed partial class BrowserWindow : Window
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);var marker=Path.Combine(Settings.Folder,"folder-"+Guid.NewGuid().ToString("N")+".tmp");try{File.WriteAllText(marker,"");var folder=Path.GetDirectoryName(NativePlacement.PhysicalPath(marker))!;Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});}finally{File.Delete(marker);}});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
         var save=UI.Require(UI.AsyncButton("Save settings",async()=>
         {
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();w.Close();EnsureOnline();
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
-        save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return w;
+        save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return body;
     }
     readonly Dictionary<string,Task> peerQueries=new();
     readonly Dictionary<string,int> queryVersions=new();

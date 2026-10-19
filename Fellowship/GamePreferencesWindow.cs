@@ -8,7 +8,12 @@ public sealed class GamePreferencesWindow : Window
     {
         if(owner.IsLoaded)Owner=owner;WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var body=UI.Shell(this,"Game preferences",480,660);MinWidth=420;MinHeight=540;
-        var panel=new StackPanel{Margin=new(24)};body.Children.Add(UI.Scroll(panel));
+        body.Children.Add(CreateContent(settings,Close));
+    }
+    public static Grid CreateContent(Settings settings,Action saved)
+    {
+        var body=new Grid();
+        var panel=new StackPanel{Margin=new(24),Width=400,HorizontalAlignment=HorizontalAlignment.Left};body.Children.Add(UI.Scroll(panel));
         panel.Children.Add(UI.Text("Game preferences",21,bold:true));
         var hint=UI.Text("Applied when joining, if your choices are available.",11,UI.Muted);hint.Margin=new(0,8,0,18);panel.Children.Add(hint);
         panel.Children.Add(UI.Text("PREFERRED COLOR",10,UI.Muted,true));
@@ -37,7 +42,8 @@ public sealed class GamePreferencesWindow : Window
         color.SelectionChanged+=(_,_)=>Render();
         preview.SpotSelected+=spot=>{if(current==null)return;if(spot==0)spots.Remove(current.MapPath);else spots[current.MapPath]=spot;Render();};
         var clear=UI.Button("Clear this map’s preference",()=>{if(current!=null)spots.Remove(current.MapPath);Render();});clear.Margin=new(0,12,0,12);panel.Children.Add(clear);
-        var save=UI.Button("Save preferences",()=>{settings.PreferredColor=(color.SelectedItem as PlayerColor)?.Value??0;settings.PreferredMapSpots=spots;settings.Save();Close();},true);save.Margin=new(0,0,0,0);panel.Children.Add(save);
+        var save=UI.Button("Save preferences",()=>{settings.PreferredColor=(color.SelectedItem as PlayerColor)?.Value??0;settings.PreferredMapSpots=spots;settings.Save();saved();},true);save.Margin=new(0,0,0,0);panel.Children.Add(save);
         map.SelectedItem=maps.FirstOrDefault(m=>m.Name=="Rhûn")??maps.FirstOrDefault();
+        return body;
     }
 }

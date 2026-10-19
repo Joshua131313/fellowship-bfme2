@@ -6,6 +6,8 @@ namespace Fellowship;
 public sealed partial class BrowserWindow
 {
     Grid? dashboardRooms;
+    readonly Grid dashboardPreferences=new(){Visibility=Visibility.Collapsed};
+    readonly Dictionary<string,FrameworkElement> preferenceTabs=new();
     readonly StackPanel dashboardSocial=new(){Margin=new(26)};
     readonly TextBlock profileName=UI.Text("",14,bold:true);
     readonly TextBlock dashboardNetwork=UI.Text("Connecting…",11,UI.Muted);
@@ -37,8 +39,8 @@ public sealed partial class BrowserWindow
         foreach(var page in new[]{"Game rooms","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
         currentRoomLink=Nav("Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,12,0,6);
         var tools=UI.Text("TOOLS",10,UI.Muted,true);tools.Margin=new(12,22,0,12);links.Children.Add(tools);
-        Nav("Game preferences",()=>new GamePreferencesWindow(this,Settings).ShowDialog());
-        Nav("Settings",OpenSettings);Nav("Help & guide",UI.OpenGuide);
+        navigation["Game preferences"]=Nav("Game preferences",()=>SelectDashboard("Game preferences"));
+        navigation["Settings"]=Nav("Settings",OpenSettings);Nav("Help & guide",UI.OpenGuide);
         UI.At(side,links,0);
         var profile=UI.Button("",()=>CreateProfileEditor(this).ShowDialog());profile.Style=(Style)Application.Current.FindResource("PlayerRowButton");profile.Height=double.NaN;profile.Margin=new(0,0,0,14);profile.Padding=new(8);profile.ToolTip="Edit your profile";
         profile.Content=UI.Row(UI.Avatar(Settings.Name,32),UI.Stack(profileName,UI.Text("Edit profile",10,UI.Muted)));
@@ -46,13 +48,29 @@ public sealed partial class BrowserWindow
         Grid.SetColumn(roomBody,1);dashboard.Children.Add(roomBody);
         var socialScroll=UI.Scroll(dashboardSocial);Grid.SetColumn(socialScroll,1);dashboard.Children.Add(socialScroll);
         socialScroll.Visibility=Visibility.Collapsed;dashboardSocial.Tag=socialScroll;
+        Grid.SetColumn(dashboardPreferences,1);dashboard.Children.Add(dashboardPreferences);
         SelectDashboard("Game rooms");
     }
     void SelectDashboard(string page)
     {
         dashboardPage=page;if(dashboardRooms==null)return;
         dashboardRooms.Visibility=page=="Game rooms"?Visibility.Visible:Visibility.Collapsed;
-        if(dashboardSocial.Tag is FrameworkElement social)social.Visibility=page=="Game rooms"?Visibility.Collapsed:Visibility.Visible;
+        if(dashboardSocial.Tag is FrameworkElement social)social.Visibility=page is "Friends" or "Messages"?Visibility.Visible:Visibility.Collapsed;
+        bool preferences=page is "Settings" or "Game preferences";
+        dashboardPreferences.Visibility=preferences?Visibility.Visible:Visibility.Collapsed;
+        if(preferences)
+        {
+            if(!preferenceTabs.TryGetValue(page,out var content))
+            {
+                var frame=new Grid();UI.Rows(frame,UI.Star,UI.Auto);
+                var feedback=UI.Text("",11,UI.Green);feedback.Margin=new(24,0,24,12);feedback.Visibility=Visibility.Collapsed;
+                void Saved(){feedback.Text="Saved";feedback.Visibility=Visibility.Visible;RenderDashboard();}
+                var editor=page=="Settings"?CreateSettingsContent(this,Saved,()=>{preferenceTabs.Remove("Settings");preferenceTabs.Remove("Game preferences");SelectDashboard("Settings");}):GamePreferencesWindow.CreateContent(Settings,Saved);
+                editor.Width=820;editor.HorizontalAlignment=HorizontalAlignment.Left;
+                UI.At(frame,editor,0);UI.At(frame,feedback,1);content=frame;preferenceTabs[page]=content;
+            }
+            dashboardPreferences.Children.Clear();dashboardPreferences.Children.Add(content);
+        }
         foreach(var pair in navigation){pair.Value.Background=UI.Brush(pair.Key==page?"#293853":"#151A21");pair.Value.BorderBrush=UI.Brush(pair.Key==page?"#537BEF":"#151A21");}
         RenderDashboard();
     }
@@ -62,7 +80,7 @@ public sealed partial class BrowserWindow
         profileName.Text=Settings.Name;profileName.TextTrimming=TextTrimming.CharacterEllipsis;profileName.MaxWidth=105;
         dashboardNetwork.Text=online?"● VPN discovery active":"○ Not connected";dashboardNetwork.Foreground=UI.Brush(online?UI.Green:UI.Muted);
         if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomLink.Content="↗ Current room";currentRoomLink.ToolTip=Peer.Current?.Title;}
-        if(dashboardPage=="Game rooms")return;
+        if(dashboardPage is "Game rooms" or "Settings" or "Game preferences")return;
         dashboardSocial.Children.Clear();var title=UI.Text(dashboardPage,25,bold:true);title.Margin=new(0,0,0,22);dashboardSocial.Children.Add(title);
         if(dashboardPage=="Friends")
         {
