@@ -291,7 +291,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.81   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.82   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -445,7 +445,7 @@ public sealed partial class BrowserWindow : Window
         var body=UI.Shell(w,"Settings",740,700);w.MinWidth=640;w.MinHeight=560;
         body.Children.Add(CreateSettingsContent(w,w.Close,w.Close));return w;
     }
-    public Grid CreateSettingsContent(Window w,Action saved,Action restored)
+    public Grid CreateSettingsContent(Window w,Action saved,Action restored,Action<string>? feedback=null)
     {
         var body=new Grid();UI.Rows(body,UI.Star,UI.Auto);
         var p=new StackPanel{Margin=new(24,20,24,18)};UI.At(body,UI.Scroll(p),0);
@@ -509,13 +509,26 @@ public sealed partial class BrowserWindow : Window
         var save=UI.Require(UI.AsyncButton("Save settings",async()=>
         {
             var selectedNetwork=interfaces[network.SelectedIndex];
+            bool switching=Peer.Address!=selectedNetwork.Address;
+            feedback?.Invoke(switching?$"Connecting to {selectedNetwork.Name}…":"Saving settings…");
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            try
+            {
             if(Peer.Address!=selectedNetwork.Address)
             {
                 await CloseRoom();Peer.Start(selectedNetwork.Address);online=true;
                 foreach(var ip in peerQueries.Keys.ToArray())queryVersions[ip]=queryVersions.GetValueOrDefault(ip)+1;
-                Presence.Clear();activityAlerts=new();discovered.Clear();discoveredAddresses.Clear();address.Text="";initialDiscovery=true;RenderRooms();RenderActivePlayers();
+                Presence.Clear();activityAlerts=new();discovered.Clear();discoveredAddresses.Clear();address.Text="";initialDiscovery=true;RenderRooms();RenderActivePlayers();friendsWindow?.Render();
             }
-            connectionFailure=null;networkWarningAddress=null;Settings.NetworkName=selectedNetwork.Name;Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();await Refresh();
+            connectionFailure=null;networkWarningAddress=null;Settings.NetworkName=selectedNetwork.Name;Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();EnsureOnline();
+            feedback?.Invoke($"Refreshing rooms and friends on {selectedNetwork.Name}…");
+            while(refreshing)await Task.Delay(50);
+            // Let any old-interface queries finish, then start a full pass on the saved interface.
+            await Task.WhenAll(peerQueries.Values.ToArray());
+            await Refresh();saved();
+            feedback?.Invoke($"✓ Settings saved · Connected to {selectedNetwork.Name} ({selectedNetwork.Address}). Rooms and friends refreshed.");
+            }
+            catch{feedback?.Invoke("Settings could not be fully applied. Check the error and try again.");throw;}
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);
         var sections=new Grid();sections.ColumnDefinitions.Add(new());sections.ColumnDefinitions.Add(new());
