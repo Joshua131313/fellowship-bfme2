@@ -239,7 +239,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.63   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.64   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -591,6 +591,7 @@ public sealed class RoomWindow : Window
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
     readonly Border setupBanner;
+    bool customPresetRules=true;
     readonly StackPanel inlineRules=new(), mapField=new(){Margin=new(0,0,0,12)};
     readonly ComboBox resourceChoice=new(), commandChoice=new(), mapChoice=new SearchableMapBox();
     readonly TextBox capacityChoice=new(){MaxLength=2,ToolTip="Fellowship room limit: 2–64. BFME2 matches support at most 8 players."};
@@ -648,6 +649,7 @@ public sealed class RoomWindow : Window
         AddChoice("MAP",mapChoice,GameInstallation.Maps(app.Settings.GamePath).Cast<object>().ToArray());
         var roomPresets=new RoomPresetPicker(app.Settings){Margin=new(0,0,0,10)};
         mapField.Children.Insert(0,roomPresets);
+        roomPresets.ModeChanged+=()=>{customPresetRules=roomPresets.IsCustom;Refresh();};
         roomPresets.Picked+=async preset=>
         {
             if(!app.Peer.IsHost||app.Peer.Current is not {} current||savingRules||launching)return;
@@ -877,6 +879,9 @@ public sealed class RoomWindow : Window
         setupBanner.Visibility=host?Visibility.Collapsed:Visibility.Visible;
         customSetup.Visibility=inlineRules.Visibility=mapField.Visibility=host?Visibility.Visible:Visibility.Collapsed;
         customSetup.IsEnabled=!launching;inlineRules.IsEnabled=mapField.IsEnabled=!savingRules&&!launching;
+        foreach(var input in new Control[]{mapChoice,resourceChoice,commandChoice,customChoice,ringChoice})
+        {input.IsEnabled=customPresetRules;input.Opacity=customPresetRules?1:.55;ToolTipService.SetShowOnDisabled(input,true);input.ToolTip=customPresetRules?null:"Select Custom preset to edit.";}
+
         if(!savingRules)SyncInlineRules(room);
         int readyCount=room.Players.Count(p=>p.Ready);
         readySummary.Text=launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.";

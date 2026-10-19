@@ -77,6 +77,12 @@ public sealed class RoomEditor : Window
             command.SelectedItem=factors.First(f=>f.Value==preset.CommandPoints);custom.IsChecked=preset.CustomHeroes;ring.IsChecked=preset.RingHeroes;
             teams.SelectedItem=layouts.FirstOrDefault(l=>l.Teams.SequenceEqual(preset.Teams));selectedTeams=preset.Teams.ToArray();
         };
+        void UpdatePresetEditing()
+        {
+            foreach(var input in new Control[]{map,resources,command,custom,ring})
+            {input.IsEnabled=presetList.IsCustom;input.Opacity=presetList.IsCustom?1:.55;ToolTipService.SetShowOnDisabled(input,true);input.ToolTip=presetList.IsCustom?null:"Select Custom preset to edit.";}
+        }
+        presetList.ModeChanged+=UpdatePresetEditing;UpdatePresetEditing();
         var store=UI.Button("Save preset",()=>
         {
             var title=RoomPresetPicker.PromptName(this);if(title==null)return;var chosen=(GameMap)map.SelectedItem;
