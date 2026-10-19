@@ -44,17 +44,20 @@ public static class AppUpdates
         if(response.StatusCode==System.Net.HttpStatusCode.NotFound)throw new IOException("No published release is available yet.");
         response.EnsureSuccessStatusCode();Available=Parse(await response.Content.ReadAsStringAsync(timeout.Token));AvailabilityChanged?.Invoke();return Available;
     }
-    public static async Task<string> Download(Release release,string? stagingRoot=null)
+    public static async Task<string> Download(Release release,string? stagingRoot=null,IProgress<(long Received,long? Total)>? progress=null,CancellationToken token=default)
     {
+        using var downloadTimeout=CancellationTokenSource.CreateLinkedTokenSource(token);downloadTimeout.CancelAfter(TimeSpan.FromMinutes(10));token=downloadTimeout.Token;
         var folder=Path.Combine(stagingRoot??Path.Combine(Settings.Folder,"versions"),release.Version.ToString(3),Guid.NewGuid().ToString("N"));Directory.CreateDirectory(folder);
         var zip=Path.Combine(folder,release.Installer?"update.msi":"update.zip");
-        using(var response=await Client.GetAsync(release.Url,HttpCompletionOption.ResponseHeadersRead))
+        using(var response=await Client.GetAsync(release.Url,HttpCompletionOption.ResponseHeadersRead,token))
         {
-            response.EnsureSuccessStatusCode();using var source=await response.Content.ReadAsStreamAsync();using var target=File.Create(zip);
-            var buffer=new byte[81920];int read;long total=0;
-            while((read=await source.ReadAsync(buffer))>0){total+=read;if(total>250_000_000)throw new InvalidDataException("Update package too large");await target.WriteAsync(buffer.AsMemory(0,read));}
+            response.EnsureSuccessStatusCode();using var source=await response.Content.ReadAsStreamAsync(token);using var target=File.Create(zip);
+            var buffer=new byte[81920];int read;long total=0;long? expected=response.Content.Headers.ContentLength;var timer=Stopwatch.StartNew();
+            if(expected>250_000_000)throw new InvalidDataException("Update package too large");progress?.Report((0,expected));
+            while((read=await source.ReadAsync(buffer,token))>0){total+=read;if(total>250_000_000)throw new InvalidDataException("Update package too large");await target.WriteAsync(buffer.AsMemory(0,read),token);if(timer.ElapsedMilliseconds>=100){progress?.Report((total,expected));timer.Restart();}}
+            if(expected.HasValue&&expected.Value!=total)throw new IOException("The download was incomplete. Please retry.");progress?.Report((total,expected));
         }
-        using(var stream=File.OpenRead(zip))if(!Convert.ToHexString(await SHA256.HashDataAsync(stream)).Equals(release.Digest,StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Update checksum failed. Your current version has not changed.");
+        using(var stream=File.OpenRead(zip))if(!Convert.ToHexString(await SHA256.HashDataAsync(stream,token)).Equals(release.Digest,StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Update checksum failed. Your current version has not changed.");
         if(release.Installer)return zip;
         var exe=Path.Combine(folder,"Fellowship.exe");
         using(var archive=ZipFile.OpenRead(zip))
@@ -71,18 +74,31 @@ public static class AppUpdates
         if(inRoom()){status("Leave your room before updating.");return;}
         if(Installing){status("An update is already downloading.");return;}
         Installing=true;
+        using var cancellation=new CancellationTokenSource();
+        var window=new UpdateProgressWindow(release.Version.ToString(3));window.AllowCancel(()=>cancellation.Cancel());window.Show();
         try
         {
-            status("Downloading and verifying…");var downloaded=await Download(release);
-            if(inRoom()){status("Leave your room, then retry the update.");return;}
+            status("Downloading update…");
+            var progress=new Progress<(long Received,long? Total)>(value=>
+            {
+                double? percent=value.Total is >0?100.0*value.Received/value.Total.Value:null;
+                string text=value.Total is >0?$"{value.Received/1048576.0:0.0} / {value.Total.Value/1048576.0:0.0} MB · {percent:0}%":$"{value.Received/1048576.0:0.0} MB downloaded";
+                bool complete=value.Total is >0&&value.Received==value.Total;
+                window.Report(complete?"Verifying download…":"Downloading update…",complete?"Checking the package before installation.":text,complete?null:percent);status(text);
+            });
+            var downloaded=await Download(release,progress:progress,token:cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            window.Report("Preparing installation…","Fellowship will close. The installer will keep you informed.");
+            if(inRoom()){status("Leave your room, then retry the update.");window.Finish();return;}
             if(release.Installer)Installation.StartUpdate(downloaded);
             else
             {
                 var start=new ProcessStartInfo(downloaded){UseShellExecute=true,WorkingDirectory=Path.GetDirectoryName(downloaded)!};start.ArgumentList.Add("--wait-for");start.ArgumentList.Add(Environment.ProcessId.ToString());Process.Start(start);
             }
-            ((App)Application.Current).Quit();
+            window.Finish();((App)Application.Current).Quit();
         }
-        catch(Exception e){status("Update failed: "+e.Message);}
+        catch(OperationCanceledException) when(cancellation.IsCancellationRequested){status("Update cancelled. Your current version is unchanged.");window.Finish();}
+        catch(Exception e){status("Update failed: "+e.Message);window.Failure(e.Message);}
         finally{Installing=false;}
     }
     public static FrameworkElement Controls(Func<bool> inRoom)
