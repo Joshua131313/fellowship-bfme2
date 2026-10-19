@@ -1,6 +1,7 @@
 ﻿using Fellowship;
 using System.Net;
 using System.Net.Sockets;
+Settings MemorySettings(string name){var settings=Settings.InMemory();settings.Name=name;return settings;}
 var installation=GameInstallation.Find();
 if(File.Exists(installation))
 {
@@ -175,7 +176,7 @@ try
         Console.WriteLine("PASS saved spots are map-specific and validated against current map metadata");
     }
     using var placementHost=new PeerService(new(){Name="Placement host",GamePath=Path.Combine(fixture,"lotrbfme2.exe")});
-    using var first=new PeerService(new(){Name="First"});using var second=new PeerService(new(){Name="Second"});
+    using var first=new PeerService(MemorySettings("First"));using var second=new PeerService(MemorySettings("Second"));
     placementHost.Start("127.0.0.10");placementHost.Host(new(){Map="Test",MapPath=@"maps\test.map"});
     await first.Join("127.0.0.10");await second.Join("127.0.0.10");
     await Until(()=>first.Current?.Players.Count==3&&second.Current?.Spots.Count==2,"map spots synchronized to guests");
@@ -218,8 +219,8 @@ try
 }
 finally{Directory.Delete(fixture,true);}
 using(var original=new PeerService(new(){Name="Original"}))
-using(var successor=new PeerService(new(){Name="Successor"}))
-using(var remaining=new PeerService(new(){Name="Remaining"}))
+using(var successor=new PeerService(MemorySettings("Successor")))
+using(var remaining=new PeerService(MemorySettings("Remaining")))
 {
     original.Start("127.0.0.20");successor.Start("127.0.0.21");remaining.Start("127.0.0.22");
     original.Host(new(){Title="Handoff test",Match=new(){Resources=2000,CommandPoints=400}});
@@ -365,7 +366,7 @@ using(var nameGuest=new PeerService(Settings.InMemory()))
 
 using(var failedHost=new PeerService(new(){Name="Failed host"}))
 using(var recoveryHost=new PeerService(new(){Name="Recovery host"}))
-using(var recoveryGuest=new PeerService(new(){Name="Recovery guest"}))
+using(var recoveryGuest=new PeerService(MemorySettings("Recovery guest")))
 {
  failedHost.Start("127.0.0.81");recoveryHost.Start("127.0.0.82");recoveryGuest.Start("127.0.0.83");
  failedHost.Host(new(){Title="Crash recovery",Match=new(){Resources=2000,CommandPoints=400}});
@@ -442,4 +443,13 @@ if(File.Exists(installation))
  oldest.LastMapSpots=new(){{"other-map",3}};room.ApplyMapSpotChoices();
  if(oldest.Spot!=0)throw new Exception("Fallback used another map's spot");
  Console.WriteLine("PASS newest-first preferred spot, last selected fallback and both occupied leave empty");
+}
+
+{
+ var room=new Room();var older=new Player{PreferredColor=2,Color=3};var middle=new Player{PreferredColor=2,Color=3};var newest=new Player{PreferredColor=2,Color=4};
+ room.Players=[older,middle,newest];older.Id="a";middle.Id="b";newest.Id="c";room.ApplyMapSpotChoices();
+ if(newest.Color!=2||middle.Color!=3||older.Color!=0)throw new Exception("Preferred color, last color fallback, random conflict priority failed");
+ var colorGuest=new Player{Id="colorGuest"};room.ApplyColorChoice(colorGuest,2,4);if(colorGuest.Color!=4)throw new Exception("Join color fallback failed");
+ room.ApplyColorChoice(colorGuest,2,3);if(colorGuest.Color!=0)throw new Exception("Conflicting colors must use random");
+ Console.WriteLine("PASS color preference, last-selected fallback, random and newest-first priority");
 }

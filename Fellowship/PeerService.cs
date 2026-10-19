@@ -102,8 +102,9 @@ public sealed partial class PeerService : IDisposable
                 else
                 {
                     guests[id] = c;
-                    var player=new Player { Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
-                    Current.ApplyPreferences(player,hello.Color??0,hello.Spot??0,hello.MapPath);
+                    var player=new Player { PreferredColor=hello.Color??0,LastSelectedColor=hello.LastSelectedColor,Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
+                    Current.ApplyPreferences(player,0,hello.Spot??0,hello.MapPath);
+                    Current.ApplyColorChoice(player,player.PreferredColor,player.LastSelectedColor);
                     Current.Players.Add(player);
                     joined = true;
                 }
@@ -180,8 +181,9 @@ public sealed partial class PeerService : IDisposable
             var saved=settings.LastHostedSetup;
             int team=saved?.Team is >=0 and <=4?saved.Team:0;
             int spot=saved!=null&&saved.MapPath==room.MapPath&&room.Spots.Any(s=>s.Number==saved.Spot)?saved.Spot:0;
-            room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,PreferredMapSpots=new(settings.PreferredMapSpots),CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
-            room.ApplyPreferences(room.Players[0],settings.PreferredColor,settings.PreferredSpot(room.MapPath),room.MapPath);
+            room.Players = [new() { Id = "host",PreferredColor=settings.PreferredColor,LastSelectedColor=settings.LastSelectedColor, Name = settings.Name, Address=Address, Ready = true,PreferredMapSpots=new(settings.PreferredMapSpots),CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
+            room.ApplyColorChoice(room.Players[0],settings.PreferredColor,settings.LastSelectedColor>0?settings.LastSelectedColor:room.Players[0].Color);
+            room.ApplyPreferences(room.Players[0],0,settings.PreferredSpot(room.MapPath),room.MapPath);
         }
         Changed?.Invoke();
         _ = Discover(presence:true);
@@ -195,7 +197,7 @@ public sealed partial class PeerService : IDisposable
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
         try
         {
-            await c.Send(new() { Type = "join", PreferredMapSpots=new(settings.PreferredMapSpots),Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
+            await c.Send(new() { Type = "join",LastSelectedColor=settings.LastSelectedColor, PreferredMapSpots=new(settings.PreferredMapSpots),Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
             using var timeout = new CancellationTokenSource(5000);
             var welcome = await c.Read(timeout.Token);
             if (welcome?.Type != "welcome") throw new IOException(welcome?.Text ?? "No response from host.");
@@ -313,7 +315,7 @@ public sealed partial class PeerService : IDisposable
             if(spot.HasValue&&spot!=0&&!Current.Spots.Any(s=>s.Number==spot))throw new InvalidOperationException("That starting spot is unavailable on this map.");
             if(spot>0&&Current.Players.Any(p=>p.Id!=id&&p.Spot==spot))throw new InvalidOperationException("Another player has claimed this spot. Choose another.");
             if((!spot.HasValue||spot==player.Spot)&&(!team.HasValue||team==player.Team)&&(!color.HasValue||color==player.Color))return;
-            if(spot.HasValue)player.Spot=spot.Value;if(team.HasValue)player.Team=team.Value;if(color.HasValue)player.Color=color.Value;
+            if(spot.HasValue)player.Spot=spot.Value;if(team.HasValue)player.Team=team.Value;if(color.HasValue){player.Color=color.Value;player.LastSelectedColor=color.Value;}
 
         }
     }
@@ -321,7 +323,7 @@ public sealed partial class PeerService : IDisposable
     {
         var room=Current??throw new InvalidOperationException("Join a room first.");
         var mapPath=expectedMap??room.MapPath;
-        if(IsHost){ApplyPlacement("host",mapPath,spot,team,color);await BroadcastState();return;}
+        if(IsHost){ApplyPlacement("host",mapPath,spot,team,color);await BroadcastState();RememberColor(color);return;}
         var connection=upstream??throw new InvalidOperationException("Disconnected from host.");
         var id=Guid.NewGuid().ToString("N");var completion=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);placementRequests[id]=completion;
         try
@@ -329,10 +331,12 @@ public sealed partial class PeerService : IDisposable
             await connection.Send(new(){Type="placement",RequestId=id,MapPath=mapPath,Spot=spot,Team=team,Color=color});
             string failure=await completion.Task.WaitAsync(TimeSpan.FromSeconds(5));
             if(failure.Length>0)throw new InvalidOperationException(failure);
+            RememberColor(color);
         }
         catch(TimeoutException){throw new IOException("Host did not confirm the selection. Both players need this version of Fellowship.");}
         finally{placementRequests.TryRemove(id,out _);}
     }
+    void RememberColor(int? color){if(color.HasValue&&settings.LastSelectedColor!=color.Value){settings.LastSelectedColor=color.Value;settings.Save();}}
     public async Task SetReady(bool ready)
     {
         if (!IsHost && upstream != null) await upstream.Send(new() { Type = "ready", Ready = ready });
@@ -389,7 +393,7 @@ public sealed partial class PeerService : IDisposable
             Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
             if(mapChanged)
             {
-                if(Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local)local.PreferredMapSpots=new(settings.PreferredMapSpots);
+                if(Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local){local.PreferredMapSpots=new(settings.PreferredMapSpots);local.PreferredColor=settings.PreferredColor;}
                 // Roster order is join order; allocate newest members first, under the room lock.
                 Current.ApplyMapSpotChoices();
             }

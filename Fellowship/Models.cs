@@ -20,6 +20,7 @@ public sealed class Settings
         if(LastHostedSetup==saved)return;
         LastHostedSetup=saved;Save();
     }
+    public int LastSelectedColor { get; set; }
     public int PreferredColor { get; set; }
     public Dictionary<string,int> PreferredMapSpots { get; set; } = new();
     public int PreferredSpot(string map)=>PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(map,StringComparison.OrdinalIgnoreCase)).Value;
@@ -68,10 +69,18 @@ public sealed class Room
     public string Phase { get; set; } = "Gathering";
     public List<MapSpot> Spots { get; set; } = [];
     public List<Player> Players { get; set; } = [];
+    public void ApplyColorChoice(Player player,int preferred,int last)
+    {
+        player.Color=0;
+        ApplyPreferences(player,preferred,0,MapPath);
+        if(player.Color==0)ApplyPreferences(player,last,0,MapPath);
+    }
     public void ApplyMapSpotChoices()
     {
+        foreach(var player in Players){if(player.Color>0)player.LastSelectedColor=player.Color;player.Color=0;}
         foreach(var player in Players.AsEnumerable().Reverse())
         {
+            ApplyColorChoice(player,player.PreferredColor,player.LastSelectedColor);
             ApplyPreferences(player,0,player.PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(MapPath,StringComparison.OrdinalIgnoreCase)).Value,MapPath);
             if(player.Spot==0)ApplyPreferences(player,0,player.LastMapSpots.FirstOrDefault(p=>p.Key.Equals(MapPath,StringComparison.OrdinalIgnoreCase)).Value,MapPath);
         }
@@ -85,6 +94,8 @@ public sealed class Room
 }
 public sealed class Player
 {
+    public int PreferredColor { get; set; }
+    public int LastSelectedColor { get; set; }
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Address { get; set; } = "";
@@ -99,6 +110,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public int LastSelectedColor { get; set; }
     public bool SupportsIsolation { get; set; }
     public Dictionary<string,int> PreferredMapSpots { get; set; } = new();
     public bool CanHostTransfer { get; set; }
