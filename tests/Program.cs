@@ -413,3 +413,21 @@ using(var preferenceB=new PeerService(prefB))
  preferenceA.Leave();preferenceB.Leave();preferenceHost.Leave();
  Console.WriteLine("PASS saved per-map preferences, simultaneous joins, occupied choices and invalid input");
 }
+
+if(File.Exists(installation))
+{
+ var hostPrefs=Settings.InMemory();hostPrefs.GamePath=installation;
+ var map=GameInstallation.Maps(installation).First(m=>m.Name=="Buckland");
+ var spots=GameMapData.Spots(installation,map.Path);
+ hostPrefs.PreferredMapSpots[map.Path]=spots[0].Number;
+ var a=Settings.InMemory();a.PreferredMapSpots[map.Path]=spots[1].Number;
+ var b=Settings.InMemory();b.PreferredMapSpots[map.Path]=spots[1].Number;
+ using var h=new PeerService(hostPrefs);using var ga=new PeerService(a);using var gb=new PeerService(b);
+ h.Start("127.0.0.97");ga.Start("127.0.0.98");gb.Start("127.0.0.99");h.Host(new());
+ await ga.Join(h.Address);await gb.Join(h.Address);await ga.SetReady(true);await gb.SetReady(true);
+ var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(h.Current))!;
+ draft.Map=map.Name;draft.MapPath=map.Path;await h.EditRoom(draft);
+ await Until(()=>h.Current!.Players.Count(p=>p.Spot!=0)==2&&ga.Current!.Players.Count(p=>p.Spot!=0)==2&&gb.Current!.Players.Count(p=>p.Spot!=0)==2,"map change applies host and guest preferences with conflict resolution");
+ if(h.Current!.Players[0].Spot!=spots[0].Number||h.Current.Players.Count(p=>p.Spot==spots[1].Number)!=1||h.Current.Players.Any(p=>!p.Ready))throw new Exception("Map preference claims collided or changed readiness");
+ ga.Leave();gb.Leave();h.Leave();
+}

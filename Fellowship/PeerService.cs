@@ -118,6 +118,17 @@ public sealed partial class PeerService : IDisposable
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
                 }
+                else if(msg.Type=="preferred-spot")
+                {
+                    bool applied=false;
+                    lock(gate)
+                    {
+                        var player=Current?.Players.FirstOrDefault(p=>p.Id==id);
+                        if(IsHost&&!transferring&&Current!=null&&player?.Spot==0&&Current.MapPath==msg.MapPath)
+                        {Current.ApplyPreferences(player,0,msg.Spot??0,msg.MapPath);applied=player.Spot!=0;}
+                    }
+                    if(applied)await BroadcastState();
+                }
                 else if(msg.Type=="native-setup"&&msg.Room is {} setup)
                 {
                     try{await ApplyNativeRules(setup);}catch(InvalidOperationException){} // Invalid/stale observations cannot replace current rules.
@@ -231,7 +242,14 @@ public sealed partial class PeerService : IDisposable
                 }
                 if(msg.Type=="kicked")
                 {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
-                if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room)) { Current = msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress; Changed?.Invoke(); }
+                if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room))
+                {
+                    bool mapChanged=Current!=null&&msg.Room!=null&&Current.Id==msg.Room.Id&&Current.MapPath!=msg.Room.MapPath;
+                    Current=msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress;
+                    if(mapChanged&&Current!=null&&settings.PreferredSpot(Current.MapPath) is >0 and var preferred)
+                        await c.Send(new(){Type="preferred-spot",MapPath=Current.MapPath,Spot=preferred});
+                    Changed?.Invoke();
+                }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
                 if (msg.Type == "chat") DeliverRoomChat(msg.Text,msg.Id);
                 if (msg.Type == "launch") LaunchRequested?.Invoke();
@@ -375,13 +393,16 @@ public sealed partial class PeerService : IDisposable
             if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can edit this room.");
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(draft.Capacity<Current.Players.Count)throw new InvalidOperationException("The player limit cannot be lower than the current roster.");
-            if(Current.MapPath!=draft.MapPath)
+            bool mapChanged=Current.MapPath!=draft.MapPath;
+            if(mapChanged)
             {
                 Current.Spots=GameMapData.Spots(settings.GamePath,draft.MapPath);
                 foreach(var p in Current.Players)p.Spot=0;
             }
             Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
             Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
+            if(mapChanged&&Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local)
+                Current.ApplyPreferences(local,0,settings.PreferredSpot(Current.MapPath),Current.MapPath);
 
             foreach(var p in Current.Players.Where(p=>p.Id!="host"&&!CanSee(p.Address)).ToArray())
                 if(guests.TryGetValue(p.Id,out var c))c.Dispose();
