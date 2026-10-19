@@ -307,7 +307,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.86   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.87   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -875,7 +875,8 @@ public sealed class RoomWindow : Window
     async Task AbortGame()
     {
         launchCancellation?.Cancel();
-        await Task.Run(()=>GameLauncher.Abort(app.Settings.GamePath));
+        try{await GameLauncher.AbortWithPermission(app.Settings.GamePath);}
+        catch(OperationCanceledException){Append("SYSTEM","Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it.");UpdateLaunchActions();return;}
         Append("SYSTEM","BFME2 stopped. You remain in the Fellowship room.");UpdateLaunchActions();
     }
     readonly Border setupBanner;
@@ -1447,8 +1448,27 @@ public static class GameLauncher
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool IsIconic(nint window);
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool ShowWindowAsync(nint window,int command);
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool SetForegroundWindow(nint window);
-    public static void Abort(string gamePath)
+    public static async Task AbortWithPermission(string gamePath)
     {
+        try{await Task.Run(()=>Abort(gamePath));return;}
+        catch(System.ComponentModel.Win32Exception error) when(error.NativeErrorCode==5){}
+        catch(UnauthorizedAccessException){}
+        var start=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=true,Verb="runas",WorkingDirectory=AppContext.BaseDirectory};
+        start.ArgumentList.Add("--abort-game");start.ArgumentList.Add(Path.GetFullPath(gamePath));
+        start.ArgumentList.Add(Process.GetCurrentProcess().SessionId.ToString());
+        try
+        {
+            using var helper=Process.Start(start)??throw new IOException("Could not start the BFME2 stop helper.");
+            await helper.WaitForExitAsync();
+            if(helper.ExitCode!=0)throw new IOException("Windows could not stop BFME2. Close the game manually or try Abort again.");
+        }
+        catch(System.ComponentModel.Win32Exception error) when(error.NativeErrorCode==1223)
+        {throw new OperationCanceledException("Windows permission was cancelled.",error);}
+    }
+    public static void Abort(string gamePath,int? session=null)
+    {
+        Validate(gamePath);
+        int targetSession=session??Process.GetCurrentProcess().SessionId;
         string folder=Path.GetDirectoryName(Path.GetFullPath(gamePath))!;
         var allowed=new[]{Path.Combine(folder,"lotrbfme2.exe"),Path.Combine(folder,"game.dat")};
         foreach(var name in new[]{"lotrbfme2","game","game.dat"})
@@ -1457,7 +1477,7 @@ public static class GameLauncher
         {
             try
             {
-                if(process.HasExited)continue;
+                if(process.HasExited||process.SessionId!=targetSession)continue;
                 string? path=process.MainModule?.FileName;
                 if(path!=null&&allowed.Contains(path,StringComparer.OrdinalIgnoreCase)){process.Kill();if(!process.WaitForExit(3000))throw new IOException("BFME2 is still stopping. Try Abort again.");}
             }

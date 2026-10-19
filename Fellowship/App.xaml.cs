@@ -47,6 +47,13 @@ public partial class App : Application
             catch(Exception error){progress.Finish();await UI.ShowPopup(UI.Information(null,"Repair could not finish",error.Message));Shutdown(1);}
             return;
         }
+        if(e.Args.Length==3&&e.Args[0]=="--abort-game"&&int.TryParse(e.Args[2],out int gameSession))
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{GameLauncher.Abort(e.Args[1],gameSession);Shutdown(0);}
+            catch{Shutdown(1);}
+            return;
+        }
         if(e.Args.Length==5&&e.Args[0]=="--native-sync"&&int.TryParse(e.Args[2],out var syncGame)&&int.TryParse(e.Args[3],out var syncParent))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
