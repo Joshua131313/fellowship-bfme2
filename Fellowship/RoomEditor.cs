@@ -83,9 +83,9 @@ public sealed class RoomEditor : Window
             {input.IsEnabled=presetList.IsCustom;input.Opacity=presetList.IsCustom?1:.55;ToolTipService.SetShowOnDisabled(input,true);input.ToolTip=presetList.IsCustom?null:"Select Custom preset to edit.";}
         }
         presetList.ModeChanged+=UpdatePresetEditing;UpdatePresetEditing();
-        var store=UI.Button("Save preset",()=>
+        var store=UI.AsyncButton("Save preset",async()=>
         {
-            var title=RoomPresetPicker.PromptName(this);if(title==null)return;var chosen=(GameMap)map.SelectedItem;
+            var title=await RoomPresetPicker.PromptName(this);if(title==null)return;var chosen=(GameMap)map.SelectedItem;
             settings.RoomPresets.RemoveAll(p=>p.Name.Equals(title,StringComparison.OrdinalIgnoreCase));
             var preset=new RoomPreset(title,chosen.Name,chosen.Path,int.Parse(capacity.Text),(int)resources.SelectedItem,((Factor)command.SelectedItem).Value,custom.IsChecked==true,ring.IsChecked==true,selectedTeams.ToArray());
             settings.RoomPresets.Add(preset);settings.Save();presetList.Reload();
@@ -94,7 +94,7 @@ public sealed class RoomEditor : Window
         teams.Margin=new(12,0,0,0);
         var teamRow=UI.Row(UI.Text("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,8,0,0);presetArea.Children.Add(teamRow);
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
-        var cancel=UI.Button("Cancel",()=>DialogResult=false);cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
+        var cancel=UI.Button("Cancel",()=>UI.FinishPopup(this,false));cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
         store.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(store);
         bool creating=false;
         Closing+=(_,e)=>{if(creating)e.Cancel=true;};
@@ -113,7 +113,7 @@ public sealed class RoomEditor : Window
             {
                 await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
                 if(create!=null)await create(Result);
-                creating=false;DialogResult=true;
+                creating=false;UI.FinishPopup(this,true);
             }
             finally
             {

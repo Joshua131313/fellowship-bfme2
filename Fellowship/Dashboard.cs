@@ -48,7 +48,7 @@ public sealed partial class BrowserWindow
         navigation["Game preferences"]=Nav("Game preferences",()=>SelectDashboard("Game preferences"));
         navigation["Settings"]=Nav("Settings",OpenSettings);Nav("Help & guide",UI.OpenGuide);
         UI.At(side,links,0);
-        var profile=UI.Button("",()=>CreateProfileEditor(this).ShowDialog());profile.Style=(Style)Application.Current.FindResource("PlayerRowButton");profile.Height=double.NaN;profile.Margin=new(0,0,0,14);profile.Padding=new(8);profile.ToolTip="Edit your profile";
+        var profile=UI.Button("",()=>CreateProfileEditor(this).Show());profile.Style=(Style)Application.Current.FindResource("PlayerRowButton");profile.Height=double.NaN;profile.Margin=new(0,0,0,14);profile.Padding=new(8);profile.ToolTip="Edit your profile";
         profile.Content=UI.Row(UI.Avatar(Settings.Name,32),UI.Stack(profileName,UI.Text("Edit profile",10,UI.Muted)));
         var bottom=UI.Stack(profile,new Border{Margin=new(10,0,0,0),Child=dashboardNetwork});UI.At(side,bottom,2);
         Grid.SetColumn(roomBody,1);dashboard.Children.Add(roomBody);

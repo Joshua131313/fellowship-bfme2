@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Threading;
 using System.Security.Principal;
 namespace Fellowship;
@@ -43,8 +43,8 @@ public partial class App : Application
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             var progress=new UpdateProgressWindow("REPAIR");progress.Show();
-            try{await InstallerRecovery.Repair((title,detail)=>progress.Report(title,detail),true);progress.Finish();UI.Information(null,"Installer repaired","Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved.").ShowDialog();Shutdown(0);}
-            catch(Exception error){progress.Finish();UI.Information(null,"Repair could not finish",error.Message).ShowDialog();Shutdown(1);}
+            try{await InstallerRecovery.Repair((title,detail)=>progress.Report(title,detail),true);progress.Finish();await UI.ShowPopup(UI.Information(null,"Installer repaired","Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved."));Shutdown(0);}
+            catch(Exception error){progress.Finish();await UI.ShowPopup(UI.Information(null,"Repair could not finish",error.Message));Shutdown(1);}
             return;
         }
         if(e.Args.Length==5&&e.Args[0]=="--native-sync"&&int.TryParse(e.Args[2],out var syncGame)&&int.TryParse(e.Args[3],out var syncParent))
@@ -73,7 +73,7 @@ public partial class App : Application
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             try{using var previous=System.Diagnostics.Process.GetProcessById(oldPid);using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(30));await previous.WaitForExitAsync(timeout.Token);}
             catch(ArgumentException){}
-            catch(OperationCanceledException){MessageBox.Show("The previous Fellowship is still running. Quit it and reopen the updated version.");Shutdown();return;}
+            catch(OperationCanceledException){await UI.ShowPopup(UI.Information(null,"Fellowship is still running","The previous Fellowship is still running. Quit it and reopen the updated version."));Shutdown();return;}
         }
         var identity=WindowsIdentity.GetCurrent().User!.Value;
         instanceMutex=new Mutex(false,@"Local\Fellowship.UI."+identity,out bool first);

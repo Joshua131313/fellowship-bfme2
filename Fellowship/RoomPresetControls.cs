@@ -35,15 +35,15 @@ public sealed class RoomPresetPicker : ComboBox
         }
         SelectedItem=Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.Tag is RoomPreset p&&p.Name==previous?.Name&&p.BuiltIn==previous.BuiltIn)??Items[0];refreshing=false;ModeChanged?.Invoke();
     }
-    public static string? PromptName(Window owner)
+    public static async Task<string?> PromptName(Window owner)
     {
         var dialog=new Window{Owner=owner,ResizeMode=ResizeMode.NoResize,WindowStartupLocation=WindowStartupLocation.CenterOwner};
         var body=UI.Shell(dialog,"Save preset",380,210);dialog.MinHeight=210;
         var name=new TextBox{MaxLength=40,Margin=new(0,8,0,16)};
-        var save=UI.Button("Save preset",()=>dialog.DialogResult=true,true);save.IsDefault=true;
+        var save=UI.Button("Save preset",()=>UI.FinishPopup(dialog,true),true);save.IsDefault=true;
         UI.Require(save,()=>!string.IsNullOrWhiteSpace(name.Text),()=>"Enter a preset name.");
-        var cancel=UI.Button("Cancel",()=>dialog.DialogResult=false);cancel.IsCancel=true;
+        var cancel=UI.Button("Cancel",()=>UI.FinishPopup(dialog,false));cancel.IsCancel=true;
         body.Children.Add(new Border{Padding=new(20),Child=UI.Stack(UI.Text("Preset name",12),name,UI.Row(cancel,save))});
-        dialog.Loaded+=(_,_)=>name.Focus();return dialog.ShowDialog()==true?name.Text.Trim():null;
+        dialog.Loaded+=(_,_)=>name.Focus();return await UI.ShowPopup(dialog)?name.Text.Trim():null;
     }
 }
