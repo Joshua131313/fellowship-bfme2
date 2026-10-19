@@ -291,7 +291,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.80   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.81   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -342,7 +342,7 @@ public sealed partial class BrowserWindow : Window
         });
         Closing += (_,e) => { if(Application.Current is App { IsQuitting:false }){e.Cancel=true;Hide();} };
         Closed += (_,_) => { refreshTimer.Stop();Peer.Dispose(); };
-        Loaded += (_,_) => { if(string.IsNullOrEmpty(Settings.BindAddress)) OpenSettings(); else EnsureOnline(); };
+        Loaded += (_,_) => { if(string.IsNullOrEmpty(Settings.BindAddress)) OpenSettings(); else EnsureOnline(quiet:true); };
     }
     public event Action? RoomPreviewsChanged;
     public Room? PreviewRoom(string id)=>Peer.Current?.Id==id?Peer.Current:discovered.Where(r=>r.Room.Id==id&&!Settings.IsBlocked(r.Address)).OrderByDescending(r=>r.Room.Revision).Select(r=>r.Room).FirstOrDefault();
@@ -351,6 +351,12 @@ public sealed partial class BrowserWindow : Window
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).GroupBy(r=>r.Room.Id).Select(g=>g.OrderByDescending(r=>r.Room.Revision).First()).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
         networkCaption.Text="    "+Settings.NetworkName;
+        if(online)
+        {
+            int totalRooms=list.Select(r=>r.Room.Id).Distinct().Count();
+            status.Text=$"●  {Peer.Address} · VPN discovery active · {totalRooms} room{(totalRooms==1?"":"s")}";
+            status.Foreground=UI.Brush(UI.Green);
+        }
         RenderDashboard();
         RoomPreviewsChanged?.Invoke();
         list=list.Select(r=>r with{Ping=Latency.Get(r.Address,Peer.Address),Icon=GameIcon.Load(Settings.GamePath)}).ToList();
@@ -362,11 +368,19 @@ public sealed partial class BrowserWindow : Window
         var selected=(rooms.SelectedItem as RoomEntry)?.Room.Id;
         rooms.ItemsSource = list;if(selected!=null)rooms.SelectedItem=list.FirstOrDefault(r=>r.Room.Id==selected); empty.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed; count.Text = $"{list.Count} room{(list.Count == 1 ? "" : "s")}";
     }
+    string? networkWarningAddress;
+    string? connectionFailure;
+    void ShowNetworkWarning(string message)
+    {
+        if(networkWarningAddress==Settings.BindAddress)return;
+        networkWarningAddress=Settings.BindAddress;
+        UI.Information(IsVisible?this:null,"Connection unavailable",message).ShowDialog();
+    }
     public async Task CheckStartupConnection()
     {
         await Task.Delay(3000);
         var warning=await Task.Run(()=>StartupConnection.Warning(Settings));
-        if(warning!=null)UI.Information(IsVisible?this:null,"Connection unavailable",warning).ShowDialog();
+        if(warning!=null||connectionFailure!=null)ShowNetworkWarning(warning??connectionFailure!);
     }
     async void OpenActivity(ActivityAlerts.Alert alert)
     {
@@ -399,7 +413,7 @@ public sealed partial class BrowserWindow : Window
         try
         {
             if(string.IsNullOrWhiteSpace(Settings.BindAddress)){ if(!quiet)UI.Error("Select your VPN network interface in Settings first."); return false; }
-            Peer.Start(Settings.BindAddress); online = true; status.Text = $"●  {Settings.Name}   ·   {Peer.Address}   ·   Ready to play"; status.Foreground = UI.Brush(UI.Green);RenderRooms();Dispatcher.BeginInvoke(new Action(async()=>{try{await Refresh();}catch(Exception error){status.Text="Discovery failed: "+error.Message;}})); return true;
+            Peer.Start(Settings.BindAddress);connectionFailure=null;networkWarningAddress=null; online = true; status.Text = $"●  {Settings.Name}   ·   {Peer.Address}   ·   Ready to play"; status.Foreground = UI.Brush(UI.Green);RenderRooms();Dispatcher.BeginInvoke(new Action(async()=>{try{await Refresh();}catch(Exception error){status.Text="Discovery failed: "+error.Message;}})); return true;
         }
         catch(Exception e)
         {
@@ -407,7 +421,7 @@ public sealed partial class BrowserWindow : Window
             var message=e is System.Net.Sockets.SocketException {SocketErrorCode:System.Net.Sockets.SocketError.AddressAlreadyInUse}
                 ? "This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry."
                 : "Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings.\n\n"+e.Message;
-            if(!quiet)UI.Error(message);return false;
+            connectionFailure=message;if(!quiet)ShowNetworkWarning(message);return false;
         }
     }
     public Window CreateProfileEditor(Window owner)
@@ -445,7 +459,15 @@ public sealed partial class BrowserWindow : Window
         var network=new ComboBox{ItemsSource=interfaces.Select(i=>$"{i.Name} · {i.Address}").ToList()};
         var networkTemplate=new DataTemplate();var networkText=new FrameworkElementFactory(typeof(TextBlock));networkText.SetBinding(TextBlock.TextProperty,new Binding());networkText.SetValue(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis);networkText.SetBinding(TextBlock.ToolTipProperty,new Binding());networkTemplate.VisualTree=networkText;network.ItemTemplate=networkTemplate;
         network.SelectedIndex=interfaces.FindIndex(i=>i.Address==Settings.BindAddress);
-        if(network.SelectedIndex<0&&string.IsNullOrWhiteSpace(Settings.BindAddress))network.SelectedIndex=interfaces.FindIndex(i=>i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));profileNetwork.Children.Add(network);
+        if(network.SelectedIndex<0&&string.IsNullOrWhiteSpace(Settings.BindAddress))network.SelectedIndex=interfaces.FindIndex(i=>i.Name.Contains("Radmin",StringComparison.OrdinalIgnoreCase));var networkBox=new Grid();networkBox.Children.Add(network);
+        var networkPlaceholder=UI.Text("Select a network…",12,UI.Muted);networkPlaceholder.Margin=new(11,0,32,0);networkPlaceholder.IsHitTestVisible=false;networkBox.Children.Add(networkPlaceholder);profileNetwork.Children.Add(networkBox);
+        void NetworkPlaceholder()=>networkPlaceholder.Visibility=network.SelectedIndex<0?Visibility.Visible:Visibility.Collapsed;
+        network.SelectionChanged+=(_,_)=>NetworkPlaceholder();NetworkPlaceholder();
+        network.DropDownOpened+=(_,_)=>
+        {
+            var selectedAddress=network.SelectedIndex>=0&&network.SelectedIndex<interfaces.Count?interfaces[network.SelectedIndex].Address:Settings.BindAddress;
+            interfaces=PeerService.Interfaces();network.ItemsSource=interfaces.Select(i=>$"{i.Name} · {i.Address}").ToList();network.SelectedIndex=interfaces.FindIndex(i=>i.Address==selectedAddress);NetworkPlaceholder();
+        };
         var networkHint=UI.Text("Select the same VPN network on both PCs. Saving switches immediately and leaves your current room.",11,UI.Muted);networkHint.Margin=new(0,10,0,0);p.Children.Add(networkHint);
         var game=UI.Field(p,"BFME2 EXECUTABLE",Settings.GamePath);
         game.Height=58;game.TextWrapping=TextWrapping.Wrap;game.VerticalContentAlignment=VerticalAlignment.Center;
@@ -492,9 +514,8 @@ public sealed partial class BrowserWindow : Window
                 await CloseRoom();Peer.Start(selectedNetwork.Address);online=true;
                 foreach(var ip in peerQueries.Keys.ToArray())queryVersions[ip]=queryVersions.GetValueOrDefault(ip)+1;
                 Presence.Clear();activityAlerts=new();discovered.Clear();discoveredAddresses.Clear();address.Text="";initialDiscovery=true;RenderRooms();RenderActivePlayers();
-                await Peer.Discover(presence:true);
             }
-            Settings.NetworkName=selectedNetwork.Name;Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();await Refresh();
+            connectionFailure=null;networkWarningAddress=null;Settings.NetworkName=selectedNetwork.Name;Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();await Refresh();
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);
         var sections=new Grid();sections.ColumnDefinitions.Add(new());sections.ColumnDefinitions.Add(new());
@@ -565,7 +586,7 @@ public sealed partial class BrowserWindow : Window
                 if(Settings.FriendActivitySounds&&alert.Online is bool onlineFriend)MessageAlert.PlayPresence(onlineFriend);
                 if(alert.Notify&&Settings.DesktopNotifications&&Application.Current is App application)application.NotifyActivity(alert.Title,alert.Message,()=>OpenActivity(alert));
             }
-            status.Text=$"●  {Peer.Address} · VPN discovery active · {discovered.Count} room(s)";
+
         }
         finally{refreshing=false;initialDiscovery=false;RenderRooms();}
     }

@@ -69,8 +69,9 @@ public sealed partial class BrowserWindow
             if(!preferenceTabs.TryGetValue(page,out var content))
             {
                 var frame=new Grid();UI.Rows(frame,UI.Star,UI.Auto);
-                var feedback=UI.Text("",11,UI.Green);feedback.Margin=new(24,0,24,12);feedback.Visibility=Visibility.Collapsed;
-                void Saved(){feedback.Text="Saved";feedback.Visibility=Visibility.Visible;RenderDashboard();}
+                var feedbackText=UI.Text("",12,UI.Green,true);
+                var feedback=UI.Card(feedbackText,"#1D352D",12);feedback.Margin=new(24,0,24,12);feedback.Visibility=Visibility.Collapsed;
+                void Saved(){feedbackText.Text=page=="Settings"?"✓ Settings saved":"✓ Game preferences saved";feedback.Visibility=Visibility.Visible;RenderDashboard();}
                 var editor=page=="Settings"?CreateSettingsContent(this,Saved,()=>{preferenceTabs.Remove("Settings");preferenceTabs.Remove("Game preferences");SelectDashboard("Settings");}):GamePreferencesWindow.CreateContent(Settings,Saved);
                 editor.HorizontalAlignment=HorizontalAlignment.Stretch;
                 UI.At(frame,editor,0);UI.At(frame,feedback,1);content=frame;preferenceTabs[page]=content;
