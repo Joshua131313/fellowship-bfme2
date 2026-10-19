@@ -12,6 +12,8 @@ public sealed partial class BrowserWindow
     readonly TextBlock profileName=UI.Text("",14,bold:true);
     readonly TextBlock dashboardNetwork=UI.Text("Connecting…",11,UI.Muted);
     Button? currentRoomLink;
+    readonly TextBlock currentRoomName=UI.Text("",13,UI.Green,true);
+    readonly TextBlock currentRoomPlayers=UI.Text("",11,UI.Green);
     string dashboardPage="Game rooms";
     readonly Dictionary<string,Button> navigation=new();
     void BuildDashboard(Grid roomBody)
@@ -37,7 +39,11 @@ public sealed partial class BrowserWindow
             links.Children.Add(button);return button;
         }
         foreach(var page in new[]{"Game rooms","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
-        currentRoomLink=Nav("▶  Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,0,0,6);currentRoomLink.Background=UI.Brush("#8ADDB6");currentRoomLink.Foreground=UI.Brush("#123629");currentRoomLink.BorderBrush=UI.Brush("#8ADDB6");
+        currentRoomLink=Nav("▶  Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,0,0,6);currentRoomLink.Background=UI.Brush("#151A21");currentRoomLink.BorderBrush=UI.Brush("#151A21");currentRoomLink.Tag="CurrentRoom";currentRoomLink.Height=62;
+        currentRoomName.TextWrapping=TextWrapping.NoWrap;currentRoomName.TextTrimming=TextTrimming.CharacterEllipsis;currentRoomPlayers.Margin=new(0,4,0,0);
+        var roomContent=new Grid();roomContent.ColumnDefinitions.Add(new(){Width=new GridLength(28)});roomContent.ColumnDefinitions.Add(new());
+        var play=new System.Windows.Shapes.Path{Data=System.Windows.Media.Geometry.Parse("M 2,1 L 17,10 L 2,19 Z"),Stroke=UI.Brush(UI.Green),StrokeThickness=2,StrokeLineJoin=System.Windows.Media.PenLineJoin.Round,Width=20,Height=22,VerticalAlignment=VerticalAlignment.Center};roomContent.Children.Add(play);
+        var roomLabels=UI.Stack(currentRoomName,currentRoomPlayers);Grid.SetColumn(roomLabels,1);roomContent.Children.Add(roomLabels);currentRoomLink.HorizontalContentAlignment=HorizontalAlignment.Stretch;currentRoomLink.Content=roomContent;
         var tools=UI.Text("TOOLS",10,UI.Muted,true);tools.Margin=new(12,22,0,12);links.Children.Add(tools);
         navigation["Game preferences"]=Nav("Game preferences",()=>SelectDashboard("Game preferences"));
         navigation["Settings"]=Nav("Settings",OpenSettings);Nav("Help & guide",UI.OpenGuide);
@@ -79,7 +85,7 @@ public sealed partial class BrowserWindow
         if(dashboardRooms==null)return;
         profileName.Text=Settings.Name;profileName.TextTrimming=TextTrimming.CharacterEllipsis;profileName.MaxWidth=105;
         dashboardNetwork.Text=online?"● VPN discovery active":"○ Not connected";dashboardNetwork.Foreground=UI.Brush(online?UI.Green:UI.Muted);
-        if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomLink.Content="▶  Current room";currentRoomLink.ToolTip=Peer.Current?.Title;}
+        if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomName.Text=Peer.Current?.Title??"Current room";currentRoomPlayers.Text=Peer.Current is {} active?$"{active.Players.Count}/{active.Capacity} players":"";currentRoomLink.ToolTip=Peer.Current?.Title;}
         if(dashboardPage is "Game rooms" or "Settings" or "Game preferences")return;
         dashboardSocial.Children.Clear();var title=UI.Text(dashboardPage,25,bold:true);title.Margin=new(0,0,0,22);dashboardSocial.Children.Add(title);
         if(dashboardPage=="Friends")
