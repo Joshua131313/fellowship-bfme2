@@ -230,6 +230,7 @@ public sealed partial class BrowserWindow : Window
     public Settings Settings { get; }
     public PeerService Peer { get; }
     readonly DataGrid rooms = new();
+    readonly Dictionary<DataGridColumn,DataGridLength> defaultRoomWidths=new();
     string roomSort="";
     System.ComponentModel.ListSortDirection roomSortDirection;
     readonly TextBlock status = UI.Text("Not connected", 11, UI.Muted);
@@ -299,6 +300,7 @@ public sealed partial class BrowserWindow : Window
         rooms.Columns.Insert(7,new DataGridTemplateColumn{Header="PING",Width=90,SortMemberPath="Ping",CellTemplate=pingTemplate});
         foreach(var column in rooms.Columns.Where(c=>c.CanUserResize))
         {
+            defaultRoomWidths[column]=column.Width;
             var label=UI.Text(column.Header?.ToString()??"",11,UI.Muted,true);label.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
             column.MinWidth=Math.Max(column.MinWidth,Math.Ceiling(label.DesiredSize.Width)+54);
             if(Settings.RoomColumnWidths?.TryGetValue(column.SortMemberPath,out var width)==true&&double.IsFinite(width)&&width>0)column.Width=new DataGridLength(Math.Clamp(width,column.MinWidth,2000));
@@ -323,7 +325,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.96   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.97   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -335,7 +337,7 @@ public sealed partial class BrowserWindow : Window
         UI.Menus(this,
             UI.MenuGroup("_File",UI.MenuAction("Host room",CreateRoom),UI.MenuAction("Hide to tray",Hide),UI.MenuAction("Quit Fellowship",()=>((App)Application.Current).Quit())),
             UI.MenuGroup("_Edit",UI.MenuAction("Settings",OpenSettings),UI.MenuAction("Clear room filter",()=>search.Clear(),()=>search.Text.Length>0)),
-            UI.MenuGroup("_View",UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Active players",()=>{playerSearch.Focus();playerSearch.SelectAll();})),
+            UI.MenuGroup("_View",UI.MenuAction("Reset column widths",ResetRoomColumnWidths),UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Active players",()=>{playerSearch.Focus();playerSearch.SelectAll();})),
             UI.MenuGroup("F_riends",UI.MenuAction("Friends list",OpenFriends),UI.MenuAction("Blocked players",ShowBlockedPlayers)),
             UI.MenuGroup("_Help",UI.MenuAction("Getting started",UI.OpenGuide),UI.MenuAction("About Fellowship",()=>UI.Info(this,"About Fellowship","Fellowship "+System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)+"\nBFME2 1.00 · Radmin VPN"))));
         playerSearch.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){playersPopup.IsOpen=false;rooms.Focus();e.Handled=true;}};
@@ -345,7 +347,7 @@ public sealed partial class BrowserWindow : Window
         var preview=new MenuItem{Header="Room preview"};preview.Click+=(_,_)=>{if(rooms.SelectedItem is RoomEntry entry)new RoomPreviewWindow(this,entry.Room,Settings.GamePath).Show();};
         var joinItem=new MenuItem{Header="Join room"};joinItem.Click+=async(_,_)=>{try{await Join();}catch(Exception ex){UI.Error(ex.Message);}};
         roomMenu.Opened+=(_,_)=>{joinItem.Header=rooms.SelectedItem is RoomEntry selectedRoom&&Peer.Current?.Id==selectedRoom.Room.Id?"Open room":"Join room";joinItem.IsEnabled=rooms.SelectedItem is RoomEntry;preview.IsEnabled=joinItem.IsEnabled;};
-        roomMenu.Items.Add(joinItem);roomMenu.Items.Add(preview);rooms.ContextMenu=roomMenu;
+        roomMenu.Items.Add(joinItem);roomMenu.Items.Add(preview);roomMenu.Items.Add(new Separator());roomMenu.Items.Add(UI.MenuAction("Reset column widths",ResetRoomColumnWidths));rooms.ContextMenu=roomMenu;
         rooms.PreviewMouseRightButtonDown+=(_,e)=>{var row=ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) as DataGridRow;if(row!=null)row.IsSelected=true;};
         Peer.Discovered+=ip=>Dispatcher.InvokeAsync(async()=>{if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);await QueryDiscoveredPeer(ip);});
         Peer.HostTransferred+=(ip,name,room)=>Dispatcher.InvokeAsync(()=>
@@ -378,6 +380,11 @@ public sealed partial class BrowserWindow : Window
     }
     public event Action? RoomPreviewsChanged;
     public Room? PreviewRoom(string id)=>Peer.Current?.Id==id?Peer.Current:discovered.Where(r=>r.Room.Id==id&&!Settings.IsBlocked(r.Address)).OrderByDescending(r=>r.Room.Revision).Select(r=>r.Room).FirstOrDefault();
+    void ResetRoomColumnWidths()
+    {
+        foreach(var pair in defaultRoomWidths)pair.Key.Width=pair.Value;
+        Settings.RoomColumnWidths=[];Settings.Save();
+    }
     void SaveRoomColumnWidths()
     {
         Settings.RoomColumnWidths=rooms.Columns.Where(c=>c.CanUserResize&&c.SortMemberPath.Length>0&&double.IsFinite(c.ActualWidth)&&c.ActualWidth>0).ToDictionary(c=>c.SortMemberPath,c=>Math.Max(c.MinWidth,c.ActualWidth));
