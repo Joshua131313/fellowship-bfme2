@@ -191,7 +191,8 @@ public sealed class BrowserWindow : Window
     RoomWindow? roomWindow;
     FriendsWindow? friendsWindow;
     readonly Dictionary<string,ChatWindow> chats = new();
-    bool online,refreshing;
+    bool online,refreshing,initialDiscovery=true;
+    readonly ProgressBar discoveryProgress=new(){Width=180,Height=5,IsIndeterminate=true,Foreground=UI.Brush("#6789F5"),Background=UI.Brush("#263042"),BorderThickness=new(0),Margin=new(0,18,0,0),Visibility=Visibility.Collapsed};
     readonly System.Windows.Threading.DispatcherTimer refreshTimer=new(){Interval=TimeSpan.FromSeconds(4)};
     readonly HashSet<string> discoveredAddresses=[];
     public PeerDirectory Presence { get; }=new();
@@ -225,7 +226,7 @@ public sealed class BrowserWindow : Window
         void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, Binding = new Binding(property), MinWidth = star ? (property == "Title" ? 180 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
         Column("ROOM NAME","Title",2,true); Column("HOST","Host",1,true); Column("MAP","Map",1.25,true); Column("PLAYERS","Slots",75); Column("PATCH","Patch",75); Column("STATUS","Status",110);
         table.Children.Add(rooms);
-        var emptyContent = UI.Stack(UI.Text("◈",42,"#5B719F",true),emptyTitle,emptyHint);
+        var emptyContent = UI.Stack(UI.Text("◈",42,"#5B719F",true),emptyTitle,emptyHint,discoveryProgress);
         foreach (FrameworkElement el in emptyContent.Children) { el.HorizontalAlignment = HorizontalAlignment.Center; el.Margin = new(0,0,0,12); if(el is TextBlock tb)tb.TextAlignment = TextAlignment.Center; }
         empty = new Border { Child = emptyContent, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false, Margin = new(0,38,0,0) }; table.Children.Add(empty);
         var tableCard = UI.Card(table,"#171A20",0); tableCard.Margin = new(22,0,22,0); UI.At(body,tableCard,3);
@@ -281,8 +282,9 @@ public sealed class BrowserWindow : Window
         var list = discovered.Where(r => r.Address != Peer.Address&&!Settings.IsBlocked(r.Address)).ToList();
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
         string filter = search.Text.Trim();
-        emptyTitle.Text=filter.Length>0?"No matching rooms":"No rooms found";
-        emptyHint.Text=filter.Length>0?"Try another room name, host or map.":"Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.";
+        discoveryProgress.Visibility=initialDiscovery&&online?Visibility.Visible:Visibility.Collapsed;
+        emptyTitle.Text=initialDiscovery&&online?"Finding rooms…":filter.Length>0?"No matching rooms":"No rooms found";
+        emptyHint.Text=initialDiscovery&&online?"Connecting to players on your VPN…":filter.Length>0?"Try another room name, host or map.":"Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.";
         list = list.Where(r => $"{r.Title} {r.Host} {r.Map}".Contains(filter,StringComparison.OrdinalIgnoreCase)).ToList();
         var selected=(rooms.SelectedItem as RoomEntry)?.Room.Id;
         rooms.ItemsSource = list;if(selected!=null)rooms.SelectedItem=list.FirstOrDefault(r=>r.Room.Id==selected); empty.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed; count.Text = $"{list.Count} room{(list.Count == 1 ? "" : "s")}";
@@ -293,7 +295,7 @@ public sealed class BrowserWindow : Window
         try
         {
             if(string.IsNullOrWhiteSpace(Settings.BindAddress)){ if(!quiet)UI.Error("Select your Radmin VPN interface in Settings first."); return false; }
-            Peer.Start(Settings.BindAddress); online = true; status.Text = $"●  {Settings.Name}   ·   {Peer.Address}   ·   Ready to play"; status.Foreground = UI.Brush(UI.Green); return true;
+            Peer.Start(Settings.BindAddress); online = true; status.Text = $"●  {Settings.Name}   ·   {Peer.Address}   ·   Ready to play"; status.Foreground = UI.Brush(UI.Green);RenderRooms();Dispatcher.BeginInvoke(new Action(async()=>{try{await Refresh();}catch(Exception error){status.Text="Discovery failed: "+error.Message;}})); return true;
         }
         catch(Exception e)
         {
@@ -359,10 +361,13 @@ public sealed class BrowserWindow : Window
     {
         if(refreshing||!EnsureOnline())return;
         refreshing=true;
+        if(initialDiscovery){status.Text="Finding peers and rooms…";RenderRooms();}
         try
         {
             await Peer.Discover(); // Compatibility with older room-only discovery.
             await Peer.Discover(presence:true);
+            // Let the initial UDP responses arrive before building the first query list.
+            if(initialDiscovery)await Task.Delay(400);
             var addresses=Settings.Friends.Select(f=>f.Address).Concat(discoveredAddresses).Concat(Presence.Known(DateTimeOffset.UtcNow)).Append(address.Text.Trim()).Where(a=>a.Length>0&&a!=Peer.Address&&!Settings.IsBlocked(a)).Distinct().Take(256).ToArray();
             await Task.WhenAll(addresses.Select(async ip=>
             {
@@ -377,7 +382,7 @@ public sealed class BrowserWindow : Window
             RenderRooms();RenderActivePlayers();friendsWindow?.Render();
             status.Text=$"●  {Peer.Address} · VPN discovery active · {discovered.Count} room(s)";
         }
-        finally{refreshing=false;}
+        finally{refreshing=false;initialDiscovery=false;RenderRooms();}
     }
     void RenderActivePlayers()
     {
