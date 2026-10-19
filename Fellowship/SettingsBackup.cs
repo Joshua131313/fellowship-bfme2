@@ -12,6 +12,7 @@ public static class SettingsBackup
         var archive=JsonSerializer.Deserialize<Archive>(json)??throw new InvalidDataException("Invalid backup.");
         if(archive.Format!=1||archive.Preferences is not {} s)throw new InvalidDataException("Unsupported backup format.");
         if(string.IsNullOrWhiteSpace(s.Name)||s.Name.Length>40||s.PreferredColor is <0 or >10||s.LastSelectedColor is <0 or >10||s.PreferredMapSpots==null||s.Friends==null||s.BlockedUsers==null||s.RoomPresets==null)throw new InvalidDataException("Invalid preferences in backup.");
+        if(s.SoundVolume is <0 or >100||s.Appearance is not ("Dark" or "Light" or "System")||s.MutedSounds==null||s.MutedSounds.Count>32)throw new InvalidDataException("Invalid appearance or sound preferences.");
         if(s.PreferredMapSpots.Count>1000||s.PreferredMapSpots.Any(p=>p.Key.Length>512||p.Value is <0 or >8))throw new InvalidDataException("Invalid map preferences.");
         foreach(var friend in s.Friends.Concat(s.BlockedUsers))if(friend==null||string.IsNullOrWhiteSpace(friend.Name)||friend.Name.Length>40||!IPAddress.TryParse(friend.Address,out var ip)||ip.AddressFamily!=System.Net.Sockets.AddressFamily.InterNetwork)throw new InvalidDataException("Invalid friend or blocked-user entry.");
         foreach(var preset in s.RoomPresets)
@@ -25,6 +26,7 @@ public static class SettingsBackup
     {
         target.SkipRemoveFriendConfirmation=source.SkipRemoveFriendConfirmation;target.SkipBlockConfirmation=source.SkipBlockConfirmation;
         target.FriendActivitySounds=source.FriendActivitySounds;target.DesktopNotifications=source.DesktopNotifications;
+        target.SoundsEnabled=source.SoundsEnabled;target.SoundVolume=source.SoundVolume;target.Appearance=source.Appearance;target.MutedSounds=source.MutedSounds.ToList();
         target.Name=source.Name;target.MessageSounds=source.MessageSounds;target.LiveGameSync=source.LiveGameSync;
         target.PreferredColor=source.PreferredColor;target.LastSelectedColor=source.LastSelectedColor;target.PreferredMapSpots=new(source.PreferredMapSpots);
         target.Friends=source.Friends.ToList();target.BlockedUsers=source.BlockedUsers.ToArray();target.RoomPresets=source.RoomPresets.Select(p=>p with{BuiltIn=false}).ToList();

@@ -105,6 +105,7 @@ public partial class App : Application
         activateEvent=new EventWaitHandle(false,EventResetMode.AutoReset,@"Local\Fellowship.Activate."+identity);
         if(!first){activateEvent.Set();Shutdown();return;}
         _=Task.Run(async()=>{await Task.Delay(3000);UpdateCache.CleanInstalledCache();});
+        Appearance.Apply(Settings.Load().Appearance);
         var main = new BrowserWindow();
         MainWindow = main;
         ShutdownMode=ShutdownMode.OnExplicitShutdown;

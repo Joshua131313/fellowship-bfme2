@@ -35,6 +35,10 @@ public sealed class Settings
     public bool FriendActivitySounds { get; set; } = true;
     public bool DesktopNotifications { get; set; } = true;
     public bool MessageSounds { get; set; } = true;
+    public bool SoundsEnabled { get; set; } = true;
+    public int SoundVolume { get; set; } = 70;
+    public string Appearance { get; set; } = "Dark";
+    public List<string> MutedSounds { get; set; } = [];
     public bool LiveGameSync { get; set; } = true;
     public bool MenuNavigation { get; set; }
     public List<Friend> Friends { get; set; } = [];

@@ -27,7 +27,7 @@ public static class UI
         thread.SetApartmentState(System.Threading.ApartmentState.STA);thread.IsBackground=true;thread.Start();return completion.Task;
     }
     public const string Muted = "#919AA9", Accent = "#83A5FF", Green = "#74D6AB";
-    public static Brush Brush(string hex) => (Brush)new BrushConverter().ConvertFromString(hex)!;
+    public static Brush Brush(string hex) => Appearance.Brush(hex);
     public static TextBlock Text(string text, double size = 13, string color = "#E8EBF2", bool bold = false) => new()
     { Text = text, FontSize = size, Foreground = Brush(color), FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
     public static Button Button(string text, Action action, bool primary = false)
@@ -260,7 +260,7 @@ public sealed partial class BrowserWindow : Window
     readonly System.Windows.Controls.Primitives.Popup playersPopup=new(){AllowsTransparency=true,StaysOpen=false,Placement=System.Windows.Controls.Primitives.PlacementMode.Bottom};
     public BrowserWindow(Settings? settings=null)
     {
-        Settings=settings??Settings.Load();
+        Settings=settings??Settings.Load();MessageAlert.Configure(Settings);
         Settings.NetworkName=PeerService.Interfaces().FirstOrDefault(i=>i.Address==Settings.BindAddress).Name??Settings.NetworkName;
         modeFilter.SelectedItem=modeFilter.Items.Contains(Settings.RoomModeFilter)?Settings.RoomModeFilter:"All modes";
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
@@ -307,7 +307,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.88   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.89   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -499,6 +499,26 @@ public sealed partial class BrowserWindow : Window
         var startup=new CheckBox{Content="Start in the tray at Windows sign-in",IsChecked=Installation.StartsWithWindows,IsEnabled=Installation.IsInstalled,ToolTip=Installation.IsInstalled?"Fellowship starts quietly in the system tray.":"Install Fellowship to enable startup."};options.Children.Add(startup);ToolTipService.SetShowOnDisabled(startup,true);
         var optionCard=UI.Card(options,"#171C24",16);optionCard.Margin=new(0,20,0,0);p.Children.Add(optionCard);
         p.Children.Add(AppUpdates.Controls(()=>Peer.Current!=null));
+        var appearanceChoice=new ComboBox{ItemsSource=new[]{"Dark","Light","System"},SelectedItem=Settings.Appearance,Margin=new(0,12,0,0)};
+        if(appearanceChoice.SelectedIndex<0)appearanceChoice.SelectedIndex=0;
+        var soundMaster=new CheckBox{Content="Enable app sounds",IsChecked=Settings.SoundsEnabled,Margin=new(0,12,0,12)};
+        var volume=new Slider{Minimum=0,Maximum=100,Value=Math.Clamp(Settings.SoundVolume,0,100),TickFrequency=1,IsSnapToTickEnabled=true,Height=28,Margin=new(0,4,0,10)};
+        var volumeLabel=UI.Text("Volume · "+(int)volume.Value+"%",11,UI.Muted);
+        System.Windows.Automation.AutomationProperties.SetName(volume,"Sound volume");
+        volume.ValueChanged+=(_,_)=>volumeLabel.Text="Volume · "+(int)volume.Value+"%";
+        var soundOptions=new StackPanel();var soundChecks=new Dictionary<string,CheckBox>();
+        foreach(var sound in MessageAlert.Choices)
+        {
+            bool groupEnabled=sound.Key.StartsWith("friend-")?Settings.FriendActivitySounds:Settings.MessageSounds;
+            var check=new CheckBox{Content=sound.Label,IsChecked=groupEnabled&&!Settings.MutedSounds.Contains(sound.Key),Margin=new(0,0,0,10)};
+            soundChecks[sound.Key]=check;soundOptions.Children.Add(check);
+        }
+        var previewChoice=new ComboBox{ItemsSource=MessageAlert.Choices.Select(c=>c.Label).ToArray(),SelectedIndex=0,MinWidth=150};
+        var previewSound=UI.Button("Play",()=>MessageAlert.Preview(MessageAlert.Choices[previewChoice.SelectedIndex].Key,(int)volume.Value));previewSound.Margin=new(8,0,0,0);
+        soundOptions.Children.Add(UI.Row(previewChoice,previewSound));
+        var soundEvents=new Expander{Header="Choose sounds & preview",Content=new Border{Padding=new(12),Child=soundOptions},Margin=new(0,6,0,0)};
+        void SoundEnabled(){volume.IsEnabled=soundMaster.IsChecked==true;soundEvents.IsEnabled=volume.IsEnabled;}
+        soundMaster.Checked+=(_,_)=>SoundEnabled();soundMaster.Unchecked+=(_,_)=>SoundEnabled();SoundEnabled();
         var footer=new Grid{Margin=new(24,14,24,20)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var export=UI.AsyncButton("Export backup",async()=>
         {
@@ -515,7 +535,7 @@ public sealed partial class BrowserWindow : Window
                 if(!await UI.Ask(w,"Restore backup","Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged.","Restore backup"))return;
                 if(Peer.Current!=null)throw new InvalidOperationException("Leave your room before restoring a backup.");
                 File.WriteAllText(Path.Combine(Settings.Folder,"before-restore.json"),SettingsBackup.Export(Settings));
-                SettingsBackup.Restore(Settings,incoming);friendsWindow?.Close();restored();await Refresh();
+                SettingsBackup.Restore(Settings,incoming);Appearance.Apply(Settings.Appearance);MessageAlert.Configure(Settings);friendsWindow?.Close();restored();await Refresh();
             }
             catch(Exception error){UI.Error(error.Message);}
         });
@@ -533,7 +553,7 @@ public sealed partial class BrowserWindow : Window
             try
             {
             await ChangeNetwork(selectedNetwork.Name,selectedNetwork.Address);
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();EnsureOnline();
+            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=true;Settings.FriendActivitySounds=true;Settings.SoundsEnabled=soundMaster.IsChecked==true;Settings.SoundVolume=(int)volume.Value;Settings.MutedSounds=soundChecks.Where(p=>p.Value.IsChecked!=true).Select(p=>p.Key).ToList();Settings.Appearance=appearanceChoice.SelectedItem?.ToString()??"Dark";Appearance.Apply(Settings.Appearance);MessageAlert.Configure(Settings);Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();EnsureOnline();
             feedback?.Invoke($"Refreshing rooms and friends on {selectedNetwork.Name}…");
             while(refreshing)await Task.Delay(50);
             // Let any old-interface queries finish, then start a full pass on the saved interface.
@@ -544,14 +564,31 @@ public sealed partial class BrowserWindow : Window
             catch{feedback?.Invoke("Settings could not be fully applied. Check the error and try again.");throw;}
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);
+        var children=p.Children.Cast<UIElement>().ToArray();p.Children.Clear();p.Children.Add(children[0]);
+        var subtitle=UI.Text("Make Fellowship feel at home. Changes apply when you save.",12,UI.Muted);subtitle.Margin=new(0,8,0,20);p.Children.Add(subtitle);
         var sections=new Grid();sections.ColumnDefinitions.Add(new());sections.ColumnDefinitions.Add(new());
-        var left=new StackPanel();var right=new StackPanel();Grid.SetColumn(right,1);
-        var children=p.Children.Cast<UIElement>().ToArray();p.Children.Clear();p.Children.Add(children[0]);p.Children.Add(sections);
-        foreach(var child in children.Skip(1)){if(child==optionCard||child==children[^1])right.Children.Add(child);else left.Children.Add(child);}
-        sections.Children.Add(left);sections.Children.Add(right);sections.Margin=new(0,8,0,0);
-        foreach(var check in options.Children.OfType<CheckBox>()){if(check.Content is string text)check.Content=UI.Text(text,12);}
-        void ArrangeSettings(double width){bool wide=width>=760;sections.ColumnDefinitions[1].Width=wide?UI.Star:new GridLength(0);Grid.SetColumn(right,wide?1:0);Grid.SetRow(right,wide?0:1);left.Margin=new(0,0,wide?24:0,0);}
         sections.RowDefinitions.Add(new(){Height=UI.Auto});sections.RowDefinitions.Add(new(){Height=UI.Auto});
+        var left=new StackPanel();var right=new StackPanel();Grid.SetColumn(right,1);sections.Children.Add(left);sections.Children.Add(right);p.Children.Add(sections);
+        Border Section(string title,string description,params UIElement[] controls)
+        {
+            var stack=UI.Stack(UI.Text(title,15,bold:true));
+            if(description.Length>0){var text=UI.Text(description,11,UI.Muted);text.Margin=new(0,5,0,4);stack.Children.Add(text);}
+            foreach(var control in controls)stack.Children.Add(control);
+            var card=UI.Card(stack,"#171C24",18);card.Margin=new(0,0,0,16);return card;
+        }
+        profile.Margin=new(0);networkHint.Margin=new(0,10,0,0);
+        left.Children.Add(Section("Profile & connection","How other players find you.",profile,networkHint));
+        browse.Margin=new(0,10,8,0);gamePreferences.Margin=new(0,10,0,0);game.Height=48;
+        left.Children.Add(Section("Game installation","Connect your copy of The Battle for Middle-earth II.",children[3],game,UI.Row(browse,gamePreferences)));
+        var backup=(Border)children[^1];backup.Margin=new(0,12,0,0);
+        left.Children.Add(Section("Backup & restore","Keep a copy of your preferences and contacts.",backup));
+        left.Children.Add(Section("Updates","",children[^2]));
+        right.Children.Add(Section("Appearance","Choose a theme, or follow Windows.",appearanceChoice));
+        right.Children.Add(Section("Sound","Set the volume and choose which events you hear.",soundMaster,volumeLabel,volume,soundEvents));
+        options.Children.Clear();notifications.Margin=new(0,12,0,14);liveSync.Margin=new(0,0,0,14);startup.Margin=new(0);
+        foreach(var check in new[]{notifications,liveSync,startup})if(check.Content is string text)check.Content=UI.Text(text,12);
+        right.Children.Add(Section("App behavior","Notifications, game sync and startup.",notifications,liveSync,startup));
+        void ArrangeSettings(double width){bool wide=width>=760;sections.ColumnDefinitions[1].Width=wide?UI.Star:new GridLength(0);Grid.SetColumn(right,wide?1:0);Grid.SetRow(right,wide?0:1);left.Margin=new(0,0,wide?20:0,0);}
         body.SizeChanged+=(_,e)=>ArrangeSettings(e.NewSize.Width);ArrangeSettings(1000);
         return body;
     }
