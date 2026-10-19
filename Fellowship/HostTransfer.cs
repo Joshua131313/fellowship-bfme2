@@ -3,6 +3,7 @@ using System.Text.Json;
 namespace Fellowship;
 public sealed partial class PeerService
 {
+    public event Action<string,string,Room?>? HostTransferred;
     bool transferring;
     string handoffTarget="",handoffId="";
     TaskCompletionSource<string>? handoffReady;
@@ -59,6 +60,15 @@ public sealed partial class PeerService
                 result="";
             }
             if(result.Length>0){sent=false;throw new IOException(result);}
+            // Query through the successor's visibility policy before showing its room.
+            try
+            {
+                var visible=await QueryPeer(address,Address);
+                HostTransferred?.Invoke(address,visible.Name,visible.Room);
+            }
+            catch(IOException){ /* Discovery can retry without disrupting the confirmed transfer. */ }
+            catch(System.Net.Sockets.SocketException){ }
+            catch(OperationCanceledException){ }
             var others=guests.Where(p=>p.Key!=id).ToArray();
             foreach(var pair in others)
             {

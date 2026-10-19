@@ -174,6 +174,7 @@ public sealed partial class PeerService : IDisposable
             room.Players = [new() { Id = "host", Name = settings.Name, Address=Address, Ready = true,CanHostTransfer=listener!=null,Team=team,Spot=spot,Color=saved?.Color is >=0 and <=10?saved.Color:0 }];
         }
         Changed?.Invoke();
+        _ = Discover(presence:true);
     }
     public async Task Join(string address)
     {
@@ -207,7 +208,7 @@ public sealed partial class PeerService : IDisposable
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
                     lock(gate){upstream=null;Current=msg.Room;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);}
                     await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId});
-                    Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
+                    _ = Discover(presence:true);Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
                 }
                 if(msg.Type=="redirect")
                 {
@@ -392,6 +393,7 @@ public sealed partial class PeerService : IDisposable
         }
         Changed?.Invoke();
         await Broadcast(new() { Type = "room", Room = snapshot });
+        await Discover(presence:true);
     }
     async Task Broadcast(Wire msg)
     {
@@ -412,6 +414,7 @@ public sealed partial class PeerService : IDisposable
         lock (gate) { IsHost = false; Current = null; }
         foreach (var c in guests.Values) c.Dispose();
         guests.Clear(); Changed?.Invoke();
+        _ = Discover(presence:true);
     }
     public void Dispose() { discovery?.Dispose(); stop.Cancel(); listener?.Stop(); Leave(); stop.Dispose(); }
     sealed class Connection : IDisposable

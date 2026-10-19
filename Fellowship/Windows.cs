@@ -236,7 +236,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.46   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.47   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -259,7 +259,14 @@ public sealed class BrowserWindow : Window
         roomMenu.Opened+=(_,_)=>{joinItem.IsEnabled=rooms.SelectedItem is RoomEntry;preview.IsEnabled=joinItem.IsEnabled;};
         roomMenu.Items.Add(joinItem);roomMenu.Items.Add(preview);rooms.ContextMenu=roomMenu;
         rooms.PreviewMouseRightButtonDown+=(_,e)=>{var row=ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) as DataGridRow;if(row!=null)row.IsSelected=true;};
-        Peer.Discovered+=ip=>Dispatcher.InvokeAsync(()=>{if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);});
+        Peer.Discovered+=ip=>Dispatcher.InvokeAsync(async()=>{if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);await QueryDiscoveredPeer(ip);});
+        Peer.HostTransferred+=(ip,name,room)=>Dispatcher.InvokeAsync(()=>
+        {
+            queryVersions[ip]=queryVersions.GetValueOrDefault(ip)+1;
+            Presence.Success(ip,name,room,DateTimeOffset.UtcNow);
+            if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);
+            UpdateDiscoveredRooms();
+        });
         refreshTimer.Tick+=async(_,_)=>{if(online)try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch{}};
         refreshTimer.Start();
         search.TextChanged += (_,_) => RenderRooms();
@@ -357,6 +364,33 @@ public sealed class BrowserWindow : Window
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
         save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return w;
     }
+    readonly Dictionary<string,Task> peerQueries=new();
+    readonly Dictionary<string,int> queryVersions=new();
+    Task QueryDiscoveredPeer(string ip)
+    {
+        if(ip==Peer.Address||Settings.IsBlocked(ip))return Task.CompletedTask;
+        if(peerQueries.TryGetValue(ip,out var pending))return pending;
+        var task=QueryAndRender(ip);peerQueries[ip]=task;return task;
+    }
+    async Task QueryAndRender(string ip)
+    {
+        var version=queryVersions.GetValueOrDefault(ip);
+        try
+        {
+            var result=await PeerService.QueryPeer(ip,Peer.Address);
+            if(version==queryVersions.GetValueOrDefault(ip)&&!Settings.IsBlocked(ip))
+                Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow);
+        }
+        catch{if(version==queryVersions.GetValueOrDefault(ip))Presence.Failure(ip);}
+        finally{peerQueries.Remove(ip);UpdateDiscoveredRooms();}
+    }
+    void UpdateDiscoveredRooms()
+    {
+        discovered.Clear();
+        foreach(var peer in Presence.Active(DateTimeOffset.UtcNow))
+            if(peer.Room!=null&&!Settings.IsBlocked(peer.Address))discovered.Add(new(peer.Address,peer.Room,peer.Reconnecting));
+        RenderRooms();RenderActivePlayers();friendsWindow?.Render();
+    }
     public async Task Refresh()
     {
         if(refreshing||!EnsureOnline())return;
@@ -369,11 +403,7 @@ public sealed class BrowserWindow : Window
             // Let the initial UDP responses arrive before building the first query list.
             if(initialDiscovery)await Task.Delay(400);
             var addresses=Settings.Friends.Select(f=>f.Address).Concat(discoveredAddresses).Concat(Presence.Known(DateTimeOffset.UtcNow)).Append(address.Text.Trim()).Where(a=>a.Length>0&&a!=Peer.Address&&!Settings.IsBlocked(a)).Distinct().Take(256).ToArray();
-            await Task.WhenAll(addresses.Select(async ip=>
-            {
-                try {var result=await PeerService.QueryPeer(ip,Peer.Address);Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow);}
-                catch {Presence.Failure(ip);}
-            }));
+            await Task.WhenAll(addresses.Select(QueryDiscoveredPeer));
             // Keep peers in the retry set through short VPN losses. A successful null
             // room response removes a closed/private room immediately.
             var now=DateTimeOffset.UtcNow;
@@ -550,7 +580,7 @@ public sealed class RoomWindow : Window
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
     readonly Border setupBanner;
-    readonly StackPanel inlineRules=new();
+    readonly StackPanel inlineRules=new(), mapField=new(){Margin=new(0,0,0,12)};
     readonly ComboBox resourceChoice=new(), commandChoice=new(), mapChoice=new SearchableMapBox();
     readonly TextBox capacityChoice=new(){MaxLength=2,ToolTip="Fellowship room limit: 2–64. BFME2 matches support at most 8 players."};
     readonly CheckBox customChoice=new(){Content="Custom Heroes"}, ringChoice=new(){Content="Ring Heroes"};
@@ -581,7 +611,7 @@ public sealed class RoomWindow : Window
         var right=new StackPanel();right.Children.Add(UI.Text("MATCH SETUP",10,UI.Muted,true));
         setupSummary.Margin=new(0,12,0,0);setupSummary.LineHeight=22;
         var banner=setupBanner=UI.Card(UI.Stack(UI.Text("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#252F43",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
-        right.Children.Add(presetStatus);right.Children.Add(mapPreview);
+        right.Children.Add(presetStatus);right.Children.Add(mapField);right.Children.Add(mapPreview);
         var choices=new Grid();choices.ColumnDefinitions.Add(new());choices.ColumnDefinitions.Add(new());
         var teamField=new StackPanel{Margin=new(0,0,6,0)};var colorField=new StackPanel{Margin=new(6,0,0,0)};Grid.SetColumn(colorField,1);
         teamField.Children.Add(UI.Text("TEAM",10,UI.Muted,true));colorField.Children.Add(UI.Text("COLOR",10,UI.Muted,true));
@@ -600,7 +630,8 @@ public sealed class RoomWindow : Window
         void AddChoice(string label,ComboBox choice,object[] values)
         {
             var caption=UI.Text(label,10,UI.Muted,true);caption.Margin=new(0,12,0,6);
-            inlineRules.Children.Add(caption);choice.ItemsSource=values;inlineRules.Children.Add(choice);
+            var container=choice==mapChoice?mapField:inlineRules;
+            container.Children.Add(caption);choice.ItemsSource=values;container.Children.Add(choice);
             choice.SelectionChanged+=async(_,_)=>await SaveInlineRules();
         }
         AddChoice("MAP",mapChoice,GameInstallation.Maps(app.Settings.GamePath).Cast<object>().ToArray());
@@ -740,10 +771,10 @@ public sealed class RoomWindow : Window
         var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(current))!;
         draft.Map=selectedMap.Name;draft.MapPath=selectedMap.Path;draft.Capacity=capacity;
         draft.Match=new(){Resources=resources,CommandPoints=factor.Value,CustomHeroes=customChoice.IsChecked==true,RingHeroes=ringChoice.IsChecked==true};
-        savingRules=true;inlineRules.IsEnabled=false;ruleStatus.Text="Saving…";
+        savingRules=true;inlineRules.IsEnabled=mapField.IsEnabled=false;ruleStatus.Text="Saving…";
         try{await app.Peer.EditRoom(draft);ruleStatus.Text="Saved";}
         catch(Exception e){ruleStatus.Text=e.Message;}
-        finally{savingRules=false;inlineRules.IsEnabled=true;Refresh();}
+        finally{savingRules=false;inlineRules.IsEnabled=mapField.IsEnabled=true;Refresh();}
     }
     void SyncInlineRules(Room room)
     {
@@ -766,7 +797,7 @@ public sealed class RoomWindow : Window
     {
         CommandManager.InvalidateRequerySuggested();
         var room=app.Peer.Current;
-        if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
+        if(room==null){players.Items.Clear();playerCount.Text="PLAYERS · DISCONNECTED";allowLaunch=false;phase.Text="Disconnected · rejoin from the room browser";launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=mapField.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Text="Return to Game rooms to reconnect.";return;}
         if(app.Peer.IsHost)
         {
             try{app.Settings.RememberHost(room);}
@@ -808,8 +839,8 @@ public sealed class RoomWindow : Window
         presetStatus.Text=defaultPreset?"●  Automatic host preset":"○  Manual setup in BFME2";
         presetStatus.Foreground=UI.Brush(defaultPreset?UI.Green:"#E5B77A");
         setupBanner.Visibility=host?Visibility.Collapsed:Visibility.Visible;
-        customSetup.Visibility=inlineRules.Visibility=host?Visibility.Visible:Visibility.Collapsed;
-        customSetup.IsEnabled=!launching;inlineRules.IsEnabled=!savingRules&&!launching;
+        customSetup.Visibility=inlineRules.Visibility=mapField.Visibility=host?Visibility.Visible:Visibility.Collapsed;
+        customSetup.IsEnabled=!launching;inlineRules.IsEnabled=mapField.IsEnabled=!savingRules&&!launching;
         if(!savingRules)SyncInlineRules(room);
         int readyCount=room.Players.Count(p=>p.Ready);
         readySummary.Text=launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.";
