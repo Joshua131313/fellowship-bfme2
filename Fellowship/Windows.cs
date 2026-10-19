@@ -240,7 +240,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.50   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.51   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -738,6 +738,7 @@ public sealed class RoomWindow : Window
                             try{await app.Peer.EditRoom(draft);}
                             finally{savingRules=false;Refresh();}
                         },message=>liveStatus.Text=message,syncLifetime.Token,()=>syncPrepared.TrySetResult(true));
+                        attempted=0; // A reconnect must be allowed even when BFME2 keeps the same PID.
                         syncPrepared.TrySetResult(false);
                     }
                     catch(OperationCanceledException) when(syncLifetime.IsCancellationRequested){break;}
@@ -849,7 +850,7 @@ public sealed class RoomWindow : Window
             if(app.Peer.IsHost&&p.Id!="host")
             {
                 menu.Items.Add(new Separator());
-                var promote=new MenuItem{Header="Promote to host"};promote.Click+=async(_,_)=>{try{await app.Peer.Promote(p.Id);}catch(Exception ex){UI.Error(ex.Message);}};menu.Items.Add(promote);
+                var promote=new MenuItem{Header="Transfer host"};promote.Click+=async(_,_)=>{try{await app.Peer.Promote(p.Id);}catch(Exception ex){UI.Error(ex.Message);}};menu.Items.Add(promote);
                 var kick=new MenuItem{Header="Kick from room"};kick.Click+=async(_,_)=>{try{await app.Peer.Kick(p.Id);}catch(Exception ex){UI.Error(ex.Message);}};menu.Items.Add(kick);
             }
             item.ContextMenu=menu;players.Items.Add(item);

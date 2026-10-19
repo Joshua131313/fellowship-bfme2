@@ -3,17 +3,16 @@
 <Style TargetType="ProgressBar">
  <Setter Property="Height" Value="5"/><Setter Property="Foreground" Value="#7395FF"/><Setter Property="Background" Value="#283142"/><Setter Property="BorderThickness" Value="0"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ProgressBar">
-  <Grid SnapsToDevicePixels="True">
+  <Grid SnapsToDevicePixels="True" ClipToBounds="True">
    <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3"/>
    <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="3" HorizontalAlignment="Left"/>
-   <Border x:Name="Pulse" Background="{TemplateBinding Foreground}" CornerRadius="3" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5"><Border.RenderTransform><ScaleTransform ScaleX="0.25"/></Border.RenderTransform></Border>
+   <Viewbox Stretch="Fill"><Canvas Width="100" Height="5"><Border x:Name="Pulse" Width="25" Height="5" Background="{TemplateBinding Foreground}" CornerRadius="2.5" Visibility="Collapsed"><Border.RenderTransform><TranslateTransform X="-25"/></Border.RenderTransform></Border></Canvas></Viewbox>
   </Grid>
   <ControlTemplate.Triggers>
    <Trigger Property="IsIndeterminate" Value="True">
     <Setter TargetName="PART_Indicator" Property="Visibility" Value="Collapsed"/><Setter TargetName="Pulse" Property="Visibility" Value="Visible"/>
-    <Trigger.EnterActions><BeginStoryboard x:Name="PulseAnimation"><Storyboard RepeatBehavior="Forever" AutoReverse="True">
-     <DoubleAnimation Storyboard.TargetName="Pulse" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="0.25" To="0.7" Duration="0:0:0.8"><DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-     <DoubleAnimation Storyboard.TargetName="Pulse" Storyboard.TargetProperty="Opacity" From="0.45" To="1" Duration="0:0:0.8"/>
+    <Trigger.EnterActions><BeginStoryboard x:Name="PulseAnimation"><Storyboard RepeatBehavior="Forever">
+     <DoubleAnimation Storyboard.TargetName="Pulse" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" From="-25" To="100" Duration="0:0:1.2"/>
     </Storyboard></BeginStoryboard></Trigger.EnterActions>
     <Trigger.ExitActions><RemoveStoryboard BeginStoryboardName="PulseAnimation"/></Trigger.ExitActions>
    </Trigger>
@@ -47,7 +46,7 @@
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar">
  <Grid Background="Transparent"><Track x:Name="PART_Track" IsDirectionReversed="True" Orientation="{TemplateBinding Orientation}">
  <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource ScrollPage}"/></Track.DecreaseRepeatButton>
- <Track.Thumb><Thumb><Thumb.Template><ControlTemplate TargetType="Thumb"><Border x:Name="Grip" Background="#3B4658" CornerRadius="2" Margin="1,0"/><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="Background" Value="#7184A4"/></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="Grip" Property="Background" Value="#8BA9DC"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+ <Track.Thumb><Thumb><Thumb.Template><ControlTemplate TargetType="Thumb"><Border x:Name="Grip" Background="#3B4658" CornerRadius="1.5" Width="3" HorizontalAlignment="Center"/><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="Background" Value="#7184A4"/></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="Grip" Property="Background" Value="#8BA9DC"/></Trigger><DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ScrollBar}}" Value="Horizontal"><Setter TargetName="Grip" Property="Width" Value="Auto"/><Setter TargetName="Grip" Property="Height" Value="3"/><Setter TargetName="Grip" Property="HorizontalAlignment" Value="Stretch"/><Setter TargetName="Grip" Property="VerticalAlignment" Value="Center"/></DataTrigger></ControlTemplate.Triggers></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
  <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Style="{StaticResource ScrollPage}"/></Track.IncreaseRepeatButton>
  </Track></Grid></ControlTemplate></Setter.Value></Setter>
  <Style.Triggers><Trigger Property="Orientation" Value="Horizontal"><Setter Property="Width" Value="Auto"/><Setter Property="Height" Value="6"/></Trigger></Style.Triggers>

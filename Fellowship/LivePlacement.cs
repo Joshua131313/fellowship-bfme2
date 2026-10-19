@@ -81,8 +81,18 @@ public static class LivePlacement
             await connected;
         }
         if(!GetNamedPipeClientProcessId(pipe.SafePipeHandle,out uint client)||client!=helper.Id)throw new IOException("Unexpected sync client.");
-        while(!token.IsCancellationRequested&&current() is {} command)
+        DateTimeOffset? missingSince=null;
+        while(!token.IsCancellationRequested)
         {
+            var command=current();
+            if(command==null)
+            {
+                missingSince??=DateTimeOffset.UtcNow;
+                if(DateTimeOffset.UtcNow-missingSince>=TimeSpan.FromSeconds(8))return;
+                status("Waiting for the room connection…");
+                await Task.Delay(200,token);continue;
+            }
+            missingSince=null;
             using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(12));
             Reply reply;
             try{await Send(pipe,command,timeout.Token);reply=await Receive<Reply>(pipe,timeout.Token);}
@@ -183,7 +193,7 @@ public static class LivePlacement
                         await Send(pipe,new Reply("BFME2 has conflicting starting spots. Resolve them in the native lobby; sync is paused."),timeout.Token);
                         continue;
                     }
-                    string nextContext=$"{snapshot.Identity}|{snapshot.HostAddress}|{snapshot.Local.Row}";
+                    string nextContext=ContextKey(command,snapshot);
                     if(context!=nextContext){context=nextContext;reconcile=new();desiredSetup=observedSetup=null;placementNotice=null;}
                     if(placementMap!=snapshot.Map){placementMap=snapshot.Map;reconcile=new();placementNotice=null;}
                     if(command.Setup is {} requestedSetup)
@@ -274,6 +284,8 @@ public static class LivePlacement
         }
         return 0;
     }
+    public static string ContextKey(Command command,NativeLobby.Snapshot snapshot)=>
+        $"{command.Room}|{command.Host}|{command.Setup!=null}|{snapshot.Identity}|{snapshot.HostAddress}|{snapshot.Local.Row}";
     public static bool MatchesLobby(Command command,NativeLobby.Snapshot snapshot)=>
         snapshot.HostAddress==command.Host&&(command.Setup!=null&&snapshot.Local.Row==0||
         command.Setup==null&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
