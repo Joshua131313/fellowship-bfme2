@@ -306,6 +306,7 @@ class Program
   var tabsBrowser=new BrowserWindow(tabsSettings);
   void SelectTab(BrowserWindow target,string tab)=>typeof(BrowserWindow).GetMethod("SelectDashboard",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(target,new object[]{tab});
   IEnumerable<DependencyObject> TabNodes(DependencyObject root){yield return root;foreach(var node in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())foreach(var child in TabNodes(node))yield return child;}
+  if(UI.MenuAction("Settings",()=>{}).InputGestureText!="Ctrl+,")throw new Exception("Settings shortcut label is not readable");
   int windowsBefore=Application.Current.Windows.Count;
   SelectTab(tabsBrowser,"Settings");
   var nicknameDraft=TabNodes(tabsBrowser).OfType<System.Windows.Controls.TextBox>().Single(t=>t.Text=="Tab draft");nicknameDraft.Text="Unsaved tab edit";

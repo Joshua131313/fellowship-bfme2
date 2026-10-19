@@ -115,7 +115,7 @@ public static class UI
         KeyGesture? gesture=title switch
         {
             "Host room" or "Add friend"=>new(Key.N,ModifierKeys.Control),
-            "Settings"=>new(Key.OemComma,ModifierKeys.Control),
+            "Settings"=>new(Key.OemComma,ModifierKeys.Control,"Ctrl+,"),
             "Hide to tray"=>new(Key.H,ModifierKeys.Control),
             "Quit Fellowship"=>new(Key.Q,ModifierKeys.Control),
             "Clear room filter"=>new(Key.L,ModifierKeys.Control),
