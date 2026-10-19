@@ -263,6 +263,7 @@ public sealed partial class BrowserWindow : Window
     public BrowserWindow(Settings? settings=null)
     {
         Settings=settings??Settings.Load();MessageAlert.Configure(Settings);
+        roomSort=new[]{"Title","Mode","Host","Map","PlayerCount","Patch","Ping","Status"}.Contains(Settings.RoomSortColumn)?Settings.RoomSortColumn:"";roomSortDirection=Settings.RoomSortDescending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;
         Settings.NetworkName=PeerService.Interfaces().FirstOrDefault(i=>i.Address==Settings.BindAddress).Name??Settings.NetworkName;
         modeFilter.SelectedItem=modeFilter.Items.Contains(Settings.RoomModeFilter)?Settings.RoomModeFilter:"All modes";
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
@@ -296,7 +297,7 @@ public sealed partial class BrowserWindow : Window
         rooms.Columns.Insert(2,new DataGridTemplateColumn{Header="MODE",Width=100,MinWidth=100,SortMemberPath="Mode",CellTemplate=modeTemplate});
         var pingTemplate=new DataTemplate();var pingFactory=new FrameworkElementFactory(typeof(PingBadge));pingFactory.SetBinding(PingBadge.MillisecondsProperty,new Binding("Ping"));pingTemplate.VisualTree=pingFactory;
         rooms.Columns.Insert(7,new DataGridTemplateColumn{Header="PING",Width=90,SortMemberPath="Ping",CellTemplate=pingTemplate});
-        rooms.Sorting+=(_,e)=>{e.Handled=true;var member=e.Column.SortMemberPath;if(string.IsNullOrEmpty(member))return;roomSortDirection=roomSort==member&&roomSortDirection==System.ComponentModel.ListSortDirection.Ascending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;roomSort=member;RenderRooms();};
+        rooms.Sorting+=(_,e)=>{e.Handled=true;var member=e.Column.SortMemberPath;if(string.IsNullOrEmpty(member))return;roomSortDirection=roomSort==member&&roomSortDirection==System.ComponentModel.ListSortDirection.Ascending?System.ComponentModel.ListSortDirection.Descending:System.ComponentModel.ListSortDirection.Ascending;roomSort=member;Settings.RoomSortColumn=roomSort;Settings.RoomSortDescending=roomSortDirection==System.ComponentModel.ListSortDirection.Descending;Settings.Save();RenderRooms();};
         rooms.RowStyle=(Style)Application.Current.FindResource(typeof(DataGridRow));
         rooms.PreviewMouseLeftButtonUp+=(_,e)=>{if(ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) is DataGridRow{Item:RoomEntry entry}&&Peer.Current?.Id==entry.Room.Id)ShowRoom();};
         table.Children.Add(rooms);
@@ -311,7 +312,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.94   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.95   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
