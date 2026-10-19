@@ -373,3 +373,16 @@ using(var recoveryGuest=new PeerService(new(){Name="Recovery guest"}))
  await Until(()=>recoveryGuest.Current==null,"kicked guest must not recover or recreate room");
  recoveryHost.Leave();
 }
+
+using(var seriesHost=new PeerService(new(){GamePath=installation}))
+using(var seriesGuest=new PeerService(new(){GamePath=installation}))
+{
+ seriesHost.Start("127.0.0.90");seriesGuest.Start("127.0.0.91");seriesHost.Host(new(){Title="Series"});await seriesGuest.Join(seriesHost.Address);
+ var setup=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(seriesGuest.Current))!;
+ setup.Match=new(){Resources=2000,CommandPoints=400};
+ await seriesGuest.SyncNativeRules(setup);
+ await Until(()=>seriesHost.Current?.Match.Resources==2000&&seriesGuest.Current?.Match.CommandPoints==400,"native-host guest rules reach Fellowship host and room");
+ setup.Match=new(){Resources=1000,CommandPoints=100};await seriesGuest.SyncNativeRules(setup);await Task.Delay(200);
+ if(seriesHost.Current!.Match.Resources!=2000)throw new Exception("Stale native rules replaced current setup");
+ seriesGuest.Leave();seriesHost.Leave();
+}

@@ -11,7 +11,7 @@ namespace Fellowship;
 public static class LivePlacement
 {
     public sealed record Choice(int Team,int Spot,int Color=0);
-    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null);
+    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null);
     public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false);
     // A countdown or missing snapshot suspends writes. Only a confirmed destroyed
     // or inactive room followed by a stable new lobby can resume writes.
@@ -104,7 +104,11 @@ public static class LivePlacement
             if(current()==command)
             {
                 status(reply.Status);
-                if(reply.ImportSetup&&reply.Setup is {} setup)await importSetup(setup);
+                if(reply.ImportSetup&&reply.Setup is {} setup)
+                {
+                    try{await importSetup(setup);}
+                    catch(InvalidOperationException error){status("Map/rules could not sync: "+error.Message);}
+                }
                 if(reply.Import&&reply.Observed is {} choice)
                 {
                     try{await import(choice,command.Map);}
@@ -196,7 +200,7 @@ public static class LivePlacement
                     string nextContext=ContextKey(command,snapshot);
                     if(context!=nextContext){context=nextContext;reconcile=new();desiredSetup=observedSetup=null;placementNotice=null;}
                     if(placementMap!=snapshot.Map){placementMap=snapshot.Map;reconcile=new();placementNotice=null;}
-                    if(command.Setup is {} requestedSetup)
+                    if(snapshot.Local.Row==0&&command.Setup is {} requestedSetup)
                     {
                         if(snapshot.Local.Row!=0)throw new IOException("Fellowship's host must also host the BFME2 lobby to sync map and rules.");
                         requestedSetup.Rules.Validate();if(!maps.Contains(requestedSetup.Map))throw new IOException("Selected map is not installed.");
@@ -240,13 +244,13 @@ public static class LivePlacement
                         }
                         reconcile.Remember(command.Choice,actual);
                         bool correction=actual!=command.Choice;
-                        reply=new(placementNotice??(command.Setup==null?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,correction);
+                        reply=new(placementNotice??(snapshot.Local.Row!=0?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,correction);
                     }
                     else
                     {
                         bool changed=reconcile.Changed(actual);
                         if(changed)reconcile.Imported(actual);else reconcile.Remember(command.Choice,actual);
-                        reply=new(placementNotice??(command.Setup==null?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,changed);
+                        reply=new(placementNotice??(snapshot.Local.Row!=0?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,changed);
                     }
                 }
                 await Send(pipe,reply,timeout.Token);
@@ -287,8 +291,8 @@ public static class LivePlacement
     public static string ContextKey(Command command,NativeLobby.Snapshot snapshot)=>
         $"{command.Room}|{command.Host}|{command.Setup!=null}|{snapshot.Identity}|{snapshot.HostAddress}|{snapshot.Local.Row}";
     public static bool MatchesLobby(Command command,NativeLobby.Snapshot snapshot)=>
-        snapshot.HostAddress==command.Host&&(command.Setup!=null&&snapshot.Local.Row==0||
-        command.Setup==null&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
+        (command.Members==null?snapshot.HostAddress==command.Host:command.Members.Split('|').Contains(snapshot.HostAddress,StringComparer.Ordinal))&&(command.Setup!=null&&snapshot.Local.Row==0||
+        (command.Members!=null||command.Setup==null)&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
     public static bool HasDuplicateSpots(NativeLobby.Snapshot snapshot)=>snapshot.Slots
         .Where(s=>s.State>1&&s.Spot>=0).GroupBy(s=>s.Spot).Any(g=>g.Count()>1);
     public static Choice ResolveOccupiedColor(NativeLobby.Snapshot snapshot,Choice desired)=>

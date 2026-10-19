@@ -240,7 +240,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.51   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.52   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -664,7 +664,7 @@ public sealed class RoomWindow : Window
         customSetup.Children.Add(privacyChoice);var confirmPrivacy=UI.Require(UI.AsyncButton("Confirm privacy",()=>SaveRoomDetails(true)),()=>app.Peer.IsHost&&privacyChoice.SelectedIndex>=0&&(privacyChoice.SelectedIndex==1)!=app.Peer.Current?.FriendsOnly,()=>!app.Peer.IsHost?"Only the host can change room privacy.":"Select a different privacy option before confirming.");confirmPrivacy.Margin=new(0,10,0,0);confirmPrivacy.HorizontalAlignment=HorizontalAlignment.Stretch;customSetup.Children.Add(confirmPrivacy);
         right.Children.Add(customSetup);
         var guide=UI.Stack(UI.Text("IN BFME2",10,UI.Muted,true),UI.Text("1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Fellowship applies your team and spot",12,"#B5C0D3"));guide.Margin=new(0,20,0,0);guide.Children[1].SetValue(MarginProperty,new Thickness(0,8,0,0));right.Children.Add(guide);
-        var note=UI.Text("The Fellowship host must also host BFME2. Map and rules sync through the host; each player's team and spot sync locally. Guests still join the native lobby manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
+        var note=UI.Text("Any room member can host BFME2. Map and rules sync through the BFME2 host; each player's selections sync locally. Join the native lobby manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
         var settingsCard=UI.Card(UI.Scroll(right),"#191D24",16);Grid.SetColumn(settingsCard,1);columns.Children.Add(settingsCard);UI.At(body,columns,1);
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var state=UI.Stack(consent,readySummary,UI.Text("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
@@ -694,7 +694,7 @@ public sealed class RoomWindow : Window
     {
         if((!app.Settings.LiveGameSync)||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
-        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),app.Peer.IsHost?NativeSetup.From(room):null);
+        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)));
     }
     bool syncPaused;
     public void RetryLiveSync()=>syncPaused=false;
@@ -730,12 +730,12 @@ public sealed class RoomWindow : Window
                             finally{changingPlacement=false;Refresh();}
                         },async setup=>
                         {
-                            if(!app.Peer.IsHost||app.Peer.Current is not {} room)return;
+                            if(app.Peer.Current is not {} room)return;
                             var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(room))!;
                             var selected=GameInstallation.Maps(app.Settings.GamePath).FirstOrDefault(m=>m.Path.Equals(setup.Map,StringComparison.OrdinalIgnoreCase))??throw new IOException("Native map is not installed.");
                             draft.Map=selected.Name;draft.MapPath=selected.Path;draft.Match=setup.Rules;
                             savingRules=true;Refresh();
-                            try{await app.Peer.EditRoom(draft);}
+                            try{await app.Peer.SyncNativeRules(draft);}
                             finally{savingRules=false;Refresh();}
                         },message=>liveStatus.Text=message,syncLifetime.Token,()=>syncPrepared.TrySetResult(true));
                         attempted=0; // A reconnect must be allowed even when BFME2 keeps the same PID.

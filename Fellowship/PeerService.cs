@@ -116,6 +116,10 @@ public sealed partial class PeerService : IDisposable
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
                 }
+                else if(msg.Type=="native-setup"&&msg.Room is {} setup)
+                {
+                    try{await ApplyNativeRules(setup);}catch(InvalidOperationException){} // Invalid/stale observations cannot replace current rules.
+                }
                 else if (msg.Type == "chat")
                 {
                     string? name;
@@ -337,6 +341,26 @@ public sealed partial class PeerService : IDisposable
         await BroadcastState();
     }
     bool CanSee(string remote) => !settings.IsBlocked(remote)&&(Current?.FriendsOnly!=true || settings.Friends.Any(f=>f.Address==remote));
+    public Task SyncNativeRules(Room observed)
+    {
+        if(IsHost)return ApplyNativeRules(observed);
+        return upstream?.Send(new(){Type="native-setup",Room=new(){Id=observed.Id,Revision=observed.Revision,MapPath=observed.MapPath,Match=observed.Match}})??Task.CompletedTask;
+    }
+    async Task ApplyNativeRules(Room observed)
+    {
+        observed.Match.Validate();
+        var map=GameInstallation.Maps(settings.GamePath).FirstOrDefault(m=>m.Path.Equals(observed.MapPath,StringComparison.OrdinalIgnoreCase));
+        if(map==null)throw new InvalidOperationException("Map is not installed.");
+        Task update;
+        lock(gate)
+        {
+            if(!IsHost||Current==null||transferring||Current.Id!=observed.Id||Current.Revision!=observed.Revision)return;
+            var draft=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current))!;
+            draft.Map=map.Name;draft.MapPath=map.Path;draft.Match=observed.Match;
+            update=EditRoom(draft);
+        }
+        await update;
+    }
     public async Task EditRoom(Room draft)
     {
         draft.Match.Validate();
