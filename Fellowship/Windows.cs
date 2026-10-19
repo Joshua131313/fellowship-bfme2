@@ -239,7 +239,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.65   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.66   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -266,7 +266,7 @@ public sealed class BrowserWindow : Window
         Peer.HostTransferred+=(ip,name,room)=>Dispatcher.InvokeAsync(()=>
         {
             queryVersions[ip]=queryVersions.GetValueOrDefault(ip)+1;
-            Presence.Success(ip,name,room,DateTimeOffset.UtcNow);
+            Presence.Success(ip,name,room,DateTimeOffset.UtcNow,room?.Players.FirstOrDefault(p=>p.Address==ip)?.GameRunning??false);
             if(discoveredAddresses.Count<256)discoveredAddresses.Add(ip);
             UpdateDiscoveredRooms();
         });
@@ -403,7 +403,7 @@ public sealed class BrowserWindow : Window
         {
             var result=await PeerService.QueryPeer(ip,Peer.Address);
             if(version==queryVersions.GetValueOrDefault(ip))
-                Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow);
+                Presence.Success(ip,result.Name,result.Room,DateTimeOffset.UtcNow,result.GameRunning);
         }
         catch{if(version==queryVersions.GetValueOrDefault(ip))Presence.Failure(ip);}
         finally{peerQueries.Remove(ip);UpdateDiscoveredRooms();}
@@ -446,7 +446,7 @@ public sealed class BrowserWindow : Window
         string query=playerSearch.Text.Trim();
         foreach(var peer in peers.Where(p=>SearchableMapBox.Matches(p.Name+" "+p.Address,query)))
         {
-            var details=UI.Stack(UI.Text(peer.Name,12,bold:true),UI.Text(peer.Reconnecting?"Reconnecting":peer.Address,10,peer.Reconnecting?UI.Muted:UI.Green));
+            var details=UI.Stack(UI.Text(peer.Name,12,bold:true),UI.Text(peer.Reconnecting?"Reconnecting":(peer.GameRunning?"In BFME2":"Online")+" · "+peer.Address,10,peer.Reconnecting?UI.Muted:UI.Green));
             var button=UI.Button("",()=>{playersPopup.IsOpen=false;OpenChat(peer.Address,peer.Name);});
             button.Style=(Style)Application.Current.FindResource("PlayerRowButton");
             button.Content=UI.Row(UI.Avatar(peer.Name,28),details);button.HorizontalContentAlignment=HorizontalAlignment.Left;
@@ -524,8 +524,8 @@ public sealed class BrowserWindow : Window
     void ShowInvitation(string ip,string name,Room room)
     {
         if(!pendingInvites.Add(ip))return;
-        var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterScreen,ResizeMode=ResizeMode.NoResize};
-        var body=UI.Shell(w,"Room invitation",410,230);w.MinHeight=230;
+        var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterScreen,ResizeMode=ResizeMode.NoResize,Topmost=true,ShowActivated=false,ShowInTaskbar=true};
+        var body=UI.Shell(w,"Room invitation",370,198);w.MinWidth=370;w.MinHeight=198;
         var join=UI.AsyncButton("Join room",async()=>
         {
             if(joining)return;
@@ -534,7 +534,9 @@ public sealed class BrowserWindow : Window
             address.Text=room.HostAddress;await Join();if(Peer.Current?.Id==room.Id)w.Close();
         },true);
         UI.Require(join,()=>!joining,()=>"A room connection is already in progress.");
-        body.Children.Add(new Border{Padding=new(24),Child=UI.Stack(UI.Text(name+" invited you",17,bold:true),UI.Text(room.Title,13,UI.Muted),new Border{Margin=new(0,24,0,0),Child=UI.Row(UI.Button("Dismiss",w.Close),join)})});
+        var actions=UI.Row(UI.Button("Dismiss",w.Close),join);actions.HorizontalAlignment=HorizontalAlignment.Right;
+        body.Children.Add(new Border{Padding=new(20,16,20,16),Child=UI.Stack(UI.Text(name+" invited you",16,bold:true),new Border{Margin=new(0,5,0,0),Child=UI.Text(room.Title,12,UI.Muted)},new Border{Margin=new(0,18,0,0),Child=actions})});
+        w.Loaded+=(_,_)=>WindowAttention.Flash(w);w.Activated+=(_,_)=>WindowAttention.Stop(w);
         w.Closed+=(_,_)=>pendingInvites.Remove(ip);w.Show();
     }
     bool joining;
@@ -1005,7 +1007,7 @@ public sealed class FriendsWindow : Window
             bool isOnline=IsOnline(f.Address);
             if(lastGroup!=isOnline){list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.Text(isOnline?"ONLINE":"OFFLINE / NOT REACHABLE",10,UI.Muted,true),Padding=new(12,16,12,8)});lastGroup=isOnline;}
             var peer=app.Presence.Find(f.Address,DateTimeOffset.UtcNow);
-            string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":peer.Room!=null?"●  In a room":"●  Online";
+            string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":peer.GameRunning?"●  In BFME2":peer.Room!=null?"●  In a room":"●  Online";
             if(app.Settings.IsBlocked(f.Address))state+=" · Blocked";
             var nickname=peer?.Name??f.Name;
             var labels=UI.Stack(UI.Text(nickname,13,"#E4E9F2",true),UI.Text(state+"  ·  "+f.Address,10,state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));

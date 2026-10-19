@@ -463,7 +463,12 @@ if(File.Exists(installation))
  await Until(()=>h.Current!.Players.Single(p=>p.Id==g.LocalId).GameRunning,"guest game status reaches room");
  await g.SetHostGameRunning(false);await Until(()=>!h.Current!.Players.Single(p=>p.Id==g.LocalId).GameRunning,"guest game exit clears status");
  if(!h.Current!.Players.Single(p=>p.Id==g.LocalId).Ready)throw new Exception("Status reset readiness");
- g.Leave();gs.BlockedUsers=[new("Host",h.Address)];invitation=null;
+ g.Leave();await g.SetHostGameRunning(true);
+ if(!(await PeerService.QueryPeer(g.Address,h.Address)).GameRunning)throw new Exception("Game status missing outside a room");
+ await g.SetHostGameRunning(false);
+ if((await PeerService.QueryPeer(g.Address,h.Address)).GameRunning)throw new Exception("Closed game still advertised in presence");
+ Console.WriteLine("PASS game presence outside rooms and game-exit clearing");
+ gs.BlockedUsers=[new("Host",h.Address)];invitation=null;
  try{await h.Invite(g.Address);throw new Exception("Blocked invitation accepted");}catch(IOException){}
  if(invitation!=null)throw new Exception("Blocked invitation displayed");
  h.Leave();Console.WriteLine("PASS invitations, consent, blocked invitations and per-player game lifecycle");

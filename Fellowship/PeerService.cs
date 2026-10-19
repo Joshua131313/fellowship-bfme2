@@ -27,6 +27,7 @@ public sealed partial class PeerService : IDisposable
     public event Action? Changed;
     public event Action<string>? Chat;
     public event Action<string,bool>? RoomChat;
+    volatile bool gameRunning;
     public event Action<string, string, string>? PrivateMessage;
     public event Action<string,string,Room>? Invitation;
     public event Action? LaunchRequested;
@@ -73,7 +74,7 @@ public sealed partial class PeerService : IDisposable
             {
                 Room? snapshot;
                 lock (gate) snapshot = !IsHost || Current == null || (!CanSee(remoteAddress)||settings.IsBlocked(remoteAddress)) ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
-                await c.Send(new() { Type = "room", Room = snapshot, Name=settings.Name }); return;
+                await c.Send(new() { Type = "room", Room = snapshot, Name=settings.Name,GameRunning=gameRunning }); return;
             }
             if(hello.Type=="invite")
             {
@@ -272,14 +273,14 @@ public sealed partial class PeerService : IDisposable
         }
     }
     public static async Task<Room?> Query(string address,string? source=null)=>(await QueryPeer(address,source)).Room;
-    public static async Task<(string Name,Room? Room)> QueryPeer(string address,string? source=null)
+    public static async Task<(string Name,Room? Room,bool GameRunning)> QueryPeer(string address,string? source=null)
     {
         using var c = await Connect(address,source);
         await c.Send(new() { Type = "query" });
         using var timeout = new CancellationTokenSource(3000);
         var reply=await c.Read(timeout.Token);
         if(reply?.Type!="room")throw new IOException("Invalid peer response.");
-        return (Clean(reply.Name,40),reply.Room);
+        return (Clean(reply.Name,40),reply.Room,reply.GameRunning);
     }
     public async Task SendPrivate(string address, string text)
     {
@@ -432,6 +433,7 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task SetHostGameRunning(bool running)
     {
+        gameRunning=running;
         lock(gate)
         {
             if(Current==null||transferring)return;

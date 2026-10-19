@@ -3,7 +3,7 @@
     <InstallerPlatform>x64</InstallerPlatform>
     <!-- This package deliberately supports per-user installation only. -->
     <SuppressIces>ICE91</SuppressIces>
-    <ProductVersion Condition="'$(ProductVersion)' == ''">0.1.65</ProductVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.1.66</ProductVersion>
     <OutputName>Fellowship-$(ProductVersion)-win-x64</OutputName>
     <DefineConstants>ProductVersion=$(ProductVersion);PublishDir=$(MSBuildThisFileDirectory)..\dist\Fellowship-$(ProductVersion)</DefineConstants>
   </PropertyGroup>
