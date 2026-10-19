@@ -27,6 +27,7 @@ public sealed class Settings
     public int PreferredSpot(string map)=>PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(map,StringComparison.OrdinalIgnoreCase)).Value;
     public string Name { get; set; } = Environment.UserName;
     public string GamePath { get; set; } = "";
+    public string RoomModeFilter { get; set; } = "All modes";
     public string BindAddress { get; set; } = "";
     public bool SkipRemoveFriendConfirmation { get; set; }
     public bool SkipBlockConfirmation { get; set; }
