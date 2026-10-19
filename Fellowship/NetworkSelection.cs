@@ -6,7 +6,9 @@ public sealed partial class BrowserWindow
 {
     sealed record NetworkChoice(string Name,string Address)
     {
-        public override string ToString()=>Name;
+        public string Label=>Name.Contains("ZeroTier",StringComparison.OrdinalIgnoreCase)?"ZeroTier":Name;
+        public string Description=>Name+"\n"+Address;
+        public override string ToString()=>Label;
     }
     bool loadingNetworks,switchingNetwork;
     event Action? NetworkChanged;
@@ -20,11 +22,15 @@ public sealed partial class BrowserWindow
                 choices.Insert(0,new(Settings.NetworkName+" (unavailable)",Settings.BindAddress));
             networkCaption.ItemsSource=choices;
             networkCaption.SelectedItem=choices.FirstOrDefault(i=>i.Address==Settings.BindAddress);
+            networkCaption.ToolTip=(networkCaption.SelectedItem as NetworkChoice)?.Description??"Select a network";
         }
         finally{loadingNetworks=false;}
     }
     void ConfigureNetworkPicker()
     {
+        var itemStyle=new Style(typeof(ComboBoxItem),(Style)Application.Current.FindResource(typeof(ComboBoxItem)));
+        itemStyle.Setters.Add(new Setter(FrameworkElement.ToolTipProperty,new System.Windows.Data.Binding("Description")));
+        networkCaption.ItemContainerStyle=itemStyle;
         LoadNetworkChoices();
         networkCaption.DropDownOpened+=(_,_)=>LoadNetworkChoices();
         networkCaption.SelectionChanged+=async(_,_)=>

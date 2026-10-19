@@ -239,7 +239,7 @@ public sealed partial class BrowserWindow : Window
     readonly TextBlock emptyTitle=UI.Text("No rooms found",19,"#DCE2ED",true);
     readonly TextBlock emptyHint=UI.Text("Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.",13,UI.Muted);
     ActivityAlerts activityAlerts=new();
-    readonly ComboBox networkCaption=new(){Width=180,Height=34,Margin=new(12,0,0,0),DisplayMemberPath="Name",ToolTip="Switch network · leaves your current room"};
+    readonly ComboBox networkCaption=new(){Width=180,Height=34,Margin=new(12,0,0,0),DisplayMemberPath="Label",ToolTip="Switch network · leaves your current room"};
     public PlayerLatency Latency { get; }=new();
     readonly List<RoomEntry> discovered = [];
     RoomWindow? roomWindow;
@@ -307,7 +307,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.85   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.86   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -713,6 +713,18 @@ public sealed partial class BrowserWindow : Window
             ipText.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Enter||e.Key==Key.Space){CopyAddress();e.Handled=true;}};
             w.Closed+=(_,_)=>{reset.Stop();tip.IsOpen=false;};
         }
+        var pingRow=new Grid{Margin=new(0,12,0,0)};pingRow.ColumnDefinitions.Add(new(){Width=new GridLength(100)});pingRow.ColumnDefinitions.Add(new());
+        pingRow.Children.Add(UI.Text("Ping",11,UI.Muted));var pingBadge=new PingBadge{Milliseconds=Latency.Get(ip,Peer.Address)};Grid.SetColumn(pingBadge,1);pingRow.Children.Add(pingBadge);content.Children.Add(pingRow);
+        var infoLatency=new PlayerLatency();bool infoClosed=false;
+        var pingTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromSeconds(5)};
+        async Task UpdatePing()
+        {
+            try{await infoLatency.Refresh(new[]{ip},Peer.Address);if(!infoClosed)pingBadge.Milliseconds=infoLatency.Get(ip,Peer.Address);}
+            catch(Exception error){Debug.WriteLine("Player info ping: "+error.Message);}
+        }
+        pingTimer.Tick+=async(_,_)=>await UpdatePing();
+        w.Loaded+=async(_,_)=>{pingTimer.Start();await UpdatePing();};
+        w.Closed+=(_,_)=>{infoClosed=true;pingTimer.Stop();};
         if(player!=null){Detail("Room",(player.Id=="host"?"Host":"Guest")+" · "+(player.Ready?"Ready":"Not ready"));Detail("Selection",(player.Team>0?"Team "+player.Team:"No team")+" · "+(player.Spot>0?"Spot "+player.Spot:"Random spot"));}
         var actions=new Grid{Margin=new(0,20,0,0)};actions.ColumnDefinitions.Add(new());actions.ColumnDefinitions.Add(new(){Width=UI.Auto});
         if(ip!=Peer.Address)
@@ -849,6 +861,23 @@ public sealed class RoomWindow : Window
     readonly ScrollViewer chatScroll;
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
+    readonly Button launchMine,abort;
+    readonly System.Windows.Threading.DispatcherTimer launchStateTimer=new(){Interval=TimeSpan.FromSeconds(1)};
+    System.Threading.CancellationTokenSource? launchCancellation;
+    void UpdateLaunchActions()
+    {
+        bool active=launching||GameLauncher.IsRunning();
+        launchMine.Visibility=active?Visibility.Collapsed:Visibility.Visible;
+        launch.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
+        abort.Visibility=active?Visibility.Visible:Visibility.Collapsed;
+        CommandManager.InvalidateRequerySuggested();
+    }
+    async Task AbortGame()
+    {
+        launchCancellation?.Cancel();
+        await Task.Run(()=>GameLauncher.Abort(app.Settings.GamePath));
+        Append("SYSTEM","BFME2 stopped. You remain in the Fellowship room.");UpdateLaunchActions();
+    }
     readonly Border setupBanner;
     bool customPresetRules=true;
     readonly StackPanel inlineRules=new(), mapField=new(){Margin=new(0,0,0,12)};
@@ -863,7 +892,7 @@ public sealed class RoomWindow : Window
     public RoomWindow(BrowserWindow app)
     {
         this.app=app;var body=UI.Shell(this,"Battle room",1020,760);MinWidth=900;MinHeight=660;
-        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!launching&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
+        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!launching&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
         var top=new Grid{Margin=new(22,18,22,18)};top.ColumnDefinitions.Add(new());top.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var titles=UI.Stack(title,phase);phase.Margin=new(0,6,0,0);top.Children.Add(titles);
@@ -958,7 +987,10 @@ public sealed class RoomWindow : Window
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);if(HostPreset.Matches(app.Peer.Current))HostPreset.ValidateBinary(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.Players.All(p=>p.Ready)==true);
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.Players.All(p=>p.Ready),()=>launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
-        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath),()=>launching?"Wait for the current launch to finish.":app.Peer.Current==null?"Join a room before launching.":"Choose your BFME2 executable in Settings."),launch);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
+        launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
+        abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
+        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),launchMine,launch,abort);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
+        launchStateTimer.Tick+=(_,_)=>UpdateLaunchActions();Loaded+=(_,_)=>launchStateTimer.Start();Closed+=(_,_)=>{launchStateTimer.Stop();launchCancellation?.Cancel();};UpdateLaunchActions();
 
         bool leaveQueued=false;
         Closing+=(_,e)=>
@@ -1166,7 +1198,7 @@ public sealed class RoomWindow : Window
         if(!savingRules)SyncInlineRules(room);
         int readyCount=room.Players.Count(p=>p.Ready);
         readySummary.Text=launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.";
-        launch.Visibility=host?Visibility.Visible:Visibility.Collapsed;
+        UpdateLaunchActions();
         launch.IsEnabled=!launching&&room.Players.All(p=>p.Ready);
         consent.Visibility=host?Visibility.Collapsed:Visibility.Visible;consent.IsEnabled=true;
         consent.IsChecked=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true;
@@ -1179,8 +1211,8 @@ public sealed class RoomWindow : Window
     async Task<string> LaunchLocalCore()
     {
         if(launching)return "BFME2 launch is already in progress.";
-        launching=true;
-        Refresh();
+        launching=true;launchCancellation=new();
+        Refresh();UpdateLaunchActions();
         try
         {
             bool preset=app.Peer.IsHost&&HostPreset.Matches(app.Peer.Current);
@@ -1192,7 +1224,7 @@ public sealed class RoomWindow : Window
             {
                 // Launch is an explicit retry; never require a trip through Settings.
                 RetryLiveSync();
-                using var preparationTimeout=System.Threading.CancellationTokenSource.CreateLinkedTokenSource(syncLifetime.Token);
+                using var preparationTimeout=System.Threading.CancellationTokenSource.CreateLinkedTokenSource(syncLifetime.Token,launchCancellation.Token);
                 preparationTimeout.CancelAfter(TimeSpan.FromSeconds(60));
                 // The game must not start until the permission dialog is finished
                 // and the authenticated helper has answered its first request.
@@ -1203,11 +1235,13 @@ public sealed class RoomWindow : Window
                    !await syncPrepared.Task.WaitAsync(preparationTimeout.Token))
                     throw new IOException("Sync preparation failed. Turn live sync off in Settings to launch without it.");
             }
+            launchCancellation.Token.ThrowIfCancellationRequested();
             await GameLauncher.Launch(app.Settings.GamePath,current,preset,false,app.Peer.LocalId,false);
             Append("SYSTEM",app.Settings.LiveGameSync?"Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.":"Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens.");
         }
+        catch(OperationCanceledException) when(launchCancellation?.IsCancellationRequested==true){return "BFME2 launch aborted.";}
         catch(Exception e){UI.Error(e.Message);return "Could not launch BFME2: "+e.Message;}
-        finally{launching=false;Refresh();}
+        finally{launching=false;launchCancellation?.Dispose();launchCancellation=null;Refresh();UpdateLaunchActions();}
         return "BFME2 launch started.";
     }
 }
@@ -1413,6 +1447,23 @@ public static class GameLauncher
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool IsIconic(nint window);
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool ShowWindowAsync(nint window,int command);
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool SetForegroundWindow(nint window);
+    public static void Abort(string gamePath)
+    {
+        string folder=Path.GetDirectoryName(Path.GetFullPath(gamePath))!;
+        var allowed=new[]{Path.Combine(folder,"lotrbfme2.exe"),Path.Combine(folder,"game.dat")};
+        foreach(var name in new[]{"lotrbfme2","game","game.dat"})
+        foreach(var process in Process.GetProcessesByName(name))
+        using(process)
+        {
+            try
+            {
+                if(process.HasExited)continue;
+                string? path=process.MainModule?.FileName;
+                if(path!=null&&allowed.Contains(path,StringComparer.OrdinalIgnoreCase)){process.Kill();if(!process.WaitForExit(3000))throw new IOException("BFME2 is still stopping. Try Abort again.");}
+            }
+            catch(InvalidOperationException){} // The game may exit between enumeration and termination.
+        }
+    }
     public static bool IsRunning()
     {
         foreach(var name in new[]{"game","game.dat","lotrbfme2"})
