@@ -16,7 +16,7 @@ public sealed class MapPreview : Border
     public event Action<int>? SpotSelected;
     readonly TextBlock fallback=UI.Text("Map preview unavailable",11,UI.Muted);
     string last="";
-    public MapPreview(){CornerRadius=new(6);Background=UI.Brush("#10151D");Padding=new(8);Margin=new(0,12,0,8);mapCanvas.Children.Add(image);mapCanvas.Children.Add(selectionLayer);mapView.Child=mapCanvas;Child=mapView;}
+    public MapPreview(){CornerRadius=new(6);Background=System.Windows.Media.Brushes.Transparent;Padding=new(0);Margin=new(0,12,0,8);mapCanvas.Children.Add(image);mapCanvas.Children.Add(selectionLayer);mapView.Child=mapCanvas;Child=mapView;}
     public void ShowMap(string executable,string map)
     {
         var key=executable+"|"+map;if(last==key)return;last=key;

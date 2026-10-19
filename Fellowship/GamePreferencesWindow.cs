@@ -8,7 +8,7 @@ public sealed class GamePreferencesWindow : Window
     {
         if(owner.IsLoaded)Owner=owner;WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var body=UI.Shell(this,"Game preferences",480,660);MinWidth=420;MinHeight=540;
-        body.Children.Add(CreateContent(settings,Close));
+        body.Children.Add(CreateContent(settings,()=>{}));
     }
     public static Grid CreateContent(Settings settings,Action saved)
     {
@@ -39,10 +39,10 @@ public sealed class GamePreferencesWindow : Window
             current=new(){Map=selected.Name,MapPath=selected.Path,Spots=GameMapData.Spots(settings.GamePath,selected.Path)};
             preview.ShowMap(settings.GamePath,selected.Path);Render();
         };
-        color.SelectionChanged+=(_,_)=>Render();
-        preview.SpotSelected+=spot=>{if(current==null)return;if(spot==0)spots.Remove(current.MapPath);else spots[current.MapPath]=spot;Render();};
-        var clear=UI.Button("Clear this map’s preference",()=>{if(current!=null)spots.Remove(current.MapPath);Render();});clear.Margin=new(0,12,0,12);panel.Children.Add(clear);
-        var save=UI.Button("Save preferences",()=>{settings.PreferredColor=(color.SelectedItem as PlayerColor)?.Value??0;settings.PreferredMapSpots=spots;settings.Save();saved();},true);save.Margin=new(0,0,0,0);panel.Children.Add(save);
+        void Save(){settings.PreferredColor=(color.SelectedItem as PlayerColor)?.Value??0;settings.PreferredMapSpots=new(spots,StringComparer.OrdinalIgnoreCase);settings.Save();saved();}
+        color.SelectionChanged+=(_,_)=>{Render();Save();};
+        preview.SpotSelected+=spot=>{if(current==null)return;if(spot==0)spots.Remove(current.MapPath);else spots[current.MapPath]=spot;Render();Save();};
+        var clear=UI.Button("Clear this map’s preference",()=>{if(current!=null)spots.Remove(current.MapPath);Render();Save();});clear.Margin=new(0,12,0,12);panel.Children.Add(clear);
         var items=panel.Children.Cast<UIElement>().ToArray();panel.Children.Clear();
         panel.Children.Add(items[0]);panel.Children.Add(items[1]);
         var layout=new Grid();layout.ColumnDefinitions.Add(new());layout.ColumnDefinitions.Add(new());
@@ -50,7 +50,7 @@ public sealed class GamePreferencesWindow : Window
         var controls=new StackPanel();var mapPanel=new StackPanel();
         foreach(var item in items.Skip(2).Take(4))controls.Children.Add(item);
         mapPanel.Children.Add(preview);mapPanel.Children.Add(selection);
-        controls.Children.Add(clear);save.HorizontalAlignment=HorizontalAlignment.Left;controls.Children.Add(save);
+        controls.Children.Add(clear);controls.Children.Add(UI.Text("Changes save automatically",11,UI.Muted));
         layout.Children.Add(controls);layout.Children.Add(mapPanel);panel.Children.Add(layout);
         void ArrangePreferences(double width){bool wide=width>=760;layout.ColumnDefinitions[1].Width=wide?UI.Star:new GridLength(0);Grid.SetColumn(mapPanel,wide?1:0);Grid.SetRow(mapPanel,wide?0:1);controls.Margin=new(0,0,wide?28:0,20);preview.PreviewHeight=wide?340:240;}
         body.SizeChanged+=(_,e)=>ArrangePreferences(e.NewSize.Width);ArrangePreferences(1000);

@@ -282,7 +282,7 @@ public sealed partial class BrowserWindow : Window
         ConfigureNetworkPicker();
         filters.Children.Add(UI.Row(UI.Badge("THE BATTLE FOR MIDDLE-EARTH II  ·  1.00"), networkCaption));
         modeFilter.Margin=new(0,0,16,0);
-        var filterRight = UI.Row(modeFilter,UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
+        var searchBox=new Grid();searchBox.Children.Add(search);var searchHint=UI.Text("Search rooms…",12,UI.Muted);searchHint.Margin=new(14,0,0,0);searchHint.VerticalAlignment=VerticalAlignment.Center;searchHint.IsHitTestVisible=false;searchBox.Children.Add(searchHint);search.TextChanged+=(_,_)=>searchHint.Visibility=search.Text.Length==0?Visibility.Visible:Visibility.Collapsed;System.Windows.Automation.AutomationProperties.SetName(search,"Search rooms");var filterRight = UI.Row(modeFilter,searchBox); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
         var table = new Grid();
         void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, Binding = new Binding(property), MinWidth = star ? (property == "Title" ? 160 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
         var gameTemplate=new DataTemplate();var gameImage=new FrameworkElementFactory(typeof(Image));gameImage.SetBinding(Image.SourceProperty,new Binding("Icon"));gameImage.SetValue(Image.WidthProperty,28.0);gameImage.SetValue(Image.HeightProperty,28.0);gameImage.SetValue(Image.ToolTipProperty,"The Battle for Middle-earth II");gameTemplate.VisualTree=gameImage;
@@ -307,7 +307,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.89   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.90   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -459,7 +459,7 @@ public sealed partial class BrowserWindow : Window
     {
         var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterOwner};if(IsLoaded)w.Owner=this;
         var body=UI.Shell(w,"Settings",740,700);w.MinWidth=640;w.MinHeight=560;
-        body.Children.Add(CreateSettingsContent(w,w.Close,w.Close));return w;
+        body.Children.Add(CreateSettingsContent(w,()=>{},w.Close));return w;
     }
     public Grid CreateSettingsContent(Window w,Action saved,Action restored,Action<string>? feedback=null)
     {
@@ -485,7 +485,7 @@ public sealed partial class BrowserWindow : Window
             var selectedAddress=network.SelectedIndex>=0&&network.SelectedIndex<interfaces.Count?interfaces[network.SelectedIndex].Address:Settings.BindAddress;
             interfaces=PeerService.Interfaces();network.ItemsSource=interfaces.Select(i=>$"{i.Name} · {i.Address}").ToList();network.SelectedIndex=interfaces.FindIndex(i=>i.Address==selectedAddress);NetworkPlaceholder();
         };
-        var networkHint=UI.Text("Select the same VPN network on both PCs. Saving switches immediately and leaves your current room.",11,UI.Muted);networkHint.Margin=new(0,10,0,0);p.Children.Add(networkHint);
+        var networkHint=UI.Text("Select the same VPN network on both PCs. Selecting a network switches immediately and leaves your current room.",11,UI.Muted);networkHint.Margin=new(0,10,0,0);p.Children.Add(networkHint);
         var game=UI.Field(p,"BFME2 EXECUTABLE",Settings.GamePath);
         game.Height=58;game.TextWrapping=TextWrapping.Wrap;game.VerticalContentAlignment=VerticalAlignment.Center;
         game.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;game.VerticalScrollBarVisibility=ScrollBarVisibility.Hidden;
@@ -544,28 +544,40 @@ public sealed partial class BrowserWindow : Window
         export.Margin=new(0,0,8,0);restore.Margin=new(0);
         p.Children.Add(new Border{Margin=new(0,28,0,8),Child=UI.Stack(backupHeading,UI.Row(export,restore))});
         var preferences=UI.Button("Preferences folder",()=>{Directory.CreateDirectory(Settings.Folder);var marker=Path.Combine(Settings.Folder,"folder-"+Guid.NewGuid().ToString("N")+".tmp");try{File.WriteAllText(marker,"");var folder=Path.GetDirectoryName(NativePlacement.PhysicalPath(marker))!;Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});}finally{File.Delete(marker);}});preferences.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(preferences);
-        var save=UI.Require(UI.AsyncButton("Save settings",async()=>
+        var status=UI.Text("Changes save automatically",12,UI.Muted);status.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(status,1);footer.Children.Add(status);UI.At(body,footer,1);
+        void Persist(){Settings.Save();status.Text="✓ Saved";}
+        void ApplyOptions()
         {
-            var selectedNetwork=interfaces[network.SelectedIndex];
-            bool switching=Peer.Address!=selectedNetwork.Address;
-            feedback?.Invoke(switching?$"Connecting to {selectedNetwork.Name}…":"Saving settings…");
-            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
-            try
-            {
-            await ChangeNetwork(selectedNetwork.Name,selectedNetwork.Address);
-            Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=selectedNetwork.Address;Settings.MessageSounds=true;Settings.FriendActivitySounds=true;Settings.SoundsEnabled=soundMaster.IsChecked==true;Settings.SoundVolume=(int)volume.Value;Settings.MutedSounds=soundChecks.Where(p=>p.Value.IsChecked!=true).Select(p=>p.Key).ToList();Settings.Appearance=appearanceChoice.SelectedItem?.ToString()??"Dark";Appearance.Apply(Settings.Appearance);MessageAlert.Configure(Settings);Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();EnsureOnline();
-            feedback?.Invoke($"Refreshing rooms and friends on {selectedNetwork.Name}…");
-            while(refreshing)await Task.Delay(50);
-            // Let any old-interface queries finish, then start a full pass on the saved interface.
-            await Task.WhenAll(peerQueries.Values.ToArray());
-            await Refresh();saved();
-            feedback?.Invoke($"✓ Settings saved · Connected to {selectedNetwork.Name} ({selectedNetwork.Address}). Rooms and friends refreshed.");
-            }
-            catch{feedback?.Invoke("Settings could not be fully applied. Check the error and try again.");throw;}
-        },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
-        save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);
+            try{Settings.MessageSounds=true;Settings.FriendActivitySounds=true;Settings.SoundsEnabled=soundMaster.IsChecked==true;Settings.SoundVolume=(int)volume.Value;Settings.MutedSounds=soundChecks.Where(p=>p.Value.IsChecked!=true).Select(p=>p.Key).ToList();Settings.Appearance=appearanceChoice.SelectedItem?.ToString()??"Dark";Appearance.Apply(Settings.Appearance);MessageAlert.Configure(Settings);Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Persist();}
+            catch(Exception error){status.Text="Could not save: "+error.Message;}
+        }
+        appearanceChoice.SelectionChanged+=(_,_)=>ApplyOptions();volume.ValueChanged+=(_,_)=>ApplyOptions();
+        foreach(var check in soundChecks.Values.Concat(new[]{soundMaster,notifications,liveSync})) {check.Checked+=(_,_)=>ApplyOptions();check.Unchecked+=(_,_)=>ApplyOptions();}
+        liveSync.Checked+=(_,_)=>roomWindow?.RetryLiveSync();liveSync.Unchecked+=(_,_)=>roomWindow?.RetryLiveSync();
+        void ApplyStartup(){try{if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Persist();}catch(Exception error){status.Text=error.Message;}}
+        startup.Checked+=(_,_)=>ApplyStartup();startup.Unchecked+=(_,_)=>ApplyStartup();
+        var editTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMilliseconds(500)};
+        async Task ApplyText()
+        {
+            editTimer.Stop();try{
+                if(string.IsNullOrWhiteSpace(name.Text)){status.Text="Enter a nickname.";return;}
+                var path=game.Text.Trim();if(path.Length>0&&(!File.Exists(path)||!Path.GetFileName(path).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))){status.Text="Select an existing lotrbfme2.exe file.";return;}
+                Settings.GamePath=path;var nickname=name.Text.Trim();if(Settings.Name!=nickname){await Peer.SetNickname(nickname);Settings.Name=nickname;friendsWindow?.Render();}Persist();
+            }catch(Exception error){status.Text="Could not save: "+error.Message;}
+        }
+        editTimer.Tick+=async(_,_)=>await ApplyText();
+        name.TextChanged+=(_,_)=>{editTimer.Stop();editTimer.Start();};game.TextChanged+=(_,_)=>{editTimer.Stop();editTimer.Start();};
+        body.Unloaded+=async(_,_)=>{if(editTimer.IsEnabled)await ApplyText();};
+        bool changingNetwork=false;
+        network.SelectionChanged+=async(_,_)=>{
+            if(changingNetwork||network.SelectedIndex<0||interfaces[network.SelectedIndex].Address==Settings.BindAddress)return;
+            var choice=interfaces[network.SelectedIndex];changingNetwork=true;network.IsEnabled=false;status.Text="Connecting to "+choice.Name+"…";
+            try{await ChangeNetwork(choice.Name,choice.Address);while(refreshing)await Task.Delay(50);await Task.WhenAll(peerQueries.Values.ToArray());await Refresh();status.Text="✓ Connected · rooms and friends refreshed";}
+            catch(Exception error){status.Text="Connection failed: "+error.Message;}
+            finally{changingNetwork=false;network.IsEnabled=true;}
+        };
         var children=p.Children.Cast<UIElement>().ToArray();p.Children.Clear();p.Children.Add(children[0]);
-        var subtitle=UI.Text("Make Fellowship feel at home. Changes apply when you save.",12,UI.Muted);subtitle.Margin=new(0,8,0,20);p.Children.Add(subtitle);
+        var subtitle=UI.Text("Make Fellowship feel at home. Changes apply and save automatically.",12,UI.Muted);subtitle.Margin=new(0,8,0,20);p.Children.Add(subtitle);
         var sections=new Grid();sections.ColumnDefinitions.Add(new());sections.ColumnDefinitions.Add(new());
         sections.RowDefinitions.Add(new(){Height=UI.Auto});sections.RowDefinitions.Add(new(){Height=UI.Auto});
         var left=new StackPanel();var right=new StackPanel();Grid.SetColumn(right,1);sections.Children.Add(left);sections.Children.Add(right);p.Children.Add(sections);
