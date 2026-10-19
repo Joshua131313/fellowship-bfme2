@@ -13,6 +13,7 @@ public sealed class UpdateProgressWindow : Window
     bool busy=true;
     public UpdateProgressWindow(string version)
     {
+        progress.Style=(Style)Application.Current.FindResource("FellowshipProgress");
         var body=UI.Shell(this,"Fellowship update",460,260);MinHeight=260;ResizeMode=ResizeMode.NoResize;WindowStartupLocation=WindowStartupLocation.CenterScreen;
         var panel=new StackPanel{Margin=new(24)};body.Children.Add(panel);
         panel.Children.Add(UI.Text("FELLOWSHIP "+version,10,UI.Accent,true));stage.Margin=new(0,14,0,9);panel.Children.Add(stage);

@@ -1,6 +1,6 @@
 <Application x:Class="Fellowship.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 <Application.Resources>
-<Style TargetType="ProgressBar">
+<Style x:Key="FellowshipProgress" TargetType="ProgressBar">
  <Setter Property="Height" Value="5"/><Setter Property="Foreground" Value="#7395FF"/><Setter Property="Background" Value="#283142"/><Setter Property="BorderThickness" Value="0"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ProgressBar">
   <Grid SnapsToDevicePixels="True" ClipToBounds="True">
@@ -19,6 +19,8 @@
   </ControlTemplate.Triggers>
  </ControlTemplate></Setter.Value></Setter>
 </Style>
+
+<Style TargetType="ProgressBar" BasedOn="{StaticResource FellowshipProgress}"/>
 
 <Style x:Key="MapSpotButton" TargetType="Button">
  <Setter Property="Cursor" Value="Hand"/><Setter Property="FocusVisualStyle" Value="{x:Null}"/>

@@ -212,14 +212,13 @@ public sealed class BrowserWindow : Window
         var body = UI.Shell(this,"Room browser",1080,700); MinWidth = 900; MinHeight = 600;
         UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var updateText=UI.Text("",12,"#E5EBFF");var updateRow=new Grid();updateRow.ColumnDefinitions.Add(new());updateRow.ColumnDefinitions.Add(new(){Width=UI.Auto});updateRow.Children.Add(updateText);
-        var updateDownload=new ProgressBar{Height=5,Margin=new(0,10,0,0),Visibility=Visibility.Collapsed};
-        var updateButton=UI.Require(UI.AsyncButton("Download & restart",async()=>{if(AppUpdates.Available is {} release)await AppUpdates.Install(release,()=>Peer.Current!=null,text=>updateText.Text=text,value=>AppUpdates.UpdateDownloadBar(updateDownload,value));},true),()=>Peer.Current==null,()=>"Leave your room before downloading and restarting.");updateButton.Margin=new(16,0,0,0);Grid.SetColumn(updateButton,1);updateRow.Children.Add(updateButton);
-        var updateBanner=UI.Card(UI.Stack(updateRow,updateDownload),"#24324E",12);updateBanner.Margin=new(22,12,22,0);updateBanner.Visibility=Visibility.Collapsed;UI.At(body,updateBanner,0);
-        void UpdateBanner(){updateBanner.Visibility=AppUpdates.Available==null?Visibility.Collapsed:Visibility.Visible;updateText.Text=AppUpdates.Available is {} release?$"Fellowship {release.Version.ToString(3)} is available. Update for the latest improvements.":"";}
-        AppUpdates.AvailabilityChanged+=UpdateBanner;UpdateBanner();updateTimer.Tick+=async(_,_)=>await CheckUpdateNotice();
+        var updateButton=UI.Require(UI.AsyncButton("Download & restart",async()=>{if(AppUpdates.Available is {} release)await AppUpdates.Install(release,()=>Peer.Current!=null,text=>updateText.Text=text);},true),()=>Peer.Current==null,()=>"Leave your room before downloading and restarting.");updateButton.Margin=new(16,0,0,0);Grid.SetColumn(updateButton,1);updateRow.Children.Add(updateButton);
+        var updateBanner=UI.Card(updateRow,"#24324E",12);updateBanner.Margin=new(22,12,22,0);updateBanner.Visibility=Visibility.Collapsed;UI.At(body,updateBanner,0);
+        void UpdateBanner(){updateBanner.Visibility=AppUpdates.Installing||AppUpdates.Available==null?Visibility.Collapsed:Visibility.Visible;updateText.Text=AppUpdates.Available is {} release?$"Fellowship {release.Version.ToString(3)} is available. Update for the latest improvements.":"";}
+        AppUpdates.AvailabilityChanged+=UpdateBanner;AppUpdates.InstallationChanged+=UpdateBanner;UpdateBanner();updateTimer.Tick+=async(_,_)=>await CheckUpdateNotice();
         updateTimer.Start();Dispatcher.BeginInvoke(new Action(async()=>await CheckUpdateNotice()));
         Activated+=async(_,_)=>await CheckUpdateNotice();
-        Loaded+=async(_,_)=>await CheckUpdateNotice();Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;};
+        Loaded+=async(_,_)=>await CheckUpdateNotice();Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;AppUpdates.InstallationChanged-=UpdateBanner;};
         var toolbar = new Grid { Margin = new(22,20,14,18) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
         toolbar.Children.Add(UI.Text("Game rooms",25,"#F3F4F8",true));
         var actions = UI.Row(UI.Button("♧  Friends",OpenFriends),UI.Button("⚙  Settings",OpenSettings),UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
@@ -240,7 +239,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.52   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.53   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);

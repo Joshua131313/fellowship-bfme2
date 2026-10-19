@@ -17,6 +17,7 @@ public static class AppUpdates
     public static Release? Available { get; private set; }
     public static event Action? AvailabilityChanged;
     public static bool Installing { get; private set; }
+    public static event Action? InstallationChanged;
     public static Release? Parse(string json)
     {
         using var doc=JsonDocument.Parse(json);var root=doc.RootElement;
@@ -72,22 +73,22 @@ public static class AppUpdates
         if(FileVersionInfo.GetVersionInfo(exe).FileVersion is not {} version||new Version(version)!=new Version(release.Version.Major,release.Version.Minor,release.Version.Build,0))throw new InvalidDataException("Update version mismatch");
         File.Delete(zip);return exe;
     }
-    public static async Task Install(Release release,Func<bool> inRoom,Action<string> status,Action<double?>? downloadProgress=null)
+    public static async Task Install(Release release,Func<bool> inRoom,Action<string> status)
     {
         if(inRoom()){status("Leave your room before updating.");return;}
         if(Installing){status("An update is already downloading.");return;}
-        Installing=true;
+        Installing=true;InstallationChanged?.Invoke();
+        bool handedOff=false;
         using var cancellation=new CancellationTokenSource();
         var window=new UpdateProgressWindow(release.Version.ToString(3));window.AllowCancel(()=>cancellation.Cancel());window.Show();
         try
         {
-            status("Downloading update…");downloadProgress?.Invoke(null);
+            status("Downloading update…");
             var progress=new Progress<(long Received,long? Total)>(value=>
             {
                 double? percent=value.Total is >0?100.0*value.Received/value.Total.Value:null;
                 string text=value.Total is >0?$"{value.Received/1048576.0:0.0} / {value.Total.Value/1048576.0:0.0} MB · {percent:0}%":$"{value.Received/1048576.0:0.0} MB downloaded";
                 bool complete=value.Total is >0&&value.Received==value.Total;
-                downloadProgress?.Invoke(percent);
                 window.Report(complete?"Verifying download…":"Downloading update…",complete?"Checking the package before installation.":text,complete?null:percent);status(text);
             });
             var downloaded=await Download(release,progress:progress,token:cancellation.Token);
@@ -99,33 +100,26 @@ public static class AppUpdates
             {
                 var start=new ProcessStartInfo(downloaded){UseShellExecute=true,WorkingDirectory=Path.GetDirectoryName(downloaded)!};start.ArgumentList.Add("--wait-for");start.ArgumentList.Add(Environment.ProcessId.ToString());Process.Start(start);
             }
-            window.Finish();((App)Application.Current).Quit();
+            handedOff=true;window.Finish();((App)Application.Current).Quit();
         }
         catch(OperationCanceledException) when(cancellation.IsCancellationRequested){status("Update cancelled. Your current version is unchanged.");window.Finish();}
         catch(Exception e){status("Update failed: "+e.Message);window.Failure(e.Message);}
-        finally{Installing=false;downloadProgress?.Invoke(-1);}
-    }
-    public static void UpdateDownloadBar(ProgressBar bar,double? value)
-    {
-        bar.Visibility=value is <0?Visibility.Collapsed:Visibility.Visible;
-        bar.IsIndeterminate=value==null;
-        if(value is >=0)bar.Value=Math.Clamp(value.Value,0,100);
+        finally{if(!handedOff){Installing=false;InstallationChanged?.Invoke();}}
     }
     public static FrameworkElement Controls(Func<bool> inRoom)
     {
         var panel=new StackPanel{Margin=new(0,22,0,0)};panel.Children.Add(UI.Text("FELLOWSHIP "+VersionText,11,UI.Muted,true));
         var status=UI.Text("Updates from GitHub",11,UI.Muted);status.Margin=new(0,8,0,8);panel.Children.Add(status);
-        var downloadBar=new ProgressBar{Height=5,Margin=new(0,4,0,8),Visibility=Visibility.Collapsed};panel.Children.Add(downloadBar);
         Release? available=Available;
         var install=UI.AsyncButton("Download & restart",async()=>
         {
             if(available==null)return;
-            await Install(available,inRoom,text=>status.Text=text,value=>UpdateDownloadBar(downloadBar,value));
+            await Install(available,inRoom,text=>status.Text=text);
         },true);install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;
         install.Margin=new(0,8,0,0);
         UI.Require(install,()=>available!=null&&!inRoom(),()=>"Leave your room before downloading and restarting.");
-        void UpdateAvailable(){available=Available;install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;if(available!=null)status.Text=$"Version {available.Version.ToString(3)} is ready to download.";}
-        panel.Loaded+=(_,_)=>{AvailabilityChanged+=UpdateAvailable;UpdateAvailable();};panel.Unloaded+=(_,_)=>AvailabilityChanged-=UpdateAvailable;
+        void UpdateAvailable(){panel.Visibility=Installing?Visibility.Collapsed:Visibility.Visible;available=Available;install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;if(available!=null)status.Text=$"Version {available.Version.ToString(3)} is ready to download.";}
+        panel.Loaded+=(_,_)=>{AvailabilityChanged+=UpdateAvailable;InstallationChanged+=UpdateAvailable;UpdateAvailable();};panel.Unloaded+=(_,_)=>{AvailabilityChanged-=UpdateAvailable;InstallationChanged-=UpdateAvailable;};
         panel.Children.Add(UI.AsyncButton("Check for updates",async()=>
         {
             try{status.Text="Checking GitHub…";available=await Check();install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;status.Text=available==null?"You have the latest published version.":$"Version {available.Version} is available. Restarting closes Fellowship windows.";}
