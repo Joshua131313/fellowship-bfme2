@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 namespace Fellowship;
@@ -37,7 +37,7 @@ public sealed partial class BrowserWindow
             links.Children.Add(button);return button;
         }
         foreach(var page in new[]{"Game rooms","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
-        currentRoomLink=Nav("Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,12,0,6);
+        currentRoomLink=Nav("▶  Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,0,0,6);currentRoomLink.Background=UI.Brush("#8ADDB6");currentRoomLink.Foreground=UI.Brush("#123629");currentRoomLink.BorderBrush=UI.Brush("#8ADDB6");
         var tools=UI.Text("TOOLS",10,UI.Muted,true);tools.Margin=new(12,22,0,12);links.Children.Add(tools);
         navigation["Game preferences"]=Nav("Game preferences",()=>SelectDashboard("Game preferences"));
         navigation["Settings"]=Nav("Settings",OpenSettings);Nav("Help & guide",UI.OpenGuide);
@@ -66,7 +66,7 @@ public sealed partial class BrowserWindow
                 var feedback=UI.Text("",11,UI.Green);feedback.Margin=new(24,0,24,12);feedback.Visibility=Visibility.Collapsed;
                 void Saved(){feedback.Text="Saved";feedback.Visibility=Visibility.Visible;RenderDashboard();}
                 var editor=page=="Settings"?CreateSettingsContent(this,Saved,()=>{preferenceTabs.Remove("Settings");preferenceTabs.Remove("Game preferences");SelectDashboard("Settings");}):GamePreferencesWindow.CreateContent(Settings,Saved);
-                editor.Width=820;editor.HorizontalAlignment=HorizontalAlignment.Left;
+                editor.HorizontalAlignment=HorizontalAlignment.Stretch;
                 UI.At(frame,editor,0);UI.At(frame,feedback,1);content=frame;preferenceTabs[page]=content;
             }
             dashboardPreferences.Children.Clear();dashboardPreferences.Children.Add(content);
@@ -79,7 +79,7 @@ public sealed partial class BrowserWindow
         if(dashboardRooms==null)return;
         profileName.Text=Settings.Name;profileName.TextTrimming=TextTrimming.CharacterEllipsis;profileName.MaxWidth=105;
         dashboardNetwork.Text=online?"● VPN discovery active":"○ Not connected";dashboardNetwork.Foreground=UI.Brush(online?UI.Green:UI.Muted);
-        if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomLink.Content="↗ Current room";currentRoomLink.ToolTip=Peer.Current?.Title;}
+        if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomLink.Content="▶  Current room";currentRoomLink.ToolTip=Peer.Current?.Title;}
         if(dashboardPage is "Game rooms" or "Settings" or "Game preferences")return;
         dashboardSocial.Children.Clear();var title=UI.Text(dashboardPage,25,bold:true);title.Margin=new(0,0,0,22);dashboardSocial.Children.Add(title);
         if(dashboardPage=="Friends")

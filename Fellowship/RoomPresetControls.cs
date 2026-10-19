@@ -8,12 +8,13 @@ public sealed class RoomPresetPicker : ComboBox
     bool refreshing;
     public event Action<RoomPreset>? Picked;
     public event Action? ModeChanged;
+    public event Action? CustomPicked;
     public bool IsCustom=>SelectedItem is not ComboBoxItem{Tag:RoomPreset};
     public RoomPresetPicker(Settings settings)
     {
         this.settings=settings;Style=(Style)Application.Current.FindResource(typeof(ComboBox));Height=34;ToolTip="Choose a saved room preset";
         DropDownOpened+=(_,_)=>Reload();
-        SelectionChanged+=(_,_)=>{if(refreshing)return;if(SelectedItem is ComboBoxItem{Tag:RoomPreset preset})Picked?.Invoke(preset);ModeChanged?.Invoke();};
+        SelectionChanged+=(_,_)=>{if(refreshing)return;if(SelectedItem is ComboBoxItem{Tag:RoomPreset preset})Picked?.Invoke(preset);else CustomPicked?.Invoke();ModeChanged?.Invoke();};
         Reload();
     }
     public void Reload()

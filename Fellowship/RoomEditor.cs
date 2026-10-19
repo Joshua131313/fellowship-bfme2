@@ -103,7 +103,7 @@ public sealed class RoomEditor : Window
         {
             if(string.IsNullOrWhiteSpace(name.Text)){name.Focus();UI.Error("Enter a room name.");return;}
             Result=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(initial))!;
-            Result.InitialTeams=selectedTeams.ToArray();Result.Title=name.Text.Trim();Result.Capacity=int.Parse(capacity.Text);Result.FriendsOnly=privacy.SelectedIndex==1;
+            Result.Mode=(presetList.SelectedItem as ComboBoxItem)?.Tag is RoomPreset chosenPreset?chosenPreset.Mode:"Custom";Result.InitialTeams=selectedTeams.ToArray();Result.Title=name.Text.Trim();Result.Capacity=int.Parse(capacity.Text);Result.FriendsOnly=privacy.SelectedIndex==1;
             var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;

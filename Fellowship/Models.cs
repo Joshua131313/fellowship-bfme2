@@ -57,6 +57,7 @@ public sealed record MapSpot(int Number,double X,double Y);
 public sealed class Room
 {
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
+    public string Mode { get; set; } = "Custom";
     public int[] InitialTeams { get; set; } = [];
     public int NextTeam()=>InitialTeams.FirstOrDefault(team=>team>0&&Players.Count(p=>p.Team==team)<InitialTeams.Count(t=>t==team));
     public long Revision { get; set; }
@@ -156,6 +157,7 @@ public sealed class MatchRules
 
 public sealed record RoomPreset(string Name,string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int[] Teams,bool BuiltIn=false)
 {
+    public string Mode=>!BuiltIn?"Custom":Name.StartsWith("1v1")?"1v1":Name;
     public override string ToString()=>Name;
     public static List<RoomPreset> Defaults(IEnumerable<GameMap> maps)
     {

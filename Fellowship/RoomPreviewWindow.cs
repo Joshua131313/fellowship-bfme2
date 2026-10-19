@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 namespace Fellowship;
 
@@ -22,7 +22,7 @@ public sealed class RoomPreviewWindow : Window
         var map=new MapPreview{PreviewHeight=190,Margin=new(0,8,0,0)};map.ShowMap(gamePath,room.MapPath);map.ShowSelections(room,"",false);
         columns.Children.Add(UI.Card(UI.Stack(UI.Text(room.Map,16,bold:true),map)));
         var rules=UI.Stack(UI.Text("MATCH RULES",10,UI.Muted,true));
-        foreach(var line in new[]{ $"{room.Match.Resources:N0} starting resources",$"{room.Match.CommandPoints/100.0:0.##}× command points",$"Custom Heroes {(room.Match.CustomHeroes?"on":"off")}",$"Ring Heroes {(room.Match.RingHeroes?"on":"off")}"}){var text=UI.Text(line);text.Margin=new(0,14,0,0);rules.Children.Add(text);}
+        var details=new MatchSummary{Margin=new(0,10,0,0)};details.Show(room,false);rules.Children.Add(details);
         var card=UI.Card(rules);Grid.SetColumn(card,2);columns.Children.Add(card);content.Children.Add(columns);
         content.Children.Add(UI.Text("PLAYERS",10,UI.Muted,true));
         var roster=new StackPanel{Margin=new(0,8,0,0)};

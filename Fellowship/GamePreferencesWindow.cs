@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 namespace Fellowship;
 
@@ -13,7 +13,7 @@ public sealed class GamePreferencesWindow : Window
     public static Grid CreateContent(Settings settings,Action saved)
     {
         var body=new Grid();
-        var panel=new StackPanel{Margin=new(24),Width=400,HorizontalAlignment=HorizontalAlignment.Left};body.Children.Add(UI.Scroll(panel));
+        var panel=new StackPanel{Margin=new(24),HorizontalAlignment=HorizontalAlignment.Stretch};body.Children.Add(UI.Scroll(panel));
         panel.Children.Add(UI.Text("Game preferences",21,bold:true));
         var hint=UI.Text("Applied when joining, if your choices are available.",11,UI.Muted);hint.Margin=new(0,8,0,18);panel.Children.Add(hint);
         panel.Children.Add(UI.Text("PREFERRED COLOR",10,UI.Muted,true));
@@ -43,6 +43,17 @@ public sealed class GamePreferencesWindow : Window
         preview.SpotSelected+=spot=>{if(current==null)return;if(spot==0)spots.Remove(current.MapPath);else spots[current.MapPath]=spot;Render();};
         var clear=UI.Button("Clear this map’s preference",()=>{if(current!=null)spots.Remove(current.MapPath);Render();});clear.Margin=new(0,12,0,12);panel.Children.Add(clear);
         var save=UI.Button("Save preferences",()=>{settings.PreferredColor=(color.SelectedItem as PlayerColor)?.Value??0;settings.PreferredMapSpots=spots;settings.Save();saved();},true);save.Margin=new(0,0,0,0);panel.Children.Add(save);
+        var items=panel.Children.Cast<UIElement>().ToArray();panel.Children.Clear();
+        panel.Children.Add(items[0]);panel.Children.Add(items[1]);
+        var layout=new Grid();layout.ColumnDefinitions.Add(new());layout.ColumnDefinitions.Add(new());
+        layout.RowDefinitions.Add(new(){Height=UI.Auto});layout.RowDefinitions.Add(new(){Height=UI.Auto});
+        var controls=new StackPanel();var mapPanel=new StackPanel();
+        foreach(var item in items.Skip(2).Take(4))controls.Children.Add(item);
+        mapPanel.Children.Add(preview);mapPanel.Children.Add(selection);
+        controls.Children.Add(clear);save.HorizontalAlignment=HorizontalAlignment.Left;controls.Children.Add(save);
+        layout.Children.Add(controls);layout.Children.Add(mapPanel);panel.Children.Add(layout);
+        void ArrangePreferences(double width){bool wide=width>=760;layout.ColumnDefinitions[1].Width=wide?UI.Star:new GridLength(0);Grid.SetColumn(mapPanel,wide?1:0);Grid.SetRow(mapPanel,wide?0:1);controls.Margin=new(0,0,wide?28:0,20);preview.PreviewHeight=wide?340:240;}
+        body.SizeChanged+=(_,e)=>ArrangePreferences(e.NewSize.Width);ArrangePreferences(1000);
         map.SelectedItem=maps.FirstOrDefault(m=>m.Name=="Rhûn")??maps.FirstOrDefault();
         return body;
     }

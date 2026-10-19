@@ -405,7 +405,7 @@ public sealed partial class PeerService : IDisposable
                 foreach(var p in Current.Players){p.LastMapSpots[Current.MapPath]=p.Spot;p.Spot=0;}
             }
             Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
-            Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
+            Current.Mode=draft.Mode;Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
             if(mapChanged)
             {
                 if(Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local){local.PreferredMapSpots=new(settings.PreferredMapSpots);local.PreferredColor=settings.PreferredColor;}

@@ -264,9 +264,11 @@ public sealed partial class BrowserWindow : Window
         var filterRight = UI.Row(UI.Text("Find  ",12,UI.Muted),search); Grid.SetColumn(filterRight,1); filters.Children.Add(filterRight); UI.At(body,filters,2);
         var table = new Grid();
         void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, Binding = new Binding(property), MinWidth = star ? (property == "Title" ? 180 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
-        Column("ROOM NAME","Title",2,true); Column("HOST","Host",1,true); Column("MAP","Map",1.25,true); Column("PLAYERS","Slots",75); Column("PATCH","Patch",75); Column("STATUS","Status",110);
+        var gameTemplate=new DataTemplate();var gameImage=new FrameworkElementFactory(typeof(Image));gameImage.SetBinding(Image.SourceProperty,new Binding("Icon"));gameImage.SetValue(Image.WidthProperty,28.0);gameImage.SetValue(Image.HeightProperty,28.0);gameImage.SetValue(Image.ToolTipProperty,"The Battle for Middle-earth II");gameTemplate.VisualTree=gameImage;
+        rooms.Columns.Add(new DataGridTemplateColumn{Header="",Width=56,CanUserSort=false,CanUserResize=false,CellTemplate=gameTemplate});
+        Column("ROOM NAME","Title",2,true); Column("MODE","Mode",70); Column("HOST","Host",1,true); Column("MAP","Map",1.25,true); Column("PLAYERS","Slots",75); Column("PATCH","Patch",75); Column("STATUS","Status",110);
         var pingTemplate=new DataTemplate();var pingFactory=new FrameworkElementFactory(typeof(PingBadge));pingFactory.SetBinding(PingBadge.MillisecondsProperty,new Binding("Ping"));pingTemplate.VisualTree=pingFactory;
-        rooms.Columns.Insert(5,new DataGridTemplateColumn{Header="PING",Width=90,CellTemplate=pingTemplate});
+        rooms.Columns.Insert(7,new DataGridTemplateColumn{Header="PING",Width=90,CellTemplate=pingTemplate});
         rooms.RowStyle=(Style)Application.Current.FindResource(typeof(DataGridRow));
         rooms.PreviewMouseLeftButtonUp+=(_,e)=>{if(ItemsControl.ContainerFromElement(rooms,e.OriginalSource as DependencyObject) is DataGridRow{Item:RoomEntry entry}&&Peer.Current?.Id==entry.Room.Id)ShowRoom();};
         table.Children.Add(rooms);
@@ -280,7 +282,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.76   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.77   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -339,12 +341,12 @@ public sealed partial class BrowserWindow : Window
         if(Peer.Current is {} current){var host=Peer.IsHost?Peer.Address:current.HostAddress;list.RemoveAll(r=>r.Room.Id==current.Id||r.Address==host);list.Insert(0,new(host,current));}
         RenderDashboard();
         RoomPreviewsChanged?.Invoke();
-        list=list.Select(r=>r with{Ping=Latency.Get(r.Address,Peer.Address)}).ToList();
+        list=list.Select(r=>r with{Ping=Latency.Get(r.Address,Peer.Address),Icon=GameIcon.Load(Settings.GamePath)}).ToList();
         string filter = search.Text.Trim();
         discoveryProgress.Visibility=initialDiscovery&&online?Visibility.Visible:Visibility.Collapsed;
         emptyTitle.Text=initialDiscovery&&online?"Finding rooms…":filter.Length>0?"No matching rooms":"No rooms found";
         emptyHint.Text=initialDiscovery&&online?"Connecting to players on your VPN…":filter.Length>0?"Try another room name, host or map.":"Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.";
-        list = list.Where(r => $"{r.Title} {r.Host} {r.Map}".Contains(filter,StringComparison.OrdinalIgnoreCase)).ToList();
+        list = list.Where(r => $"{r.Title} {r.Host} {r.Map} {r.Mode}".Contains(filter,StringComparison.OrdinalIgnoreCase)).ToList();
         var selected=(rooms.SelectedItem as RoomEntry)?.Room.Id;
         rooms.ItemsSource = list;if(selected!=null)rooms.SelectedItem=list.FirstOrDefault(r=>r.Room.Id==selected); empty.Visibility = list.Count == 0 ? Visibility.Visible : Visibility.Collapsed; count.Text = $"{list.Count} room{(list.Count == 1 ? "" : "s")}";
     }
@@ -474,7 +476,17 @@ public sealed partial class BrowserWindow : Window
         {
             Settings.Name=name.Text.Trim();Settings.GamePath=game.Text.Trim();Settings.BindAddress=interfaces[network.SelectedIndex].Address;Settings.MessageSounds=sounds.IsChecked==true;Settings.FriendActivitySounds=friendSounds.IsChecked==true;Settings.DesktopNotifications=notifications.IsChecked==true;Settings.LiveGameSync=liveSync.IsChecked==true;Settings.MenuNavigation=false;if(Installation.IsInstalled)Installation.SetStartup(startup.IsChecked==true);Settings.Save();await Peer.SetNickname(Settings.Name);friendsWindow?.Render();roomWindow?.RetryLiveSync();saved();EnsureOnline();
         },true),()=>!string.IsNullOrWhiteSpace(name.Text)&&network.SelectedIndex>=0&&(string.IsNullOrWhiteSpace(game.Text)||(File.Exists(game.Text.Trim())&&Path.GetFileName(game.Text.Trim()).Equals("lotrbfme2.exe",StringComparison.OrdinalIgnoreCase))),()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a display name.":network.SelectedIndex<0?"Select a network interface.":"Select an existing lotrbfme2.exe file, or leave the game path empty.");
-        save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);return body;
+        save.Margin=new(0);Grid.SetColumn(save,1);footer.Children.Add(save);UI.At(body,footer,1);
+        var sections=new Grid();sections.ColumnDefinitions.Add(new());sections.ColumnDefinitions.Add(new());
+        var left=new StackPanel();var right=new StackPanel();Grid.SetColumn(right,1);
+        var children=p.Children.Cast<UIElement>().ToArray();p.Children.Clear();p.Children.Add(children[0]);p.Children.Add(sections);
+        foreach(var child in children.Skip(1)){if(child==optionCard||child==children[^1])right.Children.Add(child);else left.Children.Add(child);}
+        sections.Children.Add(left);sections.Children.Add(right);sections.Margin=new(0,8,0,0);
+        foreach(var check in options.Children.OfType<CheckBox>()){if(check.Content is string text)check.Content=UI.Text(text,12);}
+        void ArrangeSettings(double width){bool wide=width>=760;sections.ColumnDefinitions[1].Width=wide?UI.Star:new GridLength(0);Grid.SetColumn(right,wide?1:0);Grid.SetRow(right,wide?0:1);left.Margin=new(0,0,wide?24:0,0);}
+        sections.RowDefinitions.Add(new(){Height=UI.Auto});sections.RowDefinitions.Add(new(){Height=UI.Auto});
+        body.SizeChanged+=(_,e)=>ArrangeSettings(e.NewSize.Width);ArrangeSettings(1000);
+        return body;
     }
     readonly Dictionary<string,Task> peerQueries=new();
     readonly Dictionary<string,int> queryVersions=new();
@@ -702,9 +714,9 @@ public sealed partial class BrowserWindow : Window
         if(chats.TryGetValue(ip,out var old)){if(activate)UI.Reveal(old);return old;}
         var w=new ChatWindow(this,ip,name){ShowActivated=activate};chats[ip]=w;w.Closed+=(_,_)=>chats.Remove(ip);w.Show();return w;
     }
-    sealed record RoomEntry(string Address,Room Room,bool Reconnecting=false,long? Ping=null)
+    sealed record RoomEntry(string Address,Room Room,bool Reconnecting=false,long? Ping=null,ImageSource? Icon=null)
     {
-        public string Title=>Room.Title; public string Host=>Room.Host; public string Map=>Room.Map;
+        public string Mode=>Room.Mode; public string Title=>Room.Title; public string Host=>Room.Host; public string Map=>Room.Map;
         public string Slots=>$"{Room.Players.Count} / {Room.Capacity}";public string Patch=>Room.Patch;
         public string Status=>Reconnecting?"◌ Reconnecting":Room.Phase=="Gathering"?(Room.FriendsOnly?"●  Friends only":"●  Public"):"●  Host in BFME2";
     }
@@ -718,7 +730,7 @@ public sealed class RoomWindow : Window
     readonly TextBlock phase=UI.Text("Waiting for host",11,UI.Green);
     readonly TextBlock playerCount=UI.Text("PLAYERS",10,UI.Muted,true);
     readonly TextBlock presetStatus=UI.Text("",11,UI.Green,true);
-    readonly TextBlock setupSummary=UI.Text("",13,"#E2E8F5");
+    readonly MatchSummary setupSummary=new();
     readonly TextBlock readySummary=UI.Text("",11,UI.Muted);
     readonly StackPanel customSetup=new();
     readonly TextBox roomName=new(){MaxLength=80};
@@ -770,8 +782,8 @@ public sealed class RoomWindow : Window
         input.KeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;try{await Send();}catch(Exception ex){UI.Error(ex.Message);}}};
         compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);UI.At(chat,compose,2);UI.At(left,UI.Card(chat,"#191D24",0),2);columns.Children.Add(left);
         var right=new StackPanel();right.Children.Add(UI.Text("MATCH SETUP",10,UI.Muted,true));
-        setupSummary.Margin=new(0,12,0,0);setupSummary.LineHeight=22;
-        var banner=setupBanner=UI.Card(UI.Stack(UI.Text("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#252F43",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
+        setupSummary.Margin=new(0,12,0,0);
+        var banner=setupBanner=UI.Card(UI.Stack(UI.Text("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#1C2330",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
         right.Children.Add(presetStatus);right.Children.Add(mapField);right.Children.Add(mapPreview);
         var choices=new Grid();choices.ColumnDefinitions.Add(new());choices.ColumnDefinitions.Add(new());
         var teamField=new StackPanel{Margin=new(0,0,6,0)};var colorField=new StackPanel{Margin=new(6,0,0,0)};Grid.SetColumn(colorField,1);
@@ -799,12 +811,18 @@ public sealed class RoomWindow : Window
         var roomPresets=new RoomPresetPicker(app.Settings){Margin=new(0,10,0,0)};
         mapField.Children.Insert(0,roomPresets);
         roomPresets.ModeChanged+=()=>{customPresetRules=roomPresets.IsCustom;Refresh();};
+        roomPresets.CustomPicked+=async ()=>
+        {
+            if(!app.Peer.IsHost||app.Peer.Current is not {} current||savingRules||launching)return;
+            var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(current))!;draft.Mode="Custom";
+            try{await app.Peer.EditRoom(draft);}catch(Exception error){UI.Error(error.Message);}
+        };
         roomPresets.Picked+=async preset=>
         {
             if(!app.Peer.IsHost||app.Peer.Current is not {} current||savingRules||launching)return;
             if(!GameInstallation.Maps(app.Settings.GamePath).Any(m=>m.Path==preset.MapPath)){UI.Error("The preset map is not installed: "+preset.Map);return;}
             var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(current))!;
-            draft.Map=preset.Map;draft.MapPath=preset.MapPath;draft.Match=new(){Resources=preset.Resources,CommandPoints=preset.CommandPoints,CustomHeroes=preset.CustomHeroes,RingHeroes=preset.RingHeroes};
+            draft.Mode=preset.Mode;draft.Map=preset.Map;draft.MapPath=preset.MapPath;draft.Match=new(){Resources=preset.Resources,CommandPoints=preset.CommandPoints,CustomHeroes=preset.CustomHeroes,RingHeroes=preset.RingHeroes};
             savingRules=true;mapField.IsEnabled=inlineRules.IsEnabled=false;
             try{await app.Peer.EditRoom(draft);ruleStatus.Text="Preset applied";}
             catch(Exception error){UI.Error(error.Message);}
@@ -946,7 +964,7 @@ public sealed class RoomWindow : Window
            commandChoice.SelectedItem is not CommandFactor factor||!int.TryParse(capacityChoice.Text,out int capacity)||capacity is <2 or >64)return;
         var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(current))!;
         draft.Map=selectedMap.Name;draft.MapPath=selectedMap.Path;draft.Capacity=capacity;
-        draft.Match=new(){Resources=resources,CommandPoints=factor.Value,CustomHeroes=customChoice.IsChecked==true,RingHeroes=ringChoice.IsChecked==true};
+        draft.Mode="Custom";draft.Match=new(){Resources=resources,CommandPoints=factor.Value,CustomHeroes=customChoice.IsChecked==true,RingHeroes=ringChoice.IsChecked==true};
         savingRules=true;inlineRules.IsEnabled=mapField.IsEnabled=false;ruleStatus.Text="Saving…";
         try{await app.Peer.EditRoom(draft);ruleStatus.Text="Saved";}
         catch(Exception e){ruleStatus.Text=e.Message;}
@@ -1030,7 +1048,7 @@ public sealed class RoomWindow : Window
         if(signature!=lastSettings){map.Text=room.Map;patch.Text=room.Patch;rules.Text=room.Rules;lastSettings=signature;}
         bool host=app.Peer.IsHost;map.IsReadOnly=rules.IsReadOnly=!host;patch.IsReadOnly=true;
         bool defaultPreset=HostPreset.Matches(room);
-        setupSummary.Text=$"{room.Map}   /   {room.Capacity} players\n{room.Match.Resources:N0} resources · {room.Match.CommandPoints/100.0:0.##}× CP\nCustom Heroes {(room.Match.CustomHeroes?"on":"off")}\nRing Heroes {(room.Match.RingHeroes?"on":"off")}\n{(room.FriendsOnly?"Friends only":"Public on VPN")}";
+        setupSummary.Show(room);
         presetStatus.Text=defaultPreset?"●  Automatic host preset":"○  Manual setup in BFME2";
         presetStatus.Foreground=UI.Brush(defaultPreset?UI.Green:"#E5B77A");
         setupBanner.Visibility=host?Visibility.Collapsed:Visibility.Visible;
