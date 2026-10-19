@@ -53,7 +53,18 @@ public static class UI
     public static Border Avatar(string name, int size = 34) => new() { Width = size, Height = size, CornerRadius = new(8), Background = Brush("#2C3854"), Margin = new(0,0,10,0), Child = new TextBlock { Text = string.IsNullOrWhiteSpace(name) ? "?" : name[..1].ToUpperInvariant(), FontSize = size * .42, Foreground = Brush("#B9CCFF"), FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } };
     public static void Info(Window owner,string title,string text)
     {
-        var window=new Window{Owner=owner};var body=Shell(window,title,480,430);body.Children.Add(Scroll(new Border{Padding=new Thickness(24),Child=Text(text,14)}));window.ShowDialog();
+        Information(owner,title,text).ShowDialog();
+    }
+    public static Window Information(Window? owner,string title,string text)
+    {
+        var window=new Window{ResizeMode=ResizeMode.NoResize};if(owner?.IsLoaded==true)window.Owner=owner;
+        var body=Shell(window,title,420,220);window.MinHeight=0;window.SizeToContent=SizeToContent.Height;
+        window.WindowStartupLocation=window.Owner==null?WindowStartupLocation.CenterScreen:WindowStartupLocation.CenterOwner;
+        var close=Button("Close",window.Close,true);close.IsDefault=true;close.IsCancel=true;close.Margin=new(0,20,0,0);close.HorizontalAlignment=HorizontalAlignment.Right;
+        var message=Text(text,13,Muted);message.VerticalAlignment=VerticalAlignment.Top;
+        var scroll=Scroll(message);scroll.MaxHeight=Math.Max(120,SystemParameters.WorkArea.Height-180);
+        body.Children.Add(new Border{Padding=new(22,20,22,20),Child=Stack(Text(title,18,bold:true),new Border{Margin=new(0,10,0,0),Child=scroll},close)});
+        return window;
     }
     public static Window InvitationSent(Window owner,string name)
     {
@@ -125,7 +136,7 @@ public static class UI
         DockPanel.SetDock(menu,Dock.Top);root.Children.Insert(1,menu);
     }
     public static void OpenGuide()=>Process.Start(new ProcessStartInfo("https://github.com/Joshua131313/fellowship-bfme2#readme"){UseShellExecute=true});
-    public static void Error(string text) => MessageBox.Show(text, "Fellowship", MessageBoxButton.OK, MessageBoxImage.Information);
+    public static void Error(string text) => Information(Application.Current.Windows.OfType<Window>().FirstOrDefault(w=>w.IsActive),"Fellowship",text).ShowDialog();
     public static void Reveal(Window window)
     {
         if(window.WindowState==WindowState.Minimized)window.WindowState=WindowState.Normal;
@@ -150,8 +161,9 @@ public static class UI
         var root = new DockPanel();
         w.Content = new Border { BorderBrush = Brush("#363C48"), BorderThickness = new(1), Background = Brush("#111419"), Child = root };
         var chrome = new Grid { Height = 48, Background = Brush("#181C22") }; chrome.ColumnDefinitions.Add(new()); chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var brand = Row(Text("◈", 24, Accent), Text("  FELLOWSHIP", 12, "#F0F2F7", true), Text("    /    " + title, 12, Muted)); brand.Margin = new(18,0,0,0); chrome.Children.Add(brand);
-        chrome.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; else w.DragMove(); };
+        var compact=w.ResizeMode==ResizeMode.NoResize;
+        var brand = compact?Row(Text("◈",22,Accent),Text("  "+title,12,"#F0F2F7",true)):Row(Text("◈", 24, Accent), Text("  FELLOWSHIP", 12, "#F0F2F7", true), Text("    /    " + title, 12, Muted)); brand.Margin = new(18,0,0,0); chrome.Children.Add(brand);
+        chrome.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2 && !compact) w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; else w.DragMove(); };
         Button Caption(string name,string geometry,Action action,bool close=false)
         {
             var button=Button("",action);button.Style=(Style)Application.Current.FindResource("CaptionButton");button.Tag=close?"Close":"";
@@ -167,6 +179,7 @@ public static class UI
             System.Windows.Automation.AutomationProperties.SetName(maximize,(string)maximize.ToolTip);
             ((System.Windows.Shapes.Path)maximize.Content).Data=Geometry.Parse(restored?"M 2,0 L 10,0 10,8 M 0,2 L 8,2 8,10 0,10 Z":"M 0,0 L 10,0 10,10 0,10 Z");
         };
+        if(compact){minimize.Visibility=Visibility.Collapsed;maximize.Visibility=Visibility.Collapsed;}
         var controls=Row(minimize,maximize,Caption("Close","M 0,0 L 10,10 M 0,10 L 10,0",w.Close,true));
         Grid.SetColumn(controls,1); chrome.Children.Add(controls); DockPanel.SetDock(chrome,Dock.Top); root.Children.Add(chrome);
         var body = new Grid(); root.Children.Add(body); return body;
@@ -249,7 +262,7 @@ public sealed class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); var footerRight=UI.Row(count,playersButton);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.Text("v0.1.68   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.Text("v0.1.69   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.Text("ACTIVE PLAYERS",10,UI.Muted,true),playerSearch,playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -498,8 +511,8 @@ public sealed class BrowserWindow : Window
     }
     public void ShowBlockedPlayers()
     {
-        var w=new Window{Owner=this,WindowStartupLocation=WindowStartupLocation.CenterOwner};var body=UI.Shell(w,"Blocked players",420,340);
-        var rows=new StackPanel{Margin=new(18)};body.Children.Add(UI.Scroll(rows));
+        var w=new Window{Owner=this,ResizeMode=ResizeMode.NoResize};var body=UI.Shell(w,"Blocked players",420,340);w.MinHeight=0;w.SizeToContent=SizeToContent.Height;w.WindowStartupLocation=WindowStartupLocation.CenterOwner;
+        var rows=new StackPanel{Margin=new(18)};var blockedScroll=UI.Scroll(rows);blockedScroll.MaxHeight=360;body.Children.Add(blockedScroll);
         void Render(){rows.Children.Clear();if(Settings.BlockedUsers.Length==0)rows.Children.Add(UI.Text("No blocked players",12,UI.Muted));foreach(var user in Settings.BlockedUsers){var row=new Grid{Margin=new(0,0,0,12)};row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=UI.Auto});row.Children.Add(UI.Stack(UI.Text(user.Name,13,bold:true),UI.Text(user.Address,11,UI.Muted)));var button=UI.AsyncButton("Unblock",async()=>{await BlockPlayer(user.Name,user.Address,false);Render();});Grid.SetColumn(button,1);row.Children.Add(button);rows.Children.Add(row);}}
         Render();w.ShowDialog();
     }
@@ -1042,7 +1055,7 @@ public sealed class FriendsWindow : Window
     void Message(){if(list.SelectedItem is ListBoxItem{Tag:Friend f}&&!app.Settings.IsBlocked(f.Address)&&app.EnsureOnline())app.OpenChat(f.Address,f.Name);}
     void AddFriend()
     {
-        var w=new Window{Owner=this};var body=UI.Shell(w,"Add friend",430,360);w.WindowStartupLocation=WindowStartupLocation.CenterOwner;
+        var w=new Window{Owner=this,ResizeMode=ResizeMode.NoResize};var body=UI.Shell(w,"Add friend",400,320);w.MinHeight=0;w.SizeToContent=SizeToContent.Height;w.WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var p=new StackPanel{Margin=new(24)};body.Children.Add(p);p.Children.Add(UI.Text("Add friend",20,"#F1F3F8",true));
         var name=UI.Field(p,"NAME","",40);var address=UI.Field(p,"RADMIN IPv4 ADDRESS","",15);
         var add=UI.Button("Add friend",()=>
