@@ -431,3 +431,15 @@ if(File.Exists(installation))
  if(h.Current!.Players[0].Spot!=spots[0].Number||h.Current.Players.Count(p=>p.Spot==spots[1].Number)!=1||h.Current.Players.First(p=>p.Id==gb.LocalId).Spot!=spots[1].Number||h.Current.Players.Any(p=>!p.Ready))throw new Exception("Map preference claims collided or changed readiness");
  ga.Leave();gb.Leave();h.Leave();
 }
+
+{
+ var room=new Room{MapPath="test",Spots=[new(1,.1,.1),new(2,.2,.2),new(3,.3,.3)]};
+ var oldest=new Player{Id="old",PreferredMapSpots=new(){{"test",1}},LastMapSpots=new(){{"test",2}}};
+ var middle=new Player{Id="middle",PreferredMapSpots=new(){{"test",1}},LastMapSpots=new(){{"test",2}}};
+ var newest=new Player{Id="new",PreferredMapSpots=new(){{"test",1}},LastMapSpots=new(){{"test",3}}};
+ room.Players=[oldest,middle,newest];room.ApplyMapSpotChoices();
+ if(newest.Spot!=1||middle.Spot!=2||oldest.Spot!=0)throw new Exception("Preference/fallback priority failed");
+ oldest.LastMapSpots=new(){{"other-map",3}};room.ApplyMapSpotChoices();
+ if(oldest.Spot!=0)throw new Exception("Fallback used another map's spot");
+ Console.WriteLine("PASS newest-first preferred spot, last selected fallback and both occupied leave empty");
+}

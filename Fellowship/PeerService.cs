@@ -383,7 +383,7 @@ public sealed partial class PeerService : IDisposable
             if(mapChanged)
             {
                 Current.Spots=GameMapData.Spots(settings.GamePath,draft.MapPath);
-                foreach(var p in Current.Players)p.Spot=0;
+                foreach(var p in Current.Players){p.LastMapSpots[Current.MapPath]=p.Spot;p.Spot=0;}
             }
             Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
             Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
@@ -391,8 +391,7 @@ public sealed partial class PeerService : IDisposable
             {
                 if(Current.Players.FirstOrDefault(p=>p.Id==LocalId) is {} local)local.PreferredMapSpots=new(settings.PreferredMapSpots);
                 // Roster order is join order; allocate newest members first, under the room lock.
-                foreach(var player in Current.Players.AsEnumerable().Reverse())
-                    Current.ApplyPreferences(player,0,player.PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(Current.MapPath,StringComparison.OrdinalIgnoreCase)).Value,Current.MapPath);
+                Current.ApplyMapSpotChoices();
             }
 
             foreach(var p in Current.Players.Where(p=>p.Id!="host"&&!CanSee(p.Address)).ToArray())

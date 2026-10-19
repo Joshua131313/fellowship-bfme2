@@ -68,6 +68,14 @@ public sealed class Room
     public string Phase { get; set; } = "Gathering";
     public List<MapSpot> Spots { get; set; } = [];
     public List<Player> Players { get; set; } = [];
+    public void ApplyMapSpotChoices()
+    {
+        foreach(var player in Players.AsEnumerable().Reverse())
+        {
+            ApplyPreferences(player,0,player.PreferredMapSpots.FirstOrDefault(p=>p.Key.Equals(MapPath,StringComparison.OrdinalIgnoreCase)).Value,MapPath);
+            if(player.Spot==0)ApplyPreferences(player,0,player.LastMapSpots.FirstOrDefault(p=>p.Key.Equals(MapPath,StringComparison.OrdinalIgnoreCase)).Value,MapPath);
+        }
+    }
     public void ApplyPreferences(Player player,int color,int spot,string map)
     {
         if(color is >=1 and <=10&&!Players.Any(p=>p.Id!=player.Id&&p.Color==color))player.Color=color;
@@ -82,6 +90,7 @@ public sealed class Player
     public string Address { get; set; } = "";
     public Dictionary<string,int> PreferredMapSpots { get; set; } = new();
     public bool CanHostTransfer { get; set; }
+    public Dictionary<string,int> LastMapSpots { get; set; } = new();
     public int Spot { get; set; }
     public int Team { get; set; }
     public int Color { get; set; }
