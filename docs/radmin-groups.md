@@ -1,6 +1,6 @@
 # Radmin group selection
 
-Select a Radmin network interface, then choose **Radmin group** in the room browser or Settings. **All Radmin groups** preserves the original adapter-wide behavior. The saved group preference survives restarting Fellowship.
+In the room browser, open **Server** and hover over **Radmin VPN**. Its right-hand menu lists the actual Radmin groups. Select a group to restrict Fellowship, or click the parent **Radmin VPN** item to use all groups. Settings also provides a group selector; **All Radmin groups** preserves the original adapter-wide behavior. The saved group preference survives restarting Fellowship.
 
 ![Fellowship Radmin group selector with a saved group and filtered player scope](screenshots/radmin-group.png)
 
@@ -12,7 +12,7 @@ For a collapsed group, the reader invokes only its `NetworkWidget.Triang` expand
 
 A separate Fellowship process performs the accessibility read. The parent dashboard limits it to 20 seconds so an unresponsive external provider cannot freeze Fellowship. Membership is refreshed every 25 seconds while Radmin is selected. If a read fails, the last successful list is usable for at most two minutes. After that, new out-of-scope/unknown connections remain blocked. A fresh app launch requires a fresh successful read. The app never broadens a selected group to all groups on failure.
 
-The reader depends on Radmin's accessible UI layout. Radmin must remain running. If data cannot be read, open its main window and use the refresh button beside the selector. Members hidden by Radmin's own display settings may not be exposed by its UI; newly exposed or online members become available on the next successful refresh.
+The reader depends on Radmin's accessible UI layout. Radmin must remain running. If data cannot be read, open its main window and choose **Refresh Radmin groups** in the side menu or use the refresh button in Settings. Members hidden by Radmin's own display settings may not be exposed by its UI; newly exposed or online members become available on the next successful refresh.
 
 ## What is filtered
 

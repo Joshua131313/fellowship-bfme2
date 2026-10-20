@@ -463,8 +463,13 @@ using(var otherGuest=new PeerService(Settings.InMemory()))
  await Until(()=>blockingGuest.Current?.Players.Count==3,"shared room roster");
  await blockingGuest.SetBlocked("Other","127.0.0.74",true);
  await Until(()=>blockingGuest.Current?.Players.Count==3&&sharedHost.Current?.Players.Count==3,"blocked guests can share another host room");
- bool hidden=false;blockingGuest.RoomChat+=(text,blocked)=>{if(text.Contains("hidden test"))hidden=blocked;};
+ bool hidden=false;blockingGuest.RoomChat+=(text,blocked,mine)=>{if(text.Contains("hidden test"))hidden=blocked;};
  await otherGuest.Say("hidden test");await Until(()=>hidden,"blocked room message marked for reveal");
+ bool guestOwn=false,hostRemote=false,hostOwn=false,guestRemote=false;
+ blockingGuest.RoomChat+=(text,blocked,mine)=>{if(text.Contains("guest alignment"))guestOwn=mine;if(text.Contains("host alignment"))guestRemote=!mine;};
+ sharedHost.RoomChat+=(text,blocked,mine)=>{if(text.Contains("guest alignment"))hostRemote=!mine;if(text.Contains("host alignment"))hostOwn=mine;};
+ await blockingGuest.Say("guest alignment");await sharedHost.Say("host alignment");
+ await Until(()=>guestOwn&&hostRemote&&hostOwn&&guestRemote,"room bubbles use sender identity even when player names match");
  await blockingGuest.Join("127.0.0.72");await Task.Delay(200);
  if(blockingGuest.Current==null)throw new Exception("Shared room rejected blocked co-player");
  Console.WriteLine("PASS shared-room blocking hides messages without removing players");

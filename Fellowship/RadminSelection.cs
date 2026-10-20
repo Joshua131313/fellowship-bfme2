@@ -34,19 +34,24 @@ public sealed partial class BrowserWindow
         choice.SelectionChanged+=async(_,_)=>
         {
             if(loadingGroups||changingGroup||choice.SelectedItem is not ComboBoxItem{Tag:string selected}||selected==Settings.RadminGroup)return;
-            changingGroup=true;
-            try
-            {
-                while(readingGroups)await Task.Delay(50);
-                await CloseRoom();
-                Settings.RadminGroup=selected;Settings.RadminMembership=RadminMembership.Empty;Settings.Save();groupReadError="";
-                ResetGroupPresence();UpdateGroupPickers();
-                await RefreshRadminGroups(true);await Refresh();
-            }
-            catch(Exception error){groupReadError=error.Message;}
-            finally{changingGroup=false;UpdateGroupPickers();}
+            await SelectRadminGroup(selected);
         };
         return panel;
+    }
+    async Task SelectRadminGroup(string selected)
+    {
+        if(changingGroup||selected==Settings.RadminGroup)return;
+        changingGroup=true;
+        try
+        {
+            while(readingGroups)await Task.Delay(50);
+            await CloseRoom();
+            Settings.RadminGroup=selected;Settings.RadminMembership=RadminMembership.Empty;Settings.Save();groupReadError="";
+            ResetGroupPresence();UpdateGroupPickers();LoadNetworkChoices();
+            await RefreshRadminGroups(true);await Refresh();
+        }
+        catch(Exception error){groupReadError=error.Message;}
+        finally{changingGroup=false;UpdateGroupPickers();}
     }
     void ConfigureRadminGroups()
     {
@@ -60,18 +65,20 @@ public sealed partial class BrowserWindow
     }
     void UpdateGroupPickers()
     {
+        L.Bind(serverHint,TextBlock.TextProperty,UsingRadmin&&groupReadError.Length>0?groupReadError:UsingRadmin&&readingGroups?"Reading Radmin groups…":"Select a server to find its rooms");
         loadingGroups=true;
         try
         {
             foreach(var (panel,choice,status) in groupPickers)
             {
                 panel.Visibility=UsingRadmin?Visibility.Visible:Visibility.Collapsed;choice.IsEnabled=!changingGroup;
-                if(!choice.IsDropDownOpen)
+                var names=Settings.RadminKnownGroups.Append(Settings.RadminGroup).Where(n=>n.Length>0).Distinct(StringComparer.Ordinal).OrderBy(n=>n,StringComparer.CurrentCultureIgnoreCase).Prepend("").ToArray();
+                if(!choice.IsDropDownOpen&&!choice.Items.OfType<ComboBoxItem>().Select(i=>(string)i.Tag).SequenceEqual(names))
                 {
-                    choice.Items.Clear();choice.Items.Add(new ComboBoxItem{Tag="",Content=UI.LocalizedText("All Radmin groups",12)});
-                    foreach(var name in Settings.RadminKnownGroups.Append(Settings.RadminGroup).Where(n=>n.Length>0).Distinct(StringComparer.Ordinal).OrderBy(n=>n,StringComparer.CurrentCultureIgnoreCase))choice.Items.Add(new ComboBoxItem{Tag=name,Content=UI.Text(name,12),ToolTip=name});
-                    choice.SelectedItem=choice.Items.OfType<ComboBoxItem>().First(i=>(string)i.Tag==Settings.RadminGroup);
+                    choice.Items.Clear();
+                    foreach(var name in names)choice.Items.Add(new ComboBoxItem{Tag=name,HorizontalContentAlignment=HorizontalAlignment.Left,Content=name.Length==0?UI.LocalizedText("All Radmin groups",12):UI.Text(name,12),ToolTip=name});
                 }
+                choice.SelectedItem=choice.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>(string)i.Tag==Settings.RadminGroup);
                 L.Bind(status,TextBlock.TextProperty,readingGroups?"Reading Radmin groups…":groupReadError.Length>0?groupReadError:Settings.RadminGroup.Length==0?"Choose a group to limit Fellowship. Other Radmin connections stay active.":"Only this group's members are used by Fellowship. Other Radmin connections stay active.");
             }
         }

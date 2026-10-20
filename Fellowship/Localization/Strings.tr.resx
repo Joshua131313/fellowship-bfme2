@@ -1798,4 +1798,6 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="This player is outside the selected Radmin group." xml:space="preserve">
     <value>Bu oyuncu seçilen Radmin grubunun dışında.</value>
   </data>
+  <data name="Reset column ordering" xml:space="preserve"><value>Sütun sırasını sıfırla</value></data>
+  <data name="SEARCH" xml:space="preserve"><value>ARA</value></data>
 </root>

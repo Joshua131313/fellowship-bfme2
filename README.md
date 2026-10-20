@@ -21,11 +21,13 @@
 - **Sort the room table** by its column headers, with ascending and descending indicators. Sorting and resized column widths survive tab changes and app restarts; reset widths whenever you want the default layout back.
 - **See connection quality** with ping indicators in the room browser, player roster, and player information.
 
+The room browser aligns server, mode, and search filters above the room list. Use **View → Reset column ordering** or the table context menu to restore the original column order; resetting column widths is available separately.
+
 ### Use one Radmin group while staying connected to the others
 
-Choose **Radmin VPN → Radmin group** in the room browser, or use the group selector in Settings. Fellowship reads the actual group names and members from your running Radmin client, remembers your choice, and refreshes membership automatically.
+Open the **Server** menu and hover over **Radmin VPN** to choose a group from its side menu, or use the group selector in Settings. Click **Radmin VPN** itself to use all groups. Fellowship reads the actual group names and members from your running Radmin client, remembers your choice, and refreshes membership automatically.
 
-Only members of the selected group are used for Fellowship discovery, player lists, messaging, and room connections. Your other Radmin groups remain connected. Choose **All Radmin groups** to remove the filter. Switching groups leaves the current Fellowship room.
+Only members of the selected group are used for Fellowship discovery, player lists, messaging, and room connections. Your other Radmin groups remain connected. Click **Radmin VPN** in the Server menu, or choose **All Radmin groups** in Settings, to remove the filter. Switching groups leaves the current Fellowship room.
 
 This filters Fellowship; BFME2's own LAN traffic and other applications keep using Radmin normally. Keep Radmin running so the member list can refresh. [Integration details and limits](docs/radmin-groups.md).
 
@@ -66,7 +68,7 @@ AFK status can follow idle detection automatically, or you can set it yourself. 
 
 ### Chat while you organize
 
-Use room chat for the group and private messages for individual conversations. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
+Use room chat for the group and private messages for individual conversations. Compact bubbles keep your messages on the right and incoming messages on the left. Opening a chat focuses the composer, and new messages stay in view unless you scroll back to read earlier messages. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
 
 ### Make Fellowship feel like yours
 
@@ -123,6 +125,13 @@ All participating players need the updated app and enabled live sync for coordin
 ## Screenshots
 
 The dashboard above shows the room browser. Expand the views below to see the lobby, player activity, and customization.
+
+<details>
+<summary><strong>Private chat — compact bubbles, conversation selection, and automatic scrolling</strong></summary>
+
+![Private chat with incoming messages on the left and your messages on the right](docs/screenshots/private-chat.png)
+
+</details>
 
 <details>
 <summary><strong>Battle room — roster, chat, map positions, and launch controls</strong></summary>
@@ -184,7 +193,7 @@ Closing the dashboard keeps Fellowship running in the system tray. Closing a bat
 | --- | --- |
 | Rooms or players are missing | Confirm all PCs use the same VPN network, selected interface, and current app version. Refresh presence or join by host IP. Check Windows Firewall access for Fellowship on that network. |
 | A player stays Reconnecting | Check that their VPN and Fellowship are still running. A brief interruption can clear after subsequent presence checks. |
-| Radmin groups or members cannot be read | Keep Radmin VPN running and press the refresh button beside the group selector. If needed, open its main window. An unavailable selected group never silently switches to all groups. |
+| Radmin groups or members cannot be read | Keep Radmin VPN running and choose **Refresh Radmin groups** from the Radmin side menu, or use the refresh button in Settings. If needed, open its main window. An unavailable selected group never silently switches to all groups. |
 | BFME2 reports a DirectX error at launch | Let sync preparation and its Windows permission prompt finish before launching. If needed, disable live sync, launch BFME2, then enable sync after the game loads. |
 | Live sync cannot apply a selection | Keep the native setup lobby open. Check the supported game version, matching map and participants, and occupied spots. Correct conflicting selections in BFME2 when sync pauses. |
 | Rhûn sides do not coordinate | Confirm **3v3 + Rhûn**, update every participant, enable live sync, and select native teams. The in-game host determines the hosting side. |

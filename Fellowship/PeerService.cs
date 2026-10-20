@@ -27,7 +27,7 @@ public sealed partial class PeerService : IDisposable
     public string Address { get; private set; } = "";
     public event Action? Changed;
     public event Action<string>? Chat;
-    public event Action<string,bool>? RoomChat;
+    public event Action<string,bool,bool>? RoomChat;
     public event Action? RoomMessageReceived;
     volatile bool gameRunning;
     public event Action<string, string, string>? PrivateMessage;
@@ -482,7 +482,7 @@ public sealed partial class PeerService : IDisposable
     {
         var sender=Current?.Players.FirstOrDefault(p=>p.Id==id);
         bool blocked=sender!=null?settings.IsBlocked(sender.Address):Current?.Players.Any(p=>settings.IsBlocked(p.Address)&&text.StartsWith(p.Name+"   ",StringComparison.Ordinal))==true;
-        RoomChat?.Invoke(text,blocked);
+        RoomChat?.Invoke(text,blocked,id==LocalId);
         if(!blocked&&id!=LocalId)RoomMessageReceived?.Invoke();
         if(!blocked)Chat?.Invoke(text);
     }

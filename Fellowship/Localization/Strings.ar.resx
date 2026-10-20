@@ -1798,4 +1798,6 @@
   <data name="This player is outside the selected Radmin group." xml:space="preserve">
     <value>هذا اللاعب خارج مجموعة Radmin المحددة.</value>
   </data>
+  <data name="Reset column ordering" xml:space="preserve"><value>إعادة ترتيب الأعمدة الافتراضي</value></data>
+  <data name="SEARCH" xml:space="preserve"><value>بحث</value></data>
 </root>

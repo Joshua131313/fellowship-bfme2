@@ -1798,4 +1798,6 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="This player is outside the selected Radmin group." xml:space="preserve">
     <value>Este jugador no pertenece al grupo de Radmin seleccionado.</value>
   </data>
+  <data name="Reset column ordering" xml:space="preserve"><value>Restablecer el orden de las columnas</value></data>
+  <data name="SEARCH" xml:space="preserve"><value>BUSCAR</value></data>
 </root>
