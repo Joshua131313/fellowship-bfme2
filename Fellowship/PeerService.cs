@@ -35,6 +35,7 @@ public sealed partial class PeerService : IDisposable
     public event Action? LaunchRequested;
     public Func<Task<string>>? LaunchHandler { get; set; }
     public event Action<string>? Notice;
+    public event Action<string>? ReadyRequested;
     public PeerService(Settings settings) { this.settings = settings; }
     public static List<(string Name, string Address)> Interfaces() => NetworkInterface.GetAllNetworkInterfaces()
         .Where(n => n.OperationalStatus == OperationalStatus.Up)
@@ -262,6 +263,7 @@ public sealed partial class PeerService : IDisposable
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
                 if (msg.Type == "chat") DeliverRoomChat(msg.Text,msg.Id);
                 if (msg.Type == "launch") _=ReceiveLaunch(c);
+                if(msg.Type=="request-ready"&&!IsHost&&Current?.Id==msg.Id&&ReferenceEquals(upstream,c))ReadyRequested?.Invoke(msg.Id);
             }
         }
         catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or JsonException or InvalidDataException) { }
@@ -358,6 +360,11 @@ public sealed partial class PeerService : IDisposable
         finally{placementRequests.TryRemove(id,out _);}
     }
     void RememberColor(int? color){if(color.HasValue&&settings.LastSelectedColor!=color.Value){settings.LastSelectedColor=color.Value;settings.Save();}}
+    public async Task RequestReady()
+    {
+        if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can request players to ready up.");
+        await Broadcast(new(){Type="request-ready",Id=Current.Id});
+    }
     public async Task SetReady(bool ready)
     {
         if (!IsHost && upstream != null) await upstream.Send(new() { Type = "ready", Ready = ready });

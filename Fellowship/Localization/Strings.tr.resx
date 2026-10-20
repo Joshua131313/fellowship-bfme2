@@ -1666,4 +1666,31 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="{0} is now offline." xml:space="preserve">
     <value>{0} artık çevrimdışı.</value>
   </data>
+  <data name="Request ready" xml:space="preserve">
+    <value>Hazır olmalarını iste</value>
+  </data>
+  <data name="Ready up" xml:space="preserve">
+    <value>Hazır ol</value>
+  </data>
+  <data name="I'm ready" xml:space="preserve">
+    <value>Hazırım</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Henüz değil</value>
+  </data>
+  <data name="The host is asking everyone to ready up." xml:space="preserve">
+    <value>Ev sahibi herkesin hazır olmasını istiyor.</value>
+  </data>
+  <data name="Marking ready allows the host to launch your game." xml:space="preserve">
+    <value>Hazır olarak işaretlemek ev sahibinin oyununuzu başlatmasına izin verir.</value>
+  </data>
+  <data name="Ask everyone in the room to ready up" xml:space="preserve">
+    <value>Odadaki herkesin hazır olmasını iste</value>
+  </data>
+  <data name="Ready request sent to room participants." xml:space="preserve">
+    <value>Hazır olma isteği oda katılımcılarına gönderildi.</value>
+  </data>
+  <data name="Only the host can request players to ready up." xml:space="preserve">
+    <value>Yalnızca ev sahibi oyunculardan hazır olmalarını isteyebilir.</value>
+  </data>
 </root>

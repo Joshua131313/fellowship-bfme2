@@ -1666,4 +1666,31 @@
   <data name="{0} is now offline." xml:space="preserve">
     <value>{0} غير متصل الآن.</value>
   </data>
+  <data name="Request ready" xml:space="preserve">
+    <value>طلب الاستعداد</value>
+  </data>
+  <data name="Ready up" xml:space="preserve">
+    <value>استعد</value>
+  </data>
+  <data name="I'm ready" xml:space="preserve">
+    <value>أنا مستعد</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>ليس بعد</value>
+  </data>
+  <data name="The host is asking everyone to ready up." xml:space="preserve">
+    <value>يطلب المضيف من الجميع الاستعداد.</value>
+  </data>
+  <data name="Marking ready allows the host to launch your game." xml:space="preserve">
+    <value>عند إعلان استعدادك، تسمح للمضيف بتشغيل لعبتك.</value>
+  </data>
+  <data name="Ask everyone in the room to ready up" xml:space="preserve">
+    <value>اطلب من جميع اللاعبين في الغرفة الاستعداد</value>
+  </data>
+  <data name="Ready request sent to room participants." xml:space="preserve">
+    <value>أُرسل طلب الاستعداد إلى المشاركين في الغرفة.</value>
+  </data>
+  <data name="Only the host can request players to ready up." xml:space="preserve">
+    <value>المضيف وحده يستطيع طلب استعداد اللاعبين.</value>
+  </data>
 </root>

@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.111   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.112   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -391,6 +391,7 @@ public sealed partial class BrowserWindow : Window
         rooms.MouseDoubleClick += async (_,_) => { if(rooms.SelectedItem != null) try { await Join(); } catch(Exception e){ UI.Error(e.Message); } };
         Peer.Changed += () => Dispatcher.InvokeAsync(() => { roomWindow?.Refresh(); if(!closingRoom && Peer.Current != null && roomWindow == null) ShowRoom(); RenderRooms(); });
         Peer.Notice += text => Dispatcher.InvokeAsync(() => {L.Bind(status,TextBlock.TextProperty,text);roomWindow?.ShowNotice(text);});
+        Peer.ReadyRequested+=id=>Dispatcher.InvokeAsync(()=>{if(Peer.Current?.Id!=id||Peer.IsHost)return;ShowRoom();roomWindow?.PromptReady(id);});
         Peer.LaunchHandler=async()=>await await Dispatcher.InvokeAsync(()=>{if(Peer.Current==null)return Task.FromResult("Room is disconnected.");if(roomWindow==null)ShowRoom();return roomWindow?.HandleLaunch()??Task.FromResult("Room window is unavailable.");});
         Peer.LaunchRequested += () => {_=Peer.LaunchHandler();};
         Peer.Invitation+=(ip,name,room)=>Dispatcher.InvokeAsync(()=>ShowInvitation(ip,name,room));
@@ -982,12 +983,16 @@ public sealed class RoomWindow : Window
     readonly ChatTranscript chatScroll;
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
-    readonly Button launchMine,abort;
+    readonly Button launchMine,abort,requestReady;
+    Window? readyPrompt;
+    DateTimeOffset nextReadyRequest;
     readonly System.Windows.Threading.DispatcherTimer launchStateTimer=new(){Interval=TimeSpan.FromSeconds(1)};
     System.Threading.CancellationTokenSource? launchCancellation;
     void UpdateLaunchActions()
     {
         bool active=launching||GameLauncher.IsRunning();
+        requestReady.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
+        requestReady.IsEnabled=app.Peer.Current?.Players.Count>1&&DateTimeOffset.UtcNow>=nextReadyRequest;
         launchMine.Visibility=active?Visibility.Collapsed:Visibility.Visible;
         launch.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         abort.Visibility=active?Visibility.Visible:Visibility.Collapsed;
@@ -1111,8 +1116,10 @@ public sealed class RoomWindow : Window
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
         launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
-        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),launchMine,launch,abort);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
-        launchStateTimer.Tick+=(_,_)=>UpdateLaunchActions();Loaded+=(_,_)=>launchStateTimer.Start();Closed+=(_,_)=>{launchStateTimer.Stop();launchCancellation?.Cancel();};UpdateLaunchActions();
+        requestReady=UI.AsyncButton("Request ready",async()=>{await app.Peer.RequestReady();nextReadyRequest=DateTimeOffset.UtcNow.AddSeconds(5);UpdateLaunchActions();AppendSystem("Ready request sent to room participants.");});
+        requestReady.ToolTip="Ask everyone in the room to ready up";
+        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),requestReady,launchMine,launch,abort);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
+        launchStateTimer.Tick+=(_,_)=>UpdateLaunchActions();Loaded+=(_,_)=>launchStateTimer.Start();Closed+=(_,_)=>{launchStateTimer.Stop();launchCancellation?.Cancel();readyPrompt?.Close();};UpdateLaunchActions();
 
         bool leaveQueued=false;
         Closing+=(_,e)=>
@@ -1318,6 +1325,25 @@ public sealed class RoomWindow : Window
         consent.Visibility=host?Visibility.Collapsed:Visibility.Visible;consent.IsEnabled=true;
         consent.IsChecked=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true;
         if(consent.IsChecked!=true)allowLaunch=false;
+    }
+    public void PromptReady(string roomId)
+    {
+        if(app.Peer.IsHost||app.Peer.Current?.Id!=roomId)return;
+        if(readyPrompt!=null){UI.Reveal(readyPrompt);return;}
+        var prompt=new Window{Owner=this};readyPrompt=prompt;
+        var body=UI.Shell(prompt,"Ready up",460,240);prompt.SizeToContent=SizeToContent.Height;
+        var panel=new StackPanel{Margin=new(24)};body.Children.Add(panel);
+        panel.Children.Add(UI.LocalizedText("The host is asking everyone to ready up.",17,bold:true));
+        var hint=UI.LocalizedText("Marking ready allows the host to launch your game.",12,UI.Muted);hint.Margin=new(0,12,0,20);panel.Children.Add(hint);
+        var ready=UI.AsyncButton("I'm ready",async()=>{
+            if(app.Peer.Current?.Id!=roomId||app.Peer.IsHost){prompt.Close();return;}
+            GameLauncher.Validate(app.Settings.GamePath);await app.Peer.SetReady(true);allowLaunch=true;consent.IsChecked=true;prompt.Close();
+        },true);
+        panel.Children.Add(UI.Row(UI.Button("Not yet",()=>prompt.Close()),ready));
+        void CheckRoom(){if(app.Peer.Current?.Id!=roomId||app.Peer.IsHost)prompt.Close();}
+        void Changed()=>Dispatcher.InvokeAsync(CheckRoom);
+        app.Peer.Changed+=Changed;prompt.Closed+=(_,_)=>{app.Peer.Changed-=Changed;if(ReferenceEquals(readyPrompt,prompt))readyPrompt=null;};
+        prompt.Show();
     }
     public void ShowNotice(string text)=>AppendSystem(text);
     public Task<string> HandleLaunch()=>app.Peer.IsHost||app.Peer.Current?.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?LaunchLocalCore():Task.FromResult("Launch skipped: player is not ready.");

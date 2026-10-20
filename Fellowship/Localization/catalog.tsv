@@ -559,3 +559,12 @@ Player offline	Joueur hors ligne	Jugador desconectado	لاعب غير متصل	O
 Room created	Salon créé	Sala creada	أُنشئت غرفة	Oda oluşturuldu
 {0} is now online.	{0} est maintenant en ligne.	{0} está conectado.	{0} متصل الآن.	{0} artık çevrimiçi.
 {0} is now offline.	{0} est maintenant hors ligne.	{0} está desconectado.	{0} غير متصل الآن.	{0} artık çevrimdışı.
+Request ready	Demander de se préparer	Pedir que se preparen	طلب الاستعداد	Hazır olmalarını iste
+Ready up	Préparez-vous	Prepárate	استعد	Hazır ol
+I'm ready	Je suis prêt	Estoy listo	أنا مستعد	Hazırım
+Not yet	Pas encore	Todavía no	ليس بعد	Henüz değil
+The host is asking everyone to ready up.	L’hôte demande à tout le monde de se préparer.	El anfitrión pide que todos se preparen.	يطلب المضيف من الجميع الاستعداد.	Ev sahibi herkesin hazır olmasını istiyor.
+Marking ready allows the host to launch your game.	En vous déclarant prêt, vous autorisez l’hôte à lancer votre jeu.	Al marcarte como listo, permites que el anfitrión inicie tu juego.	عند إعلان استعدادك، تسمح للمضيف بتشغيل لعبتك.	Hazır olarak işaretlemek ev sahibinin oyununuzu başlatmasına izin verir.
+Ask everyone in the room to ready up	Demander à tous les joueurs du salon de se préparer	Pedir a todos en la sala que se preparen	اطلب من جميع اللاعبين في الغرفة الاستعداد	Odadaki herkesin hazır olmasını iste
+Ready request sent to room participants.	Demande envoyée aux participants du salon.	Solicitud enviada a los participantes de la sala.	أُرسل طلب الاستعداد إلى المشاركين في الغرفة.	Hazır olma isteği oda katılımcılarına gönderildi.
+Only the host can request players to ready up.	Seul l’hôte peut demander aux joueurs de se préparer.	Solo el anfitrión puede pedir que los jugadores se preparen.	المضيف وحده يستطيع طلب استعداد اللاعبين.	Yalnızca ev sahibi oyunculardan hazır olmalarını isteyebilir.

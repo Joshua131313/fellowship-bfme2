@@ -1666,4 +1666,31 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="{0} is now offline." xml:space="preserve">
     <value>{0} est maintenant hors ligne.</value>
   </data>
+  <data name="Request ready" xml:space="preserve">
+    <value>Demander de se préparer</value>
+  </data>
+  <data name="Ready up" xml:space="preserve">
+    <value>Préparez-vous</value>
+  </data>
+  <data name="I'm ready" xml:space="preserve">
+    <value>Je suis prêt</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Pas encore</value>
+  </data>
+  <data name="The host is asking everyone to ready up." xml:space="preserve">
+    <value>L’hôte demande à tout le monde de se préparer.</value>
+  </data>
+  <data name="Marking ready allows the host to launch your game." xml:space="preserve">
+    <value>En vous déclarant prêt, vous autorisez l’hôte à lancer votre jeu.</value>
+  </data>
+  <data name="Ask everyone in the room to ready up" xml:space="preserve">
+    <value>Demander à tous les joueurs du salon de se préparer</value>
+  </data>
+  <data name="Ready request sent to room participants." xml:space="preserve">
+    <value>Demande envoyée aux participants du salon.</value>
+  </data>
+  <data name="Only the host can request players to ready up." xml:space="preserve">
+    <value>Seul l’hôte peut demander aux joueurs de se préparer.</value>
+  </data>
 </root>

@@ -1,7 +1,22 @@
-﻿using Fellowship;
+﻿using System.IO;
+using Fellowship;
 using System.Net;
 using System.Net.Sockets;
 Settings MemorySettings(string name){var settings=Settings.InMemory();settings.Name=name;return settings;}
+if(args.Contains("--ready-request"))
+{
+    using var h=new PeerService(MemorySettings("Host"));using var a=new PeerService(MemorySettings("First"));using var b=new PeerService(MemorySettings("Second"));
+    h.Start("127.0.0.121");a.Start("127.0.0.122");b.Start("127.0.0.123");h.Host(new(){Capacity=3});
+    await a.Join(h.Address);await b.Join(h.Address);
+    await Until(()=>a.Current?.Players.Count==3&&b.Current?.Players.Count==3,"ready request room joined");
+    int first=0,second=0;a.ReadyRequested+=id=>{if(id==h.Current?.Id)Interlocked.Increment(ref first);};b.ReadyRequested+=id=>{if(id==h.Current?.Id)Interlocked.Increment(ref second);};
+    await h.RequestReady();await Until(()=>first==1&&second==1,"ready request delivered to all participants");
+    if(h.Current!.Players.Where(p=>p.Id!="host").Any(p=>p.Ready))throw new Exception("Request automatically changed consent");
+    bool rejected=false;try{await a.RequestReady();}catch(InvalidOperationException){rejected=true;}if(!rejected)throw new Exception("Non-host sent request");
+    await a.SetReady(true);await Until(()=>h.Current!.Players.Single(p=>p.Id==a.LocalId).Ready,"ready response reaches host");
+    b.Leave();await Until(()=>h.Current!.Players.Count==2,"participant left");await h.RequestReady();await Until(()=>first==2,"remaining participant receives repeat request");
+    Console.WriteLine("PASS host-only requests, all recipients, explicit consent, ready response and departure");return;
+}
 var installation=GameInstallation.Find();
 if(File.Exists(installation))
 {
@@ -112,6 +127,10 @@ var advertised = await PeerService.Query("127.0.0.1");
 if (advertised?.Title != "Integration room") throw new Exception("Discovery failed");
 Console.WriteLine("PASS direct room discovery");
 await guest.Join("127.0.0.1");
+string? requestedRoom=null;guest.ReadyRequested+=id=>requestedRoom=id;
+await host.RequestReady();await Until(()=>requestedRoom==host.Current?.Id,"host ready request delivered to guest");
+try{await guest.RequestReady();throw new Exception("Guest sent host-only ready request");}catch(InvalidOperationException){}
+
 await Until(() => guest.Current?.Players.Count == 2, "join and roster synchronization");
 if (await PeerService.Query("127.0.0.2") != null) throw new Exception("Guest advertised a room it does not host");
 Console.WriteLine("PASS only hosts advertise rooms");
@@ -203,6 +222,10 @@ try
     placementHost.Start("127.0.0.10");placementHost.Host(new(){Map="Test",MapPath=@"maps\test.map"});
     await first.Join("127.0.0.10");await second.Join("127.0.0.10");
     await Until(()=>first.Current?.Players.Count==3&&second.Current?.Spots.Count==2,"map spots synchronized to guests");
+    int firstRequests=0,secondRequests=0;first.ReadyRequested+=_=>Interlocked.Increment(ref firstRequests);second.ReadyRequested+=_=>Interlocked.Increment(ref secondRequests);
+    await placementHost.RequestReady();await Until(()=>firstRequests==1&&secondRequests==1,"ready request reaches every participant");
+    if(placementHost.Current!.Players.Where(p=>p.Id!="host").Any(p=>p.Ready))throw new Exception("Ready request changed consent automatically");
+
     async Task<bool> Claim(PeerService peer){try{await peer.SelectPlacement(1,1);return true;}catch(InvalidOperationException){return false;}}
     var claims=await Task.WhenAll(Claim(first),Claim(second));
     if(claims.Count(x=>x)!=1||placementHost.Current!.Players.Count(p=>p.Spot==1)!=1)throw new Exception("Conflicting spot claims accepted");
