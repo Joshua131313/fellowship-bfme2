@@ -2,124 +2,211 @@
 
 ### Your BFME2 games, together in one place.
 
-Fellowship is a Windows desktop companion for **The Battle for Middle-earth II 1.00**. Find rooms, chat with friends, choose your map and rules, and coordinate game launches over **Radmin VPN**—with separate windows and a modern interface inspired by classic LAN gaming clients.
+**Fellowship is a Windows companion for The Battle for Middle-earth II 1.00.** Find games on your VPN, gather your friends, plan teams and starting positions, and carry supported selections into the native BFME2 lobby. A desktop dashboard brings rooms, online players, messages, and preferences together, with separate windows when you need them.
 
-**[Download for Windows](https://github.com/Joshua131313/fellowship-bfme2/releases/latest)** · **[Release notes](https://github.com/Joshua131313/fellowship-bfme2/releases)** · **[Report an issue](https://github.com/Joshua131313/fellowship-bfme2/issues)**
+**[Download for Windows](https://github.com/Joshua131313/fellowship-bfme2/releases/latest)** · **[What's new](https://github.com/Joshua131313/fellowship-bfme2/releases)** · **[Report an issue](https://github.com/Joshua131313/fellowship-bfme2/issues)**
 
-![Fellowship room browser with room search, direct-IP joining, and an active-player dropdown](docs/screenshots/room-browser.png)
+![Fellowship dashboard in dark mode, showing room discovery, server selection, search, ping, and direct-IP joining](docs/screenshots/room-browser.png)
 
-## What you can do
+[Features](#features) · [Get started](#get-started) · [Rhûn 3v3](#automatic-rhûn-3v3-sides-and-substitutions) · [Screenshots](#screenshots) · [Troubleshooting](#troubleshooting) · [Build from source](#build-from-source)
 
-| Feature | What it offers |
+## Features
+
+### Find your next game
+
+- **Discover public rooms** on the selected VPN interface, with Radmin VPN selected by default when available. Switch networks to see that network's rooms.
+- **Search and filter** by room name and game mode, then inspect the map, rules, and roster before joining. Direct host-IP joining is available when discovery misses a room.
+- **Sort the room table** by its column headers, with ascending and descending indicators. Sorting and resized column widths survive tab changes and app restarts; reset widths whenever you want the default layout back.
+- **See connection quality** with ping indicators in the room browser, player roster, and player information.
+
+### Build a room around your group
+
+New rooms default to the **3v3 preset** when Rhûn is installed:
+
+> **Rhûn · 6 players · 4,000 starting resources · 2× command points · Custom Heroes off · Ring Heroes off**
+
+Choose built-in **3v3, 2v2, 1v1, and FFA** presets, save your own, or select **Custom** to edit the setup. Search the installed map catalog, set the player limit and hero options, and choose a public or friends-only room.
+
+Click the map preview to claim a starting spot, choose a team and player color, and save preferred colors and per-map positions in **Game preferences**. Valid, available preferences are applied when joining. Map previews use the active theme, and player information and preview windows let you keep interacting with the rest of Fellowship.
+
+### Keep the native lobby in sync
+
+With **Live BFME2 synchronization** enabled, Fellowship synchronizes supported map, rules, team, starting-position, and color selections through the game's own lobby controls. Changes can flow back from BFME2 into Fellowship, so you can make supported adjustments from inside the game.
+
+The helper validates the supported game binary, waits for a matching, stable LAN setup lobby, checks occupied positions, and pauses writes during match transitions. Each player's helper changes that player's selections. The **BFME2 lobby host can be a different player from the Fellowship room owner**.
+
+For a closer look at the special Rhûn rules, see [Automatic Rhûn 3v3 sides and substitutions](#automatic-rhûn-3v3-sides-and-substitutions).
+
+### Get everyone ready and launch
+
+- **Request ready:** the room host can prompt participants to ready up, with a dedicated ready-check sound that follows their sound preferences.
+- **Launch mine / Launch all:** launch your local game, or coordinate a host launch for participants who have explicitly readied up.
+- **Abort locally:** while your game is running, Abort stops your own BFME2 instance. An active authorized live-sync helper reuses its permission to stop the game.
+- **Keep the group together:** Fellowship rooms remain open between games. Promote another room host, hand off ownership, or manage participants without recreating the whole group.
+
+Fellowship readiness authorizes a launch request; **BFME2's native readiness is managed separately**.
+
+### See who is around
+
+The **Online players** tab shows players discovered on your selected network, including people outside your friends list. Search by player name or VPN address from the dashboard, or keep the Friends window open alongside your room.
+
+Player activity distinguishes **waiting in a lobby**, **in game**, **AFK**, and **reconnecting**. Right-click a player to open player information, send a message, manage friendship or blocking, invite them, or view and join their visible game room.
+
+AFK status can follow idle detection automatically, or you can set it yourself. **Manual AFK stays active until you mark yourself available again.** Player information shows idle duration and connection history; recent last-online times use labels such as “5 minutes ago,” with an exact timestamp on hover. Click a player's IP address to copy it.
+
+### Chat while you organize
+
+Use room chat for the group and private messages for individual conversations. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
+
+### Make Fellowship feel like yours
+
+| Preference | Options |
 | --- | --- |
-| Find a game | Discover public rooms on your VPN, search rooms, preview their rules, or join by host IP. |
-| Host your way | Choose a map, player limit, resources, command points, and hero options. Make a room public or friends-only. |
-| Plan your team | Click a starting spot on the map and select one of four teams. |
-| Stay connected | Keep friends, private chats, the room browser, and battle rooms in separate windows. Incoming messages can play a sound. |
-| See who is around | Open the searchable **Active players** dropdown. Search by name or VPN address and click someone to chat. |
-| Coordinate launches | Launch your own game, or let the host launch ready players who have opted in. |
-| Sync the native lobby | Synchronize supported map, rules, team, and spot settings through game data, without moving your cursor. |
-| Manage the room | Promote another player to host, kick a player, or hand off the room when leaving. |
-| Keep it running | Close the browser to keep Fellowship in the tray. Reopen windows from its tray menu. |
-| Stay up to date | Use **Settings → Check for updates** to install the latest GitHub release. |
+| Appearance | **Light**, **Dark**, **Black** with true-black surfaces, or **System** to follow Windows. |
+| Language | **English, Français, Español, العربية, Türkçe**, including translated menus, tooltips, tray actions, and notification text. |
+| Sound | Master mute, volume control, individual event toggles, and sound previews—including the ready check. |
+| Notifications | Enable or disable Windows notifications for friend and room activity. |
+| Game defaults | Preferred player color and starting spot for each map. |
+| Backup | Export and restore preferences and contacts. |
+| Startup | Choose whether Fellowship starts in the tray at Windows sign-in. |
 
-## A closer look
-
-### Create a room
-
-A compact form keeps the map, rules, privacy, and preview together. The map list is searchable and comes from your local BFME2 installation.
-
-![Create-room form with map preview and game-rule selections](docs/screenshots/create-room.png)
-
-New rooms start with **Rhûn · 6 players / 3v3 · 4,000 resources · 2× command points · Custom Heroes off · Ring Heroes off**. The most recent host setup can be remembered for subsequent rooms.
-
-### Preview before joining
-
-Check the map, starting locations, rules, and player roster before entering a room.
-
-![Room preview showing Rhûn, match rules, and a player roster](docs/screenshots/room-preview.png)
-
-### Find people without clutter
-
-The active-player dropdown keeps larger groups in a scrollable list. Your own row is hidden; the button's total includes you. Player rows have subtle hover and pressed feedback.
-
-<img src="docs/screenshots/active-players.png" alt="Searchable active-player dropdown with left-aligned player rows" width="340">
-
-*Screenshots are rendered from the app with demonstration data. Maps are read from a local game installation; the download does not include BFME2 or its map assets.*
+Theme, sound, and settings changes **apply and save automatically**. First-run onboarding helps you choose language, appearance, and sound defaults and stays completed on later launches.
 
 ## Get started
 
-You need **Windows 10/11 x64**, your own **BFME2 1.00 installation**, and **Radmin VPN** on each computer. All players should use matching game files and the same Fellowship version.
+### Requirements
 
-1. **Install Fellowship.** Download the `.msi` from [the latest release](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). A portable ZIP is also available; .NET is included in both builds.
-2. **Connect through Radmin VPN.** Join the same VPN network on every computer.
-3. **Open Settings.** Select your Radmin IPv4 address, enter a player name, and check the detected `lotrbfme2.exe` path.
-4. **Host or join a room.** Public rooms appear in the browser. If discovery is unavailable, enter the host's Radmin IP. Double-click a room to join.
-5. **Choose your setup.** Pick a team and starting spot. The host can edit map and rules directly in the lobby. Click Ready when you want to allow a host launch.
-6. **Prepare live sync and launch.** With live sync enabled, approve Windows' permission prompt and wait for **Sync ready** before BFME2 starts. Use **Launch mine**, or let the host choose **Launch all**.
-7. **Open the native LAN lobby.** In BFME2, the host opens **Multiplayer → Network → Create Game**. Guests open **Network** and join that host manually. Fellowship waits for the matching lobby before syncing supported selections.
+- **Windows 10 or 11, x64.** The installer and portable build include the .NET runtime.
+- Your own **BFME2 1.00 installation**, with matching game files and maps across players. Fellowship does not include the game.
+- **Radmin VPN**, or another compatible IPv4 LAN/VPN connection, configured on every computer. Radmin is the default network choice when present.
+- The **same current Fellowship version** on all participants, especially when using coordinated live sync.
 
-**Fellowship currently does not create or join the native BFME2 lobby automatically.** It also cannot reconnect a player to an already-running match or restore their army after quitting.
+### Your first game
 
-## How it works
+1. **Install Fellowship.** Download the `.msi` from [the latest release](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). The installer creates desktop and Start menu shortcuts. A portable ZIP is also available.
+2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface; room discovery follows that selection.
+3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
+4. **Host or join.** Create a room using the default 3v3 preset or choose another setup. Join a discovered room, preview it first, or enter the host's VPN IP directly.
+5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.
+6. **Prepare sync and launch.** With live sync enabled, approve Windows' permission prompt and wait for **Sync ready**. Use **Launch mine**, or let the host use **Launch all**.
+7. **Enter BFME2's LAN lobby.** The in-game host opens **Multiplayer → Network → Create Game**. Other players join that native lobby manually. Fellowship begins supported synchronization once the lobby matches.
+
+Fellowship coordinates the group and supported lobby selections. **Creating and joining the native BFME2 lobby still happens inside BFME2.** Rejoining an already-running match or restoring an army after quitting is not supported.
+
+## Automatic Rhûn 3v3 sides and substitutions
+
+These special rules apply **only when the Fellowship room uses the 3v3 preset/mode and the map is Rhûn**. Other modes and maps use normal preference and selection behavior.
+
+| Situation | What Fellowship does |
+| --- | --- |
+| A team hosts the native BFME2 lobby | Put that team on the **right as Team 2**, with the opposing team on the **left as Team 1**. |
+| The opposing team hosts the next game | Mirror positions across the map while preserving each player's top, middle, or bottom position. |
+| A different player from the same team hosts | Keep the team's side and players' positions; changing the hosting player alone does not flip them. |
+| An active player replaces an observer | After the native roster settles, assign an eligible unassigned replacement a known, free position for their selected team. |
+
+Fellowship reads the **actual BFME2 hosting player and native team selections**, then uses the previous match's lineup to identify the hosting team. The Fellowship room owner distributes the shared plan; room ownership does not decide which team hosts the game.
+
+Temporary observer status while connecting is allowed to settle before replacement logic acts. Existing occupied spots and explicit manual changes are respected. Hosting history lasts for the current Fellowship room; replacement history lives with the sync helper. A full app restart clears this transient history.
+
+All participating players need the updated app and enabled live sync for coordinated changes. Simulated lobby and loopback multiplayer tests cover these rules; full multi-PC game testing remains important. See [the rotation and synchronization notes](docs/automatic-rotation.md) for implementation details and validation scope.
+
+## Screenshots
+
+The dashboard above shows the room browser. Expand the views below to see the lobby, player activity, and customization.
+
+<details>
+<summary><strong>Battle room — roster, chat, map positions, and launch controls</strong></summary>
+
+![Battle room with player roster, room chat, interactive map preview, team and color controls, ready request, and launch buttons](docs/screenshots/battle-room.png)
+
+</details>
+
+<details>
+<summary><strong>Online players — game activity, room names, and AFK indicators</strong></summary>
+
+![Online players in light mode showing an in-game player and an AFK player waiting in a lobby](docs/screenshots/online-players.png)
+
+</details>
+
+<details>
+<summary><strong>Settings — appearance, language, sound, and automatic saving</strong></summary>
+
+![Settings in light mode with profile, network, language, theme, sound volume, and backup sections](docs/screenshots/settings.png)
+
+</details>
+
+*Screenshots are rendered from the app with demonstration data. Map previews come from a local BFME2 installation; Fellowship downloads do not contain BFME2 or its map archives.*
+
+## How it connects
 
 ```text
-Fellowship on your PC ←── Radmin VPN ──→ Fellowship on your friend's PC
-        │                                          │
-   local sync helper                          local sync helper
-        │                                          │
-   your BFME2 LAN lobby ←── native game LAN ──→ your friend's BFME2
+Fellowship on your PC ←──── selected LAN / VPN ────→ Fellowship on another PC
+        │                                                     │
+   local sync helper                                    local sync helper
+        │                                                     │
+   your BFME2 lobby ←──────── native game LAN ────────→ their BFME2 lobby
 ```
 
-There is no central room server or account signup. Each running app listens on the selected VPN interface. Discovery uses **UDP 28743**; rooms, presence queries, and chat use **TCP 28742**. GitHub hosts downloads and update metadata, not your game sessions.
+Fellowship uses direct peer connections, with **no account signup or central room service**. Discovery uses **UDP 28743**; room state, presence queries, and messaging use **TCP 28742**. GitHub provides downloads and update metadata.
 
-The main app launches the local `lotrbfme2.exe`. When enabled, a separate local helper handles supported game-data synchronization. It checks the game binary and waits for an editable LAN lobby. It pauses during match transitions and leaves the native controls available for manual correction when it cannot safely sync.
+- **Discovery is network-local.** Online players are discovered reachable peers, not a worldwide player directory. Firewalls and VPN routing can affect discovery.
+- **Friends-only rooms follow the room host's friends list.** Their details are hidden from other peers.
+- **Brief connection loss has a grace period.** Reconnecting status allows time for a peer to return; confirmed room closures are removed.
+- **Fellowship room ownership can transfer.** An orderly handoff and lost-host recovery are supported where reachable peers can take over. This does not transfer a running BFME2 match.
+- **Chat requires connectivity.** Offline message delivery and durable chat history are not implemented.
 
-The Fellowship host must also be the BFME2 host for shared map and rule synchronization. Local team and spot selections synchronize in both directions. Native guest synchronization and simultaneous conflicts across separate computers still need broader multiplayer testing.
+This is an unsigned community build intended for trusted groups. Player names are self-asserted, and the peer protocol does not provide encrypted messaging. Native sync supports validated BFME2 binaries; compatibility with arbitrary mods or map archives is not guaranteed.
 
-## Presence, rooms, and selections
+## Updates, backups, and Windows behavior
 
-- **Idle players stay discoverable.** The browser and friends list share periodic presence checks, including while the app is in the tray.
-- **Brief network loss is not an instant logout.** A failed query shows Reconnecting for up to 20 seconds. A confirmed closed room is removed immediately, and known peers continue being retried.
-- **The active-player list is VPN-local.** It shows discovered, reachable peers—not every Fellowship user worldwide. VPN or firewall filtering can still require adding an IP manually.
-- **Private rooms use the host's saved friends.** Their details are hidden from other peers.
-- **Readiness stays put.** Changing a team, spot, map, or rule does not clear Fellowship readiness. BFME2 manages its own native readiness separately.
-- **Spots belong to maps.** Changing maps clears old spot selections. A saved spot is restored only for its matching map when valid; otherwise it defaults to Random.
-- **Existing occupants are respected.** Fellowship rejects occupied native spots, including players and AI that did not join through Fellowship. Conflicting native selections pause writes for manual correction.
-- **The room can outlive the game.** Exiting BFME2 does not close the Fellowship room. Relaunching and returning to the Fellowship room is supported; ongoing-match recovery is not.
+Use **Settings → Check for updates** or the dashboard's update notice to download and install a release. The updater reopens Fellowship after installation. Settings provides backup export/restore and a shortcut to the preferences folder.
 
-## Windows behavior
+| Location | Purpose |
+| --- | --- |
+| `%LOCALAPPDATA%\Programs\Fellowship` | Installed application. |
+| `%LOCALAPPDATA%\Fellowship` | Preferences, contacts, activity history, and support files. |
 
-The installer uses `%LOCALAPPDATA%\Programs\Fellowship`. Preferences live in `%LOCALAPPDATA%\Fellowship`; Settings can open that folder. Startup at Windows sign-in can be disabled in Settings.
-
-Closing the **room browser** keeps the app running in the tray. Closing a **battle room** leaves it and attempts an orderly host handoff when needed. Right-click the tray icon and choose **Quit Fellowship** to exit fully. A sudden host crash is not automatically recovered.
+Closing the dashboard keeps Fellowship running in the system tray. Closing a battle room leaves that room and attempts a host handoff when needed. Use the tray menu's **Quit Fellowship** action to exit fully. Startup at Windows sign-in is configurable in Settings.
 
 ## Troubleshooting
 
-| Problem | Try this |
+| Problem | What to check |
 | --- | --- |
-| A friend or room is missing | Update both PCs, confirm the same Radmin network and selected VPN address, then enter the host IP directly. Check Windows Firewall access for Fellowship on that interface. |
-| A player briefly shows Reconnecting | Allow a few checks for recovery. If it persists, check the VPN connection and that Fellowship is still running on the other PC. |
-| BFME2 shows a DirectX error at launch | Let sync preparation and its Windows prompt finish before launching. As a fallback, disable Live BFME2 synchronization, launch the game, then enable sync after it has loaded. |
-| Sync cannot apply a selection | Keep the native LAN lobby open and correct it manually. Check the matching host, map, supported game version, and whether the spot is occupied. |
-| An old client cannot update | Install the latest MSI directly from GitHub. Preferences are retained. |
+| Rooms or players are missing | Confirm all PCs use the same VPN network, selected interface, and current app version. Refresh presence or join by host IP. Check Windows Firewall access for Fellowship on that network. |
+| A player stays Reconnecting | Check that their VPN and Fellowship are still running. A brief interruption can clear after subsequent presence checks. |
+| BFME2 reports a DirectX error at launch | Let sync preparation and its Windows permission prompt finish before launching. If needed, disable live sync, launch BFME2, then enable sync after the game loads. |
+| Live sync cannot apply a selection | Keep the native setup lobby open. Check the supported game version, matching map and participants, and occupied spots. Correct conflicting selections in BFME2 when sync pauses. |
+| Rhûn sides do not coordinate | Confirm **3v3 + Rhûn**, update every participant, enable live sync, and select native teams. The in-game host determines the hosting side. |
+| An older updater loops through repairs | Close Fellowship, run the latest release's `Fellowship-Repair-<version>.exe`, then install that release's MSI directly. The helper restores verified installer sources. If it still fails, include the installer/recovery log in your issue. |
+| An update fails | Use **Open log** in the updater and include the error code and log with your report. Error 1603 can have several causes; error 1622 concerns opening the installer log. |
 
-This is an unsigned community test build. Use it with people you trust: player names are self-asserted, and the peer protocol has no application-level authentication or encryption. BFME2 compatibility checks do not guarantee that different mods or map archives will work together. Offline messaging and durable chat history are not implemented.
+When [reporting an issue](https://github.com/Joshua131313/fellowship-bfme2/issues), include the Fellowship version, selected network, game version, steps to reproduce, and any relevant log or screenshot. Mention whether the Fellowship room owner and BFME2 lobby host are different players when reporting sync problems.
 
 ## Build from source
 
-Requires the **.NET 9 SDK**, Windows desktop targeting support, **Visual Studio C++ x86 tools**, and Windows SDK libraries. The native bridge builds with the app.
+Requires **Windows**, the **.NET 9 SDK**, **Visual Studio C++ x86 build tools**, and Windows SDK libraries. The native bridge builds with the WPF app.
 
 ```powershell
+# Build the desktop app and native helper.
 dotnet build Fellowship/Fellowship.csproj -c Release
+
+# Run loopback multiplayer checks and offscreen UI checks.
 dotnet run --project tests/ProtocolTests.csproj -c Release
 dotnet run --project ui-smoke/UiSmoke.csproj -c Release
+
+# Publish a self-contained Windows x64 executable.
 dotnet publish Fellowship/Fellowship.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/Fellowship
 ```
 
-The protocol suite uses real loopback TCP/UDP peers. UI checks render windows offscreen and exercise selection, lifecycle, and update behavior. They do not replace two-computer BFME2 testing. Native integration accepts supported game binaries and rejects unverified layouts.
+To build the MSI, publish to the versioned output folder expected by `installer/Fellowship.wixproj`, then run:
 
-To build the MSI, publish to the versioned folder expected by `installer/Fellowship.wixproj`, then run `dotnet build installer/Fellowship.wixproj -c Release`.
+```powershell
+dotnet build installer/Fellowship.wixproj -c Release
+```
+
+Protocol checks use real loopback TCP/UDP peers. UI checks render screens offscreen and exercise selections, persistence, lifecycle, localization, and update behavior. These checks complement live testing with multiple PCs and BFME2 instances.
+
+Additional notes: [Rhûn rotation and native sync](docs/automatic-rotation.md) · [Player colors](docs/player-colors.md) · [Blocking](docs/blocking.md) · [Legacy room-isolation removal](docs/room-isolation.md)
 
 ---
 
