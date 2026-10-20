@@ -1705,4 +1705,16 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Connect to a network to see online players." xml:space="preserve">
     <value>Çevrimiçi oyuncuları görmek için bir ağa bağlanın.</value>
   </data>
+  <data name="Show game room info" xml:space="preserve">
+    <value>Oyun odası bilgilerini göster</value>
+  </data>
+  <data name="Join game room" xml:space="preserve">
+    <value>Oyun odasına katıl</value>
+  </data>
+  <data name="● In game" xml:space="preserve">
+    <value>● Oyunda</value>
+  </data>
+  <data name="● Waiting in lobby" xml:space="preserve">
+    <value>● Lobide bekliyor</value>
+  </data>
 </root>

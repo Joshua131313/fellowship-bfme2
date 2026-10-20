@@ -1705,4 +1705,16 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Connect to a network to see online players." xml:space="preserve">
     <value>Connect to a network to see online players.</value>
   </data>
+  <data name="Show game room info" xml:space="preserve">
+    <value>Show game room info</value>
+  </data>
+  <data name="Join game room" xml:space="preserve">
+    <value>Join game room</value>
+  </data>
+  <data name="● In game" xml:space="preserve">
+    <value>● In game</value>
+  </data>
+  <data name="● Waiting in lobby" xml:space="preserve">
+    <value>● Waiting in lobby</value>
+  </data>
 </root>

@@ -112,6 +112,7 @@ public sealed partial class BrowserWindow
         {
             var row=UI.Button("",()=>CreatePlayerInfo(this,name,ip).Show());row.Style=(Style)Application.Current.FindResource("PlayerRowButton");row.Height=double.NaN;row.Padding=new(12);row.Margin=new(0,0,0,8);row.HorizontalContentAlignment=HorizontalAlignment.Stretch;
             var details=UI.Stack(UI.Row(UI.Text(name,14,afk?UI.Muted:"#EFF1F5",true),IdlePresence.Badge(afk,showAvailable:false)),UI.Row(UI.LocalizedText(state,11,UI.Muted),UI.Text(" · "+ip,11,UI.Muted)));
+            details.Children.Add(PlayerRoomActivity(ip));
             row.Content=UI.Row(UI.Avatar(name,34),details);row.ToolTip="Player info";
             if(!self)row.ContextMenu=PlayerMenu(this,name,ip);dashboardSocial.Children.Add(row);
         }
@@ -138,7 +139,7 @@ public sealed partial class BrowserWindow
             string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.IsAfk?"AFK":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";
             var button=UI.Button("",()=>{if(!Settings.IsBlocked(friend.Address))OpenChat(friend.Address,friend.Name);});button.Style=(Style)Application.Current.FindResource("PlayerRowButton");button.Height=double.NaN;button.Padding=new(12);button.Margin=new(0,0,0,8);button.HorizontalContentAlignment=HorizontalAlignment.Stretch;
             var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.LocalizedText((presence?.IsAfk==true||state=="Online"?friend.Address:state)+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:presence.IsAfk?IdlePresence.AwayColor:UI.Green);details.Margin=new(0,4,0,0);
-            button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(UI.Row(name,presence==null?UI.LocalizedText("",10):IdlePresence.Badge(presence.IsAfk)),details));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
+            button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(UI.Row(name,presence==null?UI.LocalizedText("",10):IdlePresence.Badge(presence.IsAfk)),details,PlayerRoomActivity(friend.Address)));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
         }
     }
 }

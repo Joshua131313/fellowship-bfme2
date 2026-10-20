@@ -1705,4 +1705,16 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Connect to a network to see online players." xml:space="preserve">
     <value>Connectez-vous à un réseau pour voir les joueurs en ligne.</value>
   </data>
+  <data name="Show game room info" xml:space="preserve">
+    <value>Voir les informations du salon</value>
+  </data>
+  <data name="Join game room" xml:space="preserve">
+    <value>Rejoindre le salon</value>
+  </data>
+  <data name="● In game" xml:space="preserve">
+    <value>● En jeu</value>
+  </data>
+  <data name="● Waiting in lobby" xml:space="preserve">
+    <value>● En attente dans le salon</value>
+  </data>
 </root>

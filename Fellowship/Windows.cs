@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.114   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.115   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -748,10 +748,32 @@ public sealed partial class BrowserWindow : Window
         Settings.Friends.Add(new(name,ip));Settings.Save();friendsWindow?.Render();
         CommandManager.InvalidateRequerySuggested();
     }
+    public Room? PlayerRoom(string ip)
+    {
+        if(Settings.IsBlocked(ip))return null;
+        if(Peer.Current is {} current && (ip==Peer.Address||current.Players.Any(p=>p.Address==ip)))return current;
+        var peers=Presence.Active(DateTimeOffset.UtcNow).Where(p=>!p.Reconnecting&&!Settings.IsBlocked(p.Address));
+        return peers.Where(p=>p.Room!=null&&(p.Address==ip||p.Room.Players.Any(member=>member.Address==ip)))
+            .OrderByDescending(p=>p.Room!.Revision).Select(p=>p.Room).FirstOrDefault();
+    }
+    public FrameworkElement PlayerRoomActivity(string ip)
+    {
+        var room=PlayerRoom(ip);var presence=Presence.Find(ip,DateTimeOffset.UtcNow);
+        var running=presence?.GameRunning??room?.Players.FirstOrDefault(p=>p.Address==ip)?.GameRunning??false;
+        var panel=new StackPanel{Margin=new(0,5,0,0)};
+        if(room==null&&!running)return panel;
+        panel.Children.Add(UI.LocalizedText(running?"● In game":"● Waiting in lobby",11,running?UI.Green:UI.Accent));
+        if(room!=null){var title=UI.Text(room.Title,12,UI.Muted);title.TextWrapping=TextWrapping.Wrap;title.ToolTip=room.Title;panel.Children.Add(title);}
+        return panel;
+    }
     public ContextMenu PlayerMenu(Window owner,string name,string ip,Player? player=null)
     {
         var menu=new ContextMenu();
         menu.Items.Add(UI.MenuAction("Player info",()=>CreatePlayerInfo(owner,name,ip,player).Show()));
+        var roomInfo=UI.MenuAction("Show game room info",()=>{if(PlayerRoom(ip) is {} room)new RoomPreviewWindow(this,room,Settings.GamePath).Show();},()=>PlayerRoom(ip)!=null);
+        var joinRoom=UI.MenuAction("Join game room",async()=>{try{if(PlayerRoom(ip) is {} room)await JoinPreview(room.Id);}catch(Exception error){UI.Error(error.Message);}},()=>PlayerRoom(ip) is {} room&&(Peer.Current?.Id==room.Id||room.Players.Count<room.Capacity));
+        menu.Items.Add(roomInfo);menu.Items.Add(joinRoom);
+        menu.Opened+=(_,_)=>{var room=PlayerRoom(ip);roomInfo.Visibility=joinRoom.Visibility=room==null?Visibility.Collapsed:Visibility.Visible;L.Bind(joinRoom,HeaderedItemsControl.HeaderProperty,room!=null&&Peer.Current?.Id==room.Id?"Open room":"Join game room");};
         if(ip!=Peer.Address)
         {
             menu.Items.Add(UI.MenuAction("Invite to room",async()=>{try{await Peer.Invite(ip);UI.InvitationSent(owner,name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>Peer.Current!=null&&Settings.Friends.Any(f=>f.Address==ip)&&!Settings.IsBlocked(ip)));
@@ -797,7 +819,7 @@ public sealed partial class BrowserWindow : Window
         var presence=Presence.Find(ip,DateTimeOffset.UtcNow);
         string state=Settings.IsBlocked(ip)?"Blocked":ip==Peer.Address?"You":presence?.Reconnecting==true?"Reconnecting":player!=null||presence!=null?"Online":"Offline";
         var nameText=UI.Text(name,18,bold:true);nameText.TextWrapping=TextWrapping.Wrap;nameText.MaxWidth=280;
-        var activityHeading=UI.Text(state,11,UI.Green);content.Children.Add(UI.Row(UI.Avatar(name,40),UI.Stack(nameText,activityHeading)));
+        var activityHeading=UI.Text(state,11,UI.Green);content.Children.Add(UI.Row(UI.Avatar(name,40),UI.Stack(nameText,activityHeading)));content.Children.Add(PlayerRoomActivity(ip));
         TextBlock Detail(string label,string value)
         {
             var row=new Grid{Margin=new(0,12,0,0)};row.ColumnDefinitions.Add(new(){Width=new GridLength(100)});row.ColumnDefinitions.Add(new());
@@ -1431,7 +1453,8 @@ public sealed class FriendsWindow : Window
             if(app.Settings.IsBlocked(f.Address))state+=" · Blocked";
             var nickname=peer?.Name??f.Name;
             var labels=UI.Stack(UI.Row(UI.Text(nickname,13,peer?.IsAfk==true?UI.Muted:"#E4E9F2",true),peer==null?UI.LocalizedText("",10):IdlePresence.Badge(peer.IsAfk)),UI.LocalizedText((peer!=null&&!peer.Reconnecting&&(peer.IsAfk||state=="●  Online")?"":state+"  ·  ")+f.Address,10,peer?.IsAfk==true?IdlePresence.AwayColor:state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
-            list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(nickname),labels),Tag=f});
+            labels.Children.Add(app.PlayerRoomActivity(f.Address));
+            list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(nickname),labels),Tag=f,ContextMenu=app.PlayerMenu(this,nickname,f.Address)});
         }
         if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
         if(app.Settings.Friends.Count==0)list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.LocalizedText("No friends added.",13,UI.Muted),Padding=new(12,30,12,12)});

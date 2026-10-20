@@ -1705,4 +1705,16 @@
   <data name="Connect to a network to see online players." xml:space="preserve">
     <value>اتصل بشبكة لرؤية اللاعبين المتصلين.</value>
   </data>
+  <data name="Show game room info" xml:space="preserve">
+    <value>عرض معلومات غرفة اللعب</value>
+  </data>
+  <data name="Join game room" xml:space="preserve">
+    <value>الانضمام إلى غرفة اللعب</value>
+  </data>
+  <data name="● In game" xml:space="preserve">
+    <value>● داخل اللعبة</value>
+  </data>
+  <data name="● Waiting in lobby" xml:space="preserve">
+    <value>● ينتظر في الردهة</value>
+  </data>
 </root>

@@ -1705,4 +1705,16 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Connect to a network to see online players." xml:space="preserve">
     <value>Conéctate a una red para ver los jugadores conectados.</value>
   </data>
+  <data name="Show game room info" xml:space="preserve">
+    <value>Ver información de la sala</value>
+  </data>
+  <data name="Join game room" xml:space="preserve">
+    <value>Unirse a la sala</value>
+  </data>
+  <data name="● In game" xml:space="preserve">
+    <value>● En partida</value>
+  </data>
+  <data name="● Waiting in lobby" xml:space="preserve">
+    <value>● Esperando en la sala</value>
+  </data>
 </root>
