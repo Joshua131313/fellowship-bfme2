@@ -43,7 +43,7 @@ public sealed class RoomPresetPicker : ComboBox
         var save=UI.Button("Save preset",()=>UI.FinishPopup(dialog,true),true);save.IsDefault=true;
         UI.Require(save,()=>!string.IsNullOrWhiteSpace(name.Text),()=>"Enter a preset name.");
         var cancel=UI.Button("Cancel",()=>UI.FinishPopup(dialog,false));cancel.IsCancel=true;
-        body.Children.Add(new Border{Padding=new(20),Child=UI.Stack(UI.Text("Preset name",12),name,UI.Row(cancel,save))});
+        body.Children.Add(new Border{Padding=new(20),Child=UI.Stack(UI.LocalizedText("Preset name",12),name,UI.Row(cancel,save))});
         dialog.Loaded+=(_,_)=>name.Focus();return await UI.ShowPopup(dialog)?name.Text.Trim():null;
     }
 }

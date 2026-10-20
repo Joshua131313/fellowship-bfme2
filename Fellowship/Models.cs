@@ -4,6 +4,8 @@ namespace Fellowship;
 public sealed record Friend(string Name, string Address);
 public sealed class Settings
 {
+    public string Language {get;set;}="en";
+    public bool OnboardingCompleted {get;set;}
     public bool ManualAfk { get; set; }
     bool persist=true;
     public static Settings InMemory()=>new(){persist=false};

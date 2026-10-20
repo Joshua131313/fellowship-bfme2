@@ -14,11 +14,11 @@ public sealed class GamePreferencesWindow : Window
     {
         var body=new Grid();
         var panel=new StackPanel{Margin=new(24),HorizontalAlignment=HorizontalAlignment.Stretch};body.Children.Add(UI.Scroll(panel));
-        panel.Children.Add(UI.Text("Game preferences",21,bold:true));
-        var hint=UI.Text("Applied when joining, if your choices are available.",11,UI.Muted);hint.Margin=new(0,8,0,18);panel.Children.Add(hint);
-        panel.Children.Add(UI.Text("PREFERRED COLOR",10,UI.Muted,true));
-        var color=new ComboBox{ItemsSource=PlayerColors.All,SelectedItem=PlayerColors.Get(settings.PreferredColor),Margin=new(0,6,0,16)};panel.Children.Add(color);
-        panel.Children.Add(UI.Text("MAP",10,UI.Muted,true));
+        panel.Children.Add(UI.LocalizedText("Game preferences",21,bold:true));
+        var hint=UI.LocalizedText("Applied when joining, if your choices are available.",11,UI.Muted);hint.Margin=new(0,8,0,18);panel.Children.Add(hint);
+        panel.Children.Add(UI.LocalizedText("PREFERRED COLOR",10,UI.Muted,true));
+        var color=new ComboBox{ItemsSource=PlayerColors.All,SelectedItem=PlayerColors.Get(settings.PreferredColor),Margin=new(0,6,0,16)};L.Choices(color);panel.Children.Add(color);
+        panel.Children.Add(UI.LocalizedText("MAP",10,UI.Muted,true));
         var maps=GameInstallation.Maps(settings.GamePath);
         var map=new SearchableMapBox{ItemsSource=maps,Margin=new(0,6,0,0)};panel.Children.Add(map);
         var preview=new MapPreview{PreviewHeight=240};panel.Children.Add(preview);
@@ -49,7 +49,7 @@ public sealed class GamePreferencesWindow : Window
         var controls=new StackPanel();var mapPanel=new StackPanel();
         foreach(var item in items.Skip(2).Take(4))controls.Children.Add(item);
         mapPanel.Children.Add(preview);
-        controls.Children.Add(clear);controls.Children.Add(UI.Text("Changes save automatically",11,UI.Muted));
+        controls.Children.Add(clear);controls.Children.Add(UI.LocalizedText("Changes save automatically",11,UI.Muted));
         layout.Children.Add(controls);layout.Children.Add(mapPanel);panel.Children.Add(layout);
         void ArrangePreferences(double width){bool wide=width>=760;layout.ColumnDefinitions[1].Width=wide?UI.Star:new GridLength(0);Grid.SetColumn(mapPanel,wide?1:0);Grid.SetRow(mapPanel,wide?0:1);controls.Margin=new(0,0,wide?28:0,20);preview.PreviewHeight=wide?340:240;}
         body.SizeChanged+=(_,e)=>ArrangePreferences(e.NewSize.Width);ArrangePreferences(1000);

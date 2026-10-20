@@ -17,7 +17,7 @@ public sealed class RoomEditor : Window
         body.Children.Add(new Viewbox{Margin=new(20),Stretch=Stretch.Uniform,StretchDirection=StretchDirection.DownOnly,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Top,Child=panel});
         foreach(double height in new[]{136d,232,38,16,50})panel.RowDefinitions.Add(new(){Height=new(height)});
         var presetArea=new StackPanel();panel.Children.Add(presetArea);
-        var heading=UI.Text("Create a room",21,"#F1F3F8",true);
+        var heading=UI.LocalizedText("Create a room",21,"#F1F3F8",true);
         presetArea.Children.Add(heading);
         var setup=new Grid();setup.ColumnDefinitions.Add(new(){Width=new(368)});setup.ColumnDefinitions.Add(new(){Width=new(20)});setup.ColumnDefinitions.Add(new(){Width=new(188)});Grid.SetRow(setup,1);panel.Children.Add(setup);
         var form=new Grid();for(int i=0;i<4;i++)form.RowDefinitions.Add(new(){Height=new(58)});setup.Children.Add(form);
@@ -54,8 +54,8 @@ public sealed class RoomEditor : Window
         var command=Choice(options,"COMMAND POINTS",factors.Cast<object>().ToArray(),factors.First(f=>f.Value==initial.Match.CommandPoints));
         var privacy=Choice(options,"VISIBILITY",new object[]{"Public on VPN","Friends only"},initial.FriendsOnly?"Friends only":"Public on VPN",2);
         var preview=new MapPreview{PreviewHeight=166,Padding=new(6),Margin=new(0,5,0,8)};
-        var mapName=UI.Text("",12,"#EDF1F8",true);
-        var previewPanel=UI.Stack(UI.Text("MAP PREVIEW",9,UI.Muted,true),preview,mapName);
+        var mapName=UI.LocalizedText("",12,"#EDF1F8",true);
+        var previewPanel=UI.Stack(UI.LocalizedText("MAP PREVIEW",9,UI.Muted,true),preview,mapName);
         Grid.SetColumn(previewPanel,2);setup.Children.Add(previewPanel);
         void UpdatePreview(){if(map.SelectedItem is GameMap selected){preview.ShowMap(settings.GamePath,selected.Path);mapName.Text=selected.Name;map.ToolTip=selected.Name;}}
         map.SelectionChanged+=(_,_)=>UpdatePreview();UpdatePreview();
@@ -92,7 +92,7 @@ public sealed class RoomEditor : Window
         });
         UI.Require(store,()=>map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out int n)&&n is >=2 and <=64,()=>"Select a map and a valid room limit.");
         teams.Margin=new(12,0,0,0);
-        var teamRow=UI.Row(UI.Text("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,8,0,0);presetArea.Children.Add(teamRow);
+        var teamRow=UI.Row(UI.LocalizedText("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,8,0,0);presetArea.Children.Add(teamRow);
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
         var cancel=UI.Button("Cancel",()=>UI.FinishPopup(this,false));cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
         store.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(store);

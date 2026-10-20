@@ -6,8 +6,8 @@ namespace Fellowship;
 
 public sealed class UpdateProgressWindow : Window
 {
-    readonly TextBlock stage=UI.Text("Preparing update…",15,bold:true);
-    readonly TextBlock detail=UI.Text("",11,UI.Muted);
+    readonly TextBlock stage=UI.LocalizedText("Preparing update…",15,bold:true);
+    readonly TextBlock detail=UI.LocalizedText("",11,UI.Muted);
     readonly ProgressBar progress=new(){Height=7,Minimum=0,Maximum=100,IsIndeterminate=true,Foreground=UI.Brush("#6789F5"),Background=UI.Brush("#263042"),BorderThickness=new(0)};
     readonly StackPanel actions=new(){Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new(0,20,0,0)};
     bool busy=true;
@@ -16,7 +16,7 @@ public sealed class UpdateProgressWindow : Window
         progress.Style=(Style)Application.Current.FindResource("FellowshipProgress");
         var body=UI.Shell(this,"Fellowship update",460,260);MinHeight=260;ResizeMode=ResizeMode.NoResize;WindowStartupLocation=WindowStartupLocation.CenterScreen;
         var panel=new StackPanel{Margin=new(24)};body.Children.Add(panel);
-        panel.Children.Add(UI.Text("FELLOWSHIP "+version,10,UI.Accent,true));stage.Margin=new(0,14,0,9);panel.Children.Add(stage);
+        panel.Children.Add(UI.LocalizedText("FELLOWSHIP "+version,10,UI.Accent,true));stage.Margin=new(0,14,0,9);panel.Children.Add(stage);
         detail.TextWrapping=TextWrapping.Wrap;detail.Margin=new(0,0,0,18);panel.Children.Add(detail);panel.Children.Add(progress);panel.Children.Add(actions);
         Closing+=(_,e)=>{if(busy)e.Cancel=true;};
     }

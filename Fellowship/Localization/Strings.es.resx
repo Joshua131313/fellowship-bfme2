@@ -1,0 +1,718 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="Welcome to Fellowship" xml:space="preserve">
+    <value>Te damos la bienvenida a Fellowship</value>
+  </data>
+  <data name="Choose your defaults" xml:space="preserve">
+    <value>Elige tus preferencias</value>
+  </data>
+  <data name="You can change these preferences later in Settings." xml:space="preserve">
+    <value>Puedes cambiar estas preferencias después en Ajustes.</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Apariencia</value>
+  </data>
+  <data name="Sound" xml:space="preserve">
+    <value>Sonido</value>
+  </data>
+  <data name="Enable app sounds" xml:space="preserve">
+    <value>Activar sonidos</value>
+  </data>
+  <data name="Volume" xml:space="preserve">
+    <value>Volumen</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Continuar</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Atrás</value>
+  </data>
+  <data name="Get started" xml:space="preserve">
+    <value>Empezar</value>
+  </data>
+  <data name="Use defaults" xml:space="preserve">
+    <value>Usar valores predeterminados</value>
+  </data>
+  <data name="Onboarding" xml:space="preserve">
+    <value>Configuración inicial</value>
+  </data>
+  <data name="Open onboarding" xml:space="preserve">
+    <value>Abrir configuración inicial</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Ajustes</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Panel principal</value>
+  </data>
+  <data name="Game rooms" xml:space="preserve">
+    <value>Salas de juego</value>
+  </data>
+  <data name="Game preferences" xml:space="preserve">
+    <value>Preferencias de juego</value>
+  </data>
+  <data name="Messages" xml:space="preserve">
+    <value>Mensajes</value>
+  </data>
+  <data name="Friends" xml:space="preserve">
+    <value>Amigos</value>
+  </data>
+  <data name="WORKSPACE" xml:space="preserve">
+    <value>ESPACIO DE TRABAJO</value>
+  </data>
+  <data name="TOOLS" xml:space="preserve">
+    <value>HERRAMIENTAS</value>
+  </data>
+  <data name="Help &amp; guide" xml:space="preserve">
+    <value>Ayuda y guía</value>
+  </data>
+  <data name="Edit profile" xml:space="preserve">
+    <value>Editar perfil</value>
+  </data>
+  <data name="Set myself AFK" xml:space="preserve">
+    <value>Marcarme ausente</value>
+  </data>
+  <data name="Set available" xml:space="preserve">
+    <value>Marcarme disponible</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Disponible</value>
+  </data>
+  <data name="AFK" xml:space="preserve">
+    <value>Ausente</value>
+  </data>
+  <data name="Online" xml:space="preserve">
+    <value>En línea</value>
+  </data>
+  <data name="Offline" xml:space="preserve">
+    <value>Desconectado</value>
+  </data>
+  <data name="Reconnecting" xml:space="preserve">
+    <value>Reconectando</value>
+  </data>
+  <data name="Not connected" xml:space="preserve">
+    <value>Sin conexión</value>
+  </data>
+  <data name="Connecting…" xml:space="preserve">
+    <value>Conectando…</value>
+  </data>
+  <data name="SERVER" xml:space="preserve">
+    <value>SERVIDOR</value>
+  </data>
+  <data name="Select a server to find its rooms" xml:space="preserve">
+    <value>Elige un servidor para encontrar sus salas</value>
+  </data>
+  <data name="Search players…" xml:space="preserve">
+    <value>Buscar jugadores…</value>
+  </data>
+  <data name="Search rooms…" xml:space="preserve">
+    <value>Buscar salas…</value>
+  </data>
+  <data name="Host room" xml:space="preserve">
+    <value>Crear sala</value>
+  </data>
+  <data name="Create room" xml:space="preserve">
+    <value>Crear sala</value>
+  </data>
+  <data name="Create a room" xml:space="preserve">
+    <value>Crear una sala</value>
+  </data>
+  <data name="Join room" xml:space="preserve">
+    <value>Unirse a la sala</value>
+  </data>
+  <data name="Open room" xml:space="preserve">
+    <value>Abrir sala</value>
+  </data>
+  <data name="Room preview" xml:space="preserve">
+    <value>Vista previa de la sala</value>
+  </data>
+  <data name="No rooms found" xml:space="preserve">
+    <value>No se encontraron salas</value>
+  </data>
+  <data name="All modes" xml:space="preserve">
+    <value>Todos los modos</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Personalizado</value>
+  </data>
+  <data name="ROOM NAME" xml:space="preserve">
+    <value>NOMBRE DE SALA</value>
+  </data>
+  <data name="MODE" xml:space="preserve">
+    <value>MODO</value>
+  </data>
+  <data name="HOST" xml:space="preserve">
+    <value>ANFITRIÓN</value>
+  </data>
+  <data name="MAP" xml:space="preserve">
+    <value>MAPA</value>
+  </data>
+  <data name="PLAYERS" xml:space="preserve">
+    <value>JUGADORES</value>
+  </data>
+  <data name="PATCH" xml:space="preserve">
+    <value>VERSIÓN</value>
+  </data>
+  <data name="PING" xml:space="preserve">
+    <value>LATENCIA</value>
+  </data>
+  <data name="STATUS" xml:space="preserve">
+    <value>ESTADO</value>
+  </data>
+  <data name="PREFERRED COLOR" xml:space="preserve">
+    <value>COLOR PREFERIDO</value>
+  </data>
+  <data name="Applied when joining, if your choices are available." xml:space="preserve">
+    <value>Se aplica al unirte si tus opciones están disponibles.</value>
+  </data>
+  <data name="Clear this map’s preference" xml:space="preserve">
+    <value>Borrar preferencia de este mapa</value>
+  </data>
+  <data name="Changes save automatically" xml:space="preserve">
+    <value>Los cambios se guardan automáticamente</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>Oscuro</value>
+  </data>
+  <data name="Black" xml:space="preserve">
+    <value>Negro</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="System" xml:space="preserve">
+    <value>Sistema</value>
+  </data>
+  <data name="Profile &amp; connection" xml:space="preserve">
+    <value>Perfil y conexión</value>
+  </data>
+  <data name="How other players find you." xml:space="preserve">
+    <value>Cómo te encuentran otros jugadores.</value>
+  </data>
+  <data name="NICKNAME" xml:space="preserve">
+    <value>APODO</value>
+  </data>
+  <data name="NETWORK INTERFACE" xml:space="preserve">
+    <value>INTERFAZ DE RED</value>
+  </data>
+  <data name="Select a network…" xml:space="preserve">
+    <value>Elige una red…</value>
+  </data>
+  <data name="Game installation" xml:space="preserve">
+    <value>Instalación del juego</value>
+  </data>
+  <data name="Browse files…" xml:space="preserve">
+    <value>Buscar archivos…</value>
+  </data>
+  <data name="Backup &amp; restore" xml:space="preserve">
+    <value>Copia de seguridad y restauración</value>
+  </data>
+  <data name="Export backup" xml:space="preserve">
+    <value>Exportar copia de seguridad</value>
+  </data>
+  <data name="Restore backup" xml:space="preserve">
+    <value>Restaurar copia de seguridad</value>
+  </data>
+  <data name="Preferences folder" xml:space="preserve">
+    <value>Carpeta de preferencias</value>
+  </data>
+  <data name="Choose a theme, or follow Windows." xml:space="preserve">
+    <value>Elige un tema o sigue Windows.</value>
+  </data>
+  <data name="Control the sounds you hear." xml:space="preserve">
+    <value>Controla los sonidos que escuchas.</value>
+  </data>
+  <data name="Choose sounds &amp; preview" xml:space="preserve">
+    <value>Elegir y probar sonidos</value>
+  </data>
+  <data name="App behavior" xml:space="preserve">
+    <value>Comportamiento de la aplicación</value>
+  </data>
+  <data name="Notifications, startup, and live game sync." xml:space="preserve">
+    <value>Notificaciones, inicio y sincronización del juego.</value>
+  </data>
+  <data name="Chat, invitation and room activity sounds" xml:space="preserve">
+    <value>Sonidos de chat, invitaciones y salas</value>
+  </data>
+  <data name="Player online and offline sounds" xml:space="preserve">
+    <value>Sonidos de conexión y desconexión de jugadores</value>
+  </data>
+  <data name="Windows notifications for friends and new rooms" xml:space="preserve">
+    <value>Notificaciones de Windows para amigos y salas nuevas</value>
+  </data>
+  <data name="Live BFME2 synchronization" xml:space="preserve">
+    <value>Sincronización de BFME2 en vivo</value>
+  </data>
+  <data name="Start in the tray at Windows sign-in" xml:space="preserve">
+    <value>Iniciar en la bandeja al entrar en Windows</value>
+  </data>
+  <data name="Make Fellowship feel at home. Changes apply and save automatically." xml:space="preserve">
+    <value>Personaliza Fellowship. Los cambios se aplican y guardan automáticamente.</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Mensaje</value>
+  </data>
+  <data name="Send message" xml:space="preserve">
+    <value>Enviar mensaje</value>
+  </data>
+  <data name="Copy message" xml:space="preserve">
+    <value>Copiar mensaje</value>
+  </data>
+  <data name="Copy selected text" xml:space="preserve">
+    <value>Copiar texto seleccionado</value>
+  </data>
+  <data name="Select all" xml:space="preserve">
+    <value>Seleccionar todo</value>
+  </data>
+  <data name="Player info" xml:space="preserve">
+    <value>Información del jugador</value>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Actividad</value>
+  </data>
+  <data name="Idle for" xml:space="preserve">
+    <value>Inactivo desde hace</value>
+  </data>
+  <data name="Online since" xml:space="preserve">
+    <value>En línea desde</value>
+  </data>
+  <data name="Last online" xml:space="preserve">
+    <value>Última conexión</value>
+  </data>
+  <data name="Offline since" xml:space="preserve">
+    <value>Desconectado desde</value>
+  </data>
+  <data name="VPN address" xml:space="preserve">
+    <value>Dirección VPN</value>
+  </data>
+  <data name="Not observed" xml:space="preserve">
+    <value>Sin datos</value>
+  </data>
+  <data name="Just now" xml:space="preserve">
+    <value>Ahora mismo</value>
+  </data>
+  <data name="Add friend" xml:space="preserve">
+    <value>Añadir amigo</value>
+  </data>
+  <data name="Remove friend" xml:space="preserve">
+    <value>Eliminar amigo</value>
+  </data>
+  <data name="Manage friends" xml:space="preserve">
+    <value>Administrar amigos</value>
+  </data>
+  <data name="Friends list" xml:space="preserve">
+    <value>Lista de amigos</value>
+  </data>
+  <data name="YOUR FRIENDS" xml:space="preserve">
+    <value>TUS AMIGOS</value>
+  </data>
+  <data name="OFFLINE / NOT REACHABLE" xml:space="preserve">
+    <value>DESCONECTADO / NO DISPONIBLE</value>
+  </data>
+  <data name="Invite to room" xml:space="preserve">
+    <value>Invitar a la sala</value>
+  </data>
+  <data name="Block player" xml:space="preserve">
+    <value>Bloquear jugador</value>
+  </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>Desbloquear</value>
+  </data>
+  <data name="Blocked players" xml:space="preserve">
+    <value>Jugadores bloqueados</value>
+  </data>
+  <data name="No blocked players" xml:space="preserve">
+    <value>No hay jugadores bloqueados</value>
+  </data>
+  <data name="No friends added." xml:space="preserve">
+    <value>No se añadieron amigos.</value>
+  </data>
+  <data name="Show blocked message" xml:space="preserve">
+    <value>Mostrar mensaje bloqueado</value>
+  </data>
+  <data name="Your profile" xml:space="preserve">
+    <value>Tu perfil</value>
+  </data>
+  <data name="Save profile" xml:space="preserve">
+    <value>Guardar perfil</value>
+  </data>
+  <data name="Room browser" xml:space="preserve">
+    <value>Explorador de salas</value>
+  </data>
+  <data name="Room" xml:space="preserve">
+    <value>Sala</value>
+  </data>
+  <data name="Selection" xml:space="preserve">
+    <value>Selección</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Salir</value>
+  </data>
+  <data name="Leave room" xml:space="preserve">
+    <value>Salir de la sala</value>
+  </data>
+  <data name="Abort" xml:space="preserve">
+    <value>Abortar</value>
+  </data>
+  <data name="Launch mine" xml:space="preserve">
+    <value>Iniciar mi juego</value>
+  </data>
+  <data name="Launch all" xml:space="preserve">
+    <value>Iniciar todos</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="Refresh rooms" xml:space="preserve">
+    <value>Actualizar salas</value>
+  </data>
+  <data name="Refresh presence" xml:space="preserve">
+    <value>Actualizar estados</value>
+  </data>
+  <data name="Reset column widths" xml:space="preserve">
+    <value>Restablecer anchos de columnas</value>
+  </data>
+  <data name="Clear room filter" xml:space="preserve">
+    <value>Borrar filtro de salas</value>
+  </data>
+  <data name="Hide to tray" xml:space="preserve">
+    <value>Minimizar a la bandeja</value>
+  </data>
+  <data name="Quit Fellowship" xml:space="preserve">
+    <value>Salir de Fellowship</value>
+  </data>
+  <data name="Close window" xml:space="preserve">
+    <value>Cerrar ventana</value>
+  </data>
+  <data name="Check for updates" xml:space="preserve">
+    <value>Buscar actualizaciones</value>
+  </data>
+  <data name="Updates from GitHub" xml:space="preserve">
+    <value>Actualizaciones desde GitHub</value>
+  </data>
+  <data name="Download &amp; restart" xml:space="preserve">
+    <value>Descargar y reiniciar</value>
+  </data>
+  <data name="Preparing update…" xml:space="preserve">
+    <value>Preparando actualización…</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="Open log" xml:space="preserve">
+    <value>Abrir registro</value>
+  </data>
+  <data name="About Fellowship" xml:space="preserve">
+    <value>Acerca de Fellowship</value>
+  </data>
+  <data name="Getting started" xml:space="preserve">
+    <value>Primeros pasos</value>
+  </data>
+  <data name="Game setup guide" xml:space="preserve">
+    <value>Guía de configuración del juego</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>Archivo</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>Ver</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Ayuda</value>
+  </data>
+  <data name="TEAM" xml:space="preserve">
+    <value>EQUIPO</value>
+  </data>
+  <data name="COLOR" xml:space="preserve">
+    <value>COLOR</value>
+  </data>
+  <data name="MATCH SETUP" xml:space="preserve">
+    <value>CONFIGURACIÓN DE PARTIDA</value>
+  </data>
+  <data name="MATCH RULES" xml:space="preserve">
+    <value>REGLAS DE PARTIDA</value>
+  </data>
+  <data name="MAP PREVIEW" xml:space="preserve">
+    <value>VISTA PREVIA DEL MAPA</value>
+  </data>
+  <data name="ROOM CHAT" xml:space="preserve">
+    <value>CHAT DE LA SALA</value>
+  </data>
+  <data name="ROOM LIMIT (2–64)" xml:space="preserve">
+    <value>LÍMITE DE SALA (2–64)</value>
+  </data>
+  <data name="STARTING TEAMS" xml:space="preserve">
+    <value>EQUIPOS INICIALES</value>
+  </data>
+  <data name="VISIBILITY" xml:space="preserve">
+    <value>VISIBILIDAD</value>
+  </data>
+  <data name="Clear my spot" xml:space="preserve">
+    <value>Liberar mi posición</value>
+  </data>
+  <data name="Save preset" xml:space="preserve">
+    <value>Guardar configuración</value>
+  </data>
+  <data name="Preset name" xml:space="preserve">
+    <value>Nombre de configuración</value>
+  </data>
+  <data name="Confirm name" xml:space="preserve">
+    <value>Confirmar nombre</value>
+  </data>
+  <data name="Confirm privacy" xml:space="preserve">
+    <value>Confirmar privacidad</value>
+  </data>
+  <data name="Map preview unavailable" xml:space="preserve">
+    <value>Vista previa no disponible</value>
+  </data>
+  <data name="Waiting for host" xml:space="preserve">
+    <value>Esperando al anfitrión</value>
+  </data>
+  <data name="Joining room…" xml:space="preserve">
+    <value>Uniéndose a la sala…</value>
+  </data>
+  <data name="Connecting to the host" xml:space="preserve">
+    <value>Conectando con el anfitrión</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>Reproducir</value>
+  </data>
+  <data name="Gold" xml:space="preserve">
+    <value>Dorado</value>
+  </data>
+  <data name="Red" xml:space="preserve">
+    <value>Rojo</value>
+  </data>
+  <data name="Blue" xml:space="preserve">
+    <value>Azul</value>
+  </data>
+  <data name="Green" xml:space="preserve">
+    <value>Verde</value>
+  </data>
+  <data name="Yellow" xml:space="preserve">
+    <value>Amarillo</value>
+  </data>
+  <data name="Purple" xml:space="preserve">
+    <value>Morado</value>
+  </data>
+  <data name="Orange" xml:space="preserve">
+    <value>Naranja</value>
+  </data>
+  <data name="Pink" xml:space="preserve">
+    <value>Rosa</value>
+  </data>
+  <data name="Random" xml:space="preserve">
+    <value>Aleatorio</value>
+  </data>
+  <data name="Connect your copy of The Battle for Middle-earth II." xml:space="preserve">
+    <value>Conecta tu copia de The Battle for Middle-earth II.</value>
+  </data>
+  <data name="Keep a copy of your preferences and contacts." xml:space="preserve">
+    <value>Guarda una copia de tus preferencias y contactos.</value>
+  </data>
+  <data name="Updates" xml:space="preserve">
+    <value>Actualizaciones</value>
+  </data>
+  <data name="Set the volume and choose which events you hear." xml:space="preserve">
+    <value>Ajusta el volumen y elige qué eventos escuchar.</value>
+  </data>
+  <data name="Notifications, game sync and startup." xml:space="preserve">
+    <value>Notificaciones, sincronización del juego e inicio.</value>
+  </data>
+  <data name="Select the same VPN network on both PCs. Selecting a network switches immediately and leaves your current room." xml:space="preserve">
+    <value>Elige la misma red VPN en ambos equipos. El cambio es inmediato y abandona la sala actual.</value>
+  </data>
+  <data name="Double-click a friend to chat.&#10;Direct messages · no offline delivery" xml:space="preserve">
+    <value>Haz doble clic en un amigo para chatear.
+Mensajes directos · sin entrega sin conexión</value>
+  </data>
+  <data name="Public rooms on your VPN appear automatically.&#10;If a room is missing, enter the host's VPN address and refresh." xml:space="preserve">
+    <value>Las salas públicas de tu VPN aparecen automáticamente.
+Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Fellowship applies your team and spot" xml:space="preserve">
+    <value>1   Abre Multijugador → Red
+2   El anfitrión crea y los invitados se unen
+3   Fellowship aplica tu equipo y posición</value>
+  </data>
+  <data name="Any room member can host BFME2. Map and rules sync through the BFME2 host; each player's selections sync locally. Join the native lobby manually." xml:space="preserve">
+    <value>Cualquier miembro puede alojar BFME2. El mapa y las reglas se sincronizan mediante el anfitrión; las selecciones individuales, localmente. Únete al lobby del juego manualmente.</value>
+  </data>
+  <data name="Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2." xml:space="preserve">
+    <value>Haz clic en una posición libre. Equipos, posiciones y colores se sincronizan en ambas direcciones en el lobby LAN de BFME2, junto con el mapa y las reglas del anfitrión. Autoriza la sincronización antes de iniciar BFME2.</value>
+  </data>
+  <data name="Live sync starts when BFME2 opens." xml:space="preserve">
+    <value>La sincronización comienza al abrir BFME2.</value>
+  </data>
+  <data name="Room stays open when you exit the game." xml:space="preserve">
+    <value>La sala permanece abierta al salir del juego.</value>
+  </data>
+  <data name="ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE" xml:space="preserve">
+    <value>INTRO PARA ENVIAR   ·   AMBOS JUGADORES DEBEN ESTAR EN LÍNEA</value>
+  </data>
+  <data name="HOST IP" xml:space="preserve">
+    <value>IP DEL ANFITRIÓN</value>
+  </data>
+  <data name="PLAYER SEARCH" xml:space="preserve">
+    <value>BUSCAR JUGADORES</value>
+  </data>
+  <data name="Active players" xml:space="preserve">
+    <value>Jugadores activos</value>
+  </data>
+  <data name="YOU" xml:space="preserve">
+    <value>TÚ</value>
+  </data>
+  <data name="Sky Blue" xml:space="preserve">
+    <value>Azul cielo</value>
+  </data>
+  <data name="Gray" xml:space="preserve">
+    <value>Gris</value>
+  </data>
+  <data name="White" xml:space="preserve">
+    <value>Blanco</value>
+  </data>
+  <data name="0 rooms" xml:space="preserve">
+    <value>0 salas</value>
+  </data>
+  <data name="1 online" xml:space="preserve">
+    <value>1 en línea</value>
+  </data>
+  <data name="✓ Saved" xml:space="preserve">
+    <value>✓ Guardado</value>
+  </data>
+  <data name="Public on VPN" xml:space="preserve">
+    <value>Pública en VPN</value>
+  </data>
+  <data name="Friends only" xml:space="preserve">
+    <value>Solo amigos</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Pública</value>
+  </data>
+  <data name="In a room" xml:space="preserve">
+    <value>En una sala</value>
+  </data>
+  <data name="In BFME2" xml:space="preserve">
+    <value>En BFME2</value>
+  </data>
+  <data name="AFK · set manually" xml:space="preserve">
+    <value>Ausente · estado manual</value>
+  </data>
+  <data name="AFK · idle" xml:space="preserve">
+    <value>Ausente · inactivo</value>
+  </data>
+  <data name="Offline / unreachable" xml:space="preserve">
+    <value>Desconectado / inaccesible</value>
+  </data>
+  <data name="No friends added yet." xml:space="preserve">
+    <value>Todavía no has añadido amigos.</value>
+  </data>
+  <data name="Find a player using the search above to start a conversation." xml:space="preserve">
+    <value>Busca un jugador arriba para iniciar una conversación.</value>
+  </data>
+  <data name="Custom Heroes" xml:space="preserve">
+    <value>Héroes personalizados</value>
+  </data>
+  <data name="Ring Heroes" xml:space="preserve">
+    <value>Héroes del Anillo</value>
+  </data>
+  <data name="Ready · allow host to launch BFME2" xml:space="preserve">
+    <value>Listo · permitir al anfitrión iniciar BFME2</value>
+  </data>
+  <data name="Don't ask again" xml:space="preserve">
+    <value>No volver a preguntar</value>
+  </data>
+  <data name="Custom preset" xml:space="preserve">
+    <value>Configuración personalizada</value>
+  </data>
+  <data name="Transfer host" xml:space="preserve">
+    <value>Transferir anfitrión</value>
+  </data>
+  <data name="Kick from room" xml:space="preserve">
+    <value>Expulsar de la sala</value>
+  </data>
+  <data name="Friend info" xml:space="preserve">
+    <value>Información del amigo</value>
+  </data>
+  <data name="Unblock player" xml:space="preserve">
+    <value>Desbloquear jugador</value>
+  </data>
+  <data name="Click to copy IP address" xml:space="preserve">
+    <value>Haz clic para copiar la dirección IP</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Copiado</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>No disponible</value>
+  </data>
+  <data name="Invitation sent" xml:space="preserve">
+    <value>Invitación enviada</value>
+  </data>
+  <data name="{0} minute ago" xml:space="preserve">
+    <value>hace {0} minuto</value>
+  </data>
+  <data name="{0} minutes ago" xml:space="preserve">
+    <value>hace {0} minutos</value>
+  </data>
+  <data name="{0} hour ago" xml:space="preserve">
+    <value>hace {0} hora</value>
+  </data>
+  <data name="{0} hours ago" xml:space="preserve">
+    <value>hace {0} horas</value>
+  </data>
+  <data name="BFME2 EXECUTABLE" xml:space="preserve">
+    <value>EJECUTABLE DE BFME2</value>
+  </data>
+  <data name="Starting resources" xml:space="preserve">
+    <value>Recursos iniciales</value>
+  </data>
+  <data name="Command points" xml:space="preserve">
+    <value>Puntos de mando</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Listo</value>
+  </data>
+  <data name="Not ready" xml:space="preserve">
+    <value>No listo</value>
+  </data>
+  <data name="Guest" xml:space="preserve">
+    <value>Invitado</value>
+  </data>
+  <data name="● VPN discovery active" xml:space="preserve">
+    <value>● Detección VPN activa</value>
+  </data>
+  <data name="○ Not connected" xml:space="preserve">
+    <value>○ Sin conexión</value>
+  </data>
+</root>

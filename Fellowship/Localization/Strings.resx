@@ -1,0 +1,718 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="Welcome to Fellowship" xml:space="preserve">
+    <value>Welcome to Fellowship</value>
+  </data>
+  <data name="Choose your defaults" xml:space="preserve">
+    <value>Choose your defaults</value>
+  </data>
+  <data name="You can change these preferences later in Settings." xml:space="preserve">
+    <value>You can change these preferences later in Settings.</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Sound" xml:space="preserve">
+    <value>Sound</value>
+  </data>
+  <data name="Enable app sounds" xml:space="preserve">
+    <value>Enable app sounds</value>
+  </data>
+  <data name="Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Get started" xml:space="preserve">
+    <value>Get started</value>
+  </data>
+  <data name="Use defaults" xml:space="preserve">
+    <value>Use defaults</value>
+  </data>
+  <data name="Onboarding" xml:space="preserve">
+    <value>Onboarding</value>
+  </data>
+  <data name="Open onboarding" xml:space="preserve">
+    <value>Open onboarding</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Game rooms" xml:space="preserve">
+    <value>Game rooms</value>
+  </data>
+  <data name="Game preferences" xml:space="preserve">
+    <value>Game preferences</value>
+  </data>
+  <data name="Messages" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="Friends" xml:space="preserve">
+    <value>Friends</value>
+  </data>
+  <data name="WORKSPACE" xml:space="preserve">
+    <value>WORKSPACE</value>
+  </data>
+  <data name="TOOLS" xml:space="preserve">
+    <value>TOOLS</value>
+  </data>
+  <data name="Help &amp; guide" xml:space="preserve">
+    <value>Help &amp; guide</value>
+  </data>
+  <data name="Edit profile" xml:space="preserve">
+    <value>Edit profile</value>
+  </data>
+  <data name="Set myself AFK" xml:space="preserve">
+    <value>Set myself AFK</value>
+  </data>
+  <data name="Set available" xml:space="preserve">
+    <value>Set available</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="AFK" xml:space="preserve">
+    <value>AFK</value>
+  </data>
+  <data name="Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="Reconnecting" xml:space="preserve">
+    <value>Reconnecting</value>
+  </data>
+  <data name="Not connected" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="Connecting…" xml:space="preserve">
+    <value>Connecting…</value>
+  </data>
+  <data name="SERVER" xml:space="preserve">
+    <value>SERVER</value>
+  </data>
+  <data name="Select a server to find its rooms" xml:space="preserve">
+    <value>Select a server to find its rooms</value>
+  </data>
+  <data name="Search players…" xml:space="preserve">
+    <value>Search players…</value>
+  </data>
+  <data name="Search rooms…" xml:space="preserve">
+    <value>Search rooms…</value>
+  </data>
+  <data name="Host room" xml:space="preserve">
+    <value>Host room</value>
+  </data>
+  <data name="Create room" xml:space="preserve">
+    <value>Create room</value>
+  </data>
+  <data name="Create a room" xml:space="preserve">
+    <value>Create a room</value>
+  </data>
+  <data name="Join room" xml:space="preserve">
+    <value>Join room</value>
+  </data>
+  <data name="Open room" xml:space="preserve">
+    <value>Open room</value>
+  </data>
+  <data name="Room preview" xml:space="preserve">
+    <value>Room preview</value>
+  </data>
+  <data name="No rooms found" xml:space="preserve">
+    <value>No rooms found</value>
+  </data>
+  <data name="All modes" xml:space="preserve">
+    <value>All modes</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="ROOM NAME" xml:space="preserve">
+    <value>ROOM NAME</value>
+  </data>
+  <data name="MODE" xml:space="preserve">
+    <value>MODE</value>
+  </data>
+  <data name="HOST" xml:space="preserve">
+    <value>HOST</value>
+  </data>
+  <data name="MAP" xml:space="preserve">
+    <value>MAP</value>
+  </data>
+  <data name="PLAYERS" xml:space="preserve">
+    <value>PLAYERS</value>
+  </data>
+  <data name="PATCH" xml:space="preserve">
+    <value>PATCH</value>
+  </data>
+  <data name="PING" xml:space="preserve">
+    <value>PING</value>
+  </data>
+  <data name="STATUS" xml:space="preserve">
+    <value>STATUS</value>
+  </data>
+  <data name="PREFERRED COLOR" xml:space="preserve">
+    <value>PREFERRED COLOR</value>
+  </data>
+  <data name="Applied when joining, if your choices are available." xml:space="preserve">
+    <value>Applied when joining, if your choices are available.</value>
+  </data>
+  <data name="Clear this map’s preference" xml:space="preserve">
+    <value>Clear this map’s preference</value>
+  </data>
+  <data name="Changes save automatically" xml:space="preserve">
+    <value>Changes save automatically</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Black" xml:space="preserve">
+    <value>Black</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Profile &amp; connection" xml:space="preserve">
+    <value>Profile &amp; connection</value>
+  </data>
+  <data name="How other players find you." xml:space="preserve">
+    <value>How other players find you.</value>
+  </data>
+  <data name="NICKNAME" xml:space="preserve">
+    <value>NICKNAME</value>
+  </data>
+  <data name="NETWORK INTERFACE" xml:space="preserve">
+    <value>NETWORK INTERFACE</value>
+  </data>
+  <data name="Select a network…" xml:space="preserve">
+    <value>Select a network…</value>
+  </data>
+  <data name="Game installation" xml:space="preserve">
+    <value>Game installation</value>
+  </data>
+  <data name="Browse files…" xml:space="preserve">
+    <value>Browse files…</value>
+  </data>
+  <data name="Backup &amp; restore" xml:space="preserve">
+    <value>Backup &amp; restore</value>
+  </data>
+  <data name="Export backup" xml:space="preserve">
+    <value>Export backup</value>
+  </data>
+  <data name="Restore backup" xml:space="preserve">
+    <value>Restore backup</value>
+  </data>
+  <data name="Preferences folder" xml:space="preserve">
+    <value>Preferences folder</value>
+  </data>
+  <data name="Choose a theme, or follow Windows." xml:space="preserve">
+    <value>Choose a theme, or follow Windows.</value>
+  </data>
+  <data name="Control the sounds you hear." xml:space="preserve">
+    <value>Control the sounds you hear.</value>
+  </data>
+  <data name="Choose sounds &amp; preview" xml:space="preserve">
+    <value>Choose sounds &amp; preview</value>
+  </data>
+  <data name="App behavior" xml:space="preserve">
+    <value>App behavior</value>
+  </data>
+  <data name="Notifications, startup, and live game sync." xml:space="preserve">
+    <value>Notifications, startup, and live game sync.</value>
+  </data>
+  <data name="Chat, invitation and room activity sounds" xml:space="preserve">
+    <value>Chat, invitation and room activity sounds</value>
+  </data>
+  <data name="Player online and offline sounds" xml:space="preserve">
+    <value>Player online and offline sounds</value>
+  </data>
+  <data name="Windows notifications for friends and new rooms" xml:space="preserve">
+    <value>Windows notifications for friends and new rooms</value>
+  </data>
+  <data name="Live BFME2 synchronization" xml:space="preserve">
+    <value>Live BFME2 synchronization</value>
+  </data>
+  <data name="Start in the tray at Windows sign-in" xml:space="preserve">
+    <value>Start in the tray at Windows sign-in</value>
+  </data>
+  <data name="Make Fellowship feel at home. Changes apply and save automatically." xml:space="preserve">
+    <value>Make Fellowship feel at home. Changes apply and save automatically.</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Send message" xml:space="preserve">
+    <value>Send message</value>
+  </data>
+  <data name="Copy message" xml:space="preserve">
+    <value>Copy message</value>
+  </data>
+  <data name="Copy selected text" xml:space="preserve">
+    <value>Copy selected text</value>
+  </data>
+  <data name="Select all" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="Player info" xml:space="preserve">
+    <value>Player info</value>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Idle for" xml:space="preserve">
+    <value>Idle for</value>
+  </data>
+  <data name="Online since" xml:space="preserve">
+    <value>Online since</value>
+  </data>
+  <data name="Last online" xml:space="preserve">
+    <value>Last online</value>
+  </data>
+  <data name="Offline since" xml:space="preserve">
+    <value>Offline since</value>
+  </data>
+  <data name="VPN address" xml:space="preserve">
+    <value>VPN address</value>
+  </data>
+  <data name="Not observed" xml:space="preserve">
+    <value>Not observed</value>
+  </data>
+  <data name="Just now" xml:space="preserve">
+    <value>Just now</value>
+  </data>
+  <data name="Add friend" xml:space="preserve">
+    <value>Add friend</value>
+  </data>
+  <data name="Remove friend" xml:space="preserve">
+    <value>Remove friend</value>
+  </data>
+  <data name="Manage friends" xml:space="preserve">
+    <value>Manage friends</value>
+  </data>
+  <data name="Friends list" xml:space="preserve">
+    <value>Friends list</value>
+  </data>
+  <data name="YOUR FRIENDS" xml:space="preserve">
+    <value>YOUR FRIENDS</value>
+  </data>
+  <data name="OFFLINE / NOT REACHABLE" xml:space="preserve">
+    <value>OFFLINE / NOT REACHABLE</value>
+  </data>
+  <data name="Invite to room" xml:space="preserve">
+    <value>Invite to room</value>
+  </data>
+  <data name="Block player" xml:space="preserve">
+    <value>Block player</value>
+  </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>Unblock</value>
+  </data>
+  <data name="Blocked players" xml:space="preserve">
+    <value>Blocked players</value>
+  </data>
+  <data name="No blocked players" xml:space="preserve">
+    <value>No blocked players</value>
+  </data>
+  <data name="No friends added." xml:space="preserve">
+    <value>No friends added.</value>
+  </data>
+  <data name="Show blocked message" xml:space="preserve">
+    <value>Show blocked message</value>
+  </data>
+  <data name="Your profile" xml:space="preserve">
+    <value>Your profile</value>
+  </data>
+  <data name="Save profile" xml:space="preserve">
+    <value>Save profile</value>
+  </data>
+  <data name="Room browser" xml:space="preserve">
+    <value>Room browser</value>
+  </data>
+  <data name="Room" xml:space="preserve">
+    <value>Room</value>
+  </data>
+  <data name="Selection" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Leave</value>
+  </data>
+  <data name="Leave room" xml:space="preserve">
+    <value>Leave room</value>
+  </data>
+  <data name="Abort" xml:space="preserve">
+    <value>Abort</value>
+  </data>
+  <data name="Launch mine" xml:space="preserve">
+    <value>Launch mine</value>
+  </data>
+  <data name="Launch all" xml:space="preserve">
+    <value>Launch all</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Refresh rooms" xml:space="preserve">
+    <value>Refresh rooms</value>
+  </data>
+  <data name="Refresh presence" xml:space="preserve">
+    <value>Refresh presence</value>
+  </data>
+  <data name="Reset column widths" xml:space="preserve">
+    <value>Reset column widths</value>
+  </data>
+  <data name="Clear room filter" xml:space="preserve">
+    <value>Clear room filter</value>
+  </data>
+  <data name="Hide to tray" xml:space="preserve">
+    <value>Hide to tray</value>
+  </data>
+  <data name="Quit Fellowship" xml:space="preserve">
+    <value>Quit Fellowship</value>
+  </data>
+  <data name="Close window" xml:space="preserve">
+    <value>Close window</value>
+  </data>
+  <data name="Check for updates" xml:space="preserve">
+    <value>Check for updates</value>
+  </data>
+  <data name="Updates from GitHub" xml:space="preserve">
+    <value>Updates from GitHub</value>
+  </data>
+  <data name="Download &amp; restart" xml:space="preserve">
+    <value>Download &amp; restart</value>
+  </data>
+  <data name="Preparing update…" xml:space="preserve">
+    <value>Preparing update…</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="Open log" xml:space="preserve">
+    <value>Open log</value>
+  </data>
+  <data name="About Fellowship" xml:space="preserve">
+    <value>About Fellowship</value>
+  </data>
+  <data name="Getting started" xml:space="preserve">
+    <value>Getting started</value>
+  </data>
+  <data name="Game setup guide" xml:space="preserve">
+    <value>Game setup guide</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="TEAM" xml:space="preserve">
+    <value>TEAM</value>
+  </data>
+  <data name="COLOR" xml:space="preserve">
+    <value>COLOR</value>
+  </data>
+  <data name="MATCH SETUP" xml:space="preserve">
+    <value>MATCH SETUP</value>
+  </data>
+  <data name="MATCH RULES" xml:space="preserve">
+    <value>MATCH RULES</value>
+  </data>
+  <data name="MAP PREVIEW" xml:space="preserve">
+    <value>MAP PREVIEW</value>
+  </data>
+  <data name="ROOM CHAT" xml:space="preserve">
+    <value>ROOM CHAT</value>
+  </data>
+  <data name="ROOM LIMIT (2–64)" xml:space="preserve">
+    <value>ROOM LIMIT (2–64)</value>
+  </data>
+  <data name="STARTING TEAMS" xml:space="preserve">
+    <value>STARTING TEAMS</value>
+  </data>
+  <data name="VISIBILITY" xml:space="preserve">
+    <value>VISIBILITY</value>
+  </data>
+  <data name="Clear my spot" xml:space="preserve">
+    <value>Clear my spot</value>
+  </data>
+  <data name="Save preset" xml:space="preserve">
+    <value>Save preset</value>
+  </data>
+  <data name="Preset name" xml:space="preserve">
+    <value>Preset name</value>
+  </data>
+  <data name="Confirm name" xml:space="preserve">
+    <value>Confirm name</value>
+  </data>
+  <data name="Confirm privacy" xml:space="preserve">
+    <value>Confirm privacy</value>
+  </data>
+  <data name="Map preview unavailable" xml:space="preserve">
+    <value>Map preview unavailable</value>
+  </data>
+  <data name="Waiting for host" xml:space="preserve">
+    <value>Waiting for host</value>
+  </data>
+  <data name="Joining room…" xml:space="preserve">
+    <value>Joining room…</value>
+  </data>
+  <data name="Connecting to the host" xml:space="preserve">
+    <value>Connecting to the host</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="Gold" xml:space="preserve">
+    <value>Gold</value>
+  </data>
+  <data name="Red" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="Yellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="Purple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="Orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="Pink" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="Random" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="Connect your copy of The Battle for Middle-earth II." xml:space="preserve">
+    <value>Connect your copy of The Battle for Middle-earth II.</value>
+  </data>
+  <data name="Keep a copy of your preferences and contacts." xml:space="preserve">
+    <value>Keep a copy of your preferences and contacts.</value>
+  </data>
+  <data name="Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Set the volume and choose which events you hear." xml:space="preserve">
+    <value>Set the volume and choose which events you hear.</value>
+  </data>
+  <data name="Notifications, game sync and startup." xml:space="preserve">
+    <value>Notifications, game sync and startup.</value>
+  </data>
+  <data name="Select the same VPN network on both PCs. Selecting a network switches immediately and leaves your current room." xml:space="preserve">
+    <value>Select the same VPN network on both PCs. Selecting a network switches immediately and leaves your current room.</value>
+  </data>
+  <data name="Double-click a friend to chat.&#10;Direct messages · no offline delivery" xml:space="preserve">
+    <value>Double-click a friend to chat.
+Direct messages · no offline delivery</value>
+  </data>
+  <data name="Public rooms on your VPN appear automatically.&#10;If a room is missing, enter the host's VPN address and refresh." xml:space="preserve">
+    <value>Public rooms on your VPN appear automatically.
+If a room is missing, enter the host's VPN address and refresh.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Fellowship applies your team and spot" xml:space="preserve">
+    <value>1   Open Multiplayer → Network
+2   Host creates; guests join
+3   Fellowship applies your team and spot</value>
+  </data>
+  <data name="Any room member can host BFME2. Map and rules sync through the BFME2 host; each player's selections sync locally. Join the native lobby manually." xml:space="preserve">
+    <value>Any room member can host BFME2. Map and rules sync through the BFME2 host; each player's selections sync locally. Join the native lobby manually.</value>
+  </data>
+  <data name="Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2." xml:space="preserve">
+    <value>Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.</value>
+  </data>
+  <data name="Live sync starts when BFME2 opens." xml:space="preserve">
+    <value>Live sync starts when BFME2 opens.</value>
+  </data>
+  <data name="Room stays open when you exit the game." xml:space="preserve">
+    <value>Room stays open when you exit the game.</value>
+  </data>
+  <data name="ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE" xml:space="preserve">
+    <value>ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE</value>
+  </data>
+  <data name="HOST IP" xml:space="preserve">
+    <value>HOST IP</value>
+  </data>
+  <data name="PLAYER SEARCH" xml:space="preserve">
+    <value>PLAYER SEARCH</value>
+  </data>
+  <data name="Active players" xml:space="preserve">
+    <value>Active players</value>
+  </data>
+  <data name="YOU" xml:space="preserve">
+    <value>YOU</value>
+  </data>
+  <data name="Sky Blue" xml:space="preserve">
+    <value>Sky Blue</value>
+  </data>
+  <data name="Gray" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+  <data name="White" xml:space="preserve">
+    <value>White</value>
+  </data>
+  <data name="0 rooms" xml:space="preserve">
+    <value>0 rooms</value>
+  </data>
+  <data name="1 online" xml:space="preserve">
+    <value>1 online</value>
+  </data>
+  <data name="✓ Saved" xml:space="preserve">
+    <value>✓ Saved</value>
+  </data>
+  <data name="Public on VPN" xml:space="preserve">
+    <value>Public on VPN</value>
+  </data>
+  <data name="Friends only" xml:space="preserve">
+    <value>Friends only</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Public</value>
+  </data>
+  <data name="In a room" xml:space="preserve">
+    <value>In a room</value>
+  </data>
+  <data name="In BFME2" xml:space="preserve">
+    <value>In BFME2</value>
+  </data>
+  <data name="AFK · set manually" xml:space="preserve">
+    <value>AFK · set manually</value>
+  </data>
+  <data name="AFK · idle" xml:space="preserve">
+    <value>AFK · idle</value>
+  </data>
+  <data name="Offline / unreachable" xml:space="preserve">
+    <value>Offline / unreachable</value>
+  </data>
+  <data name="No friends added yet." xml:space="preserve">
+    <value>No friends added yet.</value>
+  </data>
+  <data name="Find a player using the search above to start a conversation." xml:space="preserve">
+    <value>Find a player using the search above to start a conversation.</value>
+  </data>
+  <data name="Custom Heroes" xml:space="preserve">
+    <value>Custom Heroes</value>
+  </data>
+  <data name="Ring Heroes" xml:space="preserve">
+    <value>Ring Heroes</value>
+  </data>
+  <data name="Ready · allow host to launch BFME2" xml:space="preserve">
+    <value>Ready · allow host to launch BFME2</value>
+  </data>
+  <data name="Don't ask again" xml:space="preserve">
+    <value>Don't ask again</value>
+  </data>
+  <data name="Custom preset" xml:space="preserve">
+    <value>Custom preset</value>
+  </data>
+  <data name="Transfer host" xml:space="preserve">
+    <value>Transfer host</value>
+  </data>
+  <data name="Kick from room" xml:space="preserve">
+    <value>Kick from room</value>
+  </data>
+  <data name="Friend info" xml:space="preserve">
+    <value>Friend info</value>
+  </data>
+  <data name="Unblock player" xml:space="preserve">
+    <value>Unblock player</value>
+  </data>
+  <data name="Click to copy IP address" xml:space="preserve">
+    <value>Click to copy IP address</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+  </data>
+  <data name="Invitation sent" xml:space="preserve">
+    <value>Invitation sent</value>
+  </data>
+  <data name="{0} minute ago" xml:space="preserve">
+    <value>{0} minute ago</value>
+  </data>
+  <data name="{0} minutes ago" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="{0} hour ago" xml:space="preserve">
+    <value>{0} hour ago</value>
+  </data>
+  <data name="{0} hours ago" xml:space="preserve">
+    <value>{0} hours ago</value>
+  </data>
+  <data name="BFME2 EXECUTABLE" xml:space="preserve">
+    <value>BFME2 EXECUTABLE</value>
+  </data>
+  <data name="Starting resources" xml:space="preserve">
+    <value>Starting resources</value>
+  </data>
+  <data name="Command points" xml:space="preserve">
+    <value>Command points</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Not ready" xml:space="preserve">
+    <value>Not ready</value>
+  </data>
+  <data name="Guest" xml:space="preserve">
+    <value>Guest</value>
+  </data>
+  <data name="● VPN discovery active" xml:space="preserve">
+    <value>● VPN discovery active</value>
+  </data>
+  <data name="○ Not connected" xml:space="preserve">
+    <value>○ Not connected</value>
+  </data>
+</root>

@@ -1,0 +1,718 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="Welcome to Fellowship" xml:space="preserve">
+    <value>Fellowship’e hoş geldiniz</value>
+  </data>
+  <data name="Choose your defaults" xml:space="preserve">
+    <value>Varsayılan tercihlerinizi seçin</value>
+  </data>
+  <data name="You can change these preferences later in Settings." xml:space="preserve">
+    <value>Bu tercihleri daha sonra Ayarlar’dan değiştirebilirsiniz.</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Dil</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Görünüm</value>
+  </data>
+  <data name="Sound" xml:space="preserve">
+    <value>Ses</value>
+  </data>
+  <data name="Enable app sounds" xml:space="preserve">
+    <value>Uygulama seslerini etkinleştir</value>
+  </data>
+  <data name="Volume" xml:space="preserve">
+    <value>Ses düzeyi</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Devam</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Geri</value>
+  </data>
+  <data name="Get started" xml:space="preserve">
+    <value>Başla</value>
+  </data>
+  <data name="Use defaults" xml:space="preserve">
+    <value>Varsayılanları kullan</value>
+  </data>
+  <data name="Onboarding" xml:space="preserve">
+    <value>İlk kurulum</value>
+  </data>
+  <data name="Open onboarding" xml:space="preserve">
+    <value>İlk kurulumu aç</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Ayarlar</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Kontrol paneli</value>
+  </data>
+  <data name="Game rooms" xml:space="preserve">
+    <value>Oyun odaları</value>
+  </data>
+  <data name="Game preferences" xml:space="preserve">
+    <value>Oyun tercihleri</value>
+  </data>
+  <data name="Messages" xml:space="preserve">
+    <value>Mesajlar</value>
+  </data>
+  <data name="Friends" xml:space="preserve">
+    <value>Arkadaşlar</value>
+  </data>
+  <data name="WORKSPACE" xml:space="preserve">
+    <value>ÇALIŞMA ALANI</value>
+  </data>
+  <data name="TOOLS" xml:space="preserve">
+    <value>ARAÇLAR</value>
+  </data>
+  <data name="Help &amp; guide" xml:space="preserve">
+    <value>Yardım ve rehber</value>
+  </data>
+  <data name="Edit profile" xml:space="preserve">
+    <value>Profili düzenle</value>
+  </data>
+  <data name="Set myself AFK" xml:space="preserve">
+    <value>Kendimi uzakta olarak işaretle</value>
+  </data>
+  <data name="Set available" xml:space="preserve">
+    <value>Müsait olarak işaretle</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Müsait</value>
+  </data>
+  <data name="AFK" xml:space="preserve">
+    <value>Uzakta</value>
+  </data>
+  <data name="Online" xml:space="preserve">
+    <value>Çevrimiçi</value>
+  </data>
+  <data name="Offline" xml:space="preserve">
+    <value>Çevrimdışı</value>
+  </data>
+  <data name="Reconnecting" xml:space="preserve">
+    <value>Yeniden bağlanıyor</value>
+  </data>
+  <data name="Not connected" xml:space="preserve">
+    <value>Bağlı değil</value>
+  </data>
+  <data name="Connecting…" xml:space="preserve">
+    <value>Bağlanıyor…</value>
+  </data>
+  <data name="SERVER" xml:space="preserve">
+    <value>SUNUCU</value>
+  </data>
+  <data name="Select a server to find its rooms" xml:space="preserve">
+    <value>Odalarını bulmak için bir sunucu seçin</value>
+  </data>
+  <data name="Search players…" xml:space="preserve">
+    <value>Oyuncu ara…</value>
+  </data>
+  <data name="Search rooms…" xml:space="preserve">
+    <value>Oda ara…</value>
+  </data>
+  <data name="Host room" xml:space="preserve">
+    <value>Oda kur</value>
+  </data>
+  <data name="Create room" xml:space="preserve">
+    <value>Oda oluştur</value>
+  </data>
+  <data name="Create a room" xml:space="preserve">
+    <value>Oda oluştur</value>
+  </data>
+  <data name="Join room" xml:space="preserve">
+    <value>Odaya katıl</value>
+  </data>
+  <data name="Open room" xml:space="preserve">
+    <value>Odayı aç</value>
+  </data>
+  <data name="Room preview" xml:space="preserve">
+    <value>Oda önizlemesi</value>
+  </data>
+  <data name="No rooms found" xml:space="preserve">
+    <value>Oda bulunamadı</value>
+  </data>
+  <data name="All modes" xml:space="preserve">
+    <value>Tüm modlar</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Özel</value>
+  </data>
+  <data name="ROOM NAME" xml:space="preserve">
+    <value>ODA ADI</value>
+  </data>
+  <data name="MODE" xml:space="preserve">
+    <value>MOD</value>
+  </data>
+  <data name="HOST" xml:space="preserve">
+    <value>KURUCU</value>
+  </data>
+  <data name="MAP" xml:space="preserve">
+    <value>HARİTA</value>
+  </data>
+  <data name="PLAYERS" xml:space="preserve">
+    <value>OYUNCULAR</value>
+  </data>
+  <data name="PATCH" xml:space="preserve">
+    <value>SÜRÜM</value>
+  </data>
+  <data name="PING" xml:space="preserve">
+    <value>GECİKME</value>
+  </data>
+  <data name="STATUS" xml:space="preserve">
+    <value>DURUM</value>
+  </data>
+  <data name="PREFERRED COLOR" xml:space="preserve">
+    <value>TERCİH EDİLEN RENK</value>
+  </data>
+  <data name="Applied when joining, if your choices are available." xml:space="preserve">
+    <value>Seçimleriniz uygunsa katılırken uygulanır.</value>
+  </data>
+  <data name="Clear this map’s preference" xml:space="preserve">
+    <value>Bu haritanın tercihini temizle</value>
+  </data>
+  <data name="Changes save automatically" xml:space="preserve">
+    <value>Değişiklikler otomatik kaydedilir</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>Koyu</value>
+  </data>
+  <data name="Black" xml:space="preserve">
+    <value>Siyah</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="System" xml:space="preserve">
+    <value>Sistem</value>
+  </data>
+  <data name="Profile &amp; connection" xml:space="preserve">
+    <value>Profil ve bağlantı</value>
+  </data>
+  <data name="How other players find you." xml:space="preserve">
+    <value>Diğer oyuncuların sizi bulma şekli.</value>
+  </data>
+  <data name="NICKNAME" xml:space="preserve">
+    <value>TAKMA AD</value>
+  </data>
+  <data name="NETWORK INTERFACE" xml:space="preserve">
+    <value>AĞ ARAYÜZÜ</value>
+  </data>
+  <data name="Select a network…" xml:space="preserve">
+    <value>Bir ağ seçin…</value>
+  </data>
+  <data name="Game installation" xml:space="preserve">
+    <value>Oyun kurulumu</value>
+  </data>
+  <data name="Browse files…" xml:space="preserve">
+    <value>Dosyalara göz at…</value>
+  </data>
+  <data name="Backup &amp; restore" xml:space="preserve">
+    <value>Yedekleme ve geri yükleme</value>
+  </data>
+  <data name="Export backup" xml:space="preserve">
+    <value>Yedeği dışa aktar</value>
+  </data>
+  <data name="Restore backup" xml:space="preserve">
+    <value>Yedeği geri yükle</value>
+  </data>
+  <data name="Preferences folder" xml:space="preserve">
+    <value>Tercihler klasörü</value>
+  </data>
+  <data name="Choose a theme, or follow Windows." xml:space="preserve">
+    <value>Bir tema seçin veya Windows’u izleyin.</value>
+  </data>
+  <data name="Control the sounds you hear." xml:space="preserve">
+    <value>Duyduğunuz sesleri kontrol edin.</value>
+  </data>
+  <data name="Choose sounds &amp; preview" xml:space="preserve">
+    <value>Sesleri seç ve önizle</value>
+  </data>
+  <data name="App behavior" xml:space="preserve">
+    <value>Uygulama davranışı</value>
+  </data>
+  <data name="Notifications, startup, and live game sync." xml:space="preserve">
+    <value>Bildirimler, başlangıç ve canlı oyun eşitlemesi.</value>
+  </data>
+  <data name="Chat, invitation and room activity sounds" xml:space="preserve">
+    <value>Sohbet, davet ve oda etkinliği sesleri</value>
+  </data>
+  <data name="Player online and offline sounds" xml:space="preserve">
+    <value>Oyuncu çevrimiçi ve çevrimdışı sesleri</value>
+  </data>
+  <data name="Windows notifications for friends and new rooms" xml:space="preserve">
+    <value>Arkadaşlar ve yeni odalar için Windows bildirimleri</value>
+  </data>
+  <data name="Live BFME2 synchronization" xml:space="preserve">
+    <value>Canlı BFME2 eşitlemesi</value>
+  </data>
+  <data name="Start in the tray at Windows sign-in" xml:space="preserve">
+    <value>Windows oturumunda sistem tepsisinde başlat</value>
+  </data>
+  <data name="Make Fellowship feel at home. Changes apply and save automatically." xml:space="preserve">
+    <value>Fellowship’i kişiselleştirin. Değişiklikler otomatik uygulanır ve kaydedilir.</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Gönder</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Mesaj</value>
+  </data>
+  <data name="Send message" xml:space="preserve">
+    <value>Mesaj gönder</value>
+  </data>
+  <data name="Copy message" xml:space="preserve">
+    <value>Mesajı kopyala</value>
+  </data>
+  <data name="Copy selected text" xml:space="preserve">
+    <value>Seçili metni kopyala</value>
+  </data>
+  <data name="Select all" xml:space="preserve">
+    <value>Tümünü seç</value>
+  </data>
+  <data name="Player info" xml:space="preserve">
+    <value>Oyuncu bilgisi</value>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Etkinlik</value>
+  </data>
+  <data name="Idle for" xml:space="preserve">
+    <value>Boşta kalma süresi</value>
+  </data>
+  <data name="Online since" xml:space="preserve">
+    <value>Çevrimiçi olduğu zaman</value>
+  </data>
+  <data name="Last online" xml:space="preserve">
+    <value>Son çevrimiçi</value>
+  </data>
+  <data name="Offline since" xml:space="preserve">
+    <value>Çevrimdışı olduğu zaman</value>
+  </data>
+  <data name="VPN address" xml:space="preserve">
+    <value>VPN adresi</value>
+  </data>
+  <data name="Not observed" xml:space="preserve">
+    <value>Gözlemlenmedi</value>
+  </data>
+  <data name="Just now" xml:space="preserve">
+    <value>Az önce</value>
+  </data>
+  <data name="Add friend" xml:space="preserve">
+    <value>Arkadaş ekle</value>
+  </data>
+  <data name="Remove friend" xml:space="preserve">
+    <value>Arkadaşı kaldır</value>
+  </data>
+  <data name="Manage friends" xml:space="preserve">
+    <value>Arkadaşları yönet</value>
+  </data>
+  <data name="Friends list" xml:space="preserve">
+    <value>Arkadaş listesi</value>
+  </data>
+  <data name="YOUR FRIENDS" xml:space="preserve">
+    <value>ARKADAŞLARINIZ</value>
+  </data>
+  <data name="OFFLINE / NOT REACHABLE" xml:space="preserve">
+    <value>ÇEVRİMDIŞI / ULAŞILAMIYOR</value>
+  </data>
+  <data name="Invite to room" xml:space="preserve">
+    <value>Odaya davet et</value>
+  </data>
+  <data name="Block player" xml:space="preserve">
+    <value>Oyuncuyu engelle</value>
+  </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>Engeli kaldır</value>
+  </data>
+  <data name="Blocked players" xml:space="preserve">
+    <value>Engellenen oyuncular</value>
+  </data>
+  <data name="No blocked players" xml:space="preserve">
+    <value>Engellenen oyuncu yok</value>
+  </data>
+  <data name="No friends added." xml:space="preserve">
+    <value>Arkadaş eklenmedi.</value>
+  </data>
+  <data name="Show blocked message" xml:space="preserve">
+    <value>Engellenen mesajı göster</value>
+  </data>
+  <data name="Your profile" xml:space="preserve">
+    <value>Profiliniz</value>
+  </data>
+  <data name="Save profile" xml:space="preserve">
+    <value>Profili kaydet</value>
+  </data>
+  <data name="Room browser" xml:space="preserve">
+    <value>Oda tarayıcısı</value>
+  </data>
+  <data name="Room" xml:space="preserve">
+    <value>Oda</value>
+  </data>
+  <data name="Selection" xml:space="preserve">
+    <value>Seçim</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Ayrıl</value>
+  </data>
+  <data name="Leave room" xml:space="preserve">
+    <value>Odadan ayrıl</value>
+  </data>
+  <data name="Abort" xml:space="preserve">
+    <value>Durdur</value>
+  </data>
+  <data name="Launch mine" xml:space="preserve">
+    <value>Oyunumu başlat</value>
+  </data>
+  <data name="Launch all" xml:space="preserve">
+    <value>Tümünü başlat</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Yenile</value>
+  </data>
+  <data name="Refresh rooms" xml:space="preserve">
+    <value>Odaları yenile</value>
+  </data>
+  <data name="Refresh presence" xml:space="preserve">
+    <value>Durumları yenile</value>
+  </data>
+  <data name="Reset column widths" xml:space="preserve">
+    <value>Sütun genişliklerini sıfırla</value>
+  </data>
+  <data name="Clear room filter" xml:space="preserve">
+    <value>Oda filtresini temizle</value>
+  </data>
+  <data name="Hide to tray" xml:space="preserve">
+    <value>Sistem tepsisine gizle</value>
+  </data>
+  <data name="Quit Fellowship" xml:space="preserve">
+    <value>Fellowship’ten çık</value>
+  </data>
+  <data name="Close window" xml:space="preserve">
+    <value>Pencereyi kapat</value>
+  </data>
+  <data name="Check for updates" xml:space="preserve">
+    <value>Güncellemeleri denetle</value>
+  </data>
+  <data name="Updates from GitHub" xml:space="preserve">
+    <value>GitHub güncellemeleri</value>
+  </data>
+  <data name="Download &amp; restart" xml:space="preserve">
+    <value>İndir ve yeniden başlat</value>
+  </data>
+  <data name="Preparing update…" xml:space="preserve">
+    <value>Güncelleme hazırlanıyor…</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Yeniden dene</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="Open log" xml:space="preserve">
+    <value>Günlüğü aç</value>
+  </data>
+  <data name="About Fellowship" xml:space="preserve">
+    <value>Fellowship hakkında</value>
+  </data>
+  <data name="Getting started" xml:space="preserve">
+    <value>Başlarken</value>
+  </data>
+  <data name="Game setup guide" xml:space="preserve">
+    <value>Oyun kurulum rehberi</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>Dosya</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>Görünüm</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Yardım</value>
+  </data>
+  <data name="TEAM" xml:space="preserve">
+    <value>TAKIM</value>
+  </data>
+  <data name="COLOR" xml:space="preserve">
+    <value>RENK</value>
+  </data>
+  <data name="MATCH SETUP" xml:space="preserve">
+    <value>MAÇ AYARLARI</value>
+  </data>
+  <data name="MATCH RULES" xml:space="preserve">
+    <value>MAÇ KURALLARI</value>
+  </data>
+  <data name="MAP PREVIEW" xml:space="preserve">
+    <value>HARİTA ÖNİZLEMESİ</value>
+  </data>
+  <data name="ROOM CHAT" xml:space="preserve">
+    <value>ODA SOHBETİ</value>
+  </data>
+  <data name="ROOM LIMIT (2–64)" xml:space="preserve">
+    <value>ODA SINIRI (2–64)</value>
+  </data>
+  <data name="STARTING TEAMS" xml:space="preserve">
+    <value>BAŞLANGIÇ TAKIMLARI</value>
+  </data>
+  <data name="VISIBILITY" xml:space="preserve">
+    <value>GÖRÜNÜRLÜK</value>
+  </data>
+  <data name="Clear my spot" xml:space="preserve">
+    <value>Konumumu temizle</value>
+  </data>
+  <data name="Save preset" xml:space="preserve">
+    <value>Ön ayarı kaydet</value>
+  </data>
+  <data name="Preset name" xml:space="preserve">
+    <value>Ön ayar adı</value>
+  </data>
+  <data name="Confirm name" xml:space="preserve">
+    <value>Adı onayla</value>
+  </data>
+  <data name="Confirm privacy" xml:space="preserve">
+    <value>Gizliliği onayla</value>
+  </data>
+  <data name="Map preview unavailable" xml:space="preserve">
+    <value>Harita önizlemesi kullanılamıyor</value>
+  </data>
+  <data name="Waiting for host" xml:space="preserve">
+    <value>Kurucu bekleniyor</value>
+  </data>
+  <data name="Joining room…" xml:space="preserve">
+    <value>Odaya katılınıyor…</value>
+  </data>
+  <data name="Connecting to the host" xml:space="preserve">
+    <value>Kurucuya bağlanılıyor</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>Oynat</value>
+  </data>
+  <data name="Gold" xml:space="preserve">
+    <value>Altın</value>
+  </data>
+  <data name="Red" xml:space="preserve">
+    <value>Kırmızı</value>
+  </data>
+  <data name="Blue" xml:space="preserve">
+    <value>Mavi</value>
+  </data>
+  <data name="Green" xml:space="preserve">
+    <value>Yeşil</value>
+  </data>
+  <data name="Yellow" xml:space="preserve">
+    <value>Sarı</value>
+  </data>
+  <data name="Purple" xml:space="preserve">
+    <value>Mor</value>
+  </data>
+  <data name="Orange" xml:space="preserve">
+    <value>Turuncu</value>
+  </data>
+  <data name="Pink" xml:space="preserve">
+    <value>Pembe</value>
+  </data>
+  <data name="Random" xml:space="preserve">
+    <value>Rastgele</value>
+  </data>
+  <data name="Connect your copy of The Battle for Middle-earth II." xml:space="preserve">
+    <value>The Battle for Middle-earth II kopyanızı bağlayın.</value>
+  </data>
+  <data name="Keep a copy of your preferences and contacts." xml:space="preserve">
+    <value>Tercihlerinizin ve kişilerinizin kopyasını saklayın.</value>
+  </data>
+  <data name="Updates" xml:space="preserve">
+    <value>Güncellemeler</value>
+  </data>
+  <data name="Set the volume and choose which events you hear." xml:space="preserve">
+    <value>Ses düzeyini ve duyacağınız olayları seçin.</value>
+  </data>
+  <data name="Notifications, game sync and startup." xml:space="preserve">
+    <value>Bildirimler, oyun eşitlemesi ve başlangıç.</value>
+  </data>
+  <data name="Select the same VPN network on both PCs. Selecting a network switches immediately and leaves your current room." xml:space="preserve">
+    <value>İki bilgisayarda aynı VPN ağını seçin. Ağ hemen değiştirilir ve mevcut odadan çıkılır.</value>
+  </data>
+  <data name="Double-click a friend to chat.&#10;Direct messages · no offline delivery" xml:space="preserve">
+    <value>Sohbet için arkadaşınıza çift tıklayın.
+Doğrudan mesajlar · çevrimdışı teslim yok</value>
+  </data>
+  <data name="Public rooms on your VPN appear automatically.&#10;If a room is missing, enter the host's VPN address and refresh." xml:space="preserve">
+    <value>VPN’inizdeki herkese açık odalar otomatik görünür.
+Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Fellowship applies your team and spot" xml:space="preserve">
+    <value>1   Çok Oyunculu → Ağ bölümünü açın
+2   Kurucu oluşturur, konuklar katılır
+3   Fellowship takım ve konumunuzu uygular</value>
+  </data>
+  <data name="Any room member can host BFME2. Map and rules sync through the BFME2 host; each player's selections sync locally. Join the native lobby manually." xml:space="preserve">
+    <value>Her üye BFME2 kurucusu olabilir. Harita ve kurallar BFME2 kurucusu üzerinden, oyuncu seçimleri yerel olarak eşitlenir. Oyun lobisine elle katılın.</value>
+  </data>
+  <data name="Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2." xml:space="preserve">
+    <value>Boş bir konuma tıklayın. Takımlar, konumlar ve renkler BFME2 LAN lobisinde iki yönlü eşitlenir. Kurucunun haritası ve kuralları da eşitlenir. BFME2’yi başlatmadan eşitlemeye izin verin.</value>
+  </data>
+  <data name="Live sync starts when BFME2 opens." xml:space="preserve">
+    <value>Canlı eşitleme BFME2 açılınca başlar.</value>
+  </data>
+  <data name="Room stays open when you exit the game." xml:space="preserve">
+    <value>Oyundan çıktığınızda oda açık kalır.</value>
+  </data>
+  <data name="ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE" xml:space="preserve">
+    <value>GÖNDERMEK İÇİN ENTER   ·   İKİ OYUNCU DA ÇEVRİMİÇİ OLMALI</value>
+  </data>
+  <data name="HOST IP" xml:space="preserve">
+    <value>KURUCU IP</value>
+  </data>
+  <data name="PLAYER SEARCH" xml:space="preserve">
+    <value>OYUNCU ARAMA</value>
+  </data>
+  <data name="Active players" xml:space="preserve">
+    <value>Aktif oyuncular</value>
+  </data>
+  <data name="YOU" xml:space="preserve">
+    <value>SİZ</value>
+  </data>
+  <data name="Sky Blue" xml:space="preserve">
+    <value>Gök mavisi</value>
+  </data>
+  <data name="Gray" xml:space="preserve">
+    <value>Gri</value>
+  </data>
+  <data name="White" xml:space="preserve">
+    <value>Beyaz</value>
+  </data>
+  <data name="0 rooms" xml:space="preserve">
+    <value>0 oda</value>
+  </data>
+  <data name="1 online" xml:space="preserve">
+    <value>1 çevrimiçi</value>
+  </data>
+  <data name="✓ Saved" xml:space="preserve">
+    <value>✓ Kaydedildi</value>
+  </data>
+  <data name="Public on VPN" xml:space="preserve">
+    <value>VPN’de herkese açık</value>
+  </data>
+  <data name="Friends only" xml:space="preserve">
+    <value>Yalnızca arkadaşlar</value>
+  </data>
+  <data name="Public" xml:space="preserve">
+    <value>Herkese açık</value>
+  </data>
+  <data name="In a room" xml:space="preserve">
+    <value>Bir odada</value>
+  </data>
+  <data name="In BFME2" xml:space="preserve">
+    <value>BFME2’de</value>
+  </data>
+  <data name="AFK · set manually" xml:space="preserve">
+    <value>Uzakta · elle ayarlandı</value>
+  </data>
+  <data name="AFK · idle" xml:space="preserve">
+    <value>Uzakta · boşta</value>
+  </data>
+  <data name="Offline / unreachable" xml:space="preserve">
+    <value>Çevrimdışı / ulaşılamıyor</value>
+  </data>
+  <data name="No friends added yet." xml:space="preserve">
+    <value>Henüz arkadaş eklenmedi.</value>
+  </data>
+  <data name="Find a player using the search above to start a conversation." xml:space="preserve">
+    <value>Sohbet başlatmak için yukarıdan bir oyuncu arayın.</value>
+  </data>
+  <data name="Custom Heroes" xml:space="preserve">
+    <value>Özel kahramanlar</value>
+  </data>
+  <data name="Ring Heroes" xml:space="preserve">
+    <value>Yüzük kahramanları</value>
+  </data>
+  <data name="Ready · allow host to launch BFME2" xml:space="preserve">
+    <value>Hazır · kurucunun BFME2’yi başlatmasına izin ver</value>
+  </data>
+  <data name="Don't ask again" xml:space="preserve">
+    <value>Bir daha sorma</value>
+  </data>
+  <data name="Custom preset" xml:space="preserve">
+    <value>Özel ön ayar</value>
+  </data>
+  <data name="Transfer host" xml:space="preserve">
+    <value>Kuruculuğu devret</value>
+  </data>
+  <data name="Kick from room" xml:space="preserve">
+    <value>Odadan çıkar</value>
+  </data>
+  <data name="Friend info" xml:space="preserve">
+    <value>Arkadaş bilgisi</value>
+  </data>
+  <data name="Unblock player" xml:space="preserve">
+    <value>Oyuncunun engelini kaldır</value>
+  </data>
+  <data name="Click to copy IP address" xml:space="preserve">
+    <value>IP adresini kopyalamak için tıklayın</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Kopyalandı</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Kullanılamıyor</value>
+  </data>
+  <data name="Invitation sent" xml:space="preserve">
+    <value>Davet gönderildi</value>
+  </data>
+  <data name="{0} minute ago" xml:space="preserve">
+    <value>{0} dakika önce</value>
+  </data>
+  <data name="{0} minutes ago" xml:space="preserve">
+    <value>{0} dakika önce</value>
+  </data>
+  <data name="{0} hour ago" xml:space="preserve">
+    <value>{0} saat önce</value>
+  </data>
+  <data name="{0} hours ago" xml:space="preserve">
+    <value>{0} saat önce</value>
+  </data>
+  <data name="BFME2 EXECUTABLE" xml:space="preserve">
+    <value>BFME2 ÇALIŞTIRILABİLİR DOSYASI</value>
+  </data>
+  <data name="Starting resources" xml:space="preserve">
+    <value>Başlangıç kaynakları</value>
+  </data>
+  <data name="Command points" xml:space="preserve">
+    <value>Komuta puanları</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Hazır</value>
+  </data>
+  <data name="Not ready" xml:space="preserve">
+    <value>Hazır değil</value>
+  </data>
+  <data name="Guest" xml:space="preserve">
+    <value>Konuk</value>
+  </data>
+  <data name="● VPN discovery active" xml:space="preserve">
+    <value>● VPN keşfi etkin</value>
+  </data>
+  <data name="○ Not connected" xml:space="preserve">
+    <value>○ Bağlı değil</value>
+  </data>
+</root>

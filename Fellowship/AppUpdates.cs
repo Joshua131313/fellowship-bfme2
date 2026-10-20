@@ -108,8 +108,8 @@ public static class AppUpdates
     }
     public static FrameworkElement Controls(Func<bool> inRoom)
     {
-        var panel=new StackPanel{Margin=new(0,22,0,0)};panel.Children.Add(UI.Text("FELLOWSHIP "+VersionText,11,UI.Muted,true));
-        var status=UI.Text("Updates from GitHub",11,UI.Muted);status.Margin=new(0,8,0,12);panel.Children.Add(status);
+        var panel=new StackPanel{Margin=new(0,22,0,0)};panel.Children.Add(UI.LocalizedText("FELLOWSHIP "+VersionText,11,UI.Muted,true));
+        var status=UI.LocalizedText("Updates from GitHub",11,UI.Muted);status.Margin=new(0,8,0,12);panel.Children.Add(status);
         Release? available=Available;
         var install=UI.AsyncButton("Download & restart",async()=>
         {

@@ -26,7 +26,7 @@ public static class SettingsBackup
     {
         target.SkipRemoveFriendConfirmation=source.SkipRemoveFriendConfirmation;target.SkipBlockConfirmation=source.SkipBlockConfirmation;
         target.FriendActivitySounds=source.FriendActivitySounds;target.DesktopNotifications=source.DesktopNotifications;
-        target.SoundsEnabled=source.SoundsEnabled;target.SoundVolume=source.SoundVolume;target.Appearance=source.Appearance;target.MutedSounds=source.MutedSounds.ToList();
+        target.Language=L.Languages.Any(l=>l.Code==source.Language)?source.Language:"en";L.Apply(target.Language);target.SoundsEnabled=source.SoundsEnabled;target.SoundVolume=source.SoundVolume;target.Appearance=source.Appearance;target.MutedSounds=source.MutedSounds.ToList();
         target.Name=source.Name;target.MessageSounds=source.MessageSounds;target.LiveGameSync=source.LiveGameSync;
         target.PreferredColor=source.PreferredColor;target.LastSelectedColor=source.LastSelectedColor;target.PreferredMapSpots=new(source.PreferredMapSpots);
         target.Friends=source.Friends.ToList();target.BlockedUsers=source.BlockedUsers.ToArray();target.RoomPresets=source.RoomPresets.Select(p=>p with{BuiltIn=false}).ToList();

@@ -105,8 +105,10 @@ public partial class App : Application
         activateEvent=new EventWaitHandle(false,EventResetMode.AutoReset,@"Local\Fellowship.Activate."+identity);
         if(!first){activateEvent.Set();Shutdown();return;}
         _=Task.Run(async()=>{await Task.Delay(3000);UpdateCache.CleanInstalledCache();});
-        Appearance.Apply(Settings.Load().Appearance);
-        var main = new BrowserWindow();
+        var settings=Settings.Load();L.Apply(settings.Language);Appearance.Apply(settings.Appearance);
+        ShutdownMode=ShutdownMode.OnExplicitShutdown;
+        if(!settings.OnboardingCompleted&&!e.Args.Contains("--startup"))await UI.ShowPopup(new OnboardingWindow(settings));
+        var main = new BrowserWindow(settings);
         MainWindow = main;
         ShutdownMode=ShutdownMode.OnExplicitShutdown;
         tray=new TrayIcon(main);

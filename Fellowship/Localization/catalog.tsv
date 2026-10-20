@@ -1,0 +1,240 @@
+English	French	Spanish	Arabic	Turkish
+Welcome to Fellowship	Bienvenue dans Fellowship	Te damos la bienvenida a Fellowship	مرحبًا بك في Fellowship	Fellowship’e hoş geldiniz
+Choose your defaults	Choisissez vos préférences	Elige tus preferencias	اختر تفضيلاتك الافتراضية	Varsayılan tercihlerinizi seçin
+You can change these preferences later in Settings.	Vous pourrez modifier ces préférences dans les paramètres.	Puedes cambiar estas preferencias después en Ajustes.	يمكنك تغيير هذه التفضيلات لاحقًا في الإعدادات.	Bu tercihleri daha sonra Ayarlar’dan değiştirebilirsiniz.
+Language	Langue	Idioma	اللغة	Dil
+Appearance	Apparence	Apariencia	المظهر	Görünüm
+Sound	Son	Sonido	الصوت	Ses
+Enable app sounds	Activer les sons	Activar sonidos	تفعيل أصوات التطبيق	Uygulama seslerini etkinleştir
+Volume	Volume	Volumen	مستوى الصوت	Ses düzeyi
+Continue	Continuer	Continuar	متابعة	Devam
+Back	Retour	Atrás	رجوع	Geri
+Get started	Commencer	Empezar	ابدأ	Başla
+Use defaults	Utiliser les valeurs par défaut	Usar valores predeterminados	استخدام الإعدادات الافتراضية	Varsayılanları kullan
+Onboarding	Configuration initiale	Configuración inicial	الإعداد الأولي	İlk kurulum
+Open onboarding	Ouvrir la configuration initiale	Abrir configuración inicial	فتح الإعداد الأولي	İlk kurulumu aç
+Settings	Paramètres	Ajustes	الإعدادات	Ayarlar
+Dashboard	Tableau de bord	Panel principal	لوحة التحكم	Kontrol paneli
+Game rooms	Salons de jeu	Salas de juego	غرف اللعب	Oyun odaları
+Game preferences	Préférences de jeu	Preferencias de juego	تفضيلات اللعبة	Oyun tercihleri
+Messages	Messages	Mensajes	الرسائل	Mesajlar
+Friends	Amis	Amigos	الأصدقاء	Arkadaşlar
+WORKSPACE	ESPACE DE TRAVAIL	ESPACIO DE TRABAJO	مساحة العمل	ÇALIŞMA ALANI
+TOOLS	OUTILS	HERRAMIENTAS	الأدوات	ARAÇLAR
+Help & guide	Aide et guide	Ayuda y guía	المساعدة والدليل	Yardım ve rehber
+Edit profile	Modifier le profil	Editar perfil	تعديل الملف الشخصي	Profili düzenle
+Set myself AFK	Me déclarer absent	Marcarme ausente	تعيين حالتي غائبًا	Kendimi uzakta olarak işaretle
+Set available	Me déclarer disponible	Marcarme disponible	تعيين حالتي متاحًا	Müsait olarak işaretle
+Available	Disponible	Disponible	متاح	Müsait
+AFK	Absent	Ausente	غائب	Uzakta
+Online	En ligne	En línea	متصل	Çevrimiçi
+Offline	Hors ligne	Desconectado	غير متصل	Çevrimdışı
+Reconnecting	Reconnexion	Reconectando	إعادة الاتصال	Yeniden bağlanıyor
+Not connected	Non connecté	Sin conexión	غير متصل	Bağlı değil
+Connecting…	Connexion…	Conectando…	جارٍ الاتصال…	Bağlanıyor…
+SERVER	SERVEUR	SERVIDOR	الخادم	SUNUCU
+Select a server to find its rooms	Choisissez un serveur pour trouver ses salons	Elige un servidor para encontrar sus salas	اختر خادمًا للعثور على غرفه	Odalarını bulmak için bir sunucu seçin
+Search players…	Rechercher des joueurs…	Buscar jugadores…	ابحث عن لاعبين…	Oyuncu ara…
+Search rooms…	Rechercher des salons…	Buscar salas…	ابحث عن غرف…	Oda ara…
+Host room	Créer un salon	Crear sala	إنشاء غرفة	Oda kur
+Create room	Créer le salon	Crear sala	إنشاء غرفة	Oda oluştur
+Create a room	Créer un salon	Crear una sala	إنشاء غرفة	Oda oluştur
+Join room	Rejoindre le salon	Unirse a la sala	الانضمام إلى الغرفة	Odaya katıl
+Open room	Ouvrir le salon	Abrir sala	فتح الغرفة	Odayı aç
+Room preview	Aperçu du salon	Vista previa de la sala	معاينة الغرفة	Oda önizlemesi
+No rooms found	Aucun salon trouvé	No se encontraron salas	لم يتم العثور على غرف	Oda bulunamadı
+All modes	Tous les modes	Todos los modos	كل الأنماط	Tüm modlar
+Custom	Personnalisé	Personalizado	مخصص	Özel
+ROOM NAME	NOM DU SALON	NOMBRE DE SALA	اسم الغرفة	ODA ADI
+MODE	MODE	MODO	النمط	MOD
+HOST	HÔTE	ANFITRIÓN	المضيف	KURUCU
+MAP	CARTE	MAPA	الخريطة	HARİTA
+PLAYERS	JOUEURS	JUGADORES	اللاعبون	OYUNCULAR
+PATCH	VERSION	VERSIÓN	الإصدار	SÜRÜM
+PING	LATENCE	LATENCIA	زمن الاستجابة	GECİKME
+STATUS	ÉTAT	ESTADO	الحالة	DURUM
+PREFERRED COLOR	COULEUR PRÉFÉRÉE	COLOR PREFERIDO	اللون المفضل	TERCİH EDİLEN RENK
+Applied when joining, if your choices are available.	Appliqué à l’entrée si vos choix sont disponibles.	Se aplica al unirte si tus opciones están disponibles.	تُطبق عند الانضمام إذا كانت اختياراتك متاحة.	Seçimleriniz uygunsa katılırken uygulanır.
+Clear this map’s preference	Effacer la préférence de cette carte	Borrar preferencia de este mapa	مسح تفضيل هذه الخريطة	Bu haritanın tercihini temizle
+Changes save automatically	Les modifications sont enregistrées automatiquement	Los cambios se guardan automáticamente	تُحفظ التغييرات تلقائيًا	Değişiklikler otomatik kaydedilir
+Dark	Sombre	Oscuro	داكن	Koyu
+Black	Noir	Negro	أسود	Siyah
+Light	Clair	Claro	فاتح	Açık
+System	Système	Sistema	النظام	Sistem
+Profile & connection	Profil et connexion	Perfil y conexión	الملف الشخصي والاتصال	Profil ve bağlantı
+How other players find you.	Comment les autres joueurs vous trouvent.	Cómo te encuentran otros jugadores.	كيف يعثر عليك اللاعبون الآخرون.	Diğer oyuncuların sizi bulma şekli.
+NICKNAME	PSEUDO	APODO	الاسم المستعار	TAKMA AD
+NETWORK INTERFACE	INTERFACE RÉSEAU	INTERFAZ DE RED	واجهة الشبكة	AĞ ARAYÜZÜ
+Select a network…	Choisir un réseau…	Elige una red…	اختر شبكة…	Bir ağ seçin…
+Game installation	Installation du jeu	Instalación del juego	تثبيت اللعبة	Oyun kurulumu
+Browse files…	Parcourir les fichiers…	Buscar archivos…	استعراض الملفات…	Dosyalara göz at…
+Backup & restore	Sauvegarde et restauration	Copia de seguridad y restauración	النسخ الاحتياطي والاستعادة	Yedekleme ve geri yükleme
+Export backup	Exporter une sauvegarde	Exportar copia de seguridad	تصدير نسخة احتياطية	Yedeği dışa aktar
+Restore backup	Restaurer une sauvegarde	Restaurar copia de seguridad	استعادة نسخة احتياطية	Yedeği geri yükle
+Preferences folder	Dossier des préférences	Carpeta de preferencias	مجلد التفضيلات	Tercihler klasörü
+Choose a theme, or follow Windows.	Choisissez un thème ou suivez Windows.	Elige un tema o sigue Windows.	اختر مظهرًا أو اتبع إعدادات Windows.	Bir tema seçin veya Windows’u izleyin.
+Control the sounds you hear.	Contrôlez les sons que vous entendez.	Controla los sonidos que escuchas.	تحكم في الأصوات التي تسمعها.	Duyduğunuz sesleri kontrol edin.
+Choose sounds & preview	Choisir et écouter les sons	Elegir y probar sonidos	اختيار الأصوات ومعاينتها	Sesleri seç ve önizle
+App behavior	Comportement de l’application	Comportamiento de la aplicación	سلوك التطبيق	Uygulama davranışı
+Notifications, startup, and live game sync.	Notifications, démarrage et synchronisation du jeu.	Notificaciones, inicio y sincronización del juego.	الإشعارات وبدء التشغيل ومزامنة اللعبة.	Bildirimler, başlangıç ve canlı oyun eşitlemesi.
+Chat, invitation and room activity sounds	Sons de discussion, d’invitation et de salon	Sonidos de chat, invitaciones y salas	أصوات المحادثة والدعوات ونشاط الغرفة	Sohbet, davet ve oda etkinliği sesleri
+Player online and offline sounds	Sons de connexion et déconnexion des joueurs	Sonidos de conexión y desconexión de jugadores	أصوات اتصال اللاعبين وانقطاعهم	Oyuncu çevrimiçi ve çevrimdışı sesleri
+Windows notifications for friends and new rooms	Notifications Windows pour les amis et nouveaux salons	Notificaciones de Windows para amigos y salas nuevas	إشعارات Windows للأصدقاء والغرف الجديدة	Arkadaşlar ve yeni odalar için Windows bildirimleri
+Live BFME2 synchronization	Synchronisation BFME2 en direct	Sincronización de BFME2 en vivo	مزامنة BFME2 المباشرة	Canlı BFME2 eşitlemesi
+Start in the tray at Windows sign-in	Démarrer dans la zone de notification à l’ouverture de Windows	Iniciar en la bandeja al entrar en Windows	البدء في علبة النظام عند تسجيل الدخول إلى Windows	Windows oturumunda sistem tepsisinde başlat
+Make Fellowship feel at home. Changes apply and save automatically.	Personnalisez Fellowship. Les modifications s’appliquent et s’enregistrent automatiquement.	Personaliza Fellowship. Los cambios se aplican y guardan automáticamente.	خصص Fellowship. تُطبق التغييرات وتُحفظ تلقائيًا.	Fellowship’i kişiselleştirin. Değişiklikler otomatik uygulanır ve kaydedilir.
+Close	Fermer	Cerrar	إغلاق	Kapat
+Cancel	Annuler	Cancelar	إلغاء	İptal
+Send	Envoyer	Enviar	إرسال	Gönder
+Message	Message	Mensaje	رسالة	Mesaj
+Send message	Envoyer un message	Enviar mensaje	إرسال رسالة	Mesaj gönder
+Copy message	Copier le message	Copiar mensaje	نسخ الرسالة	Mesajı kopyala
+Copy selected text	Copier le texte sélectionné	Copiar texto seleccionado	نسخ النص المحدد	Seçili metni kopyala
+Select all	Tout sélectionner	Seleccionar todo	تحديد الكل	Tümünü seç
+Player info	Infos du joueur	Información del jugador	معلومات اللاعب	Oyuncu bilgisi
+Activity	Activité	Actividad	النشاط	Etkinlik
+Idle for	Inactif depuis	Inactivo desde hace	مدة الخمول	Boşta kalma süresi
+Online since	En ligne depuis	En línea desde	متصل منذ	Çevrimiçi olduğu zaman
+Last online	Dernière connexion	Última conexión	آخر اتصال	Son çevrimiçi
+Offline since	Hors ligne depuis	Desconectado desde	غير متصل منذ	Çevrimdışı olduğu zaman
+VPN address	Adresse VPN	Dirección VPN	عنوان VPN	VPN adresi
+Ping	Latence	Latencia	زمن الاستجابة	Gecikme
+Not observed	Non observé	Sin datos	غير مرصود	Gözlemlenmedi
+Just now	À l’instant	Ahora mismo	الآن	Az önce
+Add friend	Ajouter un ami	Añadir amigo	إضافة صديق	Arkadaş ekle
+Remove friend	Supprimer l’ami	Eliminar amigo	إزالة الصديق	Arkadaşı kaldır
+Manage friends	Gérer les amis	Administrar amigos	إدارة الأصدقاء	Arkadaşları yönet
+Friends list	Liste d’amis	Lista de amigos	قائمة الأصدقاء	Arkadaş listesi
+YOUR FRIENDS	VOS AMIS	TUS AMIGOS	أصدقاؤك	ARKADAŞLARINIZ
+ONLINE	EN LIGNE	EN LÍNEA	متصل	ÇEVRİMİÇİ
+OFFLINE / NOT REACHABLE	HORS LIGNE / INJOIGNABLE	DESCONECTADO / NO DISPONIBLE	غير متصل / يتعذر الوصول إليه	ÇEVRİMDIŞI / ULAŞILAMIYOR
+Invite to room	Inviter dans le salon	Invitar a la sala	دعوة إلى الغرفة	Odaya davet et
+Block player	Bloquer le joueur	Bloquear jugador	حظر اللاعب	Oyuncuyu engelle
+Unblock	Débloquer	Desbloquear	إلغاء الحظر	Engeli kaldır
+Blocked players	Joueurs bloqués	Jugadores bloqueados	اللاعبون المحظورون	Engellenen oyuncular
+No blocked players	Aucun joueur bloqué	No hay jugadores bloqueados	لا يوجد لاعبون محظورون	Engellenen oyuncu yok
+No friends added.	Aucun ami ajouté.	No se añadieron amigos.	لم تتم إضافة أصدقاء.	Arkadaş eklenmedi.
+Show blocked message	Afficher le message bloqué	Mostrar mensaje bloqueado	عرض الرسالة المحظورة	Engellenen mesajı göster
+Your profile	Votre profil	Tu perfil	ملفك الشخصي	Profiliniz
+Save profile	Enregistrer le profil	Guardar perfil	حفظ الملف الشخصي	Profili kaydet
+Room browser	Liste des salons	Explorador de salas	متصفح الغرف	Oda tarayıcısı
+Room	Salon	Sala	الغرفة	Oda
+Selection	Sélection	Selección	الاختيار	Seçim
+Leave	Quitter	Salir	مغادرة	Ayrıl
+Leave room	Quitter le salon	Salir de la sala	مغادرة الغرفة	Odadan ayrıl
+Abort	Arrêter	Abortar	إيقاف	Durdur
+Launch mine	Lancer mon jeu	Iniciar mi juego	تشغيل لعبتي	Oyunumu başlat
+Launch all	Lancer tous les jeux	Iniciar todos	تشغيل الجميع	Tümünü başlat
+Refresh	Actualiser	Actualizar	تحديث	Yenile
+Refresh rooms	Actualiser les salons	Actualizar salas	تحديث الغرف	Odaları yenile
+Refresh presence	Actualiser les présences	Actualizar estados	تحديث الحالات	Durumları yenile
+Reset column widths	Réinitialiser les largeurs des colonnes	Restablecer anchos de columnas	إعادة تعيين عرض الأعمدة	Sütun genişliklerini sıfırla
+Clear room filter	Effacer le filtre des salons	Borrar filtro de salas	مسح مرشح الغرف	Oda filtresini temizle
+Hide to tray	Réduire dans la zone de notification	Minimizar a la bandeja	إخفاء في علبة النظام	Sistem tepsisine gizle
+Quit Fellowship	Quitter Fellowship	Salir de Fellowship	إنهاء Fellowship	Fellowship’ten çık
+Close window	Fermer la fenêtre	Cerrar ventana	إغلاق النافذة	Pencereyi kapat
+Check for updates	Rechercher des mises à jour	Buscar actualizaciones	التحقق من التحديثات	Güncellemeleri denetle
+Updates from GitHub	Mises à jour depuis GitHub	Actualizaciones desde GitHub	تحديثات من GitHub	GitHub güncellemeleri
+Download & restart	Télécharger et redémarrer	Descargar y reiniciar	تنزيل وإعادة تشغيل	İndir ve yeniden başlat
+Preparing update…	Préparation de la mise à jour…	Preparando actualización…	جارٍ تحضير التحديث…	Güncelleme hazırlanıyor…
+Retry	Réessayer	Reintentar	إعادة المحاولة	Yeniden dene
+Dismiss	Ignorer	Descartar	تجاهل	Kapat
+Open log	Ouvrir le journal	Abrir registro	فتح السجل	Günlüğü aç
+About Fellowship	À propos de Fellowship	Acerca de Fellowship	حول Fellowship	Fellowship hakkında
+Getting started	Premiers pas	Primeros pasos	البدء	Başlarken
+Game setup guide	Guide de configuration du jeu	Guía de configuración del juego	دليل إعداد اللعبة	Oyun kurulum rehberi
+File	Fichier	Archivo	ملف	Dosya
+Edit	Édition	Editar	تحرير	Düzenle
+View	Affichage	Ver	عرض	Görünüm
+Help	Aide	Ayuda	مساعدة	Yardım
+TEAM	ÉQUIPE	EQUIPO	الفريق	TAKIM
+COLOR	COULEUR	COLOR	اللون	RENK
+MATCH SETUP	CONFIGURATION DE PARTIE	CONFIGURACIÓN DE PARTIDA	إعداد المباراة	MAÇ AYARLARI
+MATCH RULES	RÈGLES DE PARTIE	REGLAS DE PARTIDA	قواعد المباراة	MAÇ KURALLARI
+MAP PREVIEW	APERÇU DE LA CARTE	VISTA PREVIA DEL MAPA	معاينة الخريطة	HARİTA ÖNİZLEMESİ
+ROOM CHAT	DISCUSSION DU SALON	CHAT DE LA SALA	محادثة الغرفة	ODA SOHBETİ
+ROOM LIMIT (2–64)	LIMITE DU SALON (2–64)	LÍMITE DE SALA (2–64)	حد الغرفة (2–64)	ODA SINIRI (2–64)
+STARTING TEAMS	ÉQUIPES DE DÉPART	EQUIPOS INICIALES	الفرق الأولية	BAŞLANGIÇ TAKIMLARI
+VISIBILITY	VISIBILITÉ	VISIBILIDAD	الظهور	GÖRÜNÜRLÜK
+Clear my spot	Libérer ma place	Liberar mi posición	إخلاء موقعي	Konumumu temizle
+Save preset	Enregistrer le préréglage	Guardar configuración	حفظ الإعداد المسبق	Ön ayarı kaydet
+Preset name	Nom du préréglage	Nombre de configuración	اسم الإعداد المسبق	Ön ayar adı
+Confirm name	Confirmer le nom	Confirmar nombre	تأكيد الاسم	Adı onayla
+Confirm privacy	Confirmer la confidentialité	Confirmar privacidad	تأكيد الخصوصية	Gizliliği onayla
+Map preview unavailable	Aperçu de carte indisponible	Vista previa no disponible	معاينة الخريطة غير متاحة	Harita önizlemesi kullanılamıyor
+Waiting for host	En attente de l’hôte	Esperando al anfitrión	بانتظار المضيف	Kurucu bekleniyor
+Joining room…	Connexion au salon…	Uniéndose a la sala…	جارٍ الانضمام إلى الغرفة…	Odaya katılınıyor…
+Connecting to the host	Connexion à l’hôte	Conectando con el anfitrión	الاتصال بالمضيف	Kurucuya bağlanılıyor
+Play	Écouter	Reproducir	تشغيل	Oynat
+Gold	Or	Dorado	ذهبي	Altın
+Red	Rouge	Rojo	أحمر	Kırmızı
+Blue	Bleu	Azul	أزرق	Mavi
+Green	Vert	Verde	أخضر	Yeşil
+Yellow	Jaune	Amarillo	أصفر	Sarı
+Purple	Violet	Morado	بنفسجي	Mor
+Orange	Orange	Naranja	برتقالي	Turuncu
+Pink	Rose	Rosa	وردي	Pembe
+Random	Aléatoire	Aleatorio	عشوائي	Rastgele
+Connect your copy of The Battle for Middle-earth II.	Connectez votre copie de The Battle for Middle-earth II.	Conecta tu copia de The Battle for Middle-earth II.	حدد نسختك من The Battle for Middle-earth II.	The Battle for Middle-earth II kopyanızı bağlayın.
+Keep a copy of your preferences and contacts.	Conservez une copie de vos préférences et contacts.	Guarda una copia de tus preferencias y contactos.	احتفظ بنسخة من تفضيلاتك وجهات اتصالك.	Tercihlerinizin ve kişilerinizin kopyasını saklayın.
+Updates	Mises à jour	Actualizaciones	التحديثات	Güncellemeler
+Set the volume and choose which events you hear.	Réglez le volume et choisissez les événements sonores.	Ajusta el volumen y elige qué eventos escuchar.	اضبط مستوى الصوت واختر الأحداث التي تسمعها.	Ses düzeyini ve duyacağınız olayları seçin.
+Notifications, game sync and startup.	Notifications, synchronisation du jeu et démarrage.	Notificaciones, sincronización del juego e inicio.	الإشعارات ومزامنة اللعبة وبدء التشغيل.	Bildirimler, oyun eşitlemesi ve başlangıç.
+Select the same VPN network on both PCs. Selecting a network switches immediately and leaves your current room.	Choisissez le même réseau VPN sur les deux PC. Le changement est immédiat et quitte le salon actuel.	Elige la misma red VPN en ambos equipos. El cambio es inmediato y abandona la sala actual.	اختر شبكة VPN نفسها على الجهازين. يتم التبديل فورًا مع مغادرة غرفتك الحالية.	İki bilgisayarda aynı VPN ağını seçin. Ağ hemen değiştirilir ve mevcut odadan çıkılır.
+Double-click a friend to chat.\nDirect messages · no offline delivery	Double-cliquez sur un ami pour discuter.\nMessages directs · aucune livraison hors ligne	Haz doble clic en un amigo para chatear.\nMensajes directos · sin entrega sin conexión	انقر مرتين على صديق للمحادثة.\nرسائل مباشرة · لا تسليم دون اتصال	Sohbet için arkadaşınıza çift tıklayın.\nDoğrudan mesajlar · çevrimdışı teslim yok
+Public rooms on your VPN appear automatically.\nIf a room is missing, enter the host's VPN address and refresh.	Les salons publics de votre VPN apparaissent automatiquement.\nSi un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.	Las salas públicas de tu VPN aparecen automáticamente.\nSi falta una sala, introduce la dirección VPN del anfitrión y actualiza.	تظهر الغرف العامة على شبكة VPN تلقائيًا.\nإذا كانت غرفة مفقودة، أدخل عنوان VPN للمضيف وحدّث القائمة.	VPN’inizdeki herkese açık odalar otomatik görünür.\nBir oda eksikse kurucunun VPN adresini girip yenileyin.
+1   Open Multiplayer → Network\n2   Host creates; guests join\n3   Fellowship applies your team and spot	1   Ouvrez Multijoueur → Réseau\n2   L’hôte crée, les invités rejoignent\n3   Fellowship applique votre équipe et position	1   Abre Multijugador → Red\n2   El anfitrión crea y los invitados se unen\n3   Fellowship aplica tu equipo y posición	1   افتح اللعب الجماعي ← الشبكة\n2   ينشئ المضيف الغرفة وينضم الضيوف\n3   يطبق Fellowship فريقك وموقعك	1   Çok Oyunculu → Ağ bölümünü açın\n2   Kurucu oluşturur, konuklar katılır\n3   Fellowship takım ve konumunuzu uygular
+Any room member can host BFME2. Map and rules sync through the BFME2 host; each player's selections sync locally. Join the native lobby manually.	Tout membre peut héberger BFME2. Carte et règles sont synchronisées via l’hôte BFME2 ; les choix individuels sont synchronisés localement. Rejoignez le salon du jeu manuellement.	Cualquier miembro puede alojar BFME2. El mapa y las reglas se sincronizan mediante el anfitrión; las selecciones individuales, localmente. Únete al lobby del juego manualmente.	يمكن لأي عضو استضافة BFME2. تتزامن الخريطة والقواعد عبر مضيف اللعبة، وتتزامن اختيارات كل لاعب محليًا. انضم إلى ردهة اللعبة يدويًا.	Her üye BFME2 kurucusu olabilir. Harita ve kurallar BFME2 kurucusu üzerinden, oyuncu seçimleri yerel olarak eşitlenir. Oyun lobisine elle katılın.
+Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.	Cliquez sur une place libre. Équipes, positions et couleurs sont synchronisées dans les deux sens dans le salon LAN BFME2, ainsi que la carte et les règles de l’hôte. Autorisez la synchronisation avant de lancer BFME2.	Haz clic en una posición libre. Equipos, posiciones y colores se sincronizan en ambas direcciones en el lobby LAN de BFME2, junto con el mapa y las reglas del anfitrión. Autoriza la sincronización antes de iniciar BFME2.	انقر على موقع فارغ لحجزه. تتزامن الفرق والمواقع والألوان في الاتجاهين داخل ردهة LAN للعبة BFME2، وكذلك خريطة المضيف وقواعده. وافق على إذن المزامنة قبل التشغيل.	Boş bir konuma tıklayın. Takımlar, konumlar ve renkler BFME2 LAN lobisinde iki yönlü eşitlenir. Kurucunun haritası ve kuralları da eşitlenir. BFME2’yi başlatmadan eşitlemeye izin verin.
+Live sync starts when BFME2 opens.	La synchronisation commence à l’ouverture de BFME2.	La sincronización comienza al abrir BFME2.	تبدأ المزامنة عند فتح BFME2.	Canlı eşitleme BFME2 açılınca başlar.
+Room stays open when you exit the game.	Le salon reste ouvert quand vous quittez le jeu.	La sala permanece abierta al salir del juego.	تبقى الغرفة مفتوحة عند الخروج من اللعبة.	Oyundan çıktığınızda oda açık kalır.
+ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE	ENTRÉE POUR ENVOYER   ·   LES DEUX JOUEURS DOIVENT ÊTRE EN LIGNE	INTRO PARA ENVIAR   ·   AMBOS JUGADORES DEBEN ESTAR EN LÍNEA	ENTER للإرسال   ·   يجب أن يكون اللاعبان متصلين	GÖNDERMEK İÇİN ENTER   ·   İKİ OYUNCU DA ÇEVRİMİÇİ OLMALI
+HOST IP	IP DE L’HÔTE	IP DEL ANFITRIÓN	عنوان IP للمضيف	KURUCU IP
+PLAYER SEARCH	RECHERCHE DE JOUEURS	BUSCAR JUGADORES	البحث عن لاعبين	OYUNCU ARAMA
+Active players	Joueurs actifs	Jugadores activos	اللاعبون النشطون	Aktif oyuncular
+YOU	VOUS	TÚ	أنت	SİZ
+Sky Blue	Bleu ciel	Azul cielo	أزرق سماوي	Gök mavisi
+Gray	Gris	Gris	رمادي	Gri
+White	Blanc	Blanco	أبيض	Beyaz
+0 rooms	0 salon	0 salas	0 غرف	0 oda
+1 online	1 en ligne	1 en línea	1 متصل	1 çevrimiçi
+✓ Saved	✓ Enregistré	✓ Guardado	✓ تم الحفظ	✓ Kaydedildi
+Public on VPN	Public sur VPN	Pública en VPN	عامة على VPN	VPN’de herkese açık
+Friends only	Amis uniquement	Solo amigos	الأصدقاء فقط	Yalnızca arkadaşlar
+Public	Public	Pública	عامة	Herkese açık
+In a room	Dans un salon	En una sala	في غرفة	Bir odada
+In BFME2	Dans BFME2	En BFME2	داخل BFME2	BFME2’de
+AFK · set manually	Absent · défini manuellement	Ausente · estado manual	غائب · محدد يدويًا	Uzakta · elle ayarlandı
+AFK · idle	Absent · inactif	Ausente · inactivo	غائب · خامل	Uzakta · boşta
+Offline / unreachable	Hors ligne / injoignable	Desconectado / inaccesible	غير متصل / يتعذر الوصول إليه	Çevrimdışı / ulaşılamıyor
+No friends added yet.	Aucun ami ajouté pour le moment.	Todavía no has añadido amigos.	لم تتم إضافة أصدقاء بعد.	Henüz arkadaş eklenmedi.
+Find a player using the search above to start a conversation.	Recherchez un joueur ci-dessus pour commencer une conversation.	Busca un jugador arriba para iniciar una conversación.	ابحث عن لاعب أعلاه لبدء محادثة.	Sohbet başlatmak için yukarıdan bir oyuncu arayın.
+Custom Heroes	Héros personnalisés	Héroes personalizados	الأبطال المخصصون	Özel kahramanlar
+Ring Heroes	Héros de l’Anneau	Héroes del Anillo	أبطال الخاتم	Yüzük kahramanları
+Ready · allow host to launch BFME2	Prêt · autoriser l’hôte à lancer BFME2	Listo · permitir al anfitrión iniciar BFME2	جاهز · السماح للمضيف بتشغيل BFME2	Hazır · kurucunun BFME2’yi başlatmasına izin ver
+Don't ask again	Ne plus demander	No volver a preguntar	عدم السؤال مجددًا	Bir daha sorma
+Custom preset	Préréglage personnalisé	Configuración personalizada	إعداد مسبق مخصص	Özel ön ayar
+Transfer host	Transférer le rôle d’hôte	Transferir anfitrión	نقل الاستضافة	Kuruculuğu devret
+Kick from room	Exclure du salon	Expulsar de la sala	طرد من الغرفة	Odadan çıkar
+Friend info	Infos de l’ami	Información del amigo	معلومات الصديق	Arkadaş bilgisi
+Unblock player	Débloquer le joueur	Desbloquear jugador	إلغاء حظر اللاعب	Oyuncunun engelini kaldır
+Click to copy IP address	Cliquez pour copier l’adresse IP	Haz clic para copiar la dirección IP	انقر لنسخ عنوان IP	IP adresini kopyalamak için tıklayın
+Copied	Copié	Copiado	تم النسخ	Kopyalandı
+Unavailable	Indisponible	No disponible	غير متاح	Kullanılamıyor
+Nickname	Pseudo	Apodo	الاسم المستعار	Takma ad
+Invitation sent	Invitation envoyée	Invitación enviada	تم إرسال الدعوة	Davet gönderildi
+{0} minute ago	il y a {0} minute	hace {0} minuto	قبل {0} دقيقة	{0} dakika önce
+{0} minutes ago	il y a {0} minutes	hace {0} minutos	قبل {0} دقيقة	{0} dakika önce
+{0} hour ago	il y a {0} heure	hace {0} hora	قبل {0} ساعة	{0} saat önce
+{0} hours ago	il y a {0} heures	hace {0} horas	قبل {0} ساعة	{0} saat önce
+BFME2 EXECUTABLE	EXÉCUTABLE BFME2	EJECUTABLE DE BFME2	ملف تشغيل BFME2	BFME2 ÇALIŞTIRILABİLİR DOSYASI
+Starting resources	Ressources de départ	Recursos iniciales	الموارد الأولية	Başlangıç kaynakları
+Command points	Points de commandement	Puntos de mando	نقاط القيادة	Komuta puanları
+STARTING RESOURCES	RESSOURCES DE DÉPART	RECURSOS INICIALES	الموارد الأولية	BAŞLANGIÇ KAYNAKLARI
+COMMAND POINTS	POINTS DE COMMANDEMENT	PUNTOS DE MANDO	نقاط القيادة	KOMUTA PUANLARI
+Ready	Prêt	Listo	جاهز	Hazır
+Not ready	Pas prêt	No listo	غير جاهز	Hazır değil
+Host	Hôte	Anfitrión	المضيف	Kurucu
+Guest	Invité	Invitado	ضيف	Konuk
+● VPN discovery active	● Découverte VPN active	● Detección VPN activa	● اكتشاف VPN نشط	● VPN keşfi etkin
+○ Not connected	○ Non connecté	○ Sin conexión	○ غير متصل	○ Bağlı değil
