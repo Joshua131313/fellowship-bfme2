@@ -197,12 +197,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.119-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.119/Fellowship-0.1.119-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.119",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.120-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.120/Fellowship-0.1.120-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.120",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.119","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.119",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.120","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.120",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -313,7 +313,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.119"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.119/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.120"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.120/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -362,6 +362,21 @@ class Program
   widthsBrowser.Peer.Dispose();
   Console.WriteLine("PASS room sorting persistence and header indicators");
   Render(dashboardPreview,"dist/preview-dashboard-rooms.png");
+  var roomLayout=(System.Windows.Controls.Grid)typeof(BrowserWindow).GetField("dashboardRooms",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(dashboardPreview)!;
+  double previousTableHeight=0;
+  foreach(double height in new[]{500.0,800.0})
+  {
+    roomLayout.Measure(new Size(1000,height));roomLayout.Arrange(new Rect(0,0,1000,height));roomLayout.UpdateLayout();
+    var tableFrame=roomLayout.Children.OfType<FrameworkElement>().Single(e=>System.Windows.Controls.Grid.GetRow(e)==3);
+    var footerFrame=roomLayout.Children.OfType<FrameworkElement>().Single(e=>System.Windows.Controls.Grid.GetRow(e)==4);
+    var statusFrame=roomLayout.Children.OfType<FrameworkElement>().Single(e=>System.Windows.Controls.Grid.GetRow(e)==5);
+    double footerTop=footerFrame.TranslatePoint(new Point(),roomLayout).Y,statusTop=statusFrame.TranslatePoint(new Point(),roomLayout).Y;
+    if(tableFrame.ActualHeight<180||footerTop+footerFrame.ActualHeight>statusTop+.1||statusTop+statusFrame.ActualHeight>height+.1)
+      throw new Exception("Room table or bottom controls clipped/overlapping");
+    if(previousTableHeight>0&&tableFrame.ActualHeight<previousTableHeight+299)throw new Exception("Room table does not absorb extra window height");
+    previousTableHeight=tableFrame.ActualHeight;
+  }
+  Console.WriteLine("PASS room table fills remaining height and footer stays above status bar at compact and tall sizes");
   var rowStyle=(Style)Application.Current.FindResource(typeof(System.Windows.Controls.DataGridRow));
   var testRow=new System.Windows.Controls.DataGridRow{Style=rowStyle};
   if(((SolidColorBrush)testRow.Background).Color.ToString()!="#FF171A20")throw new Exception("Room row is not dark");
@@ -421,11 +436,11 @@ class Program
   foreach(var theme in new[]{"Light","Dark","Black","System"})
   {
     Appearance.Apply(theme);
-    var themedUpdate=new UpdateProgressWindow("0.1.119");themedUpdate.Report("Installing update…","Applying the update",60);
+    var themedUpdate=new UpdateProgressWindow("0.1.120");themedUpdate.Report("Installing update…","Applying the update",60);
     Render(themedUpdate,"dist/preview-update-"+theme.ToLowerInvariant()+".png");
   }
   Appearance.Apply("Dark");
-  var updatePreview=new UpdateProgressWindow("0.1.119");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.120");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -434,7 +449,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.119\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.120\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
