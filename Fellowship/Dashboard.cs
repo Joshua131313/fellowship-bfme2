@@ -113,7 +113,7 @@ public sealed partial class BrowserWindow
             var row=UI.Button("",()=>CreatePlayerInfo(this,name,ip).Show());row.Style=(Style)Application.Current.FindResource("PlayerRowButton");row.Height=double.NaN;row.Padding=new(12);row.Margin=new(0,0,0,8);row.HorizontalContentAlignment=HorizontalAlignment.Stretch;
             var details=UI.Stack(UI.Row(UI.Text(name,14,afk?UI.Muted:"#EFF1F5",true),IdlePresence.Badge(afk,showAvailable:false)),PlayerRoomActivity(ip));
             row.Content=UI.Row(UI.Avatar(name,34),details);row.ToolTip="Player info";
-            if(!self)row.ContextMenu=PlayerMenu(this,name,ip);dashboardSocial.Children.Add(row);
+            row.ContextMenu=PlayerMenu(this,name,ip);dashboardSocial.Children.Add(row);
         }
     }
     void RenderDashboard()
@@ -124,6 +124,8 @@ public sealed partial class BrowserWindow
         L.Bind(dashboardNetwork,TextBlock.TextProperty,online?"● VPN discovery active":"○ Not connected");dashboardNetwork.Foreground=UI.Brush(online?UI.Green:UI.Muted);
         if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomName.Text=Peer.Current?.Title??"Current room";L.Bind(currentRoomPlayers,TextBlock.TextProperty,Peer.Current is {} active?$"{active.Players.Count}/{active.Capacity} players":"");currentRoomLink.ToolTip=Peer.Current?.Title;}
         if(dashboardPage is "Game rooms" or "Settings" or "Game preferences")return;
+        // Presence refreshes must not detach the row owning an open player menu.
+        if(Mouse.RightButton==MouseButtonState.Pressed||dashboardSocial.Children.OfType<Button>().Any(b=>b.ContextMenu?.IsOpen==true))return;
         dashboardSocial.Children.Clear();var title=UI.LocalizedText(dashboardPage,25,bold:true);title.Margin=new(0,0,0,22);dashboardSocial.Children.Add(title);
         if(dashboardPage=="Online players"){RenderOnlinePlayers();return;}
         if(dashboardPage=="Friends")

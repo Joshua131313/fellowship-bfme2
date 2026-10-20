@@ -197,12 +197,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.120-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.120/Fellowship-0.1.120-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.120",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.121-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.121/Fellowship-0.1.121-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.121",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.120","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.120",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.121","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.121",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -313,7 +313,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.120"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.120/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.121"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.121/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -436,11 +436,11 @@ class Program
   foreach(var theme in new[]{"Light","Dark","Black","System"})
   {
     Appearance.Apply(theme);
-    var themedUpdate=new UpdateProgressWindow("0.1.120");themedUpdate.Report("Installing update…","Applying the update",60);
+    var themedUpdate=new UpdateProgressWindow("0.1.121");themedUpdate.Report("Installing update…","Applying the update",60);
     Render(themedUpdate,"dist/preview-update-"+theme.ToLowerInvariant()+".png");
   }
   Appearance.Apply("Dark");
-  var updatePreview=new UpdateProgressWindow("0.1.120");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.121");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -449,7 +449,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.120\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.121\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
@@ -476,6 +476,7 @@ class Program
   IEnumerable<DependencyObject> PresetNodes(DependencyObject root){yield return root;foreach(var node in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())foreach(var child in PresetNodes(node))yield return child;}
   var editorPicker=PresetNodes(editor).OfType<RoomPresetPicker>().Single();
   var editorMap=PresetNodes(editor).OfType<SearchableMapBox>().Single();
+  if(editorPicker.SelectedItem is not System.Windows.Controls.ComboBoxItem{Tag:RoomPreset{Name:"3v3"}}||editorMap.SelectedItem is not GameMap{Name:"Rhûn"})throw new Exception("New room did not default to Rhun 3v3");
   editorPicker.SelectedIndex=1;if(editorMap.IsEnabled)throw new Exception("Named preset left map editable");
   editorPicker.SelectedIndex=0;if(!editorMap.IsEnabled)throw new Exception("Custom preset did not unlock map");
   Console.WriteLine("PASS named preset locks map and Custom preset unlocks editing");
@@ -619,6 +620,11 @@ class Program
   onlineSettings.Friends.Add(new("Away player","10.0.0.2"));SelectTab(onlineBrowser,"Friends");
   if(!TabNodes(onlineBrowser).OfType<System.Windows.Controls.TextBlock>().Any(t=>t.Text==playerRoom.Title))throw new Exception("Friends room title missing");
   SelectTab(onlineBrowser,"Online players");
+  var onlinePanel=(System.Windows.Controls.StackPanel)typeof(BrowserWindow).GetField("dashboardSocial",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(onlineBrowser)!;
+  var onlineRows=onlinePanel.Children.OfType<System.Windows.Controls.Button>().Where(b=>b.Style==(Style)Application.Current.FindResource("PlayerRowButton")).ToArray();
+  if(onlineRows.Length<2||onlineRows.Any(b=>b.ContextMenu==null)||onlineRows.Count(b=>b.ContextMenu!.Items.OfType<System.Windows.Controls.MenuItem>().Any(i=>i.Header?.ToString()=="Send message"))<2)throw new Exception("Online player row missing shared context menu");
+  var selfMenu=onlineBrowser.PlayerMenu(onlineBrowser,onlineSettings.Name,onlineBrowser.Peer.Address);
+  if(!selfMenu.Items.OfType<System.Windows.Controls.MenuItem>().Any(i=>i.Header?.ToString()=="Player info")||selfMenu.Items.OfType<System.Windows.Controls.MenuItem>().Any(i=>i.Header?.ToString()=="Send message"))throw new Exception("Self context menu has incorrect actions");
   var onlineTexts=TabNodes(onlineBrowser).OfType<System.Windows.Controls.TextBlock>().Select(t=>t.Text).ToArray();
   if(!onlineTexts.Contains("Visible player")||!onlineTexts.Contains("Away player")||onlineTexts.Contains("Hidden player"))throw new Exception("Online roster filtering failed");
   if(!onlineTexts.Contains(playerRoom.Title)||!onlineTexts.Contains("● In game")||!onlineTexts.Contains("● Lobby"))throw new Exception("Room activity indicators missing");

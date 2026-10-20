@@ -83,6 +83,7 @@ public sealed class RoomEditor : Window
             {input.IsEnabled=presetList.IsCustom;input.Opacity=presetList.IsCustom?1:.55;ToolTipService.SetShowOnDisabled(input,true);input.ToolTip=presetList.IsCustom?null:"Select Custom preset to edit.";}
         }
         presetList.ModeChanged+=UpdatePresetEditing;UpdatePresetEditing();
+        presetList.SelectedItem=presetList.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.Tag is RoomPreset{BuiltIn:true,Name:"3v3",MapPath.Length:>0})??presetList.SelectedItem;
         var store=UI.AsyncButton("Save preset",async()=>
         {
             var title=await RoomPresetPicker.PromptName(this);if(title==null)return;var chosen=(GameMap)map.SelectedItem;
