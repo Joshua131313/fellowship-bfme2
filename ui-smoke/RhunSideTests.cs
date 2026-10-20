@@ -22,6 +22,21 @@ static class RhunSideTests
         Check(RhunSides.Apply(room,report with{Lobby=game1,Started=true},first),"Match start did not capture hosting history");
         Check(!RhunSides.Apply(room,report with{Lobby=game1,Started=true},first),"Repeated start recaptured history");
         var before=room.Players.ToDictionary(p=>p.Address,p=>p.Spot);
+        foreach(string teammate in new[]{"10.0.0.2","10.0.0.3"})
+        {
+            // Native team numbers can reset in a recreated lobby. Membership and
+            // positions from the previous match still identify the hosting team.
+            var sameTeamLobby=Snapshot(teammate);
+            sameTeamLobby=sameTeamLobby with{Slots=sameTeamLobby.Slots.Select(s=>s with{Team=1-s.Team,Spot=-1}).ToList()};
+            var sameTeam=new LobbyReport(Guid.NewGuid().ToString("N"),sameTeamLobby);
+            Check(RhunSides.Apply(room,sameTeam,teammate),"Same-team host did not create a plan");
+            foreach(var player in room.Players)
+                Check(player.Spot==before[player.Address],"Changing host within the same team moved a player");
+            var stablePlan=room.SidePlan;
+            Check(!RhunSides.Apply(room,sameTeam,teammate)&&ReferenceEquals(stablePlan,room.SidePlan),"Repeated same-team report changed the plan");
+            Check(RhunSides.Apply(room,sameTeam with{Lobby=Snapshot(teammate),Started=true},teammate),"Same-team match history was not recorded");
+        }
+        Console.WriteLine("PASS consecutive same-team BFME2 host changes preserve all spots despite reset native team numbers and positions");
         var next=new LobbyReport(Guid.NewGuid().ToString("N"),Snapshot(second));
         Check(RhunSides.Apply(room,next,second),"Next host did not create a plan");
         foreach(var player in room.Players)
