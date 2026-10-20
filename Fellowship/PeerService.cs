@@ -80,8 +80,13 @@ public sealed partial class PeerService : IDisposable
             if (hello.Type == "query")
             {
                 Room? snapshot;
-                lock (gate) snapshot = !IsHost || Current == null || (!CanSee(remoteAddress)||settings.IsBlocked(remoteAddress)) ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
-                await c.Send(new() { Type = "room", Room = snapshot, Name=settings.Name,GameRunning=gameRunning,IdleSeconds=IdlePresence.Seconds(),ManualAfk=settings.ManualAfk }); return;
+                string roomHost="",roomId="";
+                lock (gate)
+                {
+                    snapshot = !IsHost || Current == null || (!CanSee(remoteAddress)||settings.IsBlocked(remoteAddress)) ? null : JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current));
+                    if(!IsHost&&Current!=null&&!settings.IsBlocked(remoteAddress)){roomHost=Current.HostAddress;roomId=Current.Id;}
+                }
+                await c.Send(new() { Type = "room", Room = snapshot, RoomHostAddress=roomHost,Id=roomId,Name=settings.Name,GameRunning=gameRunning,IdleSeconds=IdlePresence.Seconds(),ManualAfk=settings.ManualAfk }); return;
             }
             if(hello.Type=="invite")
             {
@@ -286,14 +291,27 @@ public sealed partial class PeerService : IDisposable
             c.Dispose();
         }
     }
-    public static async Task<Room?> Query(string address,string? source=null)=>(await QueryPeer(address,source)).Room;
-    public static async Task<(string Name,Room? Room,bool GameRunning,int? IdleSeconds,bool ManualAfk)> QueryPeer(string address,string? source=null)
+    public static async Task<Room?> Query(string address,string? source=null)=>(await QueryPeer(address,source,false)).Room;
+    public static async Task<(string Name,Room? Room,bool GameRunning,int? IdleSeconds,bool ManualAfk)> QueryPeer(string address,string? source=null,bool resolveRoom=true)
     {
         using var c = await Connect(address,source);
         await c.Send(new() { Type = "query" });
         using var timeout = new CancellationTokenSource(3000);
         var reply=await c.Read(timeout.Token);
         if(reply?.Type!="room")throw new IOException("Invalid peer response.");
+        if(resolveRoom&&reply.Room==null&&!string.IsNullOrEmpty(reply.Id)&&reply.RoomHostAddress!=address&&
+            IPAddress.TryParse(reply.RoomHostAddress,out var hostAddress)&&hostAddress.AddressFamily==AddressFamily.InterNetwork&&
+            !hostAddress.Equals(IPAddress.Any)&&!hostAddress.Equals(IPAddress.Broadcast))
+        {
+            // Fetch details from the owner so its privacy/blocking checks still apply.
+            // One hop only: a stale or cyclic reference cannot redirect indefinitely.
+            try
+            {
+                var host=await QueryPeer(hostAddress.ToString(),source,false);
+                if(host.Room is {} room&&room.Id==reply.Id&&room.HostAddress==hostAddress.ToString()&&room.Players.Any(p=>p.Address==address))reply.Room=room;
+            }
+            catch(Exception error) when(error is IOException or SocketException or OperationCanceledException){}
+        }
         return (Clean(reply.Name,40),reply.Room,reply.GameRunning,IdlePresence.Normalize(reply.IdleSeconds),reply.ManualAfk);
     }
     public async Task SendPrivate(string address, string text)

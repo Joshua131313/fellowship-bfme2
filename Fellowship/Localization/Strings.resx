@@ -1753,4 +1753,7 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Windows Installer could not open its log file. Retry to create a new log in the update folder." xml:space="preserve">
     <value>Windows Installer could not open its log file. Retry to create a new log in the update folder.</value>
   </data>
+  <data name="No Fellowship room is available for this player." xml:space="preserve">
+    <value>No Fellowship room is available for this player.</value>
+  </data>
 </root>

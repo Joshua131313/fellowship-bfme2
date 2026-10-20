@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.121   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.122   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -688,7 +688,7 @@ public sealed partial class BrowserWindow : Window
     {
         discovered.Clear();
         foreach(var peer in Presence.Active(DateTimeOffset.UtcNow))
-            if(peer.Room!=null&&!Settings.IsBlocked(peer.Address))discovered.Add(new(peer.Address,peer.Room,peer.Reconnecting));
+            if(peer.Room!=null&&!Settings.IsBlocked(peer.Address)&&!Settings.IsBlocked(peer.Room.HostAddress))discovered.Add(new(peer.Room.HostAddress,peer.Room,peer.Reconnecting));
         RenderRooms();RenderActivePlayers();friendsWindow?.Render();
     }
     async Task RefreshLatencies(string[] addresses)
@@ -753,7 +753,7 @@ public sealed partial class BrowserWindow : Window
         if(Settings.IsBlocked(ip))return null;
         if(Peer.Current is {} current && (ip==Peer.Address||current.Players.Any(p=>p.Address==ip)))return current;
         var peers=Presence.Active(DateTimeOffset.UtcNow).Where(p=>!p.Reconnecting&&!Settings.IsBlocked(p.Address));
-        return peers.Where(p=>p.Room!=null&&(p.Address==ip||p.Room.Players.Any(member=>member.Address==ip)))
+        return peers.Where(p=>p.Room!=null&&!Settings.IsBlocked(p.Room.HostAddress)&&(p.Address==ip||p.Room.Players.Any(member=>member.Address==ip)))
             .OrderByDescending(p=>p.Room!.Revision).Select(p=>p.Room).FirstOrDefault();
     }
     public FrameworkElement PlayerRoomActivity(string ip)
@@ -772,7 +772,7 @@ public sealed partial class BrowserWindow : Window
         var roomInfo=UI.MenuAction("Show game room info",()=>{if(PlayerRoom(ip) is {} room)new RoomPreviewWindow(this,room,Settings.GamePath).Show();},()=>PlayerRoom(ip)!=null);
         var joinRoom=UI.MenuAction("Join game room",async()=>{try{if(PlayerRoom(ip) is {} room)await JoinPreview(room.Id);}catch(Exception error){UI.Error(error.Message);}},()=>PlayerRoom(ip) is {} room&&(Peer.Current?.Id==room.Id||room.Players.Count<room.Capacity));
         menu.Items.Add(roomInfo);menu.Items.Add(joinRoom);
-        menu.Opened+=(_,_)=>{var room=PlayerRoom(ip);roomInfo.Visibility=joinRoom.Visibility=room==null?Visibility.Collapsed:Visibility.Visible;L.Bind(joinRoom,HeaderedItemsControl.HeaderProperty,room!=null&&Peer.Current?.Id==room.Id?"Open room":"Join game room");};
+        menu.Opened+=(_,_)=>{var room=PlayerRoom(ip);bool running=!Settings.IsBlocked(ip)&&(Presence.Find(ip,DateTimeOffset.UtcNow)?.GameRunning??player?.GameRunning??false);roomInfo.Visibility=joinRoom.Visibility=room!=null||running?Visibility.Visible:Visibility.Collapsed;L.Bind(joinRoom,HeaderedItemsControl.HeaderProperty,room!=null&&Peer.Current?.Id==room.Id?"Open room":"Join game room");foreach(var action in new[]{roomInfo,joinRoom}){ToolTipService.SetShowOnDisabled(action,true);if(room==null)L.Bind(action,FrameworkElement.ToolTipProperty,"No Fellowship room is available for this player.");else action.ToolTip=null;}};
         if(ip!=Peer.Address)
         {
             menu.Items.Add(UI.MenuAction("Invite to room",async()=>{try{await Peer.Invite(ip);UI.InvitationSent(owner,name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>Peer.Current!=null&&Settings.Friends.Any(f=>f.Address==ip)&&!Settings.IsBlocked(ip)));

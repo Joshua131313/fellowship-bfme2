@@ -3,6 +3,26 @@ using Fellowship;
 using System.Net;
 using System.Net.Sockets;
 Settings MemorySettings(string name){var settings=Settings.InMemory();settings.Name=name;return settings;}
+if(args.Length==0||args.Contains("--player-room"))
+{
+    var hs=MemorySettings("Room owner");hs.Friends.Add(new("Participant","127.0.0.122"));
+    using var h=new PeerService(hs);using var g=new PeerService(MemorySettings("Participant"));using var viewer=new PeerService(MemorySettings("Viewer"));
+    h.Start("127.0.0.121");g.Start("127.0.0.122");viewer.Start("127.0.0.123");h.Host(new(){Capacity=4});
+    await g.Join(h.Address);await Until(()=>g.Current?.Players.Count==2,"guest presence test joined");await g.SetHostGameRunning(true);
+    var visible=await PeerService.QueryPeer(g.Address,viewer.Address);
+    if(visible.Room?.Id!=h.Current!.Id||visible.Room.HostAddress!=h.Address||!visible.GameRunning||visible.Name!="Participant")throw new Exception("Guest presence lost player identity or actual room owner");
+    if(await PeerService.Query(g.Address,viewer.Address)!=null)throw new Exception("Direct joining incorrectly treats a participant as a host");
+    var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(h.Current))!;draft.FriendsOnly=true;await h.EditRoom(draft);
+    if((await PeerService.QueryPeer(g.Address,viewer.Address)).Room!=null)throw new Exception("Guest presence exposed a friends-only room");
+    hs.Friends.Add(new("Viewer",viewer.Address));
+    if((await PeerService.QueryPeer(g.Address,viewer.Address)).Room?.Id!=h.Current.Id)throw new Exception("Authorized friend could not resolve guest room");
+    hs.BlockedUsers=[new("Viewer",viewer.Address)];
+    if((await PeerService.QueryPeer(g.Address,viewer.Address)).Room!=null)throw new Exception("Guest presence bypassed the room owner's block");
+    g.Leave();var outside=await PeerService.QueryPeer(g.Address,viewer.Address);
+    if(outside.Room!=null||!outside.GameRunning)throw new Exception("Game outside Fellowship advertised stale room or lost game status");
+    Console.WriteLine("PASS participant room discovery, canonical owner, friends-only privacy, blocking and game without room");
+    if(args.Contains("--player-room"))return;
+}
 if(args.Contains("--rhun-sides"))
 {
     using var h=new PeerService(MemorySettings("Fellowship owner"));using var a=new PeerService(MemorySettings("BFME2 host"));using var b=new PeerService(MemorySettings("Participant"));

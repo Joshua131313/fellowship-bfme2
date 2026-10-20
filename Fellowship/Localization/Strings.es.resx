@@ -1753,4 +1753,7 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Windows Installer could not open its log file. Retry to create a new log in the update folder." xml:space="preserve">
     <value>Windows Installer no pudo abrir su registro. Reintenta para crear uno nuevo en la carpeta de actualización.</value>
   </data>
+  <data name="No Fellowship room is available for this player." xml:space="preserve">
+    <value>No hay una sala de Fellowship disponible para este jugador.</value>
+  </data>
 </root>

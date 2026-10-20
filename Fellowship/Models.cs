@@ -151,6 +151,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public string RoomHostAddress {get;set;}="";
     public LobbyReport? LobbyReport {get;set;}
     public bool ManualAfk { get; set; }
     public int? IdleSeconds { get; set; }
