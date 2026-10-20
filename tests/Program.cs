@@ -3,6 +3,38 @@ using Fellowship;
 using System.Net;
 using System.Net.Sockets;
 Settings MemorySettings(string name){var settings=Settings.InMemory();settings.Name=name;return settings;}
+if(args.Contains("--rhun-sides"))
+{
+    using var h=new PeerService(MemorySettings("Fellowship owner"));using var a=new PeerService(MemorySettings("BFME2 host"));using var b=new PeerService(MemorySettings("Participant"));
+    h.Start("127.0.0.121");a.Start("127.0.0.122");b.Start("127.0.0.123");
+    h.Host(new(){Capacity=3,Mode="3v3"},Enumerable.Range(0,6).Select(i=>new MapSpot(i+1,i<3?.2:.8,(i%3)*.4+.1)).ToList());
+    await a.Join(h.Address);await b.Join(h.Address);
+    await Until(()=>a.Current?.Players.Count==3&&b.Current?.Players.Count==3,"Rhûn participants joined");
+    var lobby=new NativeLobby.Snapshot(123,h.Current!.MapPath,a.Address,[
+        new(0,6,0,0,true,Address:a.Address),new(1,6,3,1,false,Address:h.Address),new(2,6,1,0,false,Address:b.Address)]);
+    var report=new LobbyReport(Guid.NewGuid().ToString("N"),lobby);
+    await b.SyncRhunLayout(report);
+    await Task.Delay(100);
+    if(h.Current.SidePlan!=null)throw new Exception("Accepted another player's native host report");
+    await a.SyncRhunLayout(report);
+    await Until(()=>h.Current.SidePlan?.Host==a.Address&&a.Current?.SidePlan?.Host==a.Address&&b.Current?.SidePlan?.Host==a.Address,"native host plan propagated independently of Fellowship ownership");
+    foreach(var peer in new[]{h,a,b})
+    {
+        var room=peer.Current!;
+        if(room.Players.Single(p=>p.Address==a.Address).Team!=2||room.Players.Single(p=>p.Address==h.Address).Team!=1)
+            throw new Exception("Fellowship owner incorrectly determined hosting team");
+        foreach(var p in room.Players)
+            if((room.Spots.Single(s=>s.Number==p.Spot).X>.5)!=(p.Team==2))throw new Exception("Wrong native hosting side");
+    }
+    if(!h.IsHost||a.IsHost)throw new Exception("Native hosting changed Fellowship ownership");
+    var cleared=lobby with{Slots=lobby.Slots.Select(s=>s with{Team=h.Current.SidePlan!.Moves[s.Ip].Team-1,Spot=-1}).ToList()};
+    await a.SyncRhunLayout(report with{Lobby=cleared});
+    await Until(()=>b.Current?.SidePlan?.Ready==true,"native clear phase propagated");
+    var final=lobby with{Slots=lobby.Slots.Select(s=>s with{Team=h.Current.SidePlan!.Moves[s.Ip].Team-1,Spot=h.Current.SidePlan.Moves[s.Ip].Spot-1}).ToList()};
+    await a.SyncRhunLayout(report with{Lobby=final,Started=true});
+    await Until(()=>b.Current?.LastRhunHost==a.Address,"actual BFME2 host retained in match history");
+    Console.WriteLine("PASS distinct Fellowship owner and BFME2 host, sender validation, correct sides, shared plan and match history");return;
+}
 if(args.Contains("--ready-request"))
 {
     using var h=new PeerService(MemorySettings("Host"));using var a=new PeerService(MemorySettings("First"));using var b=new PeerService(MemorySettings("Second"));

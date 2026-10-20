@@ -290,7 +290,7 @@ public sealed partial class BrowserWindow : Window
         if(!File.Exists(Settings.GamePath))Settings.GamePath=GameInstallation.Find();
         Peer = new(Settings);
         var body = UI.Shell(this,"Dashboard",1240,760); MinWidth = 1100; MinHeight = 650;
-        UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
+        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
         var updateText=UI.LocalizedText("",12,"#E5EBFF");var updateRow=new Grid();updateRow.ColumnDefinitions.Add(new());updateRow.ColumnDefinitions.Add(new(){Width=UI.Auto});updateRow.Children.Add(updateText);
         var updateButton=UI.Require(UI.AsyncButton("Download & restart",async()=>{if(AppUpdates.Available is {} release)await AppUpdates.Install(release,()=>Peer.Current!=null,text=>L.Bind(updateText,TextBlock.TextProperty,text));},true),()=>Peer.Current==null,()=>"Leave your room before downloading and restarting.");updateButton.Margin=new(16,0,0,0);Grid.SetColumn(updateButton,1);updateRow.Children.Add(updateButton);
         var updateBanner=UI.Card(updateRow,"#24324E",12);updateBanner.Margin=new(22,12,22,0);updateBanner.Visibility=Visibility.Collapsed;UI.At(body,updateBanner,0);
@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.117   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.118   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -760,10 +760,9 @@ public sealed partial class BrowserWindow : Window
     {
         var room=PlayerRoom(ip);var presence=Presence.Find(ip,DateTimeOffset.UtcNow);
         var running=presence?.GameRunning??room?.Players.FirstOrDefault(p=>p.Address==ip)?.GameRunning??false;
-        var panel=new StackPanel{Margin=new(0,5,0,0)};
-        if(room==null&&!running)return panel;
-        panel.Children.Add(UI.LocalizedText(running?"● In game":"● Waiting in lobby",11,running?UI.Green:UI.Accent));
-        if(room!=null){var title=UI.Text(room.Title,12,UI.Muted);title.TextWrapping=TextWrapping.Wrap;title.ToolTip=room.Title;panel.Children.Add(title);}
+        var state=Settings.IsBlocked(ip)?"Blocked":presence?.Reconnecting==true?"Reconnecting":running?"In game":room!=null?"Lobby":presence!=null||ip==Peer.Address?"Online":"Offline";
+        var panel=UI.Row(UI.LocalizedText("● "+state,11,state=="Offline"?UI.Muted:running?UI.Green:UI.Accent));panel.Margin=new(0,3,0,0);panel.ToolTip=ip;
+        if(room!=null){var title=UI.Text(room.Title,11,UI.Muted);title.TextTrimming=TextTrimming.CharacterEllipsis;title.MaxWidth=165;title.Margin=new(8,0,0,0);title.ToolTip=room.Title+"\n"+ip;panel.Children.Add(title);}
         return panel;
     }
     public ContextMenu PlayerMenu(Window owner,string name,string ip,Player? player=null)
@@ -996,6 +995,7 @@ public sealed class RoomWindow : Window
     TaskCompletionSource<bool>? syncPrepared;
     readonly LivePlacement.Control syncControl=new();
     readonly System.Threading.CancellationTokenSource syncLifetime=new();
+    readonly TextBlock sideStatus=UI.LocalizedText("Rhûn 3v3 · Team 1 left · Hosting team 2 right · Automatic mirrored spots",11,UI.Accent,true);
     readonly TextBlock liveStatus=UI.LocalizedText("Live sync starts when BFME2 opens.",10,UI.Muted);
     sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team / free for all":"Team "+Value;}
     string lastRoomName="";bool? lastPrivacy;
@@ -1082,7 +1082,7 @@ public sealed class RoomWindow : Window
         teamChoice.SelectionChanged+=async(_,_)=>{if(!syncingPlacement&&teamChoice.SelectedItem is TeamOption team)await ChangePlacement(null,team.Value);};
         mapPreview.SpotSelected+=async spot=>await ChangePlacement(spot,null);
         clearSpot=UI.AsyncButton("Clear my spot",()=>ChangePlacement(0,null));UI.DisabledHint(clearSpot,()=>app.Peer.Current==null?"Join a room first.":launching||changingPlacement?"Wait for the current operation to finish.":"Select a starting spot on the map before clearing it.");clearSpot.Margin=new(0,0,0,8);right.Children.Add(clearSpot);
-        right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.LocalizedText("Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
+        sideStatus.TextWrapping=TextWrapping.Wrap;sideStatus.Margin=new(0,8,0,8);right.Children.Add(sideStatus);right.Children.Add(placementStatus);right.Children.Add(liveStatus);var placementHint=UI.LocalizedText("Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.",10,UI.Muted);placementHint.Margin=new(0,8,0,12);right.Children.Add(placementHint);
         map=new TextBox();patch=new TextBox();rules=new TextBox();
         void AddChoice(string label,ComboBox choice,object[] values)
         {
@@ -1164,7 +1164,7 @@ public sealed class RoomWindow : Window
     {
         if((!app.Settings.LiveGameSync)||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room)return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
-        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)));
+        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)),Rhun3v3:RhunSides.Enabled(room),Sides:room.SidePlan);
     }
     bool syncPaused;
     public void RetryLiveSync()=>syncPaused=false;
@@ -1207,7 +1207,7 @@ public sealed class RoomWindow : Window
                             savingRules=true;Refresh();
                             try{await app.Peer.SyncNativeRules(draft);}
                             finally{savingRules=false;Refresh();}
-                        },message=>L.Bind(liveStatus,TextBlock.TextProperty,message),syncLifetime.Token,()=>syncPrepared.TrySetResult(true),syncControl);
+                        },message=>L.Bind(liveStatus,TextBlock.TextProperty,message),syncLifetime.Token,()=>syncPrepared.TrySetResult(true),syncControl,app.Peer.SyncRhunLayout);
                         attempted=0; // A reconnect must be allowed even when BFME2 keeps the same PID.
                         syncPrepared.TrySetResult(false);
                     }
@@ -1299,6 +1299,7 @@ public sealed class RoomWindow : Window
             catch(IOException e){AppendSystem("Could not save last selections: "+e.Message);}
             catch(UnauthorizedAccessException e){AppendSystem("Could not save last selections: "+e.Message);}
         }
+        sideStatus.Visibility=RhunSides.Enabled(room)?Visibility.Visible:Visibility.Collapsed;
         mapPreview.ShowMap(app.Settings.GamePath,room.MapPath);mapPreview.IsEnabled=!launching&&!changingPlacement;
         mapPreview.ShowSelections(room,app.Peer.LocalId,!launching&&!changingPlacement);
         var self=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
@@ -1425,8 +1426,9 @@ public sealed class FriendsWindow : Window
     {
         this.app=app;var body=UI.Shell(this,"Friends",390,620);MinWidth=360;MaxWidth=460;MinHeight=440;MaxHeight=800;
         UI.Menus(this,UI.MenuGroup("_Friends",UI.MenuAction("Add friend",AddFriend),UI.MenuAction("Blocked players",app.ShowBlockedPlayers),UI.MenuAction("Send message",Message,()=>list.SelectedItem is ListBoxItem{Tag:Friend}),UI.MenuAction("Refresh presence",async()=>{try{await RefreshPresence();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Close window",Close)));
-        UI.Rows(body,UI.Auto,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
-        var me=UI.Button("",()=>app.CreateProfileEditor(this).Show());me.Style=(Style)Application.Current.FindResource("PlayerRowButton");me.Height=double.NaN;me.Padding=new(10);me.Margin=new(10,10,10,12);me.ToolTip="Edit your profile";me.Content=UI.Row(ownAvatar,UI.Stack(ownNickname,ownStatus));var myPresence=app.CreateAvailabilityButton();myPresence.Margin=new(20,0,20,12);UI.At(body,UI.Stack(me,myPresence),0);
+        UI.Rows(body,UI.Auto,UI.Auto,UI.Star,UI.Auto,UI.Auto);
+        var me=UI.Button("",()=>app.CreateProfileEditor(this).Show());me.Style=(Style)Application.Current.FindResource("PlayerRowButton");me.Height=double.NaN;me.Padding=new(10);me.Margin=new(10,10,10,12);me.ToolTip="Edit your profile";me.Content=UI.Row(ownAvatar,UI.Stack(ownNickname,ownStatus));var myPresence=app.CreateAvailabilityButton(true);myPresence.Margin=new(8,0,14,0);myPresence.VerticalAlignment=VerticalAlignment.Center;
+        var profile=new Grid();profile.ColumnDefinitions.Add(new());profile.ColumnDefinitions.Add(new(){Width=UI.Auto});profile.Children.Add(me);Grid.SetColumn(myPresence,1);profile.Children.Add(myPresence);UI.At(body,profile,0);
         var bar=new Grid{Margin=new(20,0,12,10)};bar.ColumnDefinitions.Add(new());bar.ColumnDefinitions.Add(new(){Width=UI.Auto});bar.Children.Add(summary);
         var refresh=UI.AsyncButton("↻",RefreshPresence);refresh.ToolTip="Check which friends are online";refresh.Padding=new(10,5,10,5);Grid.SetColumn(refresh,1);bar.Children.Add(refresh);UI.At(body,bar,1);
         list.Margin=new(8,0,8,0);UI.At(body,list,2);
@@ -1440,7 +1442,7 @@ public sealed class FriendsWindow : Window
     }
     public void Render()
     {
-        var away=IdlePresence.IsAfk(IdlePresence.Seconds(),app.Settings.ManualAfk);L.Bind(ownStatus,TextBlock.TextProperty,away?"◷ AFK":"● Available");ownStatus.Foreground=UI.Brush(away?IdlePresence.AwayColor:UI.Green);
+        var away=IdlePresence.IsAfk(IdlePresence.Seconds(),app.Settings.ManualAfk);L.Bind(ownStatus,TextBlock.TextProperty,"◷ AFK");ownStatus.Visibility=away?Visibility.Visible:Visibility.Collapsed;ownStatus.Foreground=UI.Brush(away?IdlePresence.AwayColor:UI.Green);
         var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
         ownNickname.Text=app.Settings.Name;((TextBlock)ownAvatar.Child).Text=string.IsNullOrWhiteSpace(app.Settings.Name)?"?":app.Settings.Name[..1].ToUpperInvariant();list.Items.Clear();L.Bind(summary,TextBlock.TextProperty,$"YOUR FRIENDS   {app.Settings.Friends.Count}");
         bool? lastGroup=null;
@@ -1452,9 +1454,8 @@ public sealed class FriendsWindow : Window
             string state=peer==null?"○  Offline / unreachable":peer.Reconnecting?"◌  Reconnecting":peer.IsAfk?"◌  AFK":peer.GameRunning?"●  In BFME2":peer.Room!=null?"●  In a room":"●  Online";
             if(app.Settings.IsBlocked(f.Address))state+=" · Blocked";
             var nickname=peer?.Name??f.Name;
-            var labels=UI.Stack(UI.Row(UI.Text(nickname,13,peer?.IsAfk==true?UI.Muted:"#E4E9F2",true),peer==null?UI.LocalizedText("",10):IdlePresence.Badge(peer.IsAfk)),UI.LocalizedText((peer!=null&&!peer.Reconnecting&&(peer.IsAfk||state=="●  Online")?"":state+"  ·  ")+f.Address,10,peer?.IsAfk==true?IdlePresence.AwayColor:state.Contains("Online")?UI.Green:UI.Muted));labels.Children[1].SetValue(MarginProperty,new Thickness(0,5,0,0));
-            labels.Children.Add(app.PlayerRoomActivity(f.Address));
-            list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(nickname),labels),Tag=f,ContextMenu=app.PlayerMenu(this,nickname,f.Address)});
+            var labels=UI.Stack(UI.Row(UI.Text(nickname,13,peer?.IsAfk==true?UI.Muted:"#E4E9F2",true),IdlePresence.Badge(peer?.IsAfk==true,showAvailable:false)),app.PlayerRoomActivity(f.Address));
+            list.Items.Add(new ListBoxItem{Content=UI.Row(UI.Avatar(nickname),labels),Tag=f,Padding=new(10,8,10,8),ContextMenu=app.PlayerMenu(this,nickname,f.Address)});
         }
         if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);
         if(app.Settings.Friends.Count==0)list.Items.Add(new ListBoxItem{IsEnabled=false,Content=UI.LocalizedText("No friends added.",13,UI.Muted),Padding=new(12,30,12,12)});
@@ -1465,7 +1466,7 @@ public sealed class FriendsWindow : Window
         checkingPresence=true;
         try
         {
-            var away=IdlePresence.IsAfk(IdlePresence.Seconds(),app.Settings.ManualAfk);L.Bind(ownStatus,TextBlock.TextProperty,away?"◷ AFK":"● Available");ownStatus.Foreground=UI.Brush(away?IdlePresence.AwayColor:UI.Green);
+            var away=IdlePresence.IsAfk(IdlePresence.Seconds(),app.Settings.ManualAfk);L.Bind(ownStatus,TextBlock.TextProperty,"◷ AFK");ownStatus.Visibility=away?Visibility.Visible:Visibility.Collapsed;ownStatus.Foreground=UI.Brush(away?IdlePresence.AwayColor:UI.Green);
         var selected=(list.SelectedItem as ListBoxItem)?.Tag as Friend;
             await app.Refresh();Render();
             if(selected!=null)list.SelectedItem=list.Items.OfType<ListBoxItem>().FirstOrDefault(i=>i.Tag is Friend f&&f.Address==selected.Address);

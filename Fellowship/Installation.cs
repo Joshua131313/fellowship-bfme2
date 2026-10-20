@@ -44,6 +44,7 @@ public static class Installation
     public static string InstallerError(int code)=>code switch
     {
         112=>"The disk is full. Free space on the Windows, installation and temporary-file drives, then retry. Aim for at least 1 GB free on each required drive.",
+        1622=>"Windows Installer could not open its log file. Retry to create a new log in the update folder.",
         1618=>"Another installation is running. Let it finish, then retry.",
         1603=>"Windows Installer could not complete the update. Close other Fellowship copies and retry. The log contains the detailed cause.",
         1619 or 1620=>"Windows could not open the update package. Download the update again.",
@@ -51,12 +52,19 @@ public static class Installation
         1602=>"Installation was cancelled. Your preferences are preserved.",
         _=>$"Windows Installer returned error {code}. Your preferences are preserved; review the log and retry."
     };
+    public static string CreateInstallerLog()
+    {
+        var folder=Path.Combine(Settings.Folder,"installer-logs");Directory.CreateDirectory(folder);
+        var path=Path.Combine(folder,"install-"+Guid.NewGuid().ToString("N")+".log");
+        using(File.Create(path)){} // Resolve virtualized paths before passing them to MSI.
+        return NativePlacement.PhysicalPath(path);
+    }
     public static async Task<int> RunUpdate(string package,int previousPid)
     {
         var window=new UpdateProgressWindow("UPDATE");window.Show();
         while(true)
         {
-            string log=Path.Combine(Path.GetDirectoryName(package)!,"install-"+DateTime.Now.ToString("yyyyMMdd-HHmmssfff")+".log");
+            string log="";
             try
             {
                 window.Report("Closing Fellowship…","Waiting for the previous version to finish safely.");
@@ -72,6 +80,7 @@ public static class Installation
                 int code;var busyTimer=Stopwatch.StartNew();
                 do
                 {
+                    log=CreateInstallerLog();
                     window.Report("Installing update…","Keep this window open. Fellowship will reopen when installation finishes.");
                     var start=new ProcessStartInfo(Path.Combine(Environment.SystemDirectory,"msiexec.exe")){UseShellExecute=false,CreateNoWindow=true};
                     foreach(var arg in new[]{"/i",package,"/qn","/norestart","/L*v",log})start.ArgumentList.Add(arg);
@@ -80,7 +89,7 @@ public static class Installation
                     if(!repaired&&InstallerRecovery.MissingSource(code,File.Exists(log)?File.ReadAllText(log):""))
                     {
                         repaired=true;await InstallerRecovery.Repair((title,detail)=>window.Report(title,detail),true);
-                        log=Path.Combine(Path.GetDirectoryName(package)!,"install-retry-"+DateTime.Now.ToString("yyyyMMdd-HHmmssfff")+".log");continue;
+                        continue;
                     }
                     if(code==1618&&busyTimer.Elapsed<TimeSpan.FromMinutes(2))
                     {window.Report("Waiting for Windows Installer…","Another installation is running. Retrying automatically…");await Task.Delay(5000);}
@@ -96,7 +105,7 @@ public static class Installation
             }
             catch(Exception error)
             {
-                try{if(!File.Exists(log))File.WriteAllText(log,error.ToString());}catch(IOException){}catch(UnauthorizedAccessException){}
+                try{if(string.IsNullOrEmpty(log))log=CreateInstallerLog();if(new FileInfo(log).Length==0)File.WriteAllText(log,error.ToString());}catch(IOException){}catch(UnauthorizedAccessException){}
                 var decision=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 EventHandler closed=(_,_)=>decision.TrySetResult(false);window.Closed+=closed;
                 window.Failure(error.Message,()=>decision.TrySetResult(true),File.Exists(log)?log:null);

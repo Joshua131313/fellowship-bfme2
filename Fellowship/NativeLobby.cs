@@ -18,7 +18,8 @@ public sealed record NativeSetup(string Map,int Resources,int CommandPoints,bool
 public sealed class NativeLobby : IDisposable
 {
     public sealed record Slot(int Row,int State,int Spot,int Team,bool Local,int Color=-1,int Faction=-1,string Address="")
-    {public bool Observer=>Faction==-2;public bool Active=>State>1&&Faction>=-1;public string Key=>State==6&&Address.Length>0?Address:"row:"+Row;}
+    {public string Ip { get { if(Address.Length!=12)return Address;var bytes=Convert.FromHexString(Address)[..4];Array.Reverse(bytes);return new System.Net.IPAddress(bytes).ToString();} }
+        public bool Observer=>Faction==-2;public bool Active=>State>1&&Faction>=-1;public string Key=>State==6&&Address.Length>0?Address:"row:"+Row;}
     public sealed record Snapshot(uint Identity,string Map,string HostAddress,List<Slot> Slots)
     {
         public Slot Local => Slots.Single(s=>s.Local);

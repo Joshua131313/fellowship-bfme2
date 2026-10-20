@@ -81,6 +81,9 @@ public sealed class Settings
 public sealed record MapSpot(int Number,double X,double Y);
 public sealed class Room
 {
+    public SidePlan? SidePlan {get;set;}
+    public string LastRhunHost {get;set;}="";
+    public Dictionary<string,LivePlacement.Choice> LastRhunLineup {get;set;}=new();
     [System.Text.Json.Serialization.JsonIgnore]
     public bool AllGuestsReady=>Players.Where(p=>p.Id!="host").All(p=>p.Ready);
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
@@ -148,6 +151,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public LobbyReport? LobbyReport {get;set;}
     public bool ManualAfk { get; set; }
     public int? IdleSeconds { get; set; }
     public bool GameRunning { get; set; }

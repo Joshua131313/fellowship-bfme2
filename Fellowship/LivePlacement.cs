@@ -11,8 +11,8 @@ namespace Fellowship;
 public static class LivePlacement
 {
     public sealed record Choice(int Team,int Spot,int Color=0);
-    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null,bool Abort=false);
-    public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false,bool Aborted=false);
+    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null,bool Abort=false,bool Rhun3v3=false,SidePlan? Sides=null);
+    public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false,bool Aborted=false,LobbyReport? Lobby=null);
     public sealed class Control
     {
         bool connected;
@@ -86,7 +86,7 @@ public static class LivePlacement
         return JsonSerializer.Deserialize<T>(bytes)??throw new IOException("Missing sync message.");
     }
     static string SessionLog(string name)=>Path.Combine(Settings.Folder,"native-sync-"+Guid.ParseExact(name["Fellowship.Sync.".Length..],"N").ToString("N")+".log");
-    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,string,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null,Control? control=null)
+    public static async Task Listen(string gamePath,int gamePid,Func<Command?> current,Func<Choice,string,Task> import,Func<NativeSetup,Task> importSetup,Action<string> status,CancellationToken token,Action? prepared=null,Control? control=null,Func<LobbyReport,Task>? importLobby=null)
     {
         string name="Fellowship.Sync."+Guid.NewGuid().ToString("N");
         using var pipe=new NamedPipeServerStream(name,PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous|PipeOptions.CurrentUserOnly);
@@ -130,6 +130,7 @@ public static class LivePlacement
             if(current()==command)
             {
                 status(reply.Status);
+                if(reply.Lobby is {} lobby&&importLobby!=null)await importLobby(lobby);
                 if(reply.ImportSetup&&reply.Setup is {} setup)
                 {
                     try{await importSetup(setup);}
@@ -188,6 +189,7 @@ public static class LivePlacement
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
             (Choice Requested,Choice Confirmed)? rotationImport=null;
+            string nativeSession="",lastReport="",appliedSideSession="";long lastReportTick=0;NativeLobby.Snapshot? lastLobby=null;bool reportedStart=false;
             int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
@@ -220,12 +222,17 @@ public static class LivePlacement
                 if(session.Stopped)
                 {
                     rotation.Suspend();
+                    if(starting)reportedStart=true;
+                    if(reportedStart&&command.Rhun3v3&&lastLobby?.Local.Row==0&&command.Sides?.Started!=true)
+                    {
+                        reportedStart=true;await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…",Lobby:new(nativeSession,lastLobby,true)),timeout.Token);continue;
+                    }
                     await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…"),timeout.Token);
                     continue;
                 }
                 if(editable&&generation!=session.Generation)
                 {
-                    generation=session.Generation;rotation.NewSession();rotationImport=null;context=null;reconcile=new();desiredSetup=observedSetup=null;
+                    generation=session.Generation;nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=null;reportedStart=false;rotation.NewSession();rotationImport=null;context=null;reconcile=new();desiredSetup=observedSetup=null;
                 }
                 try
                 {
@@ -247,7 +254,6 @@ public static class LivePlacement
                     if(placementMap!=snapshot.Map){placementMap=snapshot.Map;rotationImport=null;reconcile=new();placementNotice=null;}
                     if(snapshot.Local.Row==0&&command.Setup is {} requestedSetup)
                     {
-                        if(snapshot.Local.Row!=0)throw new IOException("Fellowship's host must also host the BFME2 lobby to sync map and rules.");
                         requestedSetup.Rules.Validate();if(!maps.Contains(requestedSetup.Map))throw new IOException("Selected map is not installed.");
                         if(desiredSetup==null||desiredSetup!=requestedSetup)
                         {
@@ -276,6 +282,40 @@ public static class LivePlacement
                     {
                         await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
                     }
+                    if(command.Rhun3v3)
+                    {
+                        lastLobby=snapshot;
+                        if(snapshot.Local.Row==0)
+                        {
+                            var fingerprint=JsonSerializer.Serialize(snapshot);
+                            if(lastReport!=fingerprint||Environment.TickCount64-lastReportTick>2000){lastReport=fingerprint;lastReportTick=Environment.TickCount64;await Send(pipe,new Reply("Coordinating Rhûn team sides…",Lobby:new(nativeSession,snapshot)),timeout.Token);continue;}
+                        }
+                        var plan=command.Sides;
+                        if(plan is {Cancelled:true}&&plan.Session!=appliedSideSession)
+                        {
+                            appliedSideSession=plan.Session;reconcile.Remember(command.Choice,actual);
+                            await Send(pipe,new Reply("Native selections kept",actual,actual!=command.Choice),timeout.Token);continue;
+                        }
+                        if(plan is {Cancelled:false,Started:false}&&plan.Session!=appliedSideSession&&plan.Host==snapshot.HostAddress&&plan.Moves.TryGetValue(snapshot.Local.Ip,out var move)&&!snapshot.Local.Observer)
+                        {
+                            var target=new Choice(move.Team,move.Spot,actual.Color);
+                            if(actual.Team!=target.Team||actual.Spot!=target.Spot)
+                            {
+                                if(!plan.Ready&&actual.Team==move.FromTeam&&actual.Spot==move.FromSpot)
+                                {
+                                    try{await Execute(host,gamePid,snapshot,NativePlacement.SideClearRequestBytes(gamePid,snapshot,move),2,timeout.Token);}catch(PlacementRejectedException){}
+                                }
+                                else if(plan.Ready&&actual.Team==move.Team&&actual.Spot==0)
+                                {
+                                    try{await Execute(host,gamePid,snapshot,NativePlacement.RotationRequestBytes(gamePid,snapshot,move.Spot),2,timeout.Token);}catch(PlacementRejectedException){}
+                                }
+                                await Send(pipe,new Reply("Coordinating Rhûn team sides…"),timeout.Token);continue;
+                            }
+                            appliedSideSession=plan.Session;reconcile.Remember(command.Choice,actual);
+                        }
+                        else if((plan==null||plan.Host!=snapshot.HostAddress)&&snapshot.Local.Team>=0)
+                        {await Send(pipe,new Reply("Waiting for the Rhûn host's team selection…"),timeout.Token);continue;}
+                    }
                     if(snapshot.Local.Observer)
                     {
                         if(!rotation.WasActive(snapshot.Local))
@@ -297,7 +337,7 @@ public static class LivePlacement
                         }
                         rotationImport=null;
                     }
-                    var replacement=rotation.Replacement(snapshot);
+                    var replacement=command.Rhun3v3?rotation.Replacement(snapshot):null;
                     if(replacement!=null&&(!reconcile.ShouldWrite(command.Choice)||command.Choice.Spot==0))
                     {
                         try

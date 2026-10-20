@@ -12,17 +12,17 @@ public sealed partial class BrowserWindow
     readonly TextBlock profileName=UI.LocalizedText("",14,bold:true);
     readonly TextBlock dashboardNetwork=UI.LocalizedText("Connecting…",11,UI.Muted);
     readonly List<Button> availabilityButtons=new();
-    internal Button CreateAvailabilityButton()
+    internal Button CreateAvailabilityButton(bool compact=false)
     {
         var button=UI.Button(Settings.ManualAfk?"Set available":"Set myself AFK",()=>{});
-        StyleAvailabilityButton(button);
+        button.Uid=compact?"Compact":"";StyleAvailabilityButton(button);
         button.ToolTip="Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic.";
         button.Click+=async(_,_)=>{Settings.ManualAfk=!Settings.ManualAfk;Settings.Save();RenderDashboard();try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch(Exception error){System.Diagnostics.Debug.WriteLine(error);}};
         availabilityButtons.Add(button);button.Unloaded+=(_,_)=>availabilityButtons.Remove(button);return button;
     }
     void StyleAvailabilityButton(Button button)
     {
-        L.Bind(button,ContentControl.ContentProperty,Settings.ManualAfk?"Set available":"Set myself AFK");
+        L.Bind(button,ContentControl.ContentProperty,Settings.ManualAfk?(button.Uid=="Compact"?"I’m back":"Set available"):(button.Uid=="Compact"?"Set AFK":"Set myself AFK"));
         button.Tag=Settings.ManualAfk?null:"Primary";
         if(Settings.ManualAfk){button.ClearValue(Control.BackgroundProperty);button.ClearValue(Control.BorderBrushProperty);button.ClearValue(Control.ForegroundProperty);}
         else{button.Background=UI.Brush("#537BEF");button.BorderBrush=UI.Brush("#698DFC");button.Foreground=System.Windows.Media.Brushes.White;}
@@ -111,8 +111,7 @@ public sealed partial class BrowserWindow
         void Add(string name,string ip,bool afk,string state,bool self)
         {
             var row=UI.Button("",()=>CreatePlayerInfo(this,name,ip).Show());row.Style=(Style)Application.Current.FindResource("PlayerRowButton");row.Height=double.NaN;row.Padding=new(12);row.Margin=new(0,0,0,8);row.HorizontalContentAlignment=HorizontalAlignment.Stretch;
-            var details=UI.Stack(UI.Row(UI.Text(name,14,afk?UI.Muted:"#EFF1F5",true),IdlePresence.Badge(afk,showAvailable:false)),UI.Row(UI.LocalizedText(state,11,UI.Muted),UI.Text(" · "+ip,11,UI.Muted)));
-            details.Children.Add(PlayerRoomActivity(ip));
+            var details=UI.Stack(UI.Row(UI.Text(name,14,afk?UI.Muted:"#EFF1F5",true),IdlePresence.Badge(afk,showAvailable:false)),PlayerRoomActivity(ip));
             row.Content=UI.Row(UI.Avatar(name,34),details);row.ToolTip="Player info";
             if(!self)row.ContextMenu=PlayerMenu(this,name,ip);dashboardSocial.Children.Add(row);
         }
@@ -139,7 +138,7 @@ public sealed partial class BrowserWindow
             string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.IsAfk?"AFK":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";
             var button=UI.Button("",()=>{if(!Settings.IsBlocked(friend.Address))OpenChat(friend.Address,friend.Name);});button.Style=(Style)Application.Current.FindResource("PlayerRowButton");button.Height=double.NaN;button.Padding=new(12);button.Margin=new(0,0,0,8);button.HorizontalContentAlignment=HorizontalAlignment.Stretch;
             var name=UI.Text(friend.Name,13,presence?.IsAfk==true?UI.Muted:"#EFF1F5",true);var details=UI.LocalizedText((presence?.IsAfk==true||state=="Online"?friend.Address:state)+(Settings.IsBlocked(friend.Address)?" · Blocked":""),11,presence==null?UI.Muted:presence.IsAfk?IdlePresence.AwayColor:UI.Green);details.Margin=new(0,4,0,0);
-            button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(UI.Row(name,presence==null?UI.LocalizedText("",10):IdlePresence.Badge(presence.IsAfk)),details,PlayerRoomActivity(friend.Address)));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
+            button.Content=UI.Row(UI.Avatar(friend.Name,34),UI.Stack(UI.Row(name,presence==null?UI.LocalizedText("",10):IdlePresence.Badge(presence.IsAfk,showAvailable:false)),PlayerRoomActivity(friend.Address)));button.ContextMenu=PlayerMenu(this,friend.Name,friend.Address);dashboardSocial.Children.Add(button);
         }
     }
 }

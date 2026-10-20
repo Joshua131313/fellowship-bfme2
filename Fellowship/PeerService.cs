@@ -141,6 +141,11 @@ public sealed partial class PeerService : IDisposable
                     await BroadcastState();
                 }
                 else if(msg.Type=="launch-result"){Notice?.Invoke($"{Current?.Players.FirstOrDefault(p=>p.Id==id)?.Name??"Player"}: {Clean(msg.Text,300)}");}
+                else if(msg.Type=="rhun-layout"&&msg.LobbyReport is {} layout)
+                {
+                    bool changed;lock(gate)changed=Current!=null&&RhunSides.Apply(Current,layout,remoteAddress);
+                    if(changed)await BroadcastState();
+                }
                 else if(msg.Type=="native-setup"&&msg.Room is {} setup)
                 {
                     try{await ApplyNativeRules(setup);}catch(InvalidOperationException){} // Invalid/stale observations cannot replace current rules.
@@ -382,6 +387,11 @@ public sealed partial class PeerService : IDisposable
         await BroadcastState();
     }
     bool CanSee(string remote) => !settings.IsBlocked(remote)&&(Current?.FriendsOnly!=true || settings.Friends.Any(f=>f.Address==remote));
+    public async Task SyncRhunLayout(LobbyReport report)
+    {
+        if(IsHost){bool changed;lock(gate)changed=Current!=null&&RhunSides.Apply(Current,report,Address);if(changed)await BroadcastState();}
+        else if(upstream!=null)await upstream.Send(new(){Type="rhun-layout",LobbyReport=report});
+    }
     public Task SyncNativeRules(Room observed)
     {
         if(IsHost)return ApplyNativeRules(observed);
@@ -412,6 +422,7 @@ public sealed partial class PeerService : IDisposable
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(draft.Capacity<Current.Players.Count)throw new InvalidOperationException("The player limit cannot be lower than the current roster.");
             bool mapChanged=Current.MapPath!=draft.MapPath;
+            if(mapChanged||Current.Mode!=draft.Mode){Current.SidePlan=null;Current.LastRhunLineup.Clear();Current.LastRhunHost="";}
             if(mapChanged)
             {
                 Current.Spots=GameMapData.Spots(settings.GamePath,draft.MapPath);

@@ -19,10 +19,11 @@ class Program
   {
     var product=InstallerRecovery.Registered().OrderByDescending(p=>p.Version).First();
     InstallerRecovery.VerifyPackage(args[1],product);
-    var durable=InstallerRecovery.KeepSource(args[1]);InstallerRecovery.RegisterSource(durable,product);
+    var durable=InstallerRecovery.KeepSource(args[1]);if(InstallerRecovery.KeepSource(durable)!=durable)throw new Exception("Installer source retry was not idempotent");InstallerRecovery.RegisterSource(durable,product);
+    var installerLog=Installation.CreateInstallerLog();if(!File.Exists(installerLog))throw new Exception("Physical installer log is missing");
     Console.WriteLine("PASS verified installed MSI source registered without running repair actions");return;
   }
-  RotationTests.Run();
+  RotationTests.Run();RhunSideTests.Run();
   var abortControl=new LivePlacement.Control();
   if(abortControl.Abort().GetAwaiter().GetResult())throw new Exception("Disconnected helper accepted Abort");
   var flags=System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance;
@@ -196,12 +197,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.118-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.118/Fellowship-0.1.118-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.118",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.119-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.119/Fellowship-0.1.119-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.119",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.118","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.118",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.119","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.119",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -312,7 +313,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.118"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.118/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.119"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.119/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -420,11 +421,11 @@ class Program
   foreach(var theme in new[]{"Light","Dark","Black","System"})
   {
     Appearance.Apply(theme);
-    var themedUpdate=new UpdateProgressWindow("0.1.118");themedUpdate.Report("Installing update…","Applying the update",60);
+    var themedUpdate=new UpdateProgressWindow("0.1.119");themedUpdate.Report("Installing update…","Applying the update",60);
     Render(themedUpdate,"dist/preview-update-"+theme.ToLowerInvariant()+".png");
   }
   Appearance.Apply("Dark");
-  var updatePreview=new UpdateProgressWindow("0.1.118");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.119");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -433,7 +434,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.118\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.119\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
@@ -605,7 +606,8 @@ class Program
   SelectTab(onlineBrowser,"Online players");
   var onlineTexts=TabNodes(onlineBrowser).OfType<System.Windows.Controls.TextBlock>().Select(t=>t.Text).ToArray();
   if(!onlineTexts.Contains("Visible player")||!onlineTexts.Contains("Away player")||onlineTexts.Contains("Hidden player"))throw new Exception("Online roster filtering failed");
-  if(!onlineTexts.Contains(playerRoom.Title)||!onlineTexts.Contains("● In game")||!onlineTexts.Contains("● Waiting in lobby"))throw new Exception("Room activity indicators missing");
+  if(!onlineTexts.Contains(playerRoom.Title)||!onlineTexts.Contains("● In game")||!onlineTexts.Contains("● Lobby"))throw new Exception("Room activity indicators missing");
+  Appearance.Apply("Light");var compactFriends=new FriendsWindow(onlineBrowser);Render(compactFriends,"dist/preview-friends-compact.png");compactFriends.Close();
   Render(onlineBrowser,"dist/preview-online-players.png");onlineBrowser.Peer.Dispose();
   Console.WriteLine("PASS menu mnemonic template and dedicated online roster including AFK and blocked-user filtering");
 

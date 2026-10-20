@@ -1729,4 +1729,28 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="The native player selection changed before assignment. Waiting for the lobby to settle." xml:space="preserve">
     <value>Le choix du joueur a changé avant l’attribution. En attente de stabilisation du salon.</value>
   </data>
+  <data name="● Lobby" xml:space="preserve">
+    <value>● Salon</value>
+  </data>
+  <data name="Set AFK" xml:space="preserve">
+    <value>Passer AFK</value>
+  </data>
+  <data name="I’m back" xml:space="preserve">
+    <value>De retour</value>
+  </data>
+  <data name="Coordinating Rhûn team sides…" xml:space="preserve">
+    <value>Organisation des côtés des équipes sur Rhûn…</value>
+  </data>
+  <data name="Waiting for the Rhûn host's team selection…" xml:space="preserve">
+    <value>En attente du choix d’équipe de l’hôte sur Rhûn…</value>
+  </data>
+  <data name="Native selections kept" xml:space="preserve">
+    <value>Choix en jeu conservés</value>
+  </data>
+  <data name="Rhûn 3v3 · Team 1 left · Hosting team 2 right · Automatic mirrored spots" xml:space="preserve">
+    <value>Rhûn 3v3 · Équipe 1 à gauche · Équipe hôte 2 à droite · Positions symétriques automatiques</value>
+  </data>
+  <data name="Windows Installer could not open its log file. Retry to create a new log in the update folder." xml:space="preserve">
+    <value>Windows Installer n’a pas pu ouvrir son journal. Réessayez pour créer un nouveau journal dans le dossier de mise à jour.</value>
+  </data>
 </root>

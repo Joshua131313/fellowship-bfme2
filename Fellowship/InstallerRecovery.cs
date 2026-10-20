@@ -18,8 +18,10 @@ public static class InstallerRecovery
         var digest=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
         var folder=Path.Combine(Settings.Folder,"installer-packages",digest);Directory.CreateDirectory(folder);
         var destination=Path.Combine(folder,Path.GetFileName(package));
-        if(!Path.GetFullPath(package).Equals(destination,StringComparison.OrdinalIgnoreCase))File.Copy(package,destination,true);
-        return destination;
+        bool matches=false;
+        if(File.Exists(destination)){using var cached=File.OpenRead(destination);matches=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(cached))==digest;}
+        if(!matches)File.Copy(package,destination,true);
+        return NativePlacement.PhysicalPath(destination);
     }
     static string Info(string code,string property)
     {
@@ -75,6 +77,7 @@ public static class InstallerRecovery
     public static bool MissingSource(int code,string log)=>code==1612||(code==1603&&log.Contains("1612")&&log.Contains("RemoveExistingProducts"));
     public static void RegisterSource(string package,Product product)
     {
+        package=NativePlacement.PhysicalPath(package);
         VerifyPackage(package,product);
         // Register the verified original source; do not run the old product's
         // repair actions (which can fail or overwrite a newer installation).

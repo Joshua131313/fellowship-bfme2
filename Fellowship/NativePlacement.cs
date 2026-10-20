@@ -27,6 +27,13 @@ public static class NativePlacement
         var bytes=RequestBytes(pid,snapshot,snapshot.Local.Team+1,spot,color:snapshot.Local.Color+1);
         BitConverter.GetBytes(2).CopyTo(bytes,568);return bytes;
     }
+    public static byte[] SideClearRequestBytes(int pid,NativeLobby.Snapshot snapshot,SideMove move)
+    {
+        var bytes=RequestBytes(pid,snapshot,move.Team,0,color:snapshot.Local.Color+1);
+        BitConverter.GetBytes(3).CopyTo(bytes,568);
+        BitConverter.GetBytes(move.FromTeam-1).CopyTo(bytes,1084);
+        BitConverter.GetBytes(move.FromSpot-1).CopyTo(bytes,1088);return bytes;
+    }
     public static byte[] SetupRequestBytes(int pid,NativeLobby.Snapshot snapshot,NativeSetup setup)
     {
         setup.Rules.Validate();var target=Encoding.ASCII.GetBytes(setup.Map);

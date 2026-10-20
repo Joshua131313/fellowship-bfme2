@@ -1,6 +1,14 @@
 # Automatic native lobby replacements
 
-The feature reads the hash-validated BFME2 1.00 LAN lobby. It does not infer teams from Fellowship's Mode, room capacity, or player count.
+The feature reads the hash-validated BFME2 1.00 LAN lobby. Automatic replacement and side rules are enabled only for Fellowship's selected 3v3 mode on Rhûn. Actual teams and the hosting player come from the native BFME2 lobby, never from Fellowship room ownership.
+
+## Rhûn sides
+
+The native hosting player's team occupies the right side (Team 2); the other team occupies the left (Team 1). A shared plan preserves each player's vertical position while mirroring sides. Clients first release their old position with a guarded native change, then claim their target after the host observes that occupied positions have been released. Each client changes only its own slot.
+
+At native match start, the app records the actual BFME2 host and lineup. When the next native lobby has a different hosting team, that lineup determines the mirrored positions. Repeated reports do not toggle sides. A different host from the same team leaves that team on the right. Concurrent manual changes cancel a pending plan. History lasts for the Fellowship room; it is not persisted across a full application restart. All participants need the updated app and enabled live sync for coordinated changes.
+
+The Fellowship room owner distributes the plan, but is not assumed to host BFME2. A protocol test uses different players for those roles and verifies the plan, positions, and native hosting history on every participant. Other modes and maps retain ordinary saved-preference behavior.
 
 ## Native evidence
 
@@ -20,7 +28,7 @@ It remembers each occupied starting position's native team and last occupant. An
 
 A newly connected observer does not clear saved preferences until that player has been seen active in the native session. Observer selections are imported with their cleared position and are never overwritten by saved active assignments. Shared map/rules sync still runs for a host who observes. The existing countdown, native-session, map-validity, occupied-position and color protections remain. A separate automatic bridge mode rechecks that the local player is not observing, still has Random position, and still has the expected team before changing anything; native color is preserved.
 
-History is retained while the sync helper remains alive, including subsequent native lobby sessions on the same map/host. A map or native-host change resets learned positions. Restarting Fellowship loses this transient history. Initial matches still use existing saved assignments; there must be a known native team position to inherit.
+Replacement history is retained while the sync helper remains alive, including subsequent native lobby sessions on the same map/host. A map or native-host change resets learned replacement positions. Restarting Fellowship loses this transient history. A replacement needs a known native team position to inherit.
 
 ## Validation
 
@@ -37,3 +45,5 @@ Source API reference: https://learn.microsoft.com/en-us/windows/win32/api/msi/nf
 The reported remote PC's error 1603 cannot be conclusively diagnosed without its repair log. The release includes a standalone repair helper for restoring sources before running the new MSI on a PC whose old updater cannot get past this failure.
 
 The source-registration probe succeeded against the laptop’s verified 0.1.116 MSI without running repair actions.
+
+External Windows Installer calls now receive resolved physical package and log paths rather than MSIX-virtualized LocalAppData aliases. Every attempt precreates its own log directory and file, addressing error 1622 (failure to open an installation log). Reusing an already retained MSI compares its hash before copying, including when logical and physical paths refer to the same file.
