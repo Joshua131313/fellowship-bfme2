@@ -66,6 +66,7 @@ public static class Installation
                 // Give the former room's native worker time to observe its parent exit.
                 await Task.Delay(1500);
                 EnsureUpdateSpace(package,Executable,Path.GetTempPath(),Environment.SystemDirectory);
+                package=InstallerRecovery.KeepSource(package);
                 await InstallerRecovery.Repair((title,detail)=>window.Report(title,detail));
                 bool repaired=false;
                 int code;var busyTimer=Stopwatch.StartNew();

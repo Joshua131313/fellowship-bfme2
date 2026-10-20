@@ -17,7 +17,8 @@ public sealed record NativeSetup(string Map,int Resources,int CommandPoints,bool
 // Selection changes use the native LAN setters through NativePlacement.
 public sealed class NativeLobby : IDisposable
 {
-    public sealed record Slot(int Row,int State,int Spot,int Team,bool Local,int Color=-1);
+    public sealed record Slot(int Row,int State,int Spot,int Team,bool Local,int Color=-1,int Faction=-1,string Address="")
+    {public bool Observer=>Faction==-2;public bool Active=>State>1&&Faction>=-1;public string Key=>State==6&&Address.Length>0?Address:"row:"+Row;}
     public sealed record Snapshot(uint Identity,string Map,string HostAddress,List<Slot> Slots)
     {
         public Slot Local => Slots.Single(s=>s.Local);
@@ -99,7 +100,8 @@ public sealed class NativeLobby : IDisposable
             bool isLocal=state==6&&address.Take(4).SequenceEqual(local.Take(4))&&
                 (BitConverter.ToUInt16(address,4)==BitConverter.ToUInt16(local,4)||
                  BitConverter.ToUInt16(address,4)==unchecked((ushort)(BitConverter.ToUInt16(local,4)+8)));
-            slots.Add(new(row,state,spot,team,isLocal,color));
+            int faction=I(slot+0x18);
+            slots.Add(new(row,state,spot,team,isLocal,color,faction,Convert.ToHexString(address)));
         }
         if(slots.Count(s=>s.Local)!=1)return null;
         var hostIp=read(lobby+0xb0+0x38,4);Array.Reverse(hostIp);

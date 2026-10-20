@@ -38,7 +38,7 @@ static int ApplySetup(Request* r,U32 lobby,U32 setup){
  return MapEquals(lobby,r->targetMap)&&(int)Value(lobby+0x60)==r->customHeroes&&(int)Value(lobby+0x68)==r->ringHeroes&&(int)Value(lobby+0x6c)==r->commandPoints&&(int)Value(lobby+0x70)==r->resources?3:-16;
 }
 static int Apply(Request* r){
- if(r->magic!=0x46424d32||r->version!=3||r->color< -1||r->color>9||r->pid!=GetCurrentProcessId()||r->row<0||r->row>=8||r->team< -1||r->team>3||r->spot< -1||r->spot>7||r->readOnly<0||r->readOnly>1||r->mode<0||r->mode>1)return -1;
+ if(r->magic!=0x46424d32||r->version!=3||r->color< -1||r->color>9||r->pid!=GetCurrentProcessId()||r->row<0||r->row>=8||r->team< -1||r->team>3||r->spot< -1||r->spot>7||r->readOnly<0||r->readOnly>1||r->mode<0||r->mode>2)return -1;
  if((U32)GetModuleHandleW(0)!=0x400000)return -2;
  if(!Readable(0xdf9800,4)||!Readable(0xdfe1f4,4))return -2;
  U32 network=Value(0xdf9800),setup=Value(0xdfe1f4);
@@ -55,6 +55,10 @@ static int Apply(Request* r){
  if(slot!=lobby+0xb0+0x1d0*r->row||Value(slot+4)!=6||!Equal((void*)(slot+0x38),(void*)(network+0x48),4))return -8;
  U16 localPort=*(U16*)(network+0x4c),port=*(U16*)(slot+0x3c);if(port!=localPort&&port!=(U16)(localPort+8))return -8;
  if(r->mode==1){r->thread=GetCurrentThreadId();return r->readOnly?1:ApplySetup(r,lobby,setup);}
+ // An observer can never receive an active placement. Automatic replacements
+ // additionally compare the live team/random spot so a manual edit wins races.
+ if((int)Value(slot+0x18)==-2)return -19;
+ if(r->mode==2){if((int)Value(slot+0x10)!=-1||(int)Value(slot+0x1c)!=r->team)return -19;r->color=(int)Value(slot+0xc);}
  for(int row=0;row<8;row++){U32 other=Value(lobby+0x18+row*4);if(other!=lobby+0xb0+0x1d0*row)return -4;if(row!=r->row&&Value(other+4)>1&&r->spot>=0&&(int)Value(other+0x10)==r->spot)return -9;if(row!=r->row&&Value(other+4)>1&&r->color>=0&&(int)Value(other+0xc)==r->color)return -17;}
  typedef bool(__thiscall* ValidSpot)(void*,int);
  if(r->spot>=0&&!((ValidSpot)0x83c791)((void*)setup,r->spot))return -10;

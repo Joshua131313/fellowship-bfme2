@@ -22,6 +22,11 @@ public static class NativePlacement
         for(int i=0;i<6;i++)writer.Write(0);
         writer.Write(map);writer.Write(new byte[512-map.Length]);writer.Write(new byte[532]);writer.Write(color.HasValue?color.Value-1:snapshot.Local.Color);return stream.ToArray();
     }
+    public static byte[] RotationRequestBytes(int pid,NativeLobby.Snapshot snapshot,int spot)
+    {
+        var bytes=RequestBytes(pid,snapshot,snapshot.Local.Team+1,spot,color:snapshot.Local.Color+1);
+        BitConverter.GetBytes(2).CopyTo(bytes,568);return bytes;
+    }
     public static byte[] SetupRequestBytes(int pid,NativeLobby.Snapshot snapshot,NativeSetup setup)
     {
         setup.Rules.Validate();var target=Encoding.ASCII.GetBytes(setup.Map);
@@ -133,6 +138,7 @@ public static class NativePlacement
         -14=>"Only the native BFME2 host can change map and rules.",
         -15=>"The selected map is missing from BFME2's native map catalog.",
         -17=>"Another BFME2 player already uses this color. Choose another.",
+        -19=>"The native player selection changed before assignment. Waiting for the lobby to settle.",
         -18=>"BFME2 could not apply the player color.",
         -16=>"BFME2 did not retain the map or rules.",
         -20=>"This BFME2 executable is not the verified 1.00 build.",

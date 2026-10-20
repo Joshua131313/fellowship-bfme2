@@ -1717,4 +1717,16 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="● Waiting in lobby" xml:space="preserve">
     <value>● Waiting in lobby</value>
   </data>
+  <data name="Waiting for the lobby selections to settle…" xml:space="preserve">
+    <value>Waiting for the lobby selections to settle…</value>
+  </data>
+  <data name="Observing the game. Your active spot is available for replacements." xml:space="preserve">
+    <value>Observing the game. Your active spot is available for replacements.</value>
+  </data>
+  <data name="Team starting spot assigned automatically" xml:space="preserve">
+    <value>Team starting spot assigned automatically</value>
+  </data>
+  <data name="The native player selection changed before assignment. Waiting for the lobby to settle." xml:space="preserve">
+    <value>The native player selection changed before assignment. Waiting for the lobby to settle.</value>
+  </data>
 </root>

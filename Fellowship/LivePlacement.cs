@@ -158,6 +158,7 @@ public static class LivePlacement
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
+            var rotation=new LobbyRotation();
             while(!parent.HasExited)
             {
             if(gamePid==0)
@@ -186,6 +187,7 @@ public static class LivePlacement
             if(game.SessionId!=parent.SessionId)throw new IOException("BFME2 belongs to another Windows session.");
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
+            (Choice Requested,Choice Confirmed)? rotationImport=null;
             int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
@@ -217,18 +219,20 @@ public static class LivePlacement
                 }
                 if(session.Stopped)
                 {
+                    rotation.Suspend();
                     await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…"),timeout.Token);
                     continue;
                 }
                 if(editable&&generation!=session.Generation)
                 {
-                    generation=session.Generation;context=null;reconcile=new();desiredSetup=observedSetup=null;
+                    generation=session.Generation;rotation.NewSession();rotationImport=null;context=null;reconcile=new();desiredSetup=observedSetup=null;
                 }
                 try
                 {
                 Reply reply;
                 if(!editable||snapshot==null||!MatchesLobby(command,snapshot))
                 {
+                    rotation.Suspend();
                     reply=new("Waiting for the matching BFME2 LAN setup lobby…");
                 }
                 else
@@ -239,8 +243,8 @@ public static class LivePlacement
                         continue;
                     }
                     string nextContext=ContextKey(command,snapshot);
-                    if(context!=nextContext){context=nextContext;reconcile=new();desiredSetup=observedSetup=null;placementNotice=null;}
-                    if(placementMap!=snapshot.Map){placementMap=snapshot.Map;reconcile=new();placementNotice=null;}
+                    if(context!=nextContext){context=nextContext;rotationImport=null;reconcile=new();desiredSetup=observedSetup=null;placementNotice=null;}
+                    if(placementMap!=snapshot.Map){placementMap=snapshot.Map;rotationImport=null;reconcile=new();placementNotice=null;}
                     if(snapshot.Local.Row==0&&command.Setup is {} requestedSetup)
                     {
                         if(snapshot.Local.Row!=0)throw new IOException("Fellowship's host must also host the BFME2 lobby to sync map and rules.");
@@ -268,6 +272,52 @@ public static class LivePlacement
                         }
                     }
                     var actual=new Choice(snapshot.Local.Team+1,snapshot.Local.Spot+1,snapshot.Local.Color+1);
+                    if(!rotation.Observe(snapshot,TimeSpan.FromMilliseconds(Environment.TickCount64)))
+                    {
+                        await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
+                    }
+                    if(snapshot.Local.Observer)
+                    {
+                        if(!rotation.WasActive(snapshot.Local))
+                        {
+                            await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
+                        }
+                        // Observer is a faction selection, not an empty connection slot.
+                        // Import its cleared spot; never write a saved active placement back.
+                        reconcile.Remember(command.Choice,actual);
+                        await Send(pipe,new Reply("Observing the game. Your active spot is available for replacements.",actual,actual!=command.Choice),timeout.Token);continue;
+                    }
+                    if(rotationImport is {} pendingImport)
+                    {
+                        if(command.Choice==pendingImport.Requested&&actual==pendingImport.Confirmed)
+                        {
+                            // The departing player's cleared spot may reach Fellowship
+                            // after our native assignment. Retry the import until accepted.
+                            await Send(pipe,new Reply("Team starting spot assigned automatically",actual,true),timeout.Token);continue;
+                        }
+                        rotationImport=null;
+                    }
+                    var replacement=rotation.Replacement(snapshot);
+                    if(replacement!=null&&(!reconcile.ShouldWrite(command.Choice)||command.Choice.Spot==0))
+                    {
+                        try
+                        {
+                            await Execute(host,gamePid,snapshot,NativePlacement.RotationRequestBytes(gamePid,snapshot,replacement.Spot),2,timeout.Token);
+                            var confirmed=ReadAfterWrite(reader);
+                            if(confirmed==null||confirmed.Identity!=snapshot.Identity)throw new NativeTransitionException();
+                            if(confirmed.Map!=snapshot.Map||confirmed.Local.Observer||confirmed.Local.Row!=snapshot.Local.Row)throw new NativeRefreshException();
+                            actual=new(confirmed.Local.Team+1,confirmed.Local.Spot+1,confirmed.Local.Color+1);
+                            reconcile.Remember(command.Choice,actual);
+                            if(actual!=command.Choice)rotationImport=(command.Choice,actual);
+                            await Send(pipe,new Reply("Team starting spot assigned automatically",actual,actual!=command.Choice),timeout.Token);continue;
+                        }
+                        catch(PlacementRejectedException)
+                        {
+                            // A concurrent native edit or another allocation wins. Re-read.
+                            rotation.Suspend();await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
+                        }
+                    }
+
                     if(reconcile.ShouldWrite(command.Choice))
                     {
                         placementNotice=null;
@@ -337,7 +387,7 @@ public static class LivePlacement
         (command.Members==null?snapshot.HostAddress==command.Host:command.Members.Split('|').Contains(snapshot.HostAddress,StringComparer.Ordinal))&&(command.Setup!=null&&snapshot.Local.Row==0||
         (command.Members!=null||command.Setup==null)&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
     public static bool HasDuplicateSpots(NativeLobby.Snapshot snapshot)=>snapshot.Slots
-        .Where(s=>s.State>1&&s.Spot>=0).GroupBy(s=>s.Spot).Any(g=>g.Count()>1);
+        .Where(s=>s.Active&&s.Spot>=0).GroupBy(s=>s.Spot).Any(g=>g.Count()>1);
     public static Choice ResolveOccupiedColor(NativeLobby.Snapshot snapshot,Choice desired)=>
         desired.Color>0&&snapshot.Slots.Any(s=>!s.Local&&s.State>1&&s.Color==desired.Color-1)
             ?desired with{Color=snapshot.Local.Color+1}:desired;
@@ -361,7 +411,7 @@ public static class LivePlacement
             await bridge.WaitForExitAsync(token);int code=BitConverter.ToInt32(File.ReadAllBytes(request),32);
             if(code is -3 or -4 or -6)throw new NativeTransitionException();
             if(code is -7 or -8)throw new NativeRefreshException();
-            if(code is -9 or -10 or -17)throw new PlacementRejectedException(NativePlacement.Describe(code));
+            if(code is -9 or -10 or -17 or -19)throw new PlacementRejectedException(NativePlacement.Describe(code));
             if(bridge.ExitCode!=0||code!=expected)throw new IOException(NativePlacement.Describe(code));
             await Task.Delay(300,token);
         }

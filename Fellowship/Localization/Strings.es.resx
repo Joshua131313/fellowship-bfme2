@@ -1717,4 +1717,16 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="● Waiting in lobby" xml:space="preserve">
     <value>● Esperando en la sala</value>
   </data>
+  <data name="Waiting for the lobby selections to settle…" xml:space="preserve">
+    <value>Esperando a que se estabilicen las selecciones de la sala…</value>
+  </data>
+  <data name="Observing the game. Your active spot is available for replacements." xml:space="preserve">
+    <value>Estás observando. Tu posición está disponible para un sustituto.</value>
+  </data>
+  <data name="Team starting spot assigned automatically" xml:space="preserve">
+    <value>Posición inicial del equipo asignada automáticamente</value>
+  </data>
+  <data name="The native player selection changed before assignment. Waiting for the lobby to settle." xml:space="preserve">
+    <value>La selección del jugador cambió antes de la asignación. Esperando a que se estabilice la sala.</value>
+  </data>
 </root>

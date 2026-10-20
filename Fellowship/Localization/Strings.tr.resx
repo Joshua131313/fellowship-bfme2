@@ -1717,4 +1717,16 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="● Waiting in lobby" xml:space="preserve">
     <value>● Lobide bekliyor</value>
   </data>
+  <data name="Waiting for the lobby selections to settle…" xml:space="preserve">
+    <value>Lobi seçimlerinin sabitlenmesi bekleniyor…</value>
+  </data>
+  <data name="Observing the game. Your active spot is available for replacements." xml:space="preserve">
+    <value>Oyunu izliyorsunuz. Konumunuz yedek oyuncular için kullanılabilir.</value>
+  </data>
+  <data name="Team starting spot assigned automatically" xml:space="preserve">
+    <value>Takım başlangıç konumu otomatik atandı</value>
+  </data>
+  <data name="The native player selection changed before assignment. Waiting for the lobby to settle." xml:space="preserve">
+    <value>Oyuncunun seçimi atamadan önce değişti. Lobinin sabitlenmesi bekleniyor.</value>
+  </data>
 </root>

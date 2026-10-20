@@ -8,9 +8,19 @@ namespace Fellowship;
 public static class InstallerRecovery
 {
     public const string UpgradeCode="{D124E6E7-6C01-44D3-A5AD-8077BF46EE40}";
-    public sealed record Product(string Code,Version Version,string CachedPackage);
+    public sealed record Product(string Code,Version Version,string CachedPackage,uint Context=2);
     [DllImport("msi.dll",CharSet=CharSet.Unicode)]static extern uint MsiEnumRelatedProducts(string upgrade,uint reserved,uint index,StringBuilder product);
     [DllImport("msi.dll",CharSet=CharSet.Unicode)]static extern uint MsiGetProductInfo(string product,string property,StringBuilder value,ref uint length);
+    [DllImport("msi.dll",CharSet=CharSet.Unicode)]static extern uint MsiSourceListSetInfo(string product,string? sid,uint context,uint options,string property,string value);
+    public static string KeepSource(string package)
+    {
+        using var stream=File.OpenRead(package);
+        var digest=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
+        var folder=Path.Combine(Settings.Folder,"installer-packages",digest);Directory.CreateDirectory(folder);
+        var destination=Path.Combine(folder,Path.GetFileName(package));
+        if(!Path.GetFullPath(package).Equals(destination,StringComparison.OrdinalIgnoreCase))File.Copy(package,destination,true);
+        return destination;
+    }
     static string Info(string code,string property)
     {
         var value=new StringBuilder(4096);uint length=4096;var result=MsiGetProductInfo(code,property,value,ref length);
@@ -23,7 +33,7 @@ public static class InstallerRecovery
         {
             var code=new StringBuilder(39);uint result=MsiEnumRelatedProducts(UpgradeCode,0,i,code);
             if(result==259)break;if(result!=0)throw new IOException($"Cannot inspect installed Fellowship versions ({result}).");
-            products.Add(new(code.ToString(),Version.Parse(Info(code.ToString(),"VersionString")),Info(code.ToString(),"LocalPackage")));
+            products.Add(new(code.ToString(),Version.Parse(Info(code.ToString(),"VersionString")),Info(code.ToString(),"LocalPackage"),Info(code.ToString(),"AssignmentType")=="1"?4u:2u));
         }
         return products;
     }
@@ -63,6 +73,18 @@ public static class InstallerRecovery
         finally{if(db!=null)Marshal.ReleaseComObject(db);if(installer!=null)Marshal.ReleaseComObject(installer);}
     }
     public static bool MissingSource(int code,string log)=>code==1612||(code==1603&&log.Contains("1612")&&log.Contains("RemoveExistingProducts"));
+    public static void RegisterSource(string package,Product product)
+    {
+        VerifyPackage(package,product);
+        // Register the verified original source; do not run the old product's
+        // repair actions (which can fail or overwrite a newer installation).
+        var source=Path.GetDirectoryName(package)!+Path.DirectorySeparatorChar;
+        var result=MsiSourceListSetInfo(product.Code,null,product.Context,0,"PackageName",Path.GetFileName(package));
+        if(result==0)result=MsiSourceListSetInfo(product.Code,null,product.Context,1,"LastUsedSource",source);
+        var log=Path.Combine(Path.GetDirectoryName(package)!,"source-recovery.log");
+        File.WriteAllText(log,$"Product: {product.Code}\nVersion: {product.Version}\nContext: {product.Context}\nVerified source: {package}\nSource registration result: {result}\n");
+        if(result!=0)throw new IOException($"Installer source recovery returned {result}. Details: {log}");
+    }
     public static async Task Repair(Action<string,string> report,bool force=false)
     {
         foreach(var product in Registered())
@@ -74,11 +96,7 @@ public static class InstallerRecovery
             var package=await AppUpdates.Download(release,Path.Combine(Settings.Folder,"installer-recovery"));
             VerifyPackage(package,product);
             report("Restoring installer files…","Your preferences and friends will be preserved.");
-            var start=new ProcessStartInfo(Path.Combine(Environment.SystemDirectory,"msiexec.exe")){UseShellExecute=false,CreateNoWindow=true};
-            var log=Path.Combine(Path.GetDirectoryName(package)!,"repair.log");
-            foreach(var arg in new[]{"/fv",package,"/qn","/norestart","/L*v",log})start.ArgumentList.Add(arg);
-            using var process=Process.Start(start)??throw new IOException("Cannot start installer repair.");await process.WaitForExitAsync();
-            if(process.ExitCode is not (0 or 3010))throw new IOException($"Installer repair returned {process.ExitCode}. Details: {log}");
+            RegisterSource(package,product);
         }
     }
 }

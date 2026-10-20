@@ -1717,4 +1717,16 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="● Waiting in lobby" xml:space="preserve">
     <value>● En attente dans le salon</value>
   </data>
+  <data name="Waiting for the lobby selections to settle…" xml:space="preserve">
+    <value>En attente de la stabilisation des choix du salon…</value>
+  </data>
+  <data name="Observing the game. Your active spot is available for replacements." xml:space="preserve">
+    <value>Vous êtes observateur. Votre position est disponible pour un remplaçant.</value>
+  </data>
+  <data name="Team starting spot assigned automatically" xml:space="preserve">
+    <value>Position de départ de l’équipe attribuée automatiquement</value>
+  </data>
+  <data name="The native player selection changed before assignment. Waiting for the lobby to settle." xml:space="preserve">
+    <value>Le choix du joueur a changé avant l’attribution. En attente de stabilisation du salon.</value>
+  </data>
 </root>

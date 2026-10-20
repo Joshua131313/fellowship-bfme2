@@ -577,3 +577,7 @@ Show game room info	Voir les informations du salon	Ver información de la sala	�
 Join game room	Rejoindre le salon	Unirse a la sala	الانضمام إلى غرفة اللعب	Oyun odasına katıl
 ● In game	● En jeu	● En partida	● داخل اللعبة	● Oyunda
 ● Waiting in lobby	● En attente dans le salon	● Esperando en la sala	● ينتظر في الردهة	● Lobide bekliyor
+Waiting for the lobby selections to settle…	En attente de la stabilisation des choix du salon…	Esperando a que se estabilicen las selecciones de la sala…	بانتظار استقرار اختيارات الردهة…	Lobi seçimlerinin sabitlenmesi bekleniyor…
+Observing the game. Your active spot is available for replacements.	Vous êtes observateur. Votre position est disponible pour un remplaçant.	Estás observando. Tu posición está disponible para un sustituto.	أنت تشاهد اللعبة. موقعك متاح للاعب بديل.	Oyunu izliyorsunuz. Konumunuz yedek oyuncular için kullanılabilir.
+Team starting spot assigned automatically	Position de départ de l’équipe attribuée automatiquement	Posición inicial del equipo asignada automáticamente	تم تعيين موقع بداية الفريق تلقائيًا	Takım başlangıç konumu otomatik atandı
+The native player selection changed before assignment. Waiting for the lobby to settle.	Le choix du joueur a changé avant l’attribution. En attente de stabilisation du salon.	La selección del jugador cambió antes de la asignación. Esperando a que se estabilice la sala.	تغير اختيار اللاعب قبل التعيين. بانتظار استقرار الردهة.	Oyuncunun seçimi atamadan önce değişti. Lobinin sabitlenmesi bekleniyor.
