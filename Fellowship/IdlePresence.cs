@@ -13,7 +13,7 @@ public static class IdlePresence
     }
     public const int AfkSeconds=300;
     public const string AwayColor="#F2BD60";
-    public static System.Windows.Controls.Border Badge(bool afk)=>new(){CornerRadius=new(5),Padding=new(7,3,7,3),Margin=new(6,0,0,0),Background=UI.Brush(afk?"#3A2C16":"#193C31"),Child=UI.LocalizedText(afk?"◷ AFK":"● Available",10,afk?AwayColor:UI.Green,true)};
+    public static System.Windows.Controls.Border Badge(bool afk,bool showAvailable=true)=>new(){Visibility=afk||showAvailable?System.Windows.Visibility.Visible:System.Windows.Visibility.Collapsed,CornerRadius=new(5),Padding=new(7,3,7,3),Margin=new(6,0,0,0),Background=UI.Brush(afk?"#3A2C16":"#193C31"),Child=UI.LocalizedText(afk?"◷ AFK":"● Available",10,afk?AwayColor:UI.Green,true)};
     [StructLayout(LayoutKind.Sequential)]struct LastInput{public uint Size;public uint Tick;}
     [DllImport("user32.dll")]static extern bool GetLastInputInfo(ref LastInput info);
     public static int? Seconds(){var info=new LastInput{Size=(uint)Marshal.SizeOf<LastInput>()};return GetLastInputInfo(ref info)?(int)Math.Min(unchecked((uint)Environment.TickCount-info.Tick)/1000,604800):null;}

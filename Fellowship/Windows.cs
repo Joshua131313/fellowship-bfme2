@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.110   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.111   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1285,7 +1285,7 @@ public sealed class RoomWindow : Window
         foreach(var p in room.Players)
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=UI.Auto});
-            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk)?UI.Muted:"#E6EAF2",true),IdlePresence.Badge(IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk)),new PingBadge{Milliseconds=app.Latency.Get(p.Address,app.Peer.Address),Margin=new(10,0,10,0)},UI.LocalizedText(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.LocalizedText(p.GameRunning?"   IN BFME2":"   NOT IN GAME",9,p.GameRunning?UI.Green:UI.Muted),UI.LocalizedText(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
+            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk)?UI.Muted:"#E6EAF2",true),IdlePresence.Badge(IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk),showAvailable:false),new PingBadge{Milliseconds=app.Latency.Get(p.Address,app.Peer.Address),Margin=new(10,0,10,0)},UI.LocalizedText(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.LocalizedText(p.GameRunning?"   IN BFME2":"   NOT IN GAME",9,p.GameRunning?UI.Green:UI.Muted),UI.LocalizedText(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
             var ready=UI.LocalizedText($"{(p.Spot>0?"Spot "+p.Spot:"No spot")} · {(p.Team>0?"Team "+p.Team:"No team")}  |  "+(p.Ready?"● Ready":"○ Not ready"),10,p.Ready?UI.Green:MapPreview.TeamColor(p.Team));Grid.SetColumn(ready,1);row.Children.Add(ready);
             var item=new ListBoxItem{Content=row,Padding=new(12,6,12,6),Tag=p};
             var menu=app.PlayerMenu(this,p.Name,p.Address,p);
