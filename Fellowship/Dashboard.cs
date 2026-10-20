@@ -15,9 +15,17 @@ public sealed partial class BrowserWindow
     internal Button CreateAvailabilityButton()
     {
         var button=UI.Button(Settings.ManualAfk?"Set available":"Set myself AFK",()=>{});
+        StyleAvailabilityButton(button);
         button.ToolTip="Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic.";
         button.Click+=async(_,_)=>{Settings.ManualAfk=!Settings.ManualAfk;Settings.Save();RenderDashboard();try{await Peer.SetHostGameRunning(GameLauncher.IsGameActive());await Refresh();}catch(Exception error){System.Diagnostics.Debug.WriteLine(error);}};
         availabilityButtons.Add(button);button.Unloaded+=(_,_)=>availabilityButtons.Remove(button);return button;
+    }
+    void StyleAvailabilityButton(Button button)
+    {
+        button.Content=Settings.ManualAfk?"Set available":"Set myself AFK";
+        button.Tag=Settings.ManualAfk?null:"Primary";
+        if(Settings.ManualAfk){button.ClearValue(Control.BackgroundProperty);button.ClearValue(Control.BorderBrushProperty);button.ClearValue(Control.ForegroundProperty);}
+        else{button.Background=UI.Brush("#537BEF");button.BorderBrush=UI.Brush("#698DFC");button.Foreground=System.Windows.Media.Brushes.White;}
     }
     Button? currentRoomLink;
     readonly TextBlock currentRoomName=UI.Text("",13,UI.Green,true);
@@ -92,7 +100,7 @@ public sealed partial class BrowserWindow
     }
     void RenderDashboard()
     {
-        foreach(var button in availabilityButtons){button.Content=Settings.ManualAfk?"Set available":"Set myself AFK";button.Foreground=UI.Brush(Settings.ManualAfk?IdlePresence.AwayColor:UI.Green);}
+        foreach(var button in availabilityButtons)StyleAvailabilityButton(button);
         if(dashboardRooms==null)return;
         profileName.Text=Settings.Name;profileName.TextTrimming=TextTrimming.CharacterEllipsis;profileName.MaxWidth=105;
         dashboardNetwork.Text=online?"● VPN discovery active":"○ Not connected";dashboardNetwork.Foreground=UI.Brush(online?UI.Green:UI.Muted);

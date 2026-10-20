@@ -2,6 +2,15 @@
 namespace Fellowship;
 public static class IdlePresence
 {
+    public static string LastOnline(DateTimeOffset? seen,DateTimeOffset now)
+    {
+        if(seen is not {} time)return "Not observed";
+        var elapsed=now-time;
+        if(elapsed.TotalDays>=1)return time.ToLocalTime().ToString("d");
+        if(elapsed.TotalHours>=1){var hours=(int)elapsed.TotalHours;return $"{hours} {(hours==1?"hour":"hours")} ago";}
+        if(elapsed.TotalMinutes>=1){var minutes=(int)elapsed.TotalMinutes;return $"{minutes} {(minutes==1?"minute":"minutes")} ago";}
+        return "Just now";
+    }
     public const int AfkSeconds=300;
     public const string AwayColor="#F2BD60";
     public static System.Windows.Controls.Border Badge(bool afk)=>new(){CornerRadius=new(5),Padding=new(7,3,7,3),Margin=new(6,0,0,0),Background=UI.Brush(afk?"#3A2C16":"#193C31"),Child=UI.Text(afk?"◷ AFK":"● Available",10,afk?AwayColor:UI.Green,true)};
