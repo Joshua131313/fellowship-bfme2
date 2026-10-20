@@ -52,6 +52,7 @@ public sealed partial class BrowserWindow
         Button Nav(string label,Action action)
         {
             var button=UI.Button(label,action);button.HorizontalContentAlignment=HorizontalAlignment.Left;button.MinHeight=38;button.Height=double.NaN;button.Margin=new(0,0,0,6);button.Padding=new(12,6,12,6);button.Cursor=Cursors.Hand;
+            button.Background=UI.Brush("#151A21");button.BorderBrush=UI.Brush("#151A21");
             links.Children.Add(button);return button;
         }
         foreach(var page in new[]{"Game rooms","Online players","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
