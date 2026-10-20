@@ -1696,4 +1696,13 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Ready check" xml:space="preserve">
     <value>Demande de préparation</value>
   </data>
+  <data name="Online players" xml:space="preserve">
+    <value>Joueurs en ligne</value>
+  </data>
+  <data name="Players discovered on your selected network. This list updates automatically." xml:space="preserve">
+    <value>Joueurs détectés sur le réseau sélectionné. Cette liste se met à jour automatiquement.</value>
+  </data>
+  <data name="Connect to a network to see online players." xml:space="preserve">
+    <value>Connectez-vous à un réseau pour voir les joueurs en ligne.</value>
+  </data>
 </root>

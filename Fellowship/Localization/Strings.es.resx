@@ -1696,4 +1696,13 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Ready check" xml:space="preserve">
     <value>Comprobación de preparación</value>
   </data>
+  <data name="Online players" xml:space="preserve">
+    <value>Jugadores conectados</value>
+  </data>
+  <data name="Players discovered on your selected network. This list updates automatically." xml:space="preserve">
+    <value>Jugadores encontrados en la red seleccionada. La lista se actualiza automáticamente.</value>
+  </data>
+  <data name="Connect to a network to see online players." xml:space="preserve">
+    <value>Conéctate a una red para ver los jugadores conectados.</value>
+  </data>
 </root>

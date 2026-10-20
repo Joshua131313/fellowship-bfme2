@@ -1696,4 +1696,13 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Ready check" xml:space="preserve">
     <value>Ready check</value>
   </data>
+  <data name="Online players" xml:space="preserve">
+    <value>Online players</value>
+  </data>
+  <data name="Players discovered on your selected network. This list updates automatically." xml:space="preserve">
+    <value>Players discovered on your selected network. This list updates automatically.</value>
+  </data>
+  <data name="Connect to a network to see online players." xml:space="preserve">
+    <value>Connect to a network to see online players.</value>
+  </data>
 </root>

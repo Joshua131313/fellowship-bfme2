@@ -1696,4 +1696,13 @@
   <data name="Ready check" xml:space="preserve">
     <value>طلب الاستعداد</value>
   </data>
+  <data name="Online players" xml:space="preserve">
+    <value>اللاعبون المتصلون</value>
+  </data>
+  <data name="Players discovered on your selected network. This list updates automatically." xml:space="preserve">
+    <value>اللاعبون المكتشفون على الشبكة المحددة. تُحدَّث هذه القائمة تلقائيًا.</value>
+  </data>
+  <data name="Connect to a network to see online players." xml:space="preserve">
+    <value>اتصل بشبكة لرؤية اللاعبين المتصلين.</value>
+  </data>
 </root>

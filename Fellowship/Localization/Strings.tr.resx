@@ -1696,4 +1696,13 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Ready check" xml:space="preserve">
     <value>Hazırlık kontrolü</value>
   </data>
+  <data name="Online players" xml:space="preserve">
+    <value>Çevrimiçi oyuncular</value>
+  </data>
+  <data name="Players discovered on your selected network. This list updates automatically." xml:space="preserve">
+    <value>Seçili ağınızda bulunan oyuncular. Bu liste otomatik güncellenir.</value>
+  </data>
+  <data name="Connect to a network to see online players." xml:space="preserve">
+    <value>Çevrimiçi oyuncuları görmek için bir ağa bağlanın.</value>
+  </data>
 </root>

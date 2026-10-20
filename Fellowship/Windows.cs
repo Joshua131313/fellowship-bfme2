@@ -131,7 +131,7 @@ public static class UI
             "Quit Fellowship"=>new(Key.Q,ModifierKeys.Control),
             "Clear room filter"=>new(Key.L,ModifierKeys.Control),
             "Refresh rooms" or "Refresh presence"=>new(Key.F5),
-            "Active players"=>new(Key.P,ModifierKeys.Control|ModifierKeys.Shift),
+            "Active players" or "Online players"=>new(Key.P,ModifierKeys.Control|ModifierKeys.Shift),
             "Friends list" or "Friends"=>new(Key.F,ModifierKeys.Control|ModifierKeys.Shift),
             "Getting started" or "Game setup guide"=>new(Key.F1),
             "Launch mine"=>new(Key.F9),
@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.113   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.114   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -363,7 +363,7 @@ public sealed partial class BrowserWindow : Window
         UI.Menus(this,
             UI.MenuGroup("_File",UI.MenuAction("Host room",CreateRoom),UI.MenuAction("Hide to tray",Hide),UI.MenuAction("Quit Fellowship",()=>((App)Application.Current).Quit())),
             UI.MenuGroup("_Edit",UI.MenuAction("Settings",OpenSettings),UI.MenuAction("Clear room filter",()=>search.Clear(),()=>search.Text.Length>0)),
-            UI.MenuGroup("_View",UI.MenuAction("Reset column widths",ResetRoomColumnWidths),UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Active players",()=>{playerSearch.Focus();playerSearch.SelectAll();})),
+            UI.MenuGroup("_View",UI.MenuAction("Reset column widths",ResetRoomColumnWidths),UI.MenuAction("Refresh rooms",async()=>{try{await Refresh();}catch(Exception error){UI.Error(error.Message);}}),UI.MenuAction("Online players",()=>SelectDashboard("Online players"))),
             UI.MenuGroup("F_riends",UI.MenuAction("Friends list",OpenFriends),UI.MenuAction("Blocked players",ShowBlockedPlayers)),
             UI.MenuGroup("_Help",UI.MenuAction("Getting started",UI.OpenGuide),UI.MenuAction("About Fellowship",()=>UI.Info(this,"About Fellowship","Fellowship "+System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)+"\nBFME2 1.00 · Radmin VPN"))));
         playerSearch.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){playersPopup.IsOpen=false;rooms.Focus();e.Handled=true;}};

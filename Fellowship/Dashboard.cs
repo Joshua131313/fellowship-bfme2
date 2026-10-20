@@ -45,7 +45,7 @@ public sealed partial class BrowserWindow
         Grid.SetColumn(searchBox,1);menuBar.Children.Add(searchBox);DockPanel.SetDock(menuBar,Dock.Top);root.Children.Insert(1,menuBar);
         root.Children.Remove(roomBody);
         var dashboard=new Grid();dashboard.ColumnDefinitions.Add(new(){Width=new GridLength(220)});dashboard.ColumnDefinitions.Add(new());root.Children.Add(dashboard);
-        var side=new Grid{Margin=new(12,18,12,16)};UI.Rows(side,UI.Auto,UI.Star,UI.Auto);
+        var side=new Grid{Margin=new(12,18,12,16)};UI.Rows(side,UI.Star,UI.Auto);
         var sidebar=new Border{Background=UI.Brush("#151A21"),BorderBrush=UI.Brush("#2C313B"),BorderThickness=new(0,0,1,0),Child=side};dashboard.Children.Add(sidebar);
         var heading=UI.LocalizedText("WORKSPACE",10,UI.Muted,true);heading.Margin=new(12,0,0,12);
         var links=UI.Stack(heading);
@@ -54,7 +54,7 @@ public sealed partial class BrowserWindow
             var button=UI.Button(label,action);button.HorizontalContentAlignment=HorizontalAlignment.Left;button.MinHeight=38;button.Height=double.NaN;button.Margin=new(0,0,0,6);button.Padding=new(12,6,12,6);button.Cursor=Cursors.Hand;
             links.Children.Add(button);return button;
         }
-        foreach(var page in new[]{"Game rooms","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
+        foreach(var page in new[]{"Game rooms","Online players","Messages","Friends"}){var name=page;navigation[name]=Nav(name,()=>SelectDashboard(name));}
         currentRoomLink=Nav("▶  Current room",OpenCurrentRoom);currentRoomLink.Margin=new(0,0,0,6);currentRoomLink.Background=UI.Brush("#151A21");currentRoomLink.BorderBrush=UI.Brush("#151A21");currentRoomLink.Tag="CurrentRoom";currentRoomLink.Height=56;
         currentRoomName.TextWrapping=TextWrapping.NoWrap;currentRoomName.TextTrimming=TextTrimming.CharacterEllipsis;currentRoomPlayers.Margin=new(0,3,0,0);currentRoomPlayers.Foreground=UI.Brush(UI.Muted);
         var roomContent=new Grid();roomContent.ColumnDefinitions.Add(new(){Width=new GridLength(26)});roomContent.ColumnDefinitions.Add(new());
@@ -63,11 +63,11 @@ public sealed partial class BrowserWindow
         var tools=UI.LocalizedText("TOOLS",10,UI.Muted,true);tools.Margin=new(12,22,0,12);links.Children.Add(tools);
         navigation["Game preferences"]=Nav("Game preferences",()=>SelectDashboard("Game preferences"));
         navigation["Settings"]=Nav("Settings",OpenSettings);Nav("Help & guide",UI.OpenGuide);
-        UI.At(side,links,0);
+        UI.At(side,UI.Scroll(links),0);
         var profile=UI.Button("",()=>CreateProfileEditor(this).Show());profile.Style=(Style)Application.Current.FindResource("PlayerRowButton");profile.Height=double.NaN;profile.Margin=new(0,0,0,14);profile.Padding=new(8);profile.ToolTip="Edit your profile";
         profile.Content=UI.Row(UI.Avatar(Settings.Name,32),UI.Stack(profileName,UI.LocalizedText("Edit profile",10,UI.Muted)));
         var availability=CreateAvailabilityButton();availability.Margin=new(0,0,0,12);
-        var bottom=UI.Stack(profile,availability,new Border{Margin=new(10,0,0,0),Child=dashboardNetwork});UI.At(side,bottom,2);
+        var bottom=UI.Stack(profile,availability,new Border{Margin=new(10,0,0,0),Child=dashboardNetwork});UI.At(side,bottom,1);
         Grid.SetColumn(roomBody,1);dashboard.Children.Add(roomBody);
         var socialScroll=UI.Scroll(dashboardSocial);Grid.SetColumn(socialScroll,1);dashboard.Children.Add(socialScroll);
         socialScroll.Visibility=Visibility.Collapsed;dashboardSocial.Tag=socialScroll;
@@ -78,7 +78,7 @@ public sealed partial class BrowserWindow
     {
         dashboardPage=page;if(dashboardRooms==null)return;
         dashboardRooms.Visibility=page=="Game rooms"?Visibility.Visible:Visibility.Collapsed;
-        if(dashboardSocial.Tag is FrameworkElement social)social.Visibility=page is "Friends" or "Messages"?Visibility.Visible:Visibility.Collapsed;
+        if(dashboardSocial.Tag is FrameworkElement social)social.Visibility=page is "Friends" or "Messages" or "Online players"?Visibility.Visible:Visibility.Collapsed;
         bool preferences=page is "Settings" or "Game preferences";
         dashboardPreferences.Visibility=preferences?Visibility.Visible:Visibility.Collapsed;
         if(preferences)
@@ -98,6 +98,24 @@ public sealed partial class BrowserWindow
         foreach(var pair in navigation){bool selected=pair.Key==page;pair.Value.Tag=selected?"SelectedNavigation":null;pair.Value.Background=UI.Brush("#151A21");pair.Value.BorderBrush=UI.Brush("#151A21");if(selected)pair.Value.SetResourceReference(Control.ForegroundProperty,"InteractionText");else pair.Value.Foreground=UI.Brush("#EFF1F5");}
         RenderDashboard();
     }
+    void RenderOnlinePlayers()
+    {
+        var peers=Presence.Active(DateTimeOffset.UtcNow).Where(p=>p.Address!=Peer.Address&&!Settings.IsBlocked(p.Address)).OrderBy(p=>p.Reconnecting).ThenBy(p=>p.IsAfk).ThenBy(p=>p.Name,StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var network=UI.Text(Settings.NetworkName,13,bold:true);
+        var hint=UI.LocalizedText("Players discovered on your selected network. This list updates automatically.",12,UI.Muted);hint.Margin=new(0,6,0,12);
+        var refresh=UI.AsyncButton("Refresh presence",Refresh);refresh.HorizontalAlignment=HorizontalAlignment.Left;refresh.Margin=new(0,0,0,18);
+        dashboardSocial.Children.Add(network);dashboardSocial.Children.Add(hint);dashboardSocial.Children.Add(refresh);
+        if(online)Add(Settings.Name,Peer.Address,Settings.ManualAfk||IdlePresence.IsAfk(IdlePresence.Seconds()),"You",true);
+        foreach(var peer in peers)Add(peer.Name,peer.Address,peer.IsAfk,peer.Reconnecting?"Reconnecting":peer.GameRunning?"In BFME2":peer.Room!=null?"In a room":"Online",false);
+        if(peers.Length==0)dashboardSocial.Children.Add(UI.LocalizedText(online?"No other players online":"Connect to a network to see online players.",13,UI.Muted));
+        void Add(string name,string ip,bool afk,string state,bool self)
+        {
+            var row=UI.Button("",()=>CreatePlayerInfo(this,name,ip).Show());row.Style=(Style)Application.Current.FindResource("PlayerRowButton");row.Height=double.NaN;row.Padding=new(12);row.Margin=new(0,0,0,8);row.HorizontalContentAlignment=HorizontalAlignment.Stretch;
+            var details=UI.Stack(UI.Row(UI.Text(name,14,afk?UI.Muted:"#EFF1F5",true),IdlePresence.Badge(afk,showAvailable:false)),UI.Row(UI.LocalizedText(state,11,UI.Muted),UI.Text(" · "+ip,11,UI.Muted)));
+            row.Content=UI.Row(UI.Avatar(name,34),details);row.ToolTip="Player info";
+            if(!self)row.ContextMenu=PlayerMenu(this,name,ip);dashboardSocial.Children.Add(row);
+        }
+    }
     void RenderDashboard()
     {
         foreach(var button in availabilityButtons)StyleAvailabilityButton(button);
@@ -107,6 +125,7 @@ public sealed partial class BrowserWindow
         if(currentRoomLink!=null){currentRoomLink.Visibility=Peer.Current==null?Visibility.Collapsed:Visibility.Visible;currentRoomName.Text=Peer.Current?.Title??"Current room";L.Bind(currentRoomPlayers,TextBlock.TextProperty,Peer.Current is {} active?$"{active.Players.Count}/{active.Capacity} players":"");currentRoomLink.ToolTip=Peer.Current?.Title;}
         if(dashboardPage is "Game rooms" or "Settings" or "Game preferences")return;
         dashboardSocial.Children.Clear();var title=UI.LocalizedText(dashboardPage,25,bold:true);title.Margin=new(0,0,0,22);dashboardSocial.Children.Add(title);
+        if(dashboardPage=="Online players"){RenderOnlinePlayers();return;}
         if(dashboardPage=="Friends")
         {
             var manage=UI.Button("Manage friends",OpenFriends);manage.HorizontalAlignment=HorizontalAlignment.Left;manage.Margin=new(0,0,0,18);dashboardSocial.Children.Add(manage);
