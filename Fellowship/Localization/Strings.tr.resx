@@ -1651,4 +1651,19 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch mine." xml:space="preserve">
     <value>Başlatma isteği ulaşmadı: {0}. Yeniden bağlanmalarını veya kendi oyunlarını başlatmalarını isteyin.</value>
   </data>
+  <data name="Player online" xml:space="preserve">
+    <value>Oyuncu çevrimiçi</value>
+  </data>
+  <data name="Player offline" xml:space="preserve">
+    <value>Oyuncu çevrimdışı</value>
+  </data>
+  <data name="Room created" xml:space="preserve">
+    <value>Oda oluşturuldu</value>
+  </data>
+  <data name="{0} is now online." xml:space="preserve">
+    <value>{0} artık çevrimiçi.</value>
+  </data>
+  <data name="{0} is now offline." xml:space="preserve">
+    <value>{0} artık çevrimdışı.</value>
+  </data>
 </root>

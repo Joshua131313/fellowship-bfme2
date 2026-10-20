@@ -1651,4 +1651,19 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch mine." xml:space="preserve">
     <value>Launch could not reach: {0}. Ask them to reconnect or use Launch mine.</value>
   </data>
+  <data name="Player online" xml:space="preserve">
+    <value>Player online</value>
+  </data>
+  <data name="Player offline" xml:space="preserve">
+    <value>Player offline</value>
+  </data>
+  <data name="Room created" xml:space="preserve">
+    <value>Room created</value>
+  </data>
+  <data name="{0} is now online." xml:space="preserve">
+    <value>{0} is now online.</value>
+  </data>
+  <data name="{0} is now offline." xml:space="preserve">
+    <value>{0} is now offline.</value>
+  </data>
 </root>

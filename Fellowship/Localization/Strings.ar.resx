@@ -1651,4 +1651,19 @@
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch mine." xml:space="preserve">
     <value>تعذر الوصول لتشغيل اللعبة: {0}. اطلب منهم إعادة الاتصال أو تشغيل لعبتهم.</value>
   </data>
+  <data name="Player online" xml:space="preserve">
+    <value>لاعب متصل</value>
+  </data>
+  <data name="Player offline" xml:space="preserve">
+    <value>لاعب غير متصل</value>
+  </data>
+  <data name="Room created" xml:space="preserve">
+    <value>أُنشئت غرفة</value>
+  </data>
+  <data name="{0} is now online." xml:space="preserve">
+    <value>{0} متصل الآن.</value>
+  </data>
+  <data name="{0} is now offline." xml:space="preserve">
+    <value>{0} غير متصل الآن.</value>
+  </data>
 </root>

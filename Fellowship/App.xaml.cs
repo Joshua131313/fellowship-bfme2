@@ -42,7 +42,7 @@ public partial class App : Application
     EventWaitHandle? activateEvent;
     RegisteredWaitHandle? activationWait;
     TrayIcon? tray;
-    public void NotifyActivity(string title,string message,Action action)=>tray?.Notify(title,message,action);
+    public void NotifyActivity(ActivityAlerts.Alert alert,Action action)=>tray?.Notify(alert,action);
     public bool IsQuitting { get; private set; }
     bool quitPending;
     public async void Quit()

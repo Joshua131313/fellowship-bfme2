@@ -351,7 +351,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.108   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.109   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -651,7 +651,8 @@ public sealed partial class BrowserWindow : Window
         var backup=(Border)children[^1];backup.Margin=new(0,12,0,0);
         left.Children.Add(Section("Backup & restore","Keep a copy of your preferences and contacts.",backup));
         left.Children.Add(Section("Updates","",children[^2]));
-        right.Children.Add(Section("Language","",L.LanguagePicker(Settings)));
+        var languagePicker=L.LanguagePicker(Settings);languagePicker.Margin=new(0,12,0,0);
+        right.Children.Add(Section("Language","",languagePicker));
         L.Choices(appearanceChoice);
         right.Children.Add(Section("Appearance","Choose a theme, or follow Windows.",appearanceChoice));
         right.Children.Add(Section("Sound","Set the volume and choose which events you hear.",soundMaster,volumeLabel,volume,soundEvents));
@@ -717,7 +718,7 @@ public sealed partial class BrowserWindow : Window
             foreach(var alert in activityAlerts.Observe(Settings,Presence.Active(now)))
             {
                 if(Settings.FriendActivitySounds&&alert.Online is bool onlineFriend)MessageAlert.PlayPresence(onlineFriend);
-                if(alert.Notify&&Settings.DesktopNotifications&&Application.Current is App application)application.NotifyActivity(alert.Title,alert.Message,()=>OpenActivity(alert));
+                if(alert.Notify&&Settings.DesktopNotifications&&Application.Current is App application)application.NotifyActivity(alert,()=>OpenActivity(alert));
             }
 
         }

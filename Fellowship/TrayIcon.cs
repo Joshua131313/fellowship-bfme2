@@ -10,7 +10,7 @@ public sealed class TrayIcon : IDisposable
     readonly System.Drawing.Icon icon;
     readonly BrowserWindow browser;
     ContextMenu? menu;
-    readonly Queue<(string Title,string Message,Action Action)> notifications=new();
+    readonly Queue<(ActivityAlerts.Alert Alert,Action Action)> notifications=new();
     Action? notificationAction;
     bool notificationVisible;
     public TrayIcon(BrowserWindow browser)
@@ -34,25 +34,26 @@ public sealed class TrayIcon : IDisposable
         });
     }
     void LanguageChanged(object? sender,System.ComponentModel.PropertyChangedEventArgs args)=>tray.Text=L.T("Fellowship · running in the background");
-    public void Notify(string title,string message,Action action)
+    public void Notify(ActivityAlerts.Alert alert,Action action)
     {
         if(notifications.Count>=32)return;
-        notifications.Enqueue((title,message,action));if(!notificationVisible)ShowNextNotification();
+        notifications.Enqueue((alert,action));if(!notificationVisible)ShowNextNotification();
     }
     void ShowNextNotification()
     {
         if(!notifications.TryDequeue(out var next))return;
         notificationAction=next.Action;notificationVisible=true;
-        try{tray.ShowBalloonTip(5000,L.T(next.Title),next.Message,System.Windows.Forms.ToolTipIcon.Info);}
+        try{tray.ShowBalloonTip(5000,next.Alert.DisplayTitle,next.Alert.DisplayMessage,System.Windows.Forms.ToolTipIcon.Info);}
         catch(System.ComponentModel.Win32Exception){notificationAction=null;notificationVisible=false;}
     }
     void ShowMenu()
     {
         if(menu!=null)menu.IsOpen=false;
         menu=new ContextMenu{Placement=PlacementMode.MousePoint};
+        menu.SetBinding(FrameworkElement.FlowDirectionProperty,new System.Windows.Data.Binding(nameof(L.Direction)){Source=L.Current});
         void Item(string label,Action action,bool enabled=true)
         {
-            var item=new MenuItem{Header=label,IsEnabled=enabled};
+            var item=new MenuItem{IsEnabled=enabled};L.Bind(item,HeaderedItemsControl.HeaderProperty,label);
             item.Click+=(_,_)=>action();menu.Items.Add(item);
         }
         Item("Game rooms",()=>UI.Reveal(browser));

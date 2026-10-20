@@ -3,7 +3,15 @@ namespace Fellowship;
 // Observe completed discovery rounds, retaining the directory's reconnect grace period.
 public sealed class ActivityAlerts
 {
-    public sealed record Alert(string Title,string Message,bool? Online=null,string Address="",string Name="",string RoomId="",bool Notify=true);
+    public sealed record Alert(string Title,string Message,bool? Online=null,string Address="",string Name="",string RoomId="",bool Notify=true)
+    {
+        // Resolve at display time so queued notifications follow the current language.
+        // Insert player names after translation; never translate user-authored text.
+        public string DisplayTitle=>L.T(Title);
+        public string DisplayMessage=>Online is bool online
+            ?string.Format(System.Globalization.CultureInfo.CurrentUICulture,L.T(online?"{0} is now online.":"{0} is now offline."),Name)
+            :Message;
+    }
     readonly Dictionary<string,bool> friends=new();
     readonly HashSet<string> rooms=new();
     readonly Queue<string> roomOrder=new();

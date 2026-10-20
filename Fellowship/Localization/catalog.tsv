@@ -554,3 +554,8 @@ Connection to the host ended. Rejoin from the room browser.	Connexion à l’hô
 A player disconnected during transfer and may need to rejoin.	Un joueur s’est déconnecté pendant le transfert et devra peut-être rejoindre le salon.	Un jugador se desconectó durante la transferencia y puede tener que volver a unirse.	انقطع اتصال لاعب أثناء النقل وقد يحتاج إلى الانضمام مجددًا.	Devir sırasında bir oyuncunun bağlantısı kesildi ve yeniden katılması gerekebilir.
 Host transfer was interrupted. Rejoin the room at {0} if it is available.	Transfert de l’hôte interrompu. Rejoignez le salon à {0} s’il est disponible.	Se interrumpió la transferencia del anfitrión. Vuelve a unirte a {0} si está disponible.	انقطع نقل الاستضافة. انضم مجددًا إلى الغرفة على {0} إن كانت متاحة.	Ev sahibi devri kesintiye uğradı. Kullanılabiliyorsa {0} adresindeki odaya yeniden katılın.
 Launch could not reach: {0}. Ask them to reconnect or use Launch mine.	Lancement impossible pour : {0}. Demandez-leur de se reconnecter ou de lancer leur jeu.	No se pudo iniciar para: {0}. Pídeles que se reconecten o inicien su juego.	تعذر الوصول لتشغيل اللعبة: {0}. اطلب منهم إعادة الاتصال أو تشغيل لعبتهم.	Başlatma isteği ulaşmadı: {0}. Yeniden bağlanmalarını veya kendi oyunlarını başlatmalarını isteyin.
+Player online	Joueur en ligne	Jugador conectado	لاعب متصل	Oyuncu çevrimiçi
+Player offline	Joueur hors ligne	Jugador desconectado	لاعب غير متصل	Oyuncu çevrimdışı
+Room created	Salon créé	Sala creada	أُنشئت غرفة	Oda oluşturuldu
+{0} is now online.	{0} est maintenant en ligne.	{0} está conectado.	{0} متصل الآن.	{0} artık çevrimiçi.
+{0} is now offline.	{0} est maintenant hors ligne.	{0} está desconectado.	{0} غير متصل الآن.	{0} artık çevrimdışı.
