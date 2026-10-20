@@ -715,4 +715,940 @@
   <data name="○ Not connected" xml:space="preserve">
     <value>○ غير متصل</value>
   </data>
+  <data name="Private messages" xml:space="preserve">
+    <value>الرسائل الخاصة</value>
+  </data>
+  <data name="Messages sent" xml:space="preserve">
+    <value>الرسائل المرسلة</value>
+  </data>
+  <data name="Room messages" xml:space="preserve">
+    <value>رسائل الغرفة</value>
+  </data>
+  <data name="Invitations" xml:space="preserve">
+    <value>الدعوات</value>
+  </data>
+  <data name="Player joins room" xml:space="preserve">
+    <value>انضمام لاعب إلى الغرفة</value>
+  </data>
+  <data name="Player leaves room" xml:space="preserve">
+    <value>مغادرة لاعب للغرفة</value>
+  </data>
+  <data name="Friend online" xml:space="preserve">
+    <value>صديق متصل</value>
+  </data>
+  <data name="Friend offline" xml:space="preserve">
+    <value>صديق غير متصل</value>
+  </data>
+  <data name="No team / free for all" xml:space="preserve">
+    <value>بلا فريق / الجميع ضد الجميع</value>
+  </data>
+  <data name="No team" xml:space="preserve">
+    <value>بلا فريق</value>
+  </data>
+  <data name="Team {0}" xml:space="preserve">
+    <value>الفريق {0}</value>
+  </data>
+  <data name="Balanced teams" xml:space="preserve">
+    <value>فرق متوازنة</value>
+  </data>
+  <data name="Free for all" xml:space="preserve">
+    <value>الجميع ضد الجميع</value>
+  </data>
+  <data name="No maps match your search" xml:space="preserve">
+    <value>لا توجد خرائط تطابق بحثك</value>
+  </data>
+  <data name="Search map names" xml:space="preserve">
+    <value>ابحث عن أسماء الخرائط</value>
+  </data>
+  <data name="Search players or VPN address" xml:space="preserve">
+    <value>ابحث عن لاعبين أو عنوان VPN</value>
+  </data>
+  <data name="Filter rooms by mode" xml:space="preserve">
+    <value>تصفية الغرف حسب النمط</value>
+  </data>
+  <data name="Filter rooms by name, host or map" xml:space="preserve">
+    <value>تصفية حسب الاسم أو المضيف أو الخريطة</value>
+  </data>
+  <data name="Switch network · leaves your current room" xml:space="preserve">
+    <value>تبديل الشبكة · يغادر الغرفة الحالية</value>
+  </data>
+  <data name="Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic." xml:space="preserve">
+    <value>تستمر حالة الغياب اليدوية حتى تختار متاحًا. بخلاف ذلك يُكتشف الخمول تلقائيًا.</value>
+  </data>
+  <data name="Check which friends are online" xml:space="preserve">
+    <value>تحقق من الأصدقاء المتصلين</value>
+  </data>
+  <data name="Choose a saved room preset" xml:space="preserve">
+    <value>اختر إعداد غرفة محفوظًا</value>
+  </data>
+  <data name="Starting team arrangement; players can change teams in the lobby" xml:space="preserve">
+    <value>الفرق الأولية؛ يمكن للاعبين تغييرها في الردهة</value>
+  </data>
+  <data name="Starting locations — preview only" xml:space="preserve">
+    <value>مواقع البداية — معاينة فقط</value>
+  </data>
+  <data name="Stop BFME2 on this computer" xml:space="preserve">
+    <value>إيقاف BFME2 على هذا الجهاز</value>
+  </data>
+  <data name="Host's selected VPN IPv4 address" xml:space="preserve">
+    <value>عنوان IPv4 لشبكة VPN المحددة للمضيف</value>
+  </data>
+  <data name="Write a message · Enter to send" xml:space="preserve">
+    <value>اكتب رسالة · Enter للإرسال</value>
+  </data>
+  <data name="Message your room · Enter to send" xml:space="preserve">
+    <value>راسل غرفتك · Enter للإرسال</value>
+  </data>
+  <data name="Clipboard busy · try again" xml:space="preserve">
+    <value>الحافظة مشغولة · حاول مجددًا</value>
+  </data>
+  <data name="Clipboard is busy. Try copying again." xml:space="preserve">
+    <value>الحافظة مشغولة. حاول النسخ مجددًا.</value>
+  </data>
+  <data name="Complete the required fields to enable this action." xml:space="preserve">
+    <value>أكمل الحقول المطلوبة لتفعيل هذا الإجراء.</value>
+  </data>
+  <data name="Synchronize map, rules, team, starting spot and color in the native LAN lobby." xml:space="preserve">
+    <value>مزامنة الخريطة والقواعد والفريق والموقع واللون في ردهة LAN للعبة.</value>
+  </data>
+  <data name="Fellowship room capacity. BFME2 matches still support at most 8 players." xml:space="preserve">
+    <value>سعة غرفة Fellowship. تدعم مباريات BFME2 ثمانية لاعبين كحد أقصى.</value>
+  </data>
+  <data name="Fellowship room limit: 2–64. BFME2 matches support at most 8 players." xml:space="preserve">
+    <value>حد غرفة Fellowship: ‏2–64. تدعم BFME2 ثمانية لاعبين كحد أقصى.</value>
+  </data>
+  <data name="NAME" xml:space="preserve">
+    <value>الاسم</value>
+  </data>
+  <data name="RADMIN IPv4 ADDRESS" xml:space="preserve">
+    <value>عنوان IPv4 لـ RADMIN</value>
+  </data>
+  <data name="No other players online" xml:space="preserve">
+    <value>لا يوجد لاعبون آخرون متصلون</value>
+  </data>
+  <data name="Room is no longer available · showing last known details" xml:space="preserve">
+    <value>الغرفة غير متاحة · عرض آخر التفاصيل المعروفة</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>خطأ</value>
+  </data>
+  <data name="An unexpected error occurred. Please retry. Copy diagnostic details if you need support." xml:space="preserve">
+    <value>حدث خطأ غير متوقع. حاول مجددًا. انسخ تفاصيل التشخيص إذا احتجت إلى دعم.</value>
+  </data>
+  <data name="Copy diagnostic details" xml:space="preserve">
+    <value>نسخ تفاصيل التشخيص</value>
+  </data>
+  <data name="Enter a nickname." xml:space="preserve">
+    <value>أدخل اسمًا مستعارًا.</value>
+  </data>
+  <data name="Enter a room name and choose between 2 and 64 players." xml:space="preserve">
+    <value>أدخل اسم غرفة واختر عددًا من 2 إلى 64 لاعبًا.</value>
+  </data>
+  <data name="Enter the host’s IPv4 address on your selected VPN network." xml:space="preserve">
+    <value>أدخل عنوان IPv4 للمضيف على شبكة VPN المحددة.</value>
+  </data>
+  <data name="Check the room name, patch and player limit." xml:space="preserve">
+    <value>تحقق من اسم الغرفة والإصدار وحد اللاعبين.</value>
+  </data>
+  <data name="Choose a BFME2 player color." xml:space="preserve">
+    <value>اختر لون لاعب BFME2.</value>
+  </data>
+  <data name="Choose a valid team and map spot in Fellowship." xml:space="preserve">
+    <value>اختر فريقًا وموقعًا صالحين في Fellowship.</value>
+  </data>
+  <data name="Choose no team or team 1–4." xml:space="preserve">
+    <value>اختر بلا فريق أو فريقًا من 1 إلى 4.</value>
+  </data>
+  <data name="Choose supported BFME2 1.00 rules." xml:space="preserve">
+    <value>اختر قواعد تدعمها BFME2 1.00.</value>
+  </data>
+  <data name="Choose an unblocked friend." xml:space="preserve">
+    <value>اختر صديقًا غير محظور.</value>
+  </data>
+  <data name="Choose another player's VPN address." xml:space="preserve">
+    <value>اختر عنوان VPN للاعب آخر.</value>
+  </data>
+  <data name="Select a connected player." xml:space="preserve">
+    <value>اختر لاعبًا متصلًا.</value>
+  </data>
+  <data name="Another player has claimed this color. Choose another." xml:space="preserve">
+    <value>حجز لاعب آخر هذا اللون. اختر لونًا آخر.</value>
+  </data>
+  <data name="Another player has claimed this spot. Choose another." xml:space="preserve">
+    <value>حجز لاعب آخر هذا الموقع. اختر موقعًا آخر.</value>
+  </data>
+  <data name="That starting spot is unavailable on this map." xml:space="preserve">
+    <value>موقع البداية غير متاح على هذه الخريطة.</value>
+  </data>
+  <data name="The map changed. Choose a spot on the new map." xml:space="preserve">
+    <value>تغيرت الخريطة. اختر موقعًا على الخريطة الجديدة.</value>
+  </data>
+  <data name="Every player must be ready before launching." xml:space="preserve">
+    <value>يجب أن يكون جميع اللاعبين جاهزين قبل التشغيل.</value>
+  </data>
+  <data name="Join a Fellowship room first." xml:space="preserve">
+    <value>انضم أولًا إلى غرفة Fellowship.</value>
+  </data>
+  <data name="Join a room first." xml:space="preserve">
+    <value>انضم أولًا إلى غرفة.</value>
+  </data>
+  <data name="Join or host a room first." xml:space="preserve">
+    <value>انضم إلى غرفة أو أنشئ غرفة أولًا.</value>
+  </data>
+  <data name="Only the host can edit this room." xml:space="preserve">
+    <value>يمكن للمضيف فقط تعديل هذه الغرفة.</value>
+  </data>
+  <data name="Only the host can remove players." xml:space="preserve">
+    <value>يمكن للمضيف فقط إزالة اللاعبين.</value>
+  </data>
+  <data name="Only the host can promote players." xml:space="preserve">
+    <value>يمكن للمضيف فقط ترقية اللاعبين.</value>
+  </data>
+  <data name="That player is no longer connected." xml:space="preserve">
+    <value>لم يعد هذا اللاعب متصلًا.</value>
+  </data>
+  <data name="Player is no longer in the room." xml:space="preserve">
+    <value>لم يعد اللاعب في الغرفة.</value>
+  </data>
+  <data name="Host transfer in progress." xml:space="preserve">
+    <value>نقل الاستضافة جارٍ.</value>
+  </data>
+  <data name="Host transfer already in progress." xml:space="preserve">
+    <value>نقل الاستضافة جارٍ بالفعل.</value>
+  </data>
+  <data name="Wait for host transfer to finish." xml:space="preserve">
+    <value>انتظر انتهاء نقل الاستضافة.</value>
+  </data>
+  <data name="All room members must update Fellowship before transferring the host." xml:space="preserve">
+    <value>يجب على جميع الأعضاء تحديث Fellowship قبل نقل الاستضافة.</value>
+  </data>
+  <data name="The next player must update Fellowship and connect its VPN listener before becoming host." xml:space="preserve">
+    <value>يجب على المضيف التالي تحديث Fellowship وتوصيل VPN قبل استلام الاستضافة.</value>
+  </data>
+  <data name="New host did not confirm the room." xml:space="preserve">
+    <value>لم يؤكد المضيف الجديد الغرفة.</value>
+  </data>
+  <data name="Disconnected from host." xml:space="preserve">
+    <value>انقطع الاتصال بالمضيف.</value>
+  </data>
+  <data name="The room is closed." xml:space="preserve">
+    <value>الغرفة مغلقة.</value>
+  </data>
+  <data name="This room is no longer available." xml:space="preserve">
+    <value>لم تعد هذه الغرفة متاحة.</value>
+  </data>
+  <data name="This room is no longer available or is private." xml:space="preserve">
+    <value>هذه الغرفة لم تعد متاحة أو خاصة.</value>
+  </data>
+  <data name="This invitation has expired or the room moved. Ask for a new invitation." xml:space="preserve">
+    <value>انتهت الدعوة أو انتقلت الغرفة. اطلب دعوة جديدة.</value>
+  </data>
+  <data name="Unblock this player before joining." xml:space="preserve">
+    <value>ألغِ حظر هذا اللاعب قبل الانضمام.</value>
+  </data>
+  <data name="Unblock this player before messaging." xml:space="preserve">
+    <value>ألغِ حظر هذا اللاعب قبل مراسلته.</value>
+  </data>
+  <data name="Leave the room before switching networks." xml:space="preserve">
+    <value>غادر الغرفة قبل تبديل الشبكات.</value>
+  </data>
+  <data name="Leave your room before restoring a backup." xml:space="preserve">
+    <value>غادر الغرفة قبل استعادة نسخة احتياطية.</value>
+  </data>
+  <data name="The player limit cannot be lower than the current roster." xml:space="preserve">
+    <value>لا يمكن أن يكون الحد أقل من عدد اللاعبين الحالي.</value>
+  </data>
+  <data name="Room creation cancelled. Your current room is unchanged." xml:space="preserve">
+    <value>أُلغي إنشاء الغرفة. غرفتك الحالية لم تتغير.</value>
+  </data>
+  <data name="Message is too large." xml:space="preserve">
+    <value>الرسالة كبيرة جدًا.</value>
+  </data>
+  <data name="Message was not acknowledged." xml:space="preserve">
+    <value>لم يتم تأكيد استلام الرسالة.</value>
+  </data>
+  <data name="Backup is too large." xml:space="preserve">
+    <value>النسخة الاحتياطية كبيرة جدًا.</value>
+  </data>
+  <data name="Invalid backup." xml:space="preserve">
+    <value>نسخة احتياطية غير صالحة.</value>
+  </data>
+  <data name="Unsupported backup format." xml:space="preserve">
+    <value>تنسيق النسخة الاحتياطية غير مدعوم.</value>
+  </data>
+  <data name="Invalid appearance or sound preferences." xml:space="preserve">
+    <value>تفضيلات المظهر أو الصوت غير صالحة.</value>
+  </data>
+  <data name="Invalid friend or blocked-user entry." xml:space="preserve">
+    <value>إدخال صديق أو مستخدم محظور غير صالح.</value>
+  </data>
+  <data name="Invalid preferences in backup." xml:space="preserve">
+    <value>تفضيلات غير صالحة في النسخة الاحتياطية.</value>
+  </data>
+  <data name="Invalid map preferences." xml:space="preserve">
+    <value>تفضيلات خريطة غير صالحة.</value>
+  </data>
+  <data name="Invalid room preset." xml:space="preserve">
+    <value>إعداد غرفة مسبق غير صالح.</value>
+  </data>
+  <data name="Invalid preset." xml:space="preserve">
+    <value>إعداد مسبق غير صالح.</value>
+  </data>
+  <data name="Invalid player color." xml:space="preserve">
+    <value>لون لاعب غير صالح.</value>
+  </data>
+  <data name="Invalid team or spot." xml:space="preserve">
+    <value>فريق أو موقع غير صالح.</value>
+  </data>
+  <data name="Invalid team or starting spot." xml:space="preserve">
+    <value>فريق أو موقع بداية غير صالح.</value>
+  </data>
+  <data name="Invalid peer response." xml:space="preserve">
+    <value>استجابة اللاعب غير صالحة.</value>
+  </data>
+  <data name="Invalid message size." xml:space="preserve">
+    <value>حجم رسالة غير صالح.</value>
+  </data>
+  <data name="Invalid sound data." xml:space="preserve">
+    <value>بيانات صوت غير صالحة.</value>
+  </data>
+  <data name="Unsupported sound format." xml:space="preserve">
+    <value>تنسيق الصوت غير مدعوم.</value>
+  </data>
+  <data name="Missing room." xml:space="preserve">
+    <value>الغرفة مفقودة.</value>
+  </data>
+  <data name="Missing map coordinates" xml:space="preserve">
+    <value>إحداثيات الخريطة مفقودة</value>
+  </data>
+  <data name="Invalid map bounds" xml:space="preserve">
+    <value>حدود الخريطة غير صالحة</value>
+  </data>
+  <data name="Map spot outside bounds" xml:space="preserve">
+    <value>الموقع خارج حدود الخريطة</value>
+  </data>
+  <data name="Map path too long." xml:space="preserve">
+    <value>مسار الخريطة طويل جدًا.</value>
+  </data>
+  <data name="Unsupported map preview" xml:space="preserve">
+    <value>معاينة الخريطة غير مدعومة</value>
+  </data>
+  <data name="Map is not installed." xml:space="preserve">
+    <value>الخريطة غير مثبتة.</value>
+  </data>
+  <data name="Selected map is not installed." xml:space="preserve">
+    <value>الخريطة المحددة غير مثبتة.</value>
+  </data>
+  <data name="Selected map was not found in this installation." xml:space="preserve">
+    <value>لم يتم العثور على الخريطة في هذا التثبيت.</value>
+  </data>
+  <data name="Only BFME2 1.00 is supported by this build." xml:space="preserve">
+    <value>هذا الإصدار يدعم BFME2 1.00 فقط.</value>
+  </data>
+  <data name="Select lotrbfme2.exe from your BFME2 installation in Settings first." xml:space="preserve">
+    <value>حدد lotrbfme2.exe أولًا في الإعدادات.</value>
+  </data>
+  <data name="Select lotrbfme2.exe from your BFME2 installation folder; game.dat was not found beside it." xml:space="preserve">
+    <value>حدد lotrbfme2.exe من مجلد اللعبة؛ لم يتم العثور على game.dat بجانبه.</value>
+  </data>
+  <data name="Run BFME2 once to create its player profile first." xml:space="preserve">
+    <value>شغّل BFME2 مرة لإنشاء ملف اللاعب أولًا.</value>
+  </data>
+  <data name="Exit BFME2 before applying the host preset." xml:space="preserve">
+    <value>أغلق BFME2 قبل تطبيق إعداد المضيف.</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again." xml:space="preserve">
+    <value>لم تُشغل BFME2 لأن إذن Windows أُلغي. اضغط تشغيل لعبتي للمحاولة مجددًا.</value>
+  </data>
+  <data name="Windows permission was cancelled." xml:space="preserve">
+    <value>أُلغي إذن Windows.</value>
+  </data>
+  <data name="BFME2 is still stopping. Try Abort again." xml:space="preserve">
+    <value>لا تزال BFME2 تتوقف. حاول الإيقاف مجددًا.</value>
+  </data>
+  <data name="Windows could not stop BFME2. Close the game manually or try Abort again." xml:space="preserve">
+    <value>تعذر على Windows إيقاف BFME2. أغلق اللعبة يدويًا أو حاول الإيقاف مجددًا.</value>
+  </data>
+  <data name="BFME2 belongs to another Windows session." xml:space="preserve">
+    <value>تعمل BFME2 في جلسة Windows أخرى.</value>
+  </data>
+  <data name="The running BFME2 does not match the configured installation." xml:space="preserve">
+    <value>نسخة BFME2 المشغلة لا تطابق التثبيت المحدد.</value>
+  </data>
+  <data name="The launcher did not create a BFME2 process within 60 seconds." xml:space="preserve">
+    <value>لم يبدأ المشغل BFME2 خلال 60 ثانية.</value>
+  </data>
+  <data name="Cannot inspect BFME2." xml:space="preserve">
+    <value>تعذر فحص BFME2.</value>
+  </data>
+  <data name="Cannot read the BFME2 LAN lobby. Continue manually." xml:space="preserve">
+    <value>تعذر قراءة ردهة LAN للعبة BFME2. تابع يدويًا.</value>
+  </data>
+  <data name="Unrecognized BFME2 LAN state. Continue manually." xml:space="preserve">
+    <value>حالة LAN غير معروفة للعبة BFME2. تابع يدويًا.</value>
+  </data>
+  <data name="BFME2 has a different map selected. Select the Fellowship map before applying." xml:space="preserve">
+    <value>تم تحديد خريطة مختلفة في BFME2. اختر خريطة Fellowship قبل التطبيق.</value>
+  </data>
+  <data name="BFME2 is connected to a different host. Join the Fellowship host's LAN game first." xml:space="preserve">
+    <value>BFME2 متصلة بمضيف آخر. انضم أولًا إلى لعبة LAN لمضيف Fellowship.</value>
+  </data>
+  <data name="BFME2 did not retain the map and rules." xml:space="preserve">
+    <value>لم تحتفظ BFME2 بالخريطة والقواعد.</value>
+  </data>
+  <data name="BFME2 did not retain the selected team and spot. Review its native lobby manually." xml:space="preserve">
+    <value>لم تحتفظ BFME2 بالفريق والموقع. راجع ردهة اللعبة يدويًا.</value>
+  </data>
+  <data name="BFME2 preset readback failed." xml:space="preserve">
+    <value>فشل التحقق من إعداد BFME2.</value>
+  </data>
+  <data name="BFME2 rule data differs from the verified 1.00 layout. Preset was not applied." xml:space="preserve">
+    <value>تختلف بيانات القواعد عن الإصدار 1.00 المتحقق منه. لم يُطبق الإعداد.</value>
+  </data>
+  <data name="Fellowship's host must also host the BFME2 lobby to sync map and rules." xml:space="preserve">
+    <value>يجب أن يستضيف مضيف Fellowship ردهة BFME2 أيضًا لمزامنة الخريطة والقواعد.</value>
+  </data>
+  <data name="Room or choices changed; apply the current selections again." xml:space="preserve">
+    <value>تغيرت الغرفة أو الاختيارات؛ طبق الاختيارات الحالية مجددًا.</value>
+  </data>
+  <data name="No matching BFME2 LAN lobby became available. Open/create or join the matching lobby." xml:space="preserve">
+    <value>لم تتوفر ردهة LAN مطابقة. أنشئ الردهة المطابقة أو انضم إليها.</value>
+  </data>
+  <data name="Host did not confirm the selection. Both players need this version of Fellowship." xml:space="preserve">
+    <value>لم يؤكد المضيف الاختيار. يحتاج اللاعبان إلى هذا الإصدار من Fellowship.</value>
+  </data>
+  <data name="The game sync connection ended. No further changes will be sent." xml:space="preserve">
+    <value>انتهى اتصال المزامنة. لن تُرسل تغييرات أخرى.</value>
+  </data>
+  <data name="The sync helper disconnected while BFME2 is still running." xml:space="preserve">
+    <value>انقطع مساعد المزامنة بينما BFME2 لا تزال تعمل.</value>
+  </data>
+  <data name="The host did not finish sending the room. Please retry." xml:space="preserve">
+    <value>لم يُكمل المضيف إرسال الغرفة. حاول مجددًا.</value>
+  </data>
+  <data name="The release does not have a verified update package." xml:space="preserve">
+    <value>لا يتوفر لهذه النسخة حزمة تحديث متحقق منها.</value>
+  </data>
+  <data name="The latest release has no installer yet. Your installed version is unchanged." xml:space="preserve">
+    <value>لا يوجد مثبت لأحدث إصدار بعد. لم يتغير الإصدار المثبت لديك.</value>
+  </data>
+  <data name="The latest release has no Windows update package yet." xml:space="preserve">
+    <value>لا توجد حزمة تحديث Windows لأحدث إصدار بعد.</value>
+  </data>
+  <data name="No published release is available yet." xml:space="preserve">
+    <value>لا يوجد إصدار منشور متاح بعد.</value>
+  </data>
+  <data name="The download was incomplete. Please retry." xml:space="preserve">
+    <value>التنزيل غير مكتمل. حاول مجددًا.</value>
+  </data>
+  <data name="Update checksum failed. Your current version has not changed." xml:space="preserve">
+    <value>فشل التحقق من سلامة التحديث. لم يتغير إصدارك الحالي.</value>
+  </data>
+  <data name="Update executable missing" xml:space="preserve">
+    <value>ملف تشغيل التحديث مفقود</value>
+  </data>
+  <data name="Update executable too large" xml:space="preserve">
+    <value>ملف تشغيل التحديث كبير جدًا</value>
+  </data>
+  <data name="Update package too large" xml:space="preserve">
+    <value>حزمة التحديث كبيرة جدًا</value>
+  </data>
+  <data name="Update version mismatch" xml:space="preserve">
+    <value>إصدار التحديث غير مطابق</value>
+  </data>
+  <data name="Could not start Windows Installer." xml:space="preserve">
+    <value>تعذر بدء Windows Installer.</value>
+  </data>
+  <data name="Could not start the installer helper." xml:space="preserve">
+    <value>تعذر بدء مساعد التثبيت.</value>
+  </data>
+  <data name="Cannot start installer repair." xml:space="preserve">
+    <value>تعذر بدء إصلاح المثبت.</value>
+  </data>
+  <data name="Install Fellowship before enabling launch at sign-in." xml:space="preserve">
+    <value>ثبّت Fellowship قبل تفعيل البدء عند تسجيل الدخول.</value>
+  </data>
+  <data name="Installation finished but Fellowship.exe was not found. Open the log for details." xml:space="preserve">
+    <value>اكتمل التثبيت لكن لم يُعثر على Fellowship.exe. افتح السجل للتفاصيل.</value>
+  </data>
+  <data name="The previous Fellowship is still running. Quit its tray icon, then retry." xml:space="preserve">
+    <value>لا يزال Fellowship يعمل. أغلقه من علبة النظام ثم حاول مجددًا.</value>
+  </data>
+  <data name="The original installer is not available in the official release." xml:space="preserve">
+    <value>المثبت الأصلي غير متاح في الإصدار الرسمي.</value>
+  </data>
+  <data name="Recovery installer does not match the registered Fellowship product." xml:space="preserve">
+    <value>مثبت الاسترداد لا يطابق منتج Fellowship المسجل.</value>
+  </data>
+  <data name="Recovery package is not verified." xml:space="preserve">
+    <value>حزمة الاسترداد غير متحقق منها.</value>
+  </data>
+  <data name="Recovery release identity mismatch." xml:space="preserve">
+    <value>هوية إصدار الاسترداد غير مطابقة.</value>
+  </data>
+  <data name="Could not start live sync." xml:space="preserve">
+    <value>تعذر بدء المزامنة المباشرة.</value>
+  </data>
+  <data name="Could not start native bridge." xml:space="preserve">
+    <value>تعذر بدء جسر اللعبة.</value>
+  </data>
+  <data name="Could not start the native bridge." xml:space="preserve">
+    <value>تعذر بدء جسر اللعبة.</value>
+  </data>
+  <data name="Could not start the BFME2 stop helper." xml:space="preserve">
+    <value>تعذر بدء مساعد إيقاف BFME2.</value>
+  </data>
+  <data name="Could not start the direct placement helper." xml:space="preserve">
+    <value>تعذر بدء مساعد تحديد المواقع.</value>
+  </data>
+  <data name="Cannot resolve native helper path." xml:space="preserve">
+    <value>تعذر تحديد مسار مساعد اللعبة.</value>
+  </data>
+  <data name="Native bridge is missing from this build." xml:space="preserve">
+    <value>جسر اللعبة مفقود من هذا الإصدار.</value>
+  </data>
+  <data name="Native setup unavailable." xml:space="preserve">
+    <value>إعداد اللعبة غير متاح.</value>
+  </data>
+  <data name="Native assignment cancelled." xml:space="preserve">
+    <value>أُلغي التعيين في اللعبة.</value>
+  </data>
+  <data name="Fellowship closed or its room changed; native assignment cancelled." xml:space="preserve">
+    <value>أُغلق Fellowship أو تغيرت الغرفة؛ أُلغي التعيين.</value>
+  </data>
+  <data name="Native map is not installed." xml:space="preserve">
+    <value>خريطة اللعبة غير مثبتة.</value>
+  </data>
+  <data name="Native map is not in Fellowship's installed-map catalog." xml:space="preserve">
+    <value>خريطة اللعبة غير موجودة في قائمة خرائط Fellowship.</value>
+  </data>
+  <data name="Invalid native map." xml:space="preserve">
+    <value>خريطة اللعبة غير صالحة.</value>
+  </data>
+  <data name="Cursor navigation is disabled." xml:space="preserve">
+    <value>التنقل بالمؤشر معطل.</value>
+  </data>
+  <data name="Cursor navigation is disabled. Set teams and spots in BFME2 manually." xml:space="preserve">
+    <value>التنقل بالمؤشر معطل. حدد الفرق والمواقع يدويًا في BFME2.</value>
+  </data>
+  <data name="Invalid sync message." xml:space="preserve">
+    <value>رسالة مزامنة غير صالحة.</value>
+  </data>
+  <data name="Invalid sync pipe name." xml:space="preserve">
+    <value>قناة المزامنة غير صالحة.</value>
+  </data>
+  <data name="Missing sync message." xml:space="preserve">
+    <value>رسالة المزامنة مفقودة.</value>
+  </data>
+  <data name="Sync message too large." xml:space="preserve">
+    <value>رسالة المزامنة كبيرة جدًا.</value>
+  </data>
+  <data name="Unexpected sync client." xml:space="preserve">
+    <value>عميل مزامنة غير متوقع.</value>
+  </data>
+  <data name="Sync preparation failed. Turn live sync off in Settings to launch without it." xml:space="preserve">
+    <value>فشل تحضير المزامنة. عطلها في الإعدادات للتشغيل بدونها.</value>
+  </data>
+  <data name="Sync preparation failed. Save Settings to retry or disable live sync to launch manually." xml:space="preserve">
+    <value>فشل تحضير المزامنة. حاول من الإعدادات أو عطل المزامنة للتشغيل يدويًا.</value>
+  </data>
+  <data name="Automatic setup supports the verified BFME2 1.00 executable only. This game.dat differs; no game files were changed." xml:space="preserve">
+    <value>الإعداد التلقائي يدعم ملف BFME2 1.00 المتحقق منه فقط. هذا game.dat مختلف؛ لم تتغير ملفات اللعبة.</value>
+  </data>
+  <data name="Finding rooms…" xml:space="preserve">
+    <value>جارٍ البحث عن غرف…</value>
+  </data>
+  <data name="No matching rooms" xml:space="preserve">
+    <value>لا توجد غرف مطابقة</value>
+  </data>
+  <data name="Connecting to players on your VPN…" xml:space="preserve">
+    <value>جارٍ الاتصال بلاعبي VPN…</value>
+  </data>
+  <data name="Try another mode, room name, host or map." xml:space="preserve">
+    <value>جرّب نمطًا أو اسم غرفة أو مضيفًا أو خريطة أخرى.</value>
+  </data>
+  <data name="Finding peers and rooms…" xml:space="preserve">
+    <value>جارٍ البحث عن لاعبين وغرف…</value>
+  </data>
+  <data name="{0} room" xml:space="preserve">
+    <value>{0} غرفة</value>
+  </data>
+  <data name="{0} rooms" xml:space="preserve">
+    <value>{0} غرف</value>
+  </data>
+  <data name="{0} online" xml:space="preserve">
+    <value>{0} متصل</value>
+  </data>
+  <data name="{0}/{1} players" xml:space="preserve">
+    <value>{0}/{1} لاعبين</value>
+  </data>
+  <data name="{0} / {1} players ready" xml:space="preserve">
+    <value>{0} / {1} لاعبين جاهزين</value>
+  </data>
+  <data name="YOUR FRIENDS   {0}" xml:space="preserve">
+    <value>أصدقاؤك   {0}</value>
+  </data>
+  <data name="PLAYERS   {0} / {1}" xml:space="preserve">
+    <value>اللاعبون   {0} / {1}</value>
+  </data>
+  <data name="Hosted by {0}" xml:space="preserve">
+    <value>المضيف: {0}</value>
+  </data>
+  <data name="Connecting to {0}…" xml:space="preserve">
+    <value>جارٍ الاتصال بـ {0}…</value>
+  </data>
+  <data name="Your spot: {0}" xml:space="preserve">
+    <value>موقعك: {0}</value>
+  </data>
+  <data name="Spot {0}" xml:space="preserve">
+    <value>الموقع {0}</value>
+  </data>
+  <data name="Random spot" xml:space="preserve">
+    <value>موقع عشوائي</value>
+  </data>
+  <data name="not selected" xml:space="preserve">
+    <value>غير محدد</value>
+  </data>
+  <data name="VPN discovery active" xml:space="preserve">
+    <value>اكتشاف VPN نشط</value>
+  </data>
+  <data name="Ready to play" xml:space="preserve">
+    <value>جاهز للعب</value>
+  </data>
+  <data name="Connection unavailable" xml:space="preserve">
+    <value>الاتصال غير متاح</value>
+  </data>
+  <data name="check Settings" xml:space="preserve">
+    <value>تحقق من الإعدادات</value>
+  </data>
+  <data name="Discovery failed" xml:space="preserve">
+    <value>فشل الاكتشاف</value>
+  </data>
+  <data name="Could not save" xml:space="preserve">
+    <value>تعذر الحفظ</value>
+  </data>
+  <data name="Connection failed" xml:space="preserve">
+    <value>فشل الاتصال</value>
+  </data>
+  <data name="✓ Connected" xml:space="preserve">
+    <value>✓ متصل</value>
+  </data>
+  <data name="rooms and friends refreshed" xml:space="preserve">
+    <value>تم تحديث الغرف والأصدقاء</value>
+  </data>
+  <data name="Select an existing lotrbfme2.exe file." xml:space="preserve">
+    <value>حدد ملف lotrbfme2.exe موجودًا.</value>
+  </data>
+  <data name="Message not sent · reconnect and retry" xml:space="preserve">
+    <value>لم تُرسل الرسالة · أعد الاتصال وحاول مجددًا</value>
+  </data>
+  <data name="Preset applied" xml:space="preserve">
+    <value>تم تطبيق الإعداد</value>
+  </data>
+  <data name="Confirming with host…" xml:space="preserve">
+    <value>جارٍ التأكيد مع المضيف…</value>
+  </data>
+  <data name="Enter a room name." xml:space="preserve">
+    <value>أدخل اسم غرفة.</value>
+  </data>
+  <data name="Visibility updated" xml:space="preserve">
+    <value>تم تحديث الظهور</value>
+  </data>
+  <data name="Room name updated" xml:space="preserve">
+    <value>تم تحديث اسم الغرفة</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>جارٍ الحفظ…</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>تم الحفظ</value>
+  </data>
+  <data name="PLAYERS · DISCONNECTED" xml:space="preserve">
+    <value>اللاعبون · غير متصل</value>
+  </data>
+  <data name="Disconnected · rejoin from the room browser" xml:space="preserve">
+    <value>غير متصل · أعد الانضمام من متصفح الغرف</value>
+  </data>
+  <data name="Return to Game rooms to reconnect." xml:space="preserve">
+    <value>عد إلى غرف اللعب لإعادة الاتصال.</value>
+  </data>
+  <data name="Starting spots unavailable for this map." xml:space="preserve">
+    <value>مواقع البداية غير متاحة لهذه الخريطة.</value>
+  </data>
+  <data name="Automatic host preset" xml:space="preserve">
+    <value>إعداد المضيف التلقائي</value>
+  </data>
+  <data name="Manual setup in BFME2" xml:space="preserve">
+    <value>إعداد يدوي في BFME2</value>
+  </data>
+  <data name="Manual teams" xml:space="preserve">
+    <value>فرق يدوية</value>
+  </data>
+  <data name="Launching BFME2…" xml:space="preserve">
+    <value>جارٍ تشغيل BFME2…</value>
+  </data>
+  <data name="Ready for the host to launch" xml:space="preserve">
+    <value>جاهز ليبدأ المضيف</value>
+  </data>
+  <data name="Check Ready when you want to play." xml:space="preserve">
+    <value>حدد جاهز عندما تريد اللعب.</value>
+  </data>
+  <data name="Live sync paused. Native lobby remains available." xml:space="preserve">
+    <value>المزامنة متوقفة مؤقتًا. ردهة اللعبة لا تزال متاحة.</value>
+  </data>
+  <data name="Live sync is off in Settings. Set game rules, team and spot in BFME2 manually." xml:space="preserve">
+    <value>المزامنة معطلة في الإعدادات. اضبط القواعد والفريق والموقع يدويًا في BFME2.</value>
+  </data>
+  <data name="Please wait for the current action to finish." xml:space="preserve">
+    <value>انتظر انتهاء الإجراء الحالي.</value>
+  </data>
+  <data name="Wait for the current operation to finish." xml:space="preserve">
+    <value>انتظر انتهاء العملية الحالية.</value>
+  </data>
+  <data name="Select a starting spot on the map before clearing it." xml:space="preserve">
+    <value>حدد موقع بداية على الخريطة قبل مسحه.</value>
+  </data>
+  <data name="Only your saved friends can see and join." xml:space="preserve">
+    <value>يمكن لأصدقائك المحفوظين فقط الرؤية والانضمام.</value>
+  </data>
+  <data name="Everyone on your VPN can see and join." xml:space="preserve">
+    <value>يمكن للجميع على VPN الرؤية والانضمام.</value>
+  </data>
+  <data name="Fellowship update" xml:space="preserve">
+    <value>تحديث Fellowship</value>
+  </data>
+  <data name="Update could not finish" xml:space="preserve">
+    <value>تعذر إكمال التحديث</value>
+  </data>
+  <data name="Fellowship {0} is available. Update for the latest improvements." xml:space="preserve">
+    <value>يتوفر Fellowship {0}. حدّث للحصول على أحدث التحسينات.</value>
+  </data>
+  <data name="Select your VPN network interface in Settings first." xml:space="preserve">
+    <value>اختر واجهة VPN أولًا في الإعدادات.</value>
+  </data>
+  <data name="This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry." xml:space="preserve">
+    <value>عنوان VPN مستخدم بالفعل على المنفذ 28742. أغلق نسخ Fellowship القديمة ثم حدّث للمحاولة.</value>
+  </data>
+  <data name="Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings." xml:space="preserve">
+    <value>تعذر الاتصال بالواجهة المحددة. تحقق من اتصال VPN واختر عنوانها الحالي في الإعدادات.</value>
+  </data>
+  <data name="{0} ({1}) is not connected or its address has changed. Connect to your VPN network, then select its current interface in Settings." xml:space="preserve">
+    <value>{0} ({1}) غير متصل أو تغير عنوانه. اتصل بشبكة VPN ثم حدد واجهتها الحالية في الإعدادات.</value>
+  </data>
+  <data name="Fellowship could not read your network adapters. Check {0} and refresh." xml:space="preserve">
+    <value>تعذر على Fellowship قراءة محولات الشبكة. تحقق من {0} وحدّث.</value>
+  </data>
+  <data name="Windows reports no internet connection. Connect to the internet to use online updates and reach your VPN friends." xml:space="preserve">
+    <value>يشير Windows إلى عدم وجود إنترنت. اتصل للتحديث والوصول إلى أصدقائك على VPN.</value>
+  </data>
+  <data name="Switch room" xml:space="preserve">
+    <value>تبديل الغرفة</value>
+  </data>
+  <data name="Leave your current room? If you host, the next player takes over." xml:space="preserve">
+    <value>هل تريد مغادرة الغرفة الحالية؟ إذا كنت المضيف فسيتولى اللاعب التالي الاستضافة.</value>
+  </data>
+  <data name="Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged." xml:space="preserve">
+    <value>هل تريد استبدال التفضيلات والأصدقاء والمحظورين وإعدادات الغرف بهذه النسخة؟ لن يتغير مسار اللعبة وواجهة VPN.</value>
+  </data>
+  <data name="Fellowship is still running" xml:space="preserve">
+    <value>لا يزال Fellowship يعمل</value>
+  </data>
+  <data name="The previous Fellowship is still running. Quit it and reopen the updated version." xml:space="preserve">
+    <value>النسخة السابقة لا تزال تعمل. أغلقها وافتح النسخة المحدثة.</value>
+  </data>
+  <data name="Installer repaired" xml:space="preserve">
+    <value>تم إصلاح المثبت</value>
+  </data>
+  <data name="Repair could not finish" xml:space="preserve">
+    <value>تعذر إكمال الإصلاح</value>
+  </data>
+  <data name="Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved." xml:space="preserve">
+    <value>استُعيدت ملفات المثبت. افتح Fellowship وأعد محاولة التحديث. حُفظت تفضيلاتك وأصدقاؤك.</value>
+  </data>
+  <data name="Gathering" xml:space="preserve">
+    <value>تجمع اللاعبين</value>
+  </data>
+  <data name="Host in BFME2" xml:space="preserve">
+    <value>المضيف داخل BFME2</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>محظور</value>
+  </data>
+  <data name="NOT IN GAME" xml:space="preserve">
+    <value>خارج اللعبة</value>
+  </data>
+  <data name="✓ Settings saved" xml:space="preserve">
+    <value>✓ تم حفظ الإعدادات</value>
+  </data>
+  <data name="✓ Game preferences saved" xml:space="preserve">
+    <value>✓ تم حفظ تفضيلات اللعبة</value>
+  </data>
+  <data name="Private chat" xml:space="preserve">
+    <value>محادثة خاصة</value>
+  </data>
+  <data name="Direct connection" xml:space="preserve">
+    <value>اتصال مباشر</value>
+  </data>
+  <data name="This conversation stays between these app windows. Messages aren't saved when you close the chat." xml:space="preserve">
+    <value>تبقى المحادثة بين نافذتي التطبيق. لا تُحفظ الرسائل عند إغلاق المحادثة.</value>
+  </data>
+  <data name="Choose a valid recipient VPN address." xml:space="preserve">
+    <value>اختر عنوان VPN صالحًا للمستلم.</value>
+  </data>
+  <data name="Sending…" xml:space="preserve">
+    <value>جارٍ الإرسال…</value>
+  </data>
+  <data name="Message sent" xml:space="preserve">
+    <value>أُرسلت الرسالة</value>
+  </data>
+  <data name="Enter to send" xml:space="preserve">
+    <value>اضغط Enter للإرسال</value>
+  </data>
+  <data name="Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry." xml:space="preserve">
+    <value>لم يُؤكَّد التسليم. قد يكون المستلم غير متصل أو يعيد الاتصال. حُفظت المسودة؛ اضغط Enter للمحاولة مجددًا.</value>
+  </data>
+  <data name="Type a message and use a valid recipient VPN address." xml:space="preserve">
+    <value>اكتب رسالة واستخدم عنوان VPN صالحًا للمستلم.</value>
+  </data>
+  <data name="Updates automatically" xml:space="preserve">
+    <value>يُحدَّث تلقائيًا</value>
+  </data>
+  <data name="{0} / {1} players" xml:space="preserve">
+    <value>{0} / {1} لاعبين</value>
+  </data>
+  <data name="{0} invited you" xml:space="preserve">
+    <value>دعاك {0}</value>
+  </data>
+  <data name="No players match your search" xml:space="preserve">
+    <value>لا يوجد لاعبون يطابقون البحث</value>
+  </data>
+  <data name="Verifying download…" xml:space="preserve">
+    <value>جارٍ التحقق من التنزيل…</value>
+  </data>
+  <data name="Downloading update…" xml:space="preserve">
+    <value>جارٍ تنزيل التحديث…</value>
+  </data>
+  <data name="Checking the package before installation." xml:space="preserve">
+    <value>جارٍ فحص الحزمة قبل التثبيت.</value>
+  </data>
+  <data name="Preparing installation…" xml:space="preserve">
+    <value>جارٍ تحضير التثبيت…</value>
+  </data>
+  <data name="Fellowship will close. The installer will keep you informed." xml:space="preserve">
+    <value>سيُغلق Fellowship. سيعرض المثبّت تقدم العملية.</value>
+  </data>
+  <data name="Closing Fellowship…" xml:space="preserve">
+    <value>جارٍ إغلاق Fellowship…</value>
+  </data>
+  <data name="Waiting for the previous version to finish safely." xml:space="preserve">
+    <value>بانتظار إغلاق الإصدار السابق بأمان.</value>
+  </data>
+  <data name="Installing update…" xml:space="preserve">
+    <value>جارٍ تثبيت التحديث…</value>
+  </data>
+  <data name="Keep this window open. Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>أبقِ هذه النافذة مفتوحة. سيُفتح Fellowship عند اكتمال التثبيت.</value>
+  </data>
+  <data name="Waiting for Windows Installer…" xml:space="preserve">
+    <value>بانتظار Windows Installer…</value>
+  </data>
+  <data name="Another installation is running. Retrying automatically…" xml:space="preserve">
+    <value>يوجد تثبيت آخر قيد التنفيذ. ستتم إعادة المحاولة تلقائيًا…</value>
+  </data>
+  <data name="Opening Fellowship…" xml:space="preserve">
+    <value>جارٍ فتح Fellowship…</value>
+  </data>
+  <data name="Update installed. Windows may require a restart." xml:space="preserve">
+    <value>ثُبّت التحديث. قد يلزم إعادة تشغيل Windows.</value>
+  </data>
+  <data name="Update installed successfully." xml:space="preserve">
+    <value>ثُبّت التحديث بنجاح.</value>
+  </data>
+  <data name="Repairing Windows Installer…" xml:space="preserve">
+    <value>جارٍ إصلاح Windows Installer…</value>
+  </data>
+  <data name="Restoring installer files…" xml:space="preserve">
+    <value>جارٍ استعادة ملفات المثبّت…</value>
+  </data>
+  <data name="Your preferences and friends will be preserved." xml:space="preserve">
+    <value>ستُحفظ تفضيلاتك وأصدقاؤك.</value>
+  </data>
+  <data name="Downloading the original Fellowship {0} installer." xml:space="preserve">
+    <value>جارٍ تنزيل مثبّت Fellowship {0} الأصلي.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Edit your profile" xml:space="preserve">
+    <value>تعديل ملفك الشخصي</value>
+  </data>
+  <data name="RUNS IN SYSTEM TRAY" xml:space="preserve">
+    <value>يعمل في منطقة الإعلام</value>
+  </data>
+  <data name="Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it." xml:space="preserve">
+    <value>أُلغي الإيقاف. ما زالت BFME2 تعمل؛ وافق على طلب إذن Windows لإيقافها.</value>
+  </data>
+  <data name="BFME2 stopped. You remain in the Fellowship room." xml:space="preserve">
+    <value>أُوقفت BFME2. ما زلت في غرفة Fellowship.</value>
+  </data>
+  <data name="Launching BFME2. Your rules will sync when the LAN lobby opens." xml:space="preserve">
+    <value>جارٍ تشغيل BFME2. ستتم مزامنة القواعد عند فتح ردهة LAN.</value>
+  </data>
+  <data name="Returned to BFME2." xml:space="preserve">
+    <value>تم الرجوع إلى BFME2.</value>
+  </data>
+  <data name="BFME2 is starting; waiting for its window." xml:space="preserve">
+    <value>يجري بدء BFME2؛ بانتظار نافذتها.</value>
+  </data>
+  <data name="Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens." xml:space="preserve">
+    <value>افتح اللعب الجماعي ← الشبكة وأنشئ ردهة المضيف أو انضم إليها. تبدأ مزامنة الفريق والموقع تلقائيًا عند فتح الردهة المطابقة.</value>
+  </data>
+  <data name="Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens." xml:space="preserve">
+    <value>المزامنة المباشرة متوقفة. افتح اللعب الجماعي ← الشبكة واضبط القواعد والفريق والموقع يدويًا، أو أعد تفعيل المزامنة بعد فتح الردهة.</value>
+  </data>
+  <data name="running in the background" xml:space="preserve">
+    <value>يعمل في الخلفية</value>
+  </data>
+  <data name="Creating room…" xml:space="preserve">
+    <value>جارٍ إنشاء الغرفة…</value>
+  </data>
+  <data name="Checking GitHub…" xml:space="preserve">
+    <value>جارٍ التحقق من GitHub…</value>
+  </data>
+  <data name="You have the latest published version." xml:space="preserve">
+    <value>لديك أحدث إصدار منشور.</value>
+  </data>
+  <data name="Version {0} is available. Restarting closes Fellowship windows." xml:space="preserve">
+    <value>الإصدار {0} متاح. ستُغلق نوافذ Fellowship عند إعادة التشغيل.</value>
+  </data>
+  <data name="Host is now {0}" xml:space="preserve">
+    <value>المضيف الآن هو {0}</value>
+  </data>
+  <data name="Room handed to {0}" xml:space="preserve">
+    <value>نُقلت الغرفة إلى {0}</value>
+  </data>
+  <data name="Room reconnected to {0}" xml:space="preserve">
+    <value>أُعيد اتصال الغرفة بـ {0}</value>
+  </data>
+  <data name="Host disconnected. Recovering room…" xml:space="preserve">
+    <value>انقطع اتصال المضيف. جارٍ استعادة الغرفة…</value>
+  </data>
+  <data name="You are now the room host." xml:space="preserve">
+    <value>أنت الآن مضيف الغرفة.</value>
+  </data>
+  <data name="The host removed you from the room." xml:space="preserve">
+    <value>أخرجك المضيف من الغرفة.</value>
+  </data>
+  <data name="Connection to the host ended. Rejoin from the room browser." xml:space="preserve">
+    <value>انتهى الاتصال بالمضيف. انضم مجددًا من قائمة الغرف.</value>
+  </data>
+  <data name="A player disconnected during transfer and may need to rejoin." xml:space="preserve">
+    <value>انقطع اتصال لاعب أثناء النقل وقد يحتاج إلى الانضمام مجددًا.</value>
+  </data>
+  <data name="Host transfer was interrupted. Rejoin the room at {0} if it is available." xml:space="preserve">
+    <value>انقطع نقل الاستضافة. انضم مجددًا إلى الغرفة على {0} إن كانت متاحة.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch mine." xml:space="preserve">
+    <value>تعذر الوصول لتشغيل اللعبة: {0}. اطلب منهم إعادة الاتصال أو تشغيل لعبتهم.</value>
+  </data>
 </root>

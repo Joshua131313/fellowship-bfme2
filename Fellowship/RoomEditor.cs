@@ -24,7 +24,7 @@ public sealed class RoomEditor : Window
         StackPanel Field(Panel parent,string title)
         {
             var field=new StackPanel();parent.Children.Add(field);
-            var label=UI.Text(title,9,UI.Muted,true);label.Margin=new(0,0,0,5);field.Children.Add(label);return field;
+            var label=UI.LocalizedText(title,9,UI.Muted,true);label.Margin=new(0,0,0,5);field.Children.Add(label);return field;
         }
         Grid Pair(int row)
         {
@@ -37,7 +37,7 @@ public sealed class RoomEditor : Window
         {
             var field=Field(parent,title);Grid.SetColumn(field,column);
             ComboBox combo=searchable?new SearchableMapBox():new ComboBox();
-            combo.ItemsSource=values;combo.SelectedItem=selected;combo.Height=34;combo.FontSize=12;combo.Padding=new(9,5,28,5);
+            combo.ItemsSource=values;combo.SelectedItem=selected;if(!searchable)L.Choices(combo);combo.MinHeight=34;combo.Height=double.NaN;combo.FontSize=12;combo.Padding=new(9,5,28,5);
             combo.ItemContainerStyle=new Style(typeof(ComboBoxItem),(Style)Application.Current.FindResource(typeof(ComboBoxItem)));
             combo.ItemContainerStyle.Setters.Add(new Setter(Control.PaddingProperty,new Thickness(9,6,9,6)));
             combo.ItemContainerStyle.Setters.Add(new Setter(Control.FontSizeProperty,12d));
@@ -60,13 +60,13 @@ public sealed class RoomEditor : Window
         void UpdatePreview(){if(map.SelectedItem is GameMap selected){preview.ShowMap(settings.GamePath,selected.Path);mapName.Text=selected.Name;map.ToolTip=selected.Name;}}
         map.SelectionChanged+=(_,_)=>UpdatePreview();UpdatePreview();
         var custom=new CheckBox{Content="Custom Heroes",IsChecked=initial.Match.CustomHeroes,FontSize=12,Margin=new(0,0,26,0)};
-        var ring=new CheckBox{Content="Ring Heroes",IsChecked=initial.Match.RingHeroes,FontSize=12};
+        var ring=new CheckBox{Content="Ring Heroes",IsChecked=initial.Match.RingHeroes,FontSize=12};L.Bind(custom,ContentControl.ContentProperty,"Custom Heroes");L.Bind(ring,ContentControl.ContentProperty,"Ring Heroes");
         var heroes=UI.Row(custom,ring);Grid.SetRow(heroes,2);panel.Children.Add(heroes);
         void UpdateVisibility()=>privacy.ToolTip=privacy.SelectedIndex==1?"Only your saved friends can see and join.":"Everyone on your VPN can see and join.";
         privacy.SelectionChanged+=(_,_)=>UpdateVisibility();UpdateVisibility();
         var presetList=new RoomPresetPicker(settings){Margin=new(0,8,0,8)};presetArea.Children.Add(presetList);
         var layouts=new[]{new TeamLayout("Manual teams",[]),new TeamLayout("1v1",[1,2]),new TeamLayout("2v2",[1,1,2,2]),new TeamLayout("3v3",[1,1,1,2,2,2]),new TeamLayout("4v4",[1,1,1,1,2,2,2,2]),new TeamLayout("FFA",[0,0,0,0,0,0,0,0])};
-        var teams=new ComboBox{ItemsSource=layouts,SelectedIndex=0,Width=130,ToolTip="Starting team arrangement; players can change teams in the lobby"};
+        var teams=new ComboBox{ItemsSource=layouts,SelectedIndex=0,MinWidth=160,ToolTip="Starting team arrangement; players can change teams in the lobby"};L.Choices(teams);
         int[] selectedTeams=[];
         teams.SelectionChanged+=(_,_)=>{if(teams.SelectedItem is TeamLayout layout)selectedTeams=layout.Teams;};
         presetList.Picked+=preset=>
@@ -108,7 +108,7 @@ public sealed class RoomEditor : Window
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;
             creating=true;store.Visibility=Visibility.Collapsed;presetArea.IsEnabled=false;setup.IsEnabled=false;heroes.IsEnabled=false;cancel.IsEnabled=false;
-            heading.Text="Creating room…";progress.Visibility=Visibility.Visible;
+            L.Bind(heading,TextBlock.TextProperty,"Creating room…");progress.Visibility=Visibility.Visible;
             try
             {
                 await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
@@ -118,7 +118,7 @@ public sealed class RoomEditor : Window
             finally
             {
                 creating=false;store.Visibility=Visibility.Visible;presetArea.IsEnabled=true;setup.IsEnabled=true;heroes.IsEnabled=true;cancel.IsEnabled=true;
-                heading.Text="Create a room";progress.Visibility=Visibility.Collapsed;
+                L.Bind(heading,TextBlock.TextProperty,"Create a room");progress.Visibility=Visibility.Collapsed;
             }
         },true);UI.Require(save,()=>!creating&&!string.IsNullOrWhiteSpace(name.Text)&&map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out var limit)&&limit is >=2 and <=64&&resources.SelectedItem!=null&&command.SelectedItem!=null&&privacy.SelectedIndex>=0,()=>string.IsNullOrWhiteSpace(name.Text)?"Enter a room name.":"Select a map, player limit, resources, command points and privacy.");save.IsDefault=true;save.Height=34;save.Padding=new(12,5,12,5);save.Margin=new(0);Grid.SetColumn(save,3);footer.Children.Add(save);
     }

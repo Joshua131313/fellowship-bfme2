@@ -114,16 +114,16 @@ public static class AppUpdates
         var install=UI.AsyncButton("Download & restart",async()=>
         {
             if(available==null)return;
-            await Install(available,inRoom,text=>status.Text=text);
+            await Install(available,inRoom,text=>L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,text));
         },true);install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;
         install.Margin=new(0,8,0,0);
         UI.Require(install,()=>available!=null&&!inRoom(),()=>"Leave your room before downloading and restarting.");
-        void UpdateAvailable(){panel.Visibility=Installing?Visibility.Collapsed:Visibility.Visible;available=Available;install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;if(available!=null)status.Text=$"Version {available.Version.ToString(3)} is ready to download.";}
+        void UpdateAvailable(){panel.Visibility=Installing?Visibility.Collapsed:Visibility.Visible;available=Available;install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;if(available!=null)L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,$"Version {available.Version.ToString(3)} is ready to download.");}
         panel.Loaded+=(_,_)=>{AvailabilityChanged+=UpdateAvailable;InstallationChanged+=UpdateAvailable;UpdateAvailable();};panel.Unloaded+=(_,_)=>{AvailabilityChanged-=UpdateAvailable;InstallationChanged-=UpdateAvailable;};
         panel.Children.Add(UI.AsyncButton("Check for updates",async()=>
         {
-            try{status.Text="Checking GitHub…";available=await Check();install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;status.Text=available==null?"You have the latest published version.":$"Version {available.Version} is available. Restarting closes Fellowship windows.";}
-            catch(Exception e){status.Text="Could not check updates: "+e.Message;}
+            try{L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,"Checking GitHub…");available=await Check();install.Visibility=available==null?Visibility.Collapsed:Visibility.Visible;L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,available==null?"You have the latest published version.":$"Version {available.Version} is available. Restarting closes Fellowship windows.");}
+            catch(Exception e){L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,"Could not check updates: "+e.Message);}
         }));panel.Children.Add(install);foreach(var button in panel.Children.OfType<Button>())button.HorizontalAlignment=HorizontalAlignment.Left;return panel;
     }
 }

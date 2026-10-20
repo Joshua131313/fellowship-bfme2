@@ -57,6 +57,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        L.Apply(Settings.Load().Language);
         if(System.IO.Path.GetFileNameWithoutExtension(Environment.ProcessPath!).StartsWith("Fellowship-Repair-",StringComparison.OrdinalIgnoreCase))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;

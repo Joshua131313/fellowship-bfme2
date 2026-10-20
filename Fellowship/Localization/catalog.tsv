@@ -238,3 +238,319 @@ Host	Hôte	Anfitrión	المضيف	Kurucu
 Guest	Invité	Invitado	ضيف	Konuk
 ● VPN discovery active	● Découverte VPN active	● Detección VPN activa	● اكتشاف VPN نشط	● VPN keşfi etkin
 ○ Not connected	○ Non connecté	○ Sin conexión	○ غير متصل	○ Bağlı değil
+Private messages	Messages privés	Mensajes privados	الرسائل الخاصة	Özel mesajlar
+Messages sent	Messages envoyés	Mensajes enviados	الرسائل المرسلة	Gönderilen mesajlar
+Room messages	Messages du salon	Mensajes de la sala	رسائل الغرفة	Oda mesajları
+Invitations	Invitations	Invitaciones	الدعوات	Davetler
+Player joins room	Un joueur rejoint le salon	Un jugador entra en la sala	انضمام لاعب إلى الغرفة	Oyuncu odaya katılır
+Player leaves room	Un joueur quitte le salon	Un jugador sale de la sala	مغادرة لاعب للغرفة	Oyuncu odadan ayrılır
+Friend online	Ami en ligne	Amigo conectado	صديق متصل	Arkadaş çevrimiçi
+Friend offline	Ami hors ligne	Amigo desconectado	صديق غير متصل	Arkadaş çevrimdışı
+No team / free for all	Sans équipe / chacun pour soi	Sin equipo / todos contra todos	بلا فريق / الجميع ضد الجميع	Takım yok / herkes tek
+No team	Sans équipe	Sin equipo	بلا فريق	Takım yok
+Team {0}	Équipe {0}	Equipo {0}	الفريق {0}	Takım {0}
+Balanced teams	Équipes équilibrées	Equipos equilibrados	فرق متوازنة	Dengeli takımlar
+Free for all	Chacun pour soi	Todos contra todos	الجميع ضد الجميع	Herkes tek
+No maps match your search	Aucune carte ne correspond à votre recherche	Ningún mapa coincide con la búsqueda	لا توجد خرائط تطابق بحثك	Aramanızla eşleşen harita yok
+Search map names	Rechercher un nom de carte	Buscar nombres de mapas	ابحث عن أسماء الخرائط	Harita adı ara
+Search players or VPN address	Rechercher un joueur ou une adresse VPN	Buscar jugadores o dirección VPN	ابحث عن لاعبين أو عنوان VPN	Oyuncu veya VPN adresi ara
+Filter rooms by mode	Filtrer les salons par mode	Filtrar salas por modo	تصفية الغرف حسب النمط	Odaları moda göre filtrele
+Filter rooms by name, host or map	Filtrer par nom, hôte ou carte	Filtrar por nombre, anfitrión o mapa	تصفية حسب الاسم أو المضيف أو الخريطة	Ada, kurucuya veya haritaya göre filtrele
+Switch network · leaves your current room	Changer de réseau · quitte le salon actuel	Cambiar de red · abandona la sala actual	تبديل الشبكة · يغادر الغرفة الحالية	Ağı değiştir · mevcut odadan çıkar
+Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic.	Le statut absent manuel reste actif jusqu’à votre retour disponible. Sinon, l’inactivité est détectée automatiquement.	El estado ausente manual permanece hasta que elijas Disponible. En otro caso, la inactividad se detecta automáticamente.	تستمر حالة الغياب اليدوية حتى تختار متاحًا. بخلاف ذلك يُكتشف الخمول تلقائيًا.	Elle ayarlanan uzak durumu, müsait olana kadar sürer. Diğer durumlarda boşta kalma otomatik algılanır.
+Check which friends are online	Vérifier quels amis sont en ligne	Comprobar qué amigos están conectados	تحقق من الأصدقاء المتصلين	Çevrimiçi arkadaşları kontrol et
+Choose a saved room preset	Choisir un préréglage de salon	Elegir una configuración guardada	اختر إعداد غرفة محفوظًا	Kayıtlı oda ön ayarı seçin
+Starting team arrangement; players can change teams in the lobby	Équipes initiales ; les joueurs peuvent en changer dans le salon	Equipos iniciales; los jugadores pueden cambiarlos en el lobby	الفرق الأولية؛ يمكن للاعبين تغييرها في الردهة	Başlangıç takımları; oyuncular lobide takım değiştirebilir
+Starting locations — preview only	Positions de départ — aperçu uniquement	Posiciones iniciales — solo vista previa	مواقع البداية — معاينة فقط	Başlangıç konumları — yalnızca önizleme
+Stop BFME2 on this computer	Arrêter BFME2 sur cet ordinateur	Detener BFME2 en este equipo	إيقاف BFME2 على هذا الجهاز	Bu bilgisayarda BFME2’yi durdur
+Host's selected VPN IPv4 address	Adresse IPv4 VPN choisie par l’hôte	Dirección IPv4 VPN elegida por el anfitrión	عنوان IPv4 لشبكة VPN المحددة للمضيف	Kurucunun seçili VPN IPv4 adresi
+Write a message · Enter to send	Écrivez un message · Entrée pour envoyer	Escribe un mensaje · Intro para enviar	اكتب رسالة · Enter للإرسال	Mesaj yazın · göndermek için Enter
+Message your room · Enter to send	Message au salon · Entrée pour envoyer	Mensaje a tu sala · Intro para enviar	راسل غرفتك · Enter للإرسال	Odanıza mesaj yazın · göndermek için Enter
+Clipboard busy · try again	Presse-papiers occupé · réessayez	Portapapeles ocupado · reintenta	الحافظة مشغولة · حاول مجددًا	Pano meşgul · yeniden deneyin
+Clipboard is busy. Try copying again.	Le presse-papiers est occupé. Réessayez de copier.	El portapapeles está ocupado. Intenta copiar de nuevo.	الحافظة مشغولة. حاول النسخ مجددًا.	Pano meşgul. Yeniden kopyalamayı deneyin.
+Complete the required fields to enable this action.	Remplissez les champs requis pour activer cette action.	Completa los campos obligatorios para activar esta acción.	أكمل الحقول المطلوبة لتفعيل هذا الإجراء.	Bu işlemi etkinleştirmek için gerekli alanları doldurun.
+Synchronize map, rules, team, starting spot and color in the native LAN lobby.	Synchroniser carte, règles, équipe, position et couleur dans le salon LAN du jeu.	Sincronizar mapa, reglas, equipo, posición y color en el lobby LAN del juego.	مزامنة الخريطة والقواعد والفريق والموقع واللون في ردهة LAN للعبة.	Oyun LAN lobisinde harita, kurallar, takım, konum ve rengi eşitle.
+Fellowship room capacity. BFME2 matches still support at most 8 players.	Capacité du salon Fellowship. BFME2 accepte au maximum 8 joueurs par partie.	Capacidad de la sala Fellowship. BFME2 admite como máximo 8 jugadores por partida.	سعة غرفة Fellowship. تدعم مباريات BFME2 ثمانية لاعبين كحد أقصى.	Fellowship oda kapasitesi. BFME2 maçları en fazla 8 oyuncuyu destekler.
+Fellowship room limit: 2–64. BFME2 matches support at most 8 players.	Limite Fellowship : 2–64. BFME2 accepte au maximum 8 joueurs.	Límite de Fellowship: 2–64. BFME2 admite hasta 8 jugadores.	حد غرفة Fellowship: ‏2–64. تدعم BFME2 ثمانية لاعبين كحد أقصى.	Fellowship oda sınırı: 2–64. BFME2 en fazla 8 oyuncu destekler.
+NAME	NOM	NOMBRE	الاسم	AD
+RADMIN IPv4 ADDRESS	ADRESSE IPv4 RADMIN	DIRECCIÓN IPv4 DE RADMIN	عنوان IPv4 لـ RADMIN	RADMIN IPv4 ADRESİ
+No other players online	Aucun autre joueur en ligne	No hay otros jugadores conectados	لا يوجد لاعبون آخرون متصلون	Başka çevrimiçi oyuncu yok
+Room is no longer available · showing last known details	Salon indisponible · dernières informations connues	Sala no disponible · se muestran los últimos datos conocidos	الغرفة غير متاحة · عرض آخر التفاصيل المعروفة	Oda artık yok · son bilinen bilgiler gösteriliyor
+Error	Erreur	Error	خطأ	Hata
+An unexpected error occurred. Please retry. Copy diagnostic details if you need support.	Une erreur inattendue est survenue. Réessayez. Copiez les détails de diagnostic si vous avez besoin d’aide.	Se produjo un error inesperado. Reintenta. Copia los detalles de diagnóstico si necesitas ayuda.	حدث خطأ غير متوقع. حاول مجددًا. انسخ تفاصيل التشخيص إذا احتجت إلى دعم.	Beklenmeyen bir hata oluştu. Yeniden deneyin. Destek için tanılama ayrıntılarını kopyalayın.
+Copy diagnostic details	Copier les détails de diagnostic	Copiar detalles de diagnóstico	نسخ تفاصيل التشخيص	Tanılama ayrıntılarını kopyala
+Enter a nickname.	Saisissez un pseudo.	Introduce un apodo.	أدخل اسمًا مستعارًا.	Bir takma ad girin.
+Enter a room name and choose between 2 and 64 players.	Saisissez un nom de salon et choisissez entre 2 et 64 joueurs.	Introduce un nombre de sala y elige entre 2 y 64 jugadores.	أدخل اسم غرفة واختر عددًا من 2 إلى 64 لاعبًا.	Oda adı girin ve 2 ile 64 arasında oyuncu seçin.
+Enter the host’s IPv4 address on your selected VPN network.	Saisissez l’adresse IPv4 de l’hôte sur le VPN sélectionné.	Introduce la dirección IPv4 del anfitrión en la VPN seleccionada.	أدخل عنوان IPv4 للمضيف على شبكة VPN المحددة.	Seçili VPN ağındaki kurucunun IPv4 adresini girin.
+Check the room name, patch and player limit.	Vérifiez le nom du salon, la version et la limite de joueurs.	Comprueba el nombre, la versión y el límite de jugadores.	تحقق من اسم الغرفة والإصدار وحد اللاعبين.	Oda adını, sürümü ve oyuncu sınırını kontrol edin.
+Choose a BFME2 player color.	Choisissez une couleur de joueur BFME2.	Elige un color de jugador de BFME2.	اختر لون لاعب BFME2.	Bir BFME2 oyuncu rengi seçin.
+Choose a valid team and map spot in Fellowship.	Choisissez une équipe et une position valides dans Fellowship.	Elige un equipo y una posición válidos en Fellowship.	اختر فريقًا وموقعًا صالحين في Fellowship.	Fellowship’te geçerli takım ve harita konumu seçin.
+Choose no team or team 1–4.	Choisissez sans équipe ou une équipe de 1 à 4.	Elige sin equipo o un equipo del 1 al 4.	اختر بلا فريق أو فريقًا من 1 إلى 4.	Takımsız veya 1–4 arası takım seçin.
+Choose supported BFME2 1.00 rules.	Choisissez des règles compatibles avec BFME2 1.00.	Elige reglas compatibles con BFME2 1.00.	اختر قواعد تدعمها BFME2 1.00.	Desteklenen BFME2 1.00 kurallarını seçin.
+Choose an unblocked friend.	Choisissez un ami non bloqué.	Elige un amigo no bloqueado.	اختر صديقًا غير محظور.	Engellenmemiş bir arkadaş seçin.
+Choose another player's VPN address.	Choisissez l’adresse VPN d’un autre joueur.	Elige la dirección VPN de otro jugador.	اختر عنوان VPN للاعب آخر.	Başka oyuncunun VPN adresini seçin.
+Select a connected player.	Sélectionnez un joueur connecté.	Selecciona un jugador conectado.	اختر لاعبًا متصلًا.	Bağlı bir oyuncu seçin.
+Another player has claimed this color. Choose another.	Un autre joueur a pris cette couleur. Choisissez-en une autre.	Otro jugador eligió este color. Elige otro.	حجز لاعب آخر هذا اللون. اختر لونًا آخر.	Başka oyuncu bu rengi seçti. Başkasını seçin.
+Another player has claimed this spot. Choose another.	Un autre joueur a pris cette position. Choisissez-en une autre.	Otro jugador eligió esta posición. Elige otra.	حجز لاعب آخر هذا الموقع. اختر موقعًا آخر.	Başka oyuncu bu konumu seçti. Başkasını seçin.
+That starting spot is unavailable on this map.	Cette position de départ n’est pas disponible sur cette carte.	Esa posición inicial no está disponible en este mapa.	موقع البداية غير متاح على هذه الخريطة.	Bu haritada o başlangıç konumu kullanılamıyor.
+The map changed. Choose a spot on the new map.	La carte a changé. Choisissez une position sur la nouvelle carte.	El mapa cambió. Elige una posición en el nuevo mapa.	تغيرت الخريطة. اختر موقعًا على الخريطة الجديدة.	Harita değişti. Yeni haritada bir konum seçin.
+Every player must be ready before launching.	Tous les joueurs doivent être prêts avant le lancement.	Todos los jugadores deben estar listos antes de iniciar.	يجب أن يكون جميع اللاعبين جاهزين قبل التشغيل.	Başlatmadan önce tüm oyuncular hazır olmalı.
+Join a Fellowship room first.	Rejoignez d’abord un salon Fellowship.	Únete primero a una sala de Fellowship.	انضم أولًا إلى غرفة Fellowship.	Önce bir Fellowship odasına katılın.
+Join a room first.	Rejoignez d’abord un salon.	Únete primero a una sala.	انضم أولًا إلى غرفة.	Önce bir odaya katılın.
+Join or host a room first.	Rejoignez ou créez d’abord un salon.	Primero únete a una sala o crea una.	انضم إلى غرفة أو أنشئ غرفة أولًا.	Önce bir odaya katılın veya kurun.
+Only the host can edit this room.	Seul l’hôte peut modifier ce salon.	Solo el anfitrión puede editar esta sala.	يمكن للمضيف فقط تعديل هذه الغرفة.	Bu odayı yalnızca kurucu düzenleyebilir.
+Only the host can remove players.	Seul l’hôte peut exclure des joueurs.	Solo el anfitrión puede expulsar jugadores.	يمكن للمضيف فقط إزالة اللاعبين.	Oyuncuları yalnızca kurucu çıkarabilir.
+Only the host can promote players.	Seul l’hôte peut promouvoir des joueurs.	Solo el anfitrión puede transferir el rol.	يمكن للمضيف فقط ترقية اللاعبين.	Oyuncuları yalnızca kurucu yükseltebilir.
+That player is no longer connected.	Ce joueur n’est plus connecté.	Ese jugador ya no está conectado.	لم يعد هذا اللاعب متصلًا.	Bu oyuncu artık bağlı değil.
+Player is no longer in the room.	Le joueur n’est plus dans le salon.	El jugador ya no está en la sala.	لم يعد اللاعب في الغرفة.	Oyuncu artık odada değil.
+Host transfer in progress.	Transfert du rôle d’hôte en cours.	Transferencia de anfitrión en curso.	نقل الاستضافة جارٍ.	Kuruculuk aktarılıyor.
+Host transfer already in progress.	Un transfert du rôle d’hôte est déjà en cours.	Ya hay una transferencia de anfitrión en curso.	نقل الاستضافة جارٍ بالفعل.	Kuruculuk aktarımı zaten sürüyor.
+Wait for host transfer to finish.	Attendez la fin du transfert de l’hôte.	Espera a que termine la transferencia.	انتظر انتهاء نقل الاستضافة.	Kuruculuk aktarımının bitmesini bekleyin.
+All room members must update Fellowship before transferring the host.	Tous les membres doivent mettre à jour Fellowship avant le transfert de l’hôte.	Todos los miembros deben actualizar Fellowship antes de transferir el anfitrión.	يجب على جميع الأعضاء تحديث Fellowship قبل نقل الاستضافة.	Kuruculuk aktarılmadan tüm üyeler Fellowship’i güncellemeli.
+The next player must update Fellowship and connect its VPN listener before becoming host.	Le prochain hôte doit mettre à jour Fellowship et connecter son VPN avant le transfert.	El siguiente anfitrión debe actualizar Fellowship y conectar su VPN antes de asumir el rol.	يجب على المضيف التالي تحديث Fellowship وتوصيل VPN قبل استلام الاستضافة.	Yeni kurucu, görevi almadan Fellowship’i güncelleyip VPN bağlantısını açmalı.
+New host did not confirm the room.	Le nouvel hôte n’a pas confirmé le salon.	El nuevo anfitrión no confirmó la sala.	لم يؤكد المضيف الجديد الغرفة.	Yeni kurucu odayı onaylamadı.
+Disconnected from host.	Déconnecté de l’hôte.	Desconectado del anfitrión.	انقطع الاتصال بالمضيف.	Kurucuyla bağlantı kesildi.
+The room is closed.	Le salon est fermé.	La sala está cerrada.	الغرفة مغلقة.	Oda kapalı.
+This room is no longer available.	Ce salon n’est plus disponible.	Esta sala ya no está disponible.	لم تعد هذه الغرفة متاحة.	Bu oda artık kullanılamıyor.
+This room is no longer available or is private.	Ce salon n’est plus disponible ou est privé.	Esta sala ya no está disponible o es privada.	هذه الغرفة لم تعد متاحة أو خاصة.	Bu oda artık yok veya özel.
+This invitation has expired or the room moved. Ask for a new invitation.	Cette invitation a expiré ou le salon a changé. Demandez une nouvelle invitation.	La invitación caducó o la sala cambió. Pide otra invitación.	انتهت الدعوة أو انتقلت الغرفة. اطلب دعوة جديدة.	Davetin süresi doldu veya oda taşındı. Yeni davet isteyin.
+Unblock this player before joining.	Débloquez ce joueur avant de rejoindre.	Desbloquea al jugador antes de unirte.	ألغِ حظر هذا اللاعب قبل الانضمام.	Katılmadan önce oyuncunun engelini kaldırın.
+Unblock this player before messaging.	Débloquez ce joueur avant de lui écrire.	Desbloquea al jugador antes de enviar mensajes.	ألغِ حظر هذا اللاعب قبل مراسلته.	Mesaj göndermeden oyuncunun engelini kaldırın.
+Leave the room before switching networks.	Quittez le salon avant de changer de réseau.	Sal de la sala antes de cambiar de red.	غادر الغرفة قبل تبديل الشبكات.	Ağ değiştirmeden odadan ayrılın.
+Leave your room before restoring a backup.	Quittez le salon avant de restaurer une sauvegarde.	Sal de la sala antes de restaurar una copia.	غادر الغرفة قبل استعادة نسخة احتياطية.	Yedek geri yüklemeden odadan ayrılın.
+The player limit cannot be lower than the current roster.	La limite ne peut pas être inférieure au nombre actuel de joueurs.	El límite no puede ser menor que el número actual de jugadores.	لا يمكن أن يكون الحد أقل من عدد اللاعبين الحالي.	Oyuncu sınırı mevcut oyuncu sayısından az olamaz.
+Room creation cancelled. Your current room is unchanged.	Création annulée. Le salon actuel est inchangé.	Creación cancelada. Tu sala actual no cambió.	أُلغي إنشاء الغرفة. غرفتك الحالية لم تتغير.	Oda oluşturma iptal edildi. Mevcut odanız değişmedi.
+Message is too large.	Le message est trop long.	El mensaje es demasiado largo.	الرسالة كبيرة جدًا.	Mesaj çok uzun.
+Message was not acknowledged.	Le message n’a pas été confirmé.	El mensaje no fue confirmado.	لم يتم تأكيد استلام الرسالة.	Mesajın alındığı onaylanmadı.
+Backup is too large.	La sauvegarde est trop volumineuse.	La copia es demasiado grande.	النسخة الاحتياطية كبيرة جدًا.	Yedek çok büyük.
+Invalid backup.	Sauvegarde invalide.	Copia no válida.	نسخة احتياطية غير صالحة.	Geçersiz yedek.
+Unsupported backup format.	Format de sauvegarde non pris en charge.	Formato de copia no compatible.	تنسيق النسخة الاحتياطية غير مدعوم.	Desteklenmeyen yedek biçimi.
+Invalid appearance or sound preferences.	Préférences d’apparence ou de son invalides.	Preferencias de apariencia o sonido no válidas.	تفضيلات المظهر أو الصوت غير صالحة.	Geçersiz görünüm veya ses tercihleri.
+Invalid friend or blocked-user entry.	Entrée d’ami ou d’utilisateur bloqué invalide.	Entrada de amigo o usuario bloqueado no válida.	إدخال صديق أو مستخدم محظور غير صالح.	Geçersiz arkadaş veya engellenen kullanıcı kaydı.
+Invalid preferences in backup.	Préférences invalides dans la sauvegarde.	Preferencias no válidas en la copia.	تفضيلات غير صالحة في النسخة الاحتياطية.	Yedekte geçersiz tercihler.
+Invalid map preferences.	Préférences de carte invalides.	Preferencias de mapa no válidas.	تفضيلات خريطة غير صالحة.	Geçersiz harita tercihleri.
+Invalid room preset.	Préréglage de salon invalide.	Configuración de sala no válida.	إعداد غرفة مسبق غير صالح.	Geçersiz oda ön ayarı.
+Invalid preset.	Préréglage invalide.	Configuración no válida.	إعداد مسبق غير صالح.	Geçersiz ön ayar.
+Invalid player color.	Couleur de joueur invalide.	Color de jugador no válido.	لون لاعب غير صالح.	Geçersiz oyuncu rengi.
+Invalid team or spot.	Équipe ou position invalide.	Equipo o posición no válidos.	فريق أو موقع غير صالح.	Geçersiz takım veya konum.
+Invalid team or starting spot.	Équipe ou position de départ invalide.	Equipo o posición inicial no válidos.	فريق أو موقع بداية غير صالح.	Geçersiz takım veya başlangıç konumu.
+Invalid peer response.	Réponse du joueur invalide.	Respuesta del jugador no válida.	استجابة اللاعب غير صالحة.	Geçersiz oyuncu yanıtı.
+Invalid message size.	Taille de message invalide.	Tamaño de mensaje no válido.	حجم رسالة غير صالح.	Geçersiz mesaj boyutu.
+Invalid sound data.	Données sonores invalides.	Datos de sonido no válidos.	بيانات صوت غير صالحة.	Geçersiz ses verisi.
+Unsupported sound format.	Format sonore non pris en charge.	Formato de sonido no compatible.	تنسيق الصوت غير مدعوم.	Desteklenmeyen ses biçimi.
+Missing room.	Salon manquant.	Falta la sala.	الغرفة مفقودة.	Oda bulunamadı.
+Missing map coordinates	Coordonnées de carte manquantes	Faltan coordenadas del mapa	إحداثيات الخريطة مفقودة	Harita koordinatları eksik
+Invalid map bounds	Limites de carte invalides	Límites del mapa no válidos	حدود الخريطة غير صالحة	Geçersiz harita sınırları
+Map spot outside bounds	Position hors des limites de la carte	Posición fuera de los límites del mapa	الموقع خارج حدود الخريطة	Konum harita sınırları dışında
+Map path too long.	Chemin de carte trop long.	Ruta del mapa demasiado larga.	مسار الخريطة طويل جدًا.	Harita yolu çok uzun.
+Unsupported map preview	Aperçu de carte non pris en charge	Vista previa de mapa no compatible	معاينة الخريطة غير مدعومة	Desteklenmeyen harita önizlemesi
+Map is not installed.	La carte n’est pas installée.	El mapa no está instalado.	الخريطة غير مثبتة.	Harita yüklü değil.
+Selected map is not installed.	La carte sélectionnée n’est pas installée.	El mapa seleccionado no está instalado.	الخريطة المحددة غير مثبتة.	Seçili harita yüklü değil.
+Selected map was not found in this installation.	La carte sélectionnée est introuvable dans cette installation.	No se encontró el mapa en esta instalación.	لم يتم العثور على الخريطة في هذا التثبيت.	Seçili harita bu kurulumda bulunamadı.
+Only BFME2 1.00 is supported by this build.	Cette version prend uniquement en charge BFME2 1.00.	Esta versión solo admite BFME2 1.00.	هذا الإصدار يدعم BFME2 1.00 فقط.	Bu sürüm yalnızca BFME2 1.00 destekler.
+Select lotrbfme2.exe from your BFME2 installation in Settings first.	Sélectionnez d’abord lotrbfme2.exe dans les paramètres.	Selecciona primero lotrbfme2.exe en Ajustes.	حدد lotrbfme2.exe أولًا في الإعدادات.	Önce Ayarlar’dan lotrbfme2.exe dosyasını seçin.
+Select lotrbfme2.exe from your BFME2 installation folder; game.dat was not found beside it.	Sélectionnez lotrbfme2.exe dans le dossier du jeu ; game.dat est introuvable à côté.	Selecciona lotrbfme2.exe en la carpeta del juego; no se encontró game.dat junto a él.	حدد lotrbfme2.exe من مجلد اللعبة؛ لم يتم العثور على game.dat بجانبه.	Oyun klasöründen lotrbfme2.exe seçin; yanında game.dat bulunamadı.
+Run BFME2 once to create its player profile first.	Lancez d’abord BFME2 pour créer son profil joueur.	Ejecuta BFME2 una vez para crear su perfil de jugador.	شغّل BFME2 مرة لإنشاء ملف اللاعب أولًا.	Oyuncu profilini oluşturmak için önce BFME2’yi bir kez çalıştırın.
+Exit BFME2 before applying the host preset.	Quittez BFME2 avant d’appliquer le préréglage de l’hôte.	Cierra BFME2 antes de aplicar la configuración del anfitrión.	أغلق BFME2 قبل تطبيق إعداد المضيف.	Kurucu ön ayarını uygulamadan BFME2’den çıkın.
+BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again.	BFME2 n’a pas démarré car l’autorisation Windows a été annulée. Cliquez sur Lancer mon jeu pour réessayer.	BFME2 no se inició porque se canceló el permiso de Windows. Pulsa Iniciar mi juego para reintentar.	لم تُشغل BFME2 لأن إذن Windows أُلغي. اضغط تشغيل لعبتي للمحاولة مجددًا.	Windows izni iptal edildiğinden BFME2 başlamadı. Yeniden denemek için Oyunumu başlat’a tıklayın.
+Windows permission was cancelled.	L’autorisation Windows a été annulée.	Se canceló el permiso de Windows.	أُلغي إذن Windows.	Windows izni iptal edildi.
+BFME2 is still stopping. Try Abort again.	BFME2 est encore en cours d’arrêt. Réessayez Arrêter.	BFME2 aún se está deteniendo. Vuelve a pulsar Abortar.	لا تزال BFME2 تتوقف. حاول الإيقاف مجددًا.	BFME2 hâlâ kapanıyor. Durdur’u yeniden deneyin.
+Windows could not stop BFME2. Close the game manually or try Abort again.	Windows n’a pas pu arrêter BFME2. Fermez le jeu manuellement ou réessayez.	Windows no pudo detener BFME2. Ciérralo manualmente o vuelve a pulsar Abortar.	تعذر على Windows إيقاف BFME2. أغلق اللعبة يدويًا أو حاول الإيقاف مجددًا.	Windows BFME2’yi durduramadı. Oyunu elle kapatın veya yeniden deneyin.
+BFME2 belongs to another Windows session.	BFME2 appartient à une autre session Windows.	BFME2 pertenece a otra sesión de Windows.	تعمل BFME2 في جلسة Windows أخرى.	BFME2 başka Windows oturumuna ait.
+The running BFME2 does not match the configured installation.	Le BFME2 en cours ne correspond pas à l’installation configurée.	El BFME2 en ejecución no coincide con la instalación configurada.	نسخة BFME2 المشغلة لا تطابق التثبيت المحدد.	Çalışan BFME2 yapılandırılmış kurulumla eşleşmiyor.
+The launcher did not create a BFME2 process within 60 seconds.	Le lanceur n’a pas démarré BFME2 sous 60 secondes.	El lanzador no inició BFME2 en 60 segundos.	لم يبدأ المشغل BFME2 خلال 60 ثانية.	Başlatıcı 60 saniyede BFME2 işlemi oluşturmadı.
+Cannot inspect BFME2.	Impossible d’inspecter BFME2.	No se puede inspeccionar BFME2.	تعذر فحص BFME2.	BFME2 incelenemiyor.
+Cannot read the BFME2 LAN lobby. Continue manually.	Impossible de lire le salon LAN BFME2. Continuez manuellement.	No se puede leer el lobby LAN de BFME2. Continúa manualmente.	تعذر قراءة ردهة LAN للعبة BFME2. تابع يدويًا.	BFME2 LAN lobisi okunamıyor. Elle devam edin.
+Unrecognized BFME2 LAN state. Continue manually.	État LAN BFME2 non reconnu. Continuez manuellement.	Estado LAN de BFME2 desconocido. Continúa manualmente.	حالة LAN غير معروفة للعبة BFME2. تابع يدويًا.	BFME2 LAN durumu tanınmıyor. Elle devam edin.
+BFME2 has a different map selected. Select the Fellowship map before applying.	BFME2 utilise une autre carte. Sélectionnez celle de Fellowship avant d’appliquer.	BFME2 tiene otro mapa seleccionado. Elige el de Fellowship antes de aplicar.	تم تحديد خريطة مختلفة في BFME2. اختر خريطة Fellowship قبل التطبيق.	BFME2’de farklı harita seçili. Uygulamadan önce Fellowship haritasını seçin.
+BFME2 is connected to a different host. Join the Fellowship host's LAN game first.	BFME2 est connecté à un autre hôte. Rejoignez d’abord le jeu LAN de l’hôte Fellowship.	BFME2 está conectado a otro anfitrión. Únete primero al anfitrión de Fellowship en LAN.	BFME2 متصلة بمضيف آخر. انضم أولًا إلى لعبة LAN لمضيف Fellowship.	BFME2 başka kurucuya bağlı. Önce Fellowship kurucusunun LAN oyununa katılın.
+BFME2 did not retain the map and rules.	BFME2 n’a pas conservé la carte et les règles.	BFME2 no conservó el mapa y las reglas.	لم تحتفظ BFME2 بالخريطة والقواعد.	BFME2 harita ve kuralları kaydetmedi.
+BFME2 did not retain the selected team and spot. Review its native lobby manually.	BFME2 n’a pas conservé l’équipe et la position. Vérifiez le salon du jeu manuellement.	BFME2 no conservó el equipo y la posición. Revisa el lobby manualmente.	لم تحتفظ BFME2 بالفريق والموقع. راجع ردهة اللعبة يدويًا.	BFME2 takım ve konumu kaydetmedi. Oyun lobisini elle kontrol edin.
+BFME2 preset readback failed.	Échec de vérification du préréglage BFME2.	Falló la verificación de la configuración de BFME2.	فشل التحقق من إعداد BFME2.	BFME2 ön ayarı doğrulanamadı.
+BFME2 rule data differs from the verified 1.00 layout. Preset was not applied.	Les données de règles diffèrent de BFME2 1.00 vérifié. Préréglage non appliqué.	Los datos de reglas difieren de la versión 1.00 verificada. No se aplicó la configuración.	تختلف بيانات القواعد عن الإصدار 1.00 المتحقق منه. لم يُطبق الإعداد.	Kural verileri doğrulanmış 1.00 düzeninden farklı. Ön ayar uygulanmadı.
+Fellowship's host must also host the BFME2 lobby to sync map and rules.	L’hôte Fellowship doit aussi héberger BFME2 pour synchroniser carte et règles.	El anfitrión de Fellowship también debe alojar BFME2 para sincronizar mapa y reglas.	يجب أن يستضيف مضيف Fellowship ردهة BFME2 أيضًا لمزامنة الخريطة والقواعد.	Harita ve kurallar için Fellowship kurucusu BFME2 lobisini de kurmalı.
+Room or choices changed; apply the current selections again.	Le salon ou les choix ont changé ; appliquez de nouveau les choix actuels.	La sala o las opciones cambiaron; aplica de nuevo las selecciones actuales.	تغيرت الغرفة أو الاختيارات؛ طبق الاختيارات الحالية مجددًا.	Oda veya seçimler değişti; mevcut seçimleri yeniden uygulayın.
+No matching BFME2 LAN lobby became available. Open/create or join the matching lobby.	Aucun salon LAN BFME2 correspondant. Créez ou rejoignez le bon salon.	No apareció un lobby LAN de BFME2 coincidente. Crea o únete al correcto.	لم تتوفر ردهة LAN مطابقة. أنشئ الردهة المطابقة أو انضم إليها.	Eşleşen BFME2 LAN lobisi bulunamadı. Uygun lobiyi oluşturun veya katılın.
+Host did not confirm the selection. Both players need this version of Fellowship.	L’hôte n’a pas confirmé le choix. Les deux joueurs doivent utiliser cette version de Fellowship.	El anfitrión no confirmó la selección. Ambos jugadores necesitan esta versión de Fellowship.	لم يؤكد المضيف الاختيار. يحتاج اللاعبان إلى هذا الإصدار من Fellowship.	Kurucu seçimi onaylamadı. İki oyuncu da bu Fellowship sürümünü kullanmalı.
+The game sync connection ended. No further changes will be sent.	La connexion de synchronisation est terminée. Aucun autre changement ne sera envoyé.	La conexión de sincronización terminó. No se enviarán más cambios.	انتهى اتصال المزامنة. لن تُرسل تغييرات أخرى.	Oyun eşitleme bağlantısı sona erdi. Başka değişiklik gönderilmeyecek.
+The sync helper disconnected while BFME2 is still running.	L’assistant de synchronisation s’est déconnecté alors que BFME2 fonctionne encore.	El asistente de sincronización se desconectó mientras BFME2 seguía abierto.	انقطع مساعد المزامنة بينما BFME2 لا تزال تعمل.	BFME2 çalışırken eşitleme yardımcısının bağlantısı kesildi.
+The host did not finish sending the room. Please retry.	L’hôte n’a pas fini d’envoyer le salon. Réessayez.	El anfitrión no terminó de enviar la sala. Reintenta.	لم يُكمل المضيف إرسال الغرفة. حاول مجددًا.	Kurucu oda bilgilerini göndermeyi bitiremedi. Yeniden deneyin.
+The release does not have a verified update package.	Cette version n’a pas de paquet de mise à jour vérifié.	La versión no tiene un paquete de actualización verificado.	لا يتوفر لهذه النسخة حزمة تحديث متحقق منها.	Sürümün doğrulanmış güncelleme paketi yok.
+The latest release has no installer yet. Your installed version is unchanged.	La dernière version n’a pas encore d’installateur. Votre version installée est inchangée.	La última versión aún no tiene instalador. Tu versión instalada no cambió.	لا يوجد مثبت لأحدث إصدار بعد. لم يتغير الإصدار المثبت لديك.	Son sürümün yükleyicisi henüz yok. Kurulu sürüm değişmedi.
+The latest release has no Windows update package yet.	La dernière version n’a pas encore de paquet Windows.	La última versión aún no tiene paquete para Windows.	لا توجد حزمة تحديث Windows لأحدث إصدار بعد.	Son sürümün Windows güncelleme paketi henüz yok.
+No published release is available yet.	Aucune version publiée n’est encore disponible.	Aún no hay una versión publicada disponible.	لا يوجد إصدار منشور متاح بعد.	Henüz yayımlanmış sürüm yok.
+The download was incomplete. Please retry.	Le téléchargement est incomplet. Réessayez.	La descarga quedó incompleta. Reintenta.	التنزيل غير مكتمل. حاول مجددًا.	İndirme tamamlanmadı. Yeniden deneyin.
+Update checksum failed. Your current version has not changed.	La vérification de mise à jour a échoué. Votre version actuelle est inchangée.	Falló la verificación de actualización. Tu versión actual no cambió.	فشل التحقق من سلامة التحديث. لم يتغير إصدارك الحالي.	Güncelleme doğrulaması başarısız. Mevcut sürüm değişmedi.
+Update executable missing	Exécutable de mise à jour manquant	Falta el ejecutable de actualización	ملف تشغيل التحديث مفقود	Güncelleme çalıştırılabilir dosyası eksik
+Update executable too large	Exécutable de mise à jour trop volumineux	Ejecutable de actualización demasiado grande	ملف تشغيل التحديث كبير جدًا	Güncelleme dosyası çok büyük
+Update package too large	Paquet de mise à jour trop volumineux	Paquete de actualización demasiado grande	حزمة التحديث كبيرة جدًا	Güncelleme paketi çok büyük
+Update version mismatch	La version de mise à jour ne correspond pas	La versión de actualización no coincide	إصدار التحديث غير مطابق	Güncelleme sürümü eşleşmiyor
+Could not start Windows Installer.	Impossible de démarrer Windows Installer.	No se pudo iniciar Windows Installer.	تعذر بدء Windows Installer.	Windows Installer başlatılamadı.
+Could not start the installer helper.	Impossible de démarrer l’assistant d’installation.	No se pudo iniciar el asistente de instalación.	تعذر بدء مساعد التثبيت.	Yükleme yardımcısı başlatılamadı.
+Cannot start installer repair.	Impossible de lancer la réparation de l’installateur.	No se puede iniciar la reparación del instalador.	تعذر بدء إصلاح المثبت.	Yükleyici onarımı başlatılamıyor.
+Install Fellowship before enabling launch at sign-in.	Installez Fellowship avant d’activer le démarrage automatique.	Instala Fellowship antes de activar el inicio automático.	ثبّت Fellowship قبل تفعيل البدء عند تسجيل الدخول.	Oturum açılışında başlatmayı etkinleştirmeden Fellowship’i yükleyin.
+Installation finished but Fellowship.exe was not found. Open the log for details.	Installation terminée mais Fellowship.exe est introuvable. Consultez le journal.	La instalación terminó, pero no se encontró Fellowship.exe. Consulta el registro.	اكتمل التثبيت لكن لم يُعثر على Fellowship.exe. افتح السجل للتفاصيل.	Yükleme bitti ancak Fellowship.exe bulunamadı. Ayrıntılar için günlüğü açın.
+The previous Fellowship is still running. Quit its tray icon, then retry.	Fellowship fonctionne encore. Quittez-le depuis la zone de notification, puis réessayez.	Fellowship sigue abierto. Ciérralo desde la bandeja y reintenta.	لا يزال Fellowship يعمل. أغلقه من علبة النظام ثم حاول مجددًا.	Önceki Fellowship hâlâ çalışıyor. Sistem tepsisinden kapatıp yeniden deneyin.
+The original installer is not available in the official release.	L’installateur d’origine est absent de la version officielle.	El instalador original no está en la versión oficial.	المثبت الأصلي غير متاح في الإصدار الرسمي.	Özgün yükleyici resmi sürümde bulunmuyor.
+Recovery installer does not match the registered Fellowship product.	L’installateur de récupération ne correspond pas au produit Fellowship enregistré.	El instalador de recuperación no coincide con el producto Fellowship registrado.	مثبت الاسترداد لا يطابق منتج Fellowship المسجل.	Kurtarma yükleyicisi kayıtlı Fellowship ürünüyle eşleşmiyor.
+Recovery package is not verified.	Le paquet de récupération n’est pas vérifié.	El paquete de recuperación no está verificado.	حزمة الاسترداد غير متحقق منها.	Kurtarma paketi doğrulanmamış.
+Recovery release identity mismatch.	L’identité de la version de récupération ne correspond pas.	La identidad de la versión de recuperación no coincide.	هوية إصدار الاسترداد غير مطابقة.	Kurtarma sürümü kimliği eşleşmiyor.
+Could not start live sync.	Impossible de démarrer la synchronisation.	No se pudo iniciar la sincronización.	تعذر بدء المزامنة المباشرة.	Canlı eşitleme başlatılamadı.
+Could not start native bridge.	Impossible de démarrer la passerelle du jeu.	No se pudo iniciar el puente del juego.	تعذر بدء جسر اللعبة.	Oyun köprüsü başlatılamadı.
+Could not start the native bridge.	Impossible de démarrer la passerelle du jeu.	No se pudo iniciar el puente del juego.	تعذر بدء جسر اللعبة.	Oyun köprüsü başlatılamadı.
+Could not start the BFME2 stop helper.	Impossible de démarrer l’assistant d’arrêt BFME2.	No se pudo iniciar el asistente de cierre de BFME2.	تعذر بدء مساعد إيقاف BFME2.	BFME2 durdurma yardımcısı başlatılamadı.
+Could not start the direct placement helper.	Impossible de démarrer l’assistant de placement.	No se pudo iniciar el asistente de posicionamiento.	تعذر بدء مساعد تحديد المواقع.	Konumlandırma yardımcısı başlatılamadı.
+Cannot resolve native helper path.	Impossible de trouver le chemin de l’assistant du jeu.	No se puede resolver la ruta del asistente del juego.	تعذر تحديد مسار مساعد اللعبة.	Oyun yardımcısının yolu bulunamıyor.
+Native bridge is missing from this build.	La passerelle du jeu manque dans cette version.	Falta el puente del juego en esta versión.	جسر اللعبة مفقود من هذا الإصدار.	Bu sürümde oyun köprüsü eksik.
+Native setup unavailable.	Configuration du jeu indisponible.	Configuración del juego no disponible.	إعداد اللعبة غير متاح.	Oyun kurulumu kullanılamıyor.
+Native assignment cancelled.	Affectation dans le jeu annulée.	Asignación en el juego cancelada.	أُلغي التعيين في اللعبة.	Oyun içi atama iptal edildi.
+Fellowship closed or its room changed; native assignment cancelled.	Fellowship a fermé ou le salon a changé ; affectation annulée.	Fellowship se cerró o cambió la sala; asignación cancelada.	أُغلق Fellowship أو تغيرت الغرفة؛ أُلغي التعيين.	Fellowship kapandı veya oda değişti; atama iptal edildi.
+Native map is not installed.	La carte du jeu n’est pas installée.	El mapa del juego no está instalado.	خريطة اللعبة غير مثبتة.	Oyun haritası yüklü değil.
+Native map is not in Fellowship's installed-map catalog.	La carte du jeu ne figure pas dans le catalogue de Fellowship.	El mapa del juego no está en el catálogo de Fellowship.	خريطة اللعبة غير موجودة في قائمة خرائط Fellowship.	Oyun haritası Fellowship kataloğunda yok.
+Invalid native map.	Carte du jeu invalide.	Mapa del juego no válido.	خريطة اللعبة غير صالحة.	Geçersiz oyun haritası.
+Cursor navigation is disabled.	La navigation du curseur est désactivée.	La navegación del cursor está desactivada.	التنقل بالمؤشر معطل.	İmleç gezinmesi devre dışı.
+Cursor navigation is disabled. Set teams and spots in BFME2 manually.	La navigation du curseur est désactivée. Définissez les équipes et positions manuellement dans BFME2.	La navegación del cursor está desactivada. Configura equipos y posiciones manualmente en BFME2.	التنقل بالمؤشر معطل. حدد الفرق والمواقع يدويًا في BFME2.	İmleç gezinmesi kapalı. BFME2’de takım ve konumları elle ayarlayın.
+Invalid sync message.	Message de synchronisation invalide.	Mensaje de sincronización no válido.	رسالة مزامنة غير صالحة.	Geçersiz eşitleme mesajı.
+Invalid sync pipe name.	Canal de synchronisation invalide.	Canal de sincronización no válido.	قناة المزامنة غير صالحة.	Geçersiz eşitleme kanalı.
+Missing sync message.	Message de synchronisation manquant.	Falta el mensaje de sincronización.	رسالة المزامنة مفقودة.	Eşitleme mesajı eksik.
+Sync message too large.	Message de synchronisation trop volumineux.	Mensaje de sincronización demasiado grande.	رسالة المزامنة كبيرة جدًا.	Eşitleme mesajı çok büyük.
+Unexpected sync client.	Client de synchronisation inattendu.	Cliente de sincronización inesperado.	عميل مزامنة غير متوقع.	Beklenmeyen eşitleme istemcisi.
+Sync preparation failed. Turn live sync off in Settings to launch without it.	La préparation a échoué. Désactivez la synchronisation dans les paramètres pour lancer sans elle.	Falló la preparación. Desactiva la sincronización en Ajustes para iniciar sin ella.	فشل تحضير المزامنة. عطلها في الإعدادات للتشغيل بدونها.	Eşitleme hazırlığı başarısız. Onsuz başlatmak için Ayarlar’dan kapatın.
+Sync preparation failed. Save Settings to retry or disable live sync to launch manually.	La préparation a échoué. Réessayez dans les paramètres ou désactivez la synchronisation pour lancer manuellement.	Falló la preparación. Reintenta en Ajustes o desactiva la sincronización para iniciar manualmente.	فشل تحضير المزامنة. حاول من الإعدادات أو عطل المزامنة للتشغيل يدويًا.	Eşitleme hazırlığı başarısız. Ayarlar’dan yeniden deneyin veya elle başlatmak için eşitlemeyi kapatın.
+Automatic setup supports the verified BFME2 1.00 executable only. This game.dat differs; no game files were changed.	La configuration automatique prend uniquement en charge BFME2 1.00 vérifié. Ce game.dat diffère ; aucun fichier n’a été modifié.	La configuración automática solo admite BFME2 1.00 verificado. Este game.dat es diferente; no se modificaron archivos.	الإعداد التلقائي يدعم ملف BFME2 1.00 المتحقق منه فقط. هذا game.dat مختلف؛ لم تتغير ملفات اللعبة.	Otomatik kurulum yalnızca doğrulanmış BFME2 1.00’ı destekler. Bu game.dat farklı; oyun dosyaları değiştirilmedi.
+Finding rooms…	Recherche de salons…	Buscando salas…	جارٍ البحث عن غرف…	Odalar aranıyor…
+No matching rooms	Aucun salon correspondant	No hay salas coincidentes	لا توجد غرف مطابقة	Eşleşen oda yok
+Connecting to players on your VPN…	Connexion aux joueurs de votre VPN…	Conectando con jugadores de tu VPN…	جارٍ الاتصال بلاعبي VPN…	VPN’inizdeki oyunculara bağlanılıyor…
+Try another mode, room name, host or map.	Essayez un autre mode, nom de salon, hôte ou carte.	Prueba otro modo, nombre, anfitrión o mapa.	جرّب نمطًا أو اسم غرفة أو مضيفًا أو خريطة أخرى.	Başka mod, oda adı, kurucu veya harita deneyin.
+Finding peers and rooms…	Recherche de joueurs et de salons…	Buscando jugadores y salas…	جارٍ البحث عن لاعبين وغرف…	Oyuncular ve odalar aranıyor…
+{0} room	{0} salon	{0} sala	{0} غرفة	{0} oda
+{0} rooms	{0} salons	{0} salas	{0} غرف	{0} oda
+{0} online	{0} en ligne	{0} en línea	{0} متصل	{0} çevrimiçi
+{0}/{1} players	{0}/{1} joueurs	{0}/{1} jugadores	{0}/{1} لاعبين	{0}/{1} oyuncu
+{0} / {1} players ready	{0} / {1} joueurs prêts	{0} / {1} jugadores listos	{0} / {1} لاعبين جاهزين	{0} / {1} oyuncu hazır
+YOUR FRIENDS   {0}	VOS AMIS   {0}	TUS AMIGOS   {0}	أصدقاؤك   {0}	ARKADAŞLARINIZ   {0}
+PLAYERS   {0} / {1}	JOUEURS   {0} / {1}	JUGADORES   {0} / {1}	اللاعبون   {0} / {1}	OYUNCULAR   {0} / {1}
+Hosted by {0}	Hébergé par {0}	Anfitrión: {0}	المضيف: {0}	Kurucu: {0}
+Connecting to {0}…	Connexion à {0}…	Conectando a {0}…	جارٍ الاتصال بـ {0}…	{0} bağlantısı kuruluyor…
+Your spot: {0}	Votre position : {0}	Tu posición: {0}	موقعك: {0}	Konumunuz: {0}
+Spot {0}	Position {0}	Posición {0}	الموقع {0}	Konum {0}
+Random spot	Position aléatoire	Posición aleatoria	موقع عشوائي	Rastgele konum
+not selected	non sélectionnée	no seleccionada	غير محدد	seçilmedi
+VPN discovery active	Découverte VPN active	Detección VPN activa	اكتشاف VPN نشط	VPN keşfi etkin
+Ready to play	Prêt à jouer	Listo para jugar	جاهز للعب	Oynamaya hazır
+Connection unavailable	Connexion indisponible	Conexión no disponible	الاتصال غير متاح	Bağlantı kullanılamıyor
+check Settings	vérifiez les paramètres	revisa Ajustes	تحقق من الإعدادات	Ayarları kontrol edin
+Discovery failed	Échec de la découverte	Falló la detección	فشل الاكتشاف	Keşif başarısız
+Could not save	Impossible d’enregistrer	No se pudo guardar	تعذر الحفظ	Kaydedilemedi
+Connection failed	Échec de connexion	Falló la conexión	فشل الاتصال	Bağlantı başarısız
+✓ Connected	✓ Connecté	✓ Conectado	✓ متصل	✓ Bağlandı
+rooms and friends refreshed	salons et amis actualisés	salas y amigos actualizados	تم تحديث الغرف والأصدقاء	odalar ve arkadaşlar yenilendi
+Select an existing lotrbfme2.exe file.	Sélectionnez un fichier lotrbfme2.exe existant.	Selecciona un archivo lotrbfme2.exe existente.	حدد ملف lotrbfme2.exe موجودًا.	Mevcut bir lotrbfme2.exe dosyası seçin.
+Message not sent · reconnect and retry	Message non envoyé · reconnectez-vous et réessayez	Mensaje no enviado · reconecta y reintenta	لم تُرسل الرسالة · أعد الاتصال وحاول مجددًا	Mesaj gönderilmedi · yeniden bağlanıp deneyin
+Preset applied	Préréglage appliqué	Configuración aplicada	تم تطبيق الإعداد	Ön ayar uygulandı
+Confirming with host…	Confirmation avec l’hôte…	Confirmando con el anfitrión…	جارٍ التأكيد مع المضيف…	Kurucuyla onaylanıyor…
+Enter a room name.	Saisissez un nom de salon.	Introduce un nombre de sala.	أدخل اسم غرفة.	Bir oda adı girin.
+Visibility updated	Visibilité mise à jour	Visibilidad actualizada	تم تحديث الظهور	Görünürlük güncellendi
+Room name updated	Nom du salon mis à jour	Nombre de sala actualizado	تم تحديث اسم الغرفة	Oda adı güncellendi
+Saving…	Enregistrement…	Guardando…	جارٍ الحفظ…	Kaydediliyor…
+Saved	Enregistré	Guardado	تم الحفظ	Kaydedildi
+PLAYERS · DISCONNECTED	JOUEURS · DÉCONNECTÉ	JUGADORES · DESCONECTADO	اللاعبون · غير متصل	OYUNCULAR · BAĞLANTI KESİLDİ
+Disconnected · rejoin from the room browser	Déconnecté · rejoignez depuis la liste des salons	Desconectado · vuelve a entrar desde las salas	غير متصل · أعد الانضمام من متصفح الغرف	Bağlantı kesildi · oda tarayıcısından yeniden katılın
+Return to Game rooms to reconnect.	Retournez aux salons de jeu pour vous reconnecter.	Vuelve a Salas de juego para reconectar.	عد إلى غرف اللعب لإعادة الاتصال.	Yeniden bağlanmak için Oyun odaları’na dönün.
+Starting spots unavailable for this map.	Positions de départ indisponibles pour cette carte.	Posiciones iniciales no disponibles para este mapa.	مواقع البداية غير متاحة لهذه الخريطة.	Bu harita için başlangıç konumları yok.
+Automatic host preset	Préréglage automatique de l’hôte	Configuración automática del anfitrión	إعداد المضيف التلقائي	Otomatik kurucu ön ayarı
+Manual setup in BFME2	Configuration manuelle dans BFME2	Configuración manual en BFME2	إعداد يدوي في BFME2	BFME2’de elle kurulum
+Manual teams	Équipes manuelles	Equipos manuales	فرق يدوية	Elle takımlar
+Launching BFME2…	Lancement de BFME2…	Iniciando BFME2…	جارٍ تشغيل BFME2…	BFME2 başlatılıyor…
+Ready for the host to launch	Prêt pour le lancement par l’hôte	Listo para que inicie el anfitrión	جاهز ليبدأ المضيف	Kurucunun başlatmasına hazır
+Check Ready when you want to play.	Cochez Prêt quand vous voulez jouer.	Marca Listo cuando quieras jugar.	حدد جاهز عندما تريد اللعب.	Oynamak istediğinizde Hazır’ı işaretleyin.
+Live sync paused. Native lobby remains available.	Synchronisation suspendue. Le salon du jeu reste disponible.	Sincronización pausada. El lobby del juego sigue disponible.	المزامنة متوقفة مؤقتًا. ردهة اللعبة لا تزال متاحة.	Canlı eşitleme duraklatıldı. Oyun lobisi kullanılabilir.
+Live sync is off in Settings. Set game rules, team and spot in BFME2 manually.	La synchronisation est désactivée. Réglez règles, équipe et position manuellement dans BFME2.	La sincronización está desactivada. Configura reglas, equipo y posición manualmente en BFME2.	المزامنة معطلة في الإعدادات. اضبط القواعد والفريق والموقع يدويًا في BFME2.	Canlı eşitleme kapalı. BFME2’de kuralları, takım ve konumu elle ayarlayın.
+Please wait for the current action to finish.	Attendez la fin de l’action en cours.	Espera a que termine la acción actual.	انتظر انتهاء الإجراء الحالي.	Mevcut işlemin bitmesini bekleyin.
+Wait for the current operation to finish.	Attendez la fin de l’opération en cours.	Espera a que termine la operación actual.	انتظر انتهاء العملية الحالية.	Mevcut işlemin bitmesini bekleyin.
+Select a starting spot on the map before clearing it.	Sélectionnez une position sur la carte avant de l’effacer.	Selecciona una posición antes de borrarla.	حدد موقع بداية على الخريطة قبل مسحه.	Temizlemeden önce haritada başlangıç konumu seçin.
+Only your saved friends can see and join.	Seuls vos amis enregistrés peuvent voir et rejoindre.	Solo tus amigos guardados pueden ver y unirse.	يمكن لأصدقائك المحفوظين فقط الرؤية والانضمام.	Yalnızca kayıtlı arkadaşlarınız görüp katılabilir.
+Everyone on your VPN can see and join.	Tous les joueurs de votre VPN peuvent voir et rejoindre.	Todos en tu VPN pueden ver y unirse.	يمكن للجميع على VPN الرؤية والانضمام.	VPN’inizdeki herkes görüp katılabilir.
+Fellowship update	Mise à jour de Fellowship	Actualización de Fellowship	تحديث Fellowship	Fellowship güncellemesi
+Update could not finish	La mise à jour n’a pas pu se terminer	No se pudo completar la actualización	تعذر إكمال التحديث	Güncelleme tamamlanamadı
+Fellowship {0} is available. Update for the latest improvements.	Fellowship {0} est disponible. Mettez à jour pour profiter des améliorations.	Fellowship {0} está disponible. Actualiza para obtener las últimas mejoras.	يتوفر Fellowship {0}. حدّث للحصول على أحدث التحسينات.	Fellowship {0} kullanılabilir. Son iyileştirmeler için güncelleyin.
+Select your VPN network interface in Settings first.	Sélectionnez d’abord votre interface VPN dans les paramètres.	Selecciona primero tu interfaz VPN en Ajustes.	اختر واجهة VPN أولًا في الإعدادات.	Önce Ayarlar’dan VPN ağ arayüzünü seçin.
+This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry.	Cette adresse VPN utilise déjà le port 28742. Fermez les anciennes instances de Fellowship puis actualisez.	Esta dirección VPN ya usa el puerto 28742. Cierra otras versiones de Fellowship y pulsa Actualizar.	عنوان VPN مستخدم بالفعل على المنفذ 28742. أغلق نسخ Fellowship القديمة ثم حدّث للمحاولة.	Bu VPN adresinin 28742 bağlantı noktası kullanımda. Eski Fellowship sürümlerini kapatıp Yenile’ye tıklayın.
+Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings.	Connexion impossible sur cette interface. Vérifiez le VPN et choisissez son adresse actuelle dans les paramètres.	No se pudo conectar en esta interfaz. Comprueba la VPN y elige su dirección actual en Ajustes.	تعذر الاتصال بالواجهة المحددة. تحقق من اتصال VPN واختر عنوانها الحالي في الإعدادات.	Seçili arayüzde bağlantı kurulamadı. VPN’i kontrol edip Ayarlar’dan güncel adresini seçin.
+{0} ({1}) is not connected or its address has changed. Connect to your VPN network, then select its current interface in Settings.	{0} ({1}) est déconnecté ou son adresse a changé. Connectez votre VPN et sélectionnez son interface actuelle dans les paramètres.	{0} ({1}) está desconectado o cambió de dirección. Conecta tu VPN y selecciona su interfaz actual en Ajustes.	{0} ({1}) غير متصل أو تغير عنوانه. اتصل بشبكة VPN ثم حدد واجهتها الحالية في الإعدادات.	{0} ({1}) bağlı değil veya adresi değişti. VPN’e bağlanıp Ayarlar’dan güncel arayüzünü seçin.
+Fellowship could not read your network adapters. Check {0} and refresh.	Fellowship n’a pas pu lire vos adaptateurs réseau. Vérifiez {0} et actualisez.	Fellowship no pudo leer los adaptadores de red. Comprueba {0} y actualiza.	تعذر على Fellowship قراءة محولات الشبكة. تحقق من {0} وحدّث.	Fellowship ağ bağdaştırıcılarını okuyamadı. {0} bağlantısını kontrol edip yenileyin.
+Windows reports no internet connection. Connect to the internet to use online updates and reach your VPN friends.	Windows indique une absence de connexion Internet. Connectez-vous pour les mises à jour et vos amis VPN.	Windows indica que no hay Internet. Conéctate para actualizar y contactar con tus amigos VPN.	يشير Windows إلى عدم وجود إنترنت. اتصل للتحديث والوصول إلى أصدقائك على VPN.	Windows internet bağlantısı olmadığını bildiriyor. Güncellemeler ve VPN arkadaşlarınız için internete bağlanın.
+Switch room	Changer de salon	Cambiar de sala	تبديل الغرفة	Oda değiştir
+Leave your current room? If you host, the next player takes over.	Quitter le salon actuel ? Si vous êtes l’hôte, un autre joueur prendra le relais.	¿Salir de la sala actual? Si eres el anfitrión, otro jugador tomará el control.	هل تريد مغادرة الغرفة الحالية؟ إذا كنت المضيف فسيتولى اللاعب التالي الاستضافة.	Mevcut odadan ayrılsın mı? Kurucuysanız sıradaki oyuncu devralır.
+Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged.	Remplacer préférences, amis, utilisateurs bloqués et préréglages par cette sauvegarde ? Le chemin du jeu et le VPN resteront inchangés.	¿Reemplazar preferencias, amigos, bloqueados y configuraciones con esta copia? La ruta del juego y la VPN no cambiarán.	هل تريد استبدال التفضيلات والأصدقاء والمحظورين وإعدادات الغرف بهذه النسخة؟ لن يتغير مسار اللعبة وواجهة VPN.	Tercihler, arkadaşlar, engellenenler ve ön ayarlar bu yedekle değiştirilsin mi? Oyun yolu ve VPN arayüzü korunur.
+Fellowship is still running	Fellowship fonctionne encore	Fellowship sigue abierto	لا يزال Fellowship يعمل	Fellowship hâlâ çalışıyor
+The previous Fellowship is still running. Quit it and reopen the updated version.	L’ancienne instance fonctionne encore. Fermez-la puis ouvrez la version mise à jour.	La versión anterior sigue abierta. Ciérrala y abre la actualizada.	النسخة السابقة لا تزال تعمل. أغلقها وافتح النسخة المحدثة.	Önceki Fellowship hâlâ çalışıyor. Kapatıp güncel sürümü açın.
+Installer repaired	Installateur réparé	Instalador reparado	تم إصلاح المثبت	Yükleyici onarıldı
+Repair could not finish	La réparation n’a pas pu se terminer	No se pudo completar la reparación	تعذر إكمال الإصلاح	Onarım tamamlanamadı
+Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved.	Les fichiers d’installation sont restaurés. Ouvrez Fellowship et réessayez la mise à jour. Préférences et amis sont préservés.	Se restauraron los archivos del instalador. Abre Fellowship y reintenta. Tus preferencias y amigos se conservaron.	استُعيدت ملفات المثبت. افتح Fellowship وأعد محاولة التحديث. حُفظت تفضيلاتك وأصدقاؤك.	Yükleyici dosyaları geri yüklendi. Fellowship’i açıp güncellemeyi yeniden deneyin. Tercihleriniz ve arkadaşlarınız korundu.
+Gathering	Rassemblement	Reuniendo jugadores	تجمع اللاعبين	Oyuncular toplanıyor
+Host in BFME2	Hôte dans BFME2	Anfitrión en BFME2	المضيف داخل BFME2	Kurucu BFME2’de
+Blocked	Bloqué	Bloqueado	محظور	Engellendi
+NOT IN GAME	HORS DU JEU	FUERA DEL JUEGO	خارج اللعبة	OYUNDA DEĞİL
+✓ Settings saved	✓ Paramètres enregistrés	✓ Ajustes guardados	✓ تم حفظ الإعدادات	✓ Ayarlar kaydedildi
+✓ Game preferences saved	✓ Préférences de jeu enregistrées	✓ Preferencias de juego guardadas	✓ تم حفظ تفضيلات اللعبة	✓ Oyun tercihleri kaydedildi
+Private chat	Discussion privée	Chat privado	محادثة خاصة	Özel sohbet
+Direct connection	Connexion directe	Conexión directa	اتصال مباشر	Doğrudan bağlantı
+SYSTEM	SYSTÈME	SISTEMA	النظام	SİSTEM
+This conversation stays between these app windows. Messages aren't saved when you close the chat.	Cette conversation reste entre ces fenêtres. Les messages ne sont pas conservés à la fermeture.	Esta conversación queda entre estas ventanas. Los mensajes no se guardan al cerrar el chat.	تبقى المحادثة بين نافذتي التطبيق. لا تُحفظ الرسائل عند إغلاق المحادثة.	Bu konuşma bu uygulama pencereleri arasında kalır. Sohbet kapatıldığında mesajlar kaydedilmez.
+Unblock this player before messaging.	Débloquez ce joueur avant de lui écrire.	Desbloquea a este jugador antes de enviarle mensajes.	ألغِ حظر اللاعب قبل مراسلته.	Mesaj göndermeden önce bu oyuncunun engelini kaldırın.
+Choose a valid recipient VPN address.	Choisissez une adresse VPN de destinataire valide.	Elige una dirección VPN válida del destinatario.	اختر عنوان VPN صالحًا للمستلم.	Geçerli bir alıcı VPN adresi seçin.
+Sending…	Envoi…	Enviando…	جارٍ الإرسال…	Gönderiliyor…
+Message sent	Message envoyé	Mensaje enviado	أُرسلت الرسالة	Mesaj gönderildi
+Enter to send	Entrée pour envoyer	Intro para enviar	اضغط Enter للإرسال	Göndermek için Enter
+Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry.	Envoi non confirmé. Le destinataire est peut-être hors ligne ou se reconnecte. Votre brouillon est conservé. Appuyez sur Entrée pour réessayer.	Entrega sin confirmar. Puede estar desconectado o reconectándose. Se conserva tu borrador; pulsa Intro para reintentar.	لم يُؤكَّد التسليم. قد يكون المستلم غير متصل أو يعيد الاتصال. حُفظت المسودة؛ اضغط Enter للمحاولة مجددًا.	Teslimat doğrulanamadı. Alıcı çevrimdışı olabilir veya yeniden bağlanıyor olabilir. Taslağınız korundu; yeniden denemek için Enter'a basın.
+Type a message and use a valid recipient VPN address.	Saisissez un message et une adresse VPN de destinataire valide.	Escribe un mensaje y usa una dirección VPN válida del destinatario.	اكتب رسالة واستخدم عنوان VPN صالحًا للمستلم.	Bir mesaj yazın ve geçerli bir alıcı VPN adresi kullanın.
+Updates automatically	Mise à jour automatique	Se actualiza automáticamente	يُحدَّث تلقائيًا	Otomatik güncellenir
+{0} / {1} players	{0} / {1} joueurs	{0} / {1} jugadores	{0} / {1} لاعبين	{0} / {1} oyuncu
+{0} invited you	{0} vous a invité	{0} te ha invitado	دعاك {0}	{0} sizi davet etti
+No other players online	Aucun autre joueur en ligne	No hay otros jugadores conectados	لا يوجد لاعبون آخرون متصلون	Başka çevrimiçi oyuncu yok
+No players match your search	Aucun joueur ne correspond	Ningún jugador coincide con tu búsqueda	لا يوجد لاعبون يطابقون البحث	Aramanızla eşleşen oyuncu yok
+Verifying download…	Vérification du téléchargement…	Verificando descarga…	جارٍ التحقق من التنزيل…	İndirme doğrulanıyor…
+Downloading update…	Téléchargement de la mise à jour…	Descargando actualización…	جارٍ تنزيل التحديث…	Güncelleme indiriliyor…
+Checking the package before installation.	Vérification du paquet avant installation.	Comprobando el paquete antes de instalar.	جارٍ فحص الحزمة قبل التثبيت.	Paket kurulumdan önce denetleniyor.
+Preparing installation…	Préparation de l’installation…	Preparando instalación…	جارٍ تحضير التثبيت…	Kurulum hazırlanıyor…
+Fellowship will close. The installer will keep you informed.	Fellowship va se fermer. Le programme d’installation vous informera de la progression.	Fellowship se cerrará. El instalador te informará del progreso.	سيُغلق Fellowship. سيعرض المثبّت تقدم العملية.	Fellowship kapanacak. Yükleyici ilerlemeyi gösterecek.
+Closing Fellowship…	Fermeture de Fellowship…	Cerrando Fellowship…	جارٍ إغلاق Fellowship…	Fellowship kapatılıyor…
+Waiting for the previous version to finish safely.	Attente de la fermeture de la version précédente.	Esperando a que la versión anterior termine de forma segura.	بانتظار إغلاق الإصدار السابق بأمان.	Önceki sürümün güvenle kapanması bekleniyor.
+Installing update…	Installation de la mise à jour…	Instalando actualización…	جارٍ تثبيت التحديث…	Güncelleme yükleniyor…
+Keep this window open. Fellowship will reopen when installation finishes.	Gardez cette fenêtre ouverte. Fellowship redémarrera après l’installation.	Mantén esta ventana abierta. Fellowship se abrirá al terminar la instalación.	أبقِ هذه النافذة مفتوحة. سيُفتح Fellowship عند اكتمال التثبيت.	Bu pencereyi açık tutun. Kurulum tamamlandığında Fellowship yeniden açılacak.
+Waiting for Windows Installer…	Attente de Windows Installer…	Esperando a Windows Installer…	بانتظار Windows Installer…	Windows Installer bekleniyor…
+Another installation is running. Retrying automatically…	Une autre installation est en cours. Nouvelle tentative automatique…	Hay otra instalación en curso. Reintentando automáticamente…	يوجد تثبيت آخر قيد التنفيذ. ستتم إعادة المحاولة تلقائيًا…	Başka bir kurulum sürüyor. Otomatik olarak yeniden deneniyor…
+Opening Fellowship…	Ouverture de Fellowship…	Abriendo Fellowship…	جارٍ فتح Fellowship…	Fellowship açılıyor…
+Update installed. Windows may require a restart.	Mise à jour installée. Windows peut nécessiter un redémarrage.	Actualización instalada. Windows puede requerir reiniciarse.	ثُبّت التحديث. قد يلزم إعادة تشغيل Windows.	Güncelleme yüklendi. Windows'un yeniden başlatılması gerekebilir.
+Update installed successfully.	Mise à jour installée.	Actualización instalada correctamente.	ثُبّت التحديث بنجاح.	Güncelleme başarıyla yüklendi.
+Repairing Windows Installer…	Réparation de Windows Installer…	Reparando Windows Installer…	جارٍ إصلاح Windows Installer…	Windows Installer onarılıyor…
+Restoring installer files…	Restauration des fichiers d’installation…	Restaurando archivos del instalador…	جارٍ استعادة ملفات المثبّت…	Yükleyici dosyaları geri yükleniyor…
+Your preferences and friends will be preserved.	Vos préférences et vos amis seront conservés.	Se conservarán tus preferencias y amigos.	ستُحفظ تفضيلاتك وأصدقاؤك.	Tercihleriniz ve arkadaşlarınız korunacak.
+Downloading the original Fellowship {0} installer.	Téléchargement du programme d’installation original de Fellowship {0}.	Descargando el instalador original de Fellowship {0}.	جارٍ تنزيل مثبّت Fellowship {0} الأصلي.	Orijinal Fellowship {0} yükleyicisi indiriliyor.
+Delete	Supprimer	Eliminar	حذف	Sil
+Edit your profile	Modifier votre profil	Edita tu perfil	تعديل ملفك الشخصي	Profilinizi düzenleyin
+RUNS IN SYSTEM TRAY	FONCTIONNE DANS LA ZONE DE NOTIFICATION	SE EJECUTA EN LA BANDEJA DEL SISTEMA	يعمل في منطقة الإعلام	SİSTEM TEPSİSİNDE ÇALIŞIR
+Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it.	Arrêt annulé. BFME2 est toujours ouvert ; autorisez la demande Windows pour l’arrêter.	Cancelación anulada. BFME2 sigue abierto; acepta el permiso de Windows para detenerlo.	أُلغي الإيقاف. ما زالت BFME2 تعمل؛ وافق على طلب إذن Windows لإيقافها.	Durdurma iptal edildi. BFME2 hâlâ çalışıyor; durdurmak için Windows izin isteğini onaylayın.
+BFME2 stopped. You remain in the Fellowship room.	BFME2 arrêté. Vous restez dans le salon Fellowship.	BFME2 detenido. Sigues en la sala de Fellowship.	أُوقفت BFME2. ما زلت في غرفة Fellowship.	BFME2 durduruldu. Fellowship odasında kalmaya devam ediyorsunuz.
+Launching BFME2. Your rules will sync when the LAN lobby opens.	Lancement de BFME2. Vos règles seront synchronisées à l’ouverture du salon LAN.	Iniciando BFME2. Tus reglas se sincronizarán al abrir la sala LAN.	جارٍ تشغيل BFME2. ستتم مزامنة القواعد عند فتح ردهة LAN.	BFME2 başlatılıyor. LAN lobisi açıldığında kurallarınız eşitlenecek.
+Returned to BFME2.	Retour dans BFME2.	De vuelta en BFME2.	تم الرجوع إلى BFME2.	BFME2'ye dönüldü.
+BFME2 is starting; waiting for its window.	BFME2 démarre ; attente de sa fenêtre.	BFME2 se está iniciando; esperando su ventana.	يجري بدء BFME2؛ بانتظار نافذتها.	BFME2 başlatılıyor; penceresi bekleniyor.
+Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.	Ouvrez Multijoueur → Réseau et créez ou rejoignez le salon de l’hôte. La synchronisation de l’équipe et de la position démarrera automatiquement.	Abre Multijugador → Red y crea o únete a la sala del anfitrión. El equipo y la posición se sincronizarán automáticamente al abrir la sala correspondiente.	افتح اللعب الجماعي ← الشبكة وأنشئ ردهة المضيف أو انضم إليها. تبدأ مزامنة الفريق والموقع تلقائيًا عند فتح الردهة المطابقة.	Çok Oyunculu → Ağ bölümünden ev sahibinin lobisini oluşturun veya katılın. Eşleşen lobi açıldığında takım ve konum otomatik eşitlenir.
+Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens.	La synchronisation est désactivée. Ouvrez Multijoueur → Réseau et définissez les règles, l’équipe et la position manuellement, ou réactivez la synchronisation dans le salon.	La sincronización está desactivada. Abre Multijugador → Red y configura las reglas, equipo y posición manualmente, o reactívala al abrir la sala.	المزامنة المباشرة متوقفة. افتح اللعب الجماعي ← الشبكة واضبط القواعد والفريق والموقع يدويًا، أو أعد تفعيل المزامنة بعد فتح الردهة.	Canlı eşitleme kapalı. Çok Oyunculu → Ağ bölümünden kuralları, takımı ve konumu elle ayarlayın veya lobi açıldıktan sonra eşitlemeyi yeniden açın.
+running in the background	en arrière-plan	en segundo plano	يعمل في الخلفية	arka planda çalışıyor
+Quit Fellowship	Quitter Fellowship	Salir de Fellowship	إنهاء Fellowship	Fellowship'ten çık
+Creating room…	Création du salon…	Creando sala…	جارٍ إنشاء الغرفة…	Oda oluşturuluyor…
+Checking GitHub…	Vérification de GitHub…	Consultando GitHub…	جارٍ التحقق من GitHub…	GitHub denetleniyor…
+You have the latest published version.	Vous disposez de la dernière version publiée.	Tienes la última versión publicada.	لديك أحدث إصدار منشور.	En son yayımlanan sürümü kullanıyorsunuz.
+Version {0} is available. Restarting closes Fellowship windows.	La version {0} est disponible. Le redémarrage ferme les fenêtres Fellowship.	La versión {0} está disponible. El reinicio cierra las ventanas de Fellowship.	الإصدار {0} متاح. ستُغلق نوافذ Fellowship عند إعادة التشغيل.	{0} sürümü hazır. Yeniden başlatma Fellowship pencerelerini kapatır.
+Host is now {0}	L’hôte est maintenant {0}	El anfitrión ahora es {0}	المضيف الآن هو {0}	Yeni ev sahibi: {0}
+Room handed to {0}	Salon transféré à {0}	Sala transferida a {0}	نُقلت الغرفة إلى {0}	Oda {0} oyuncusuna devredildi
+Room reconnected to {0}	Salon reconnecté à {0}	Sala reconectada a {0}	أُعيد اتصال الغرفة بـ {0}	Oda {0} oyuncusuna yeniden bağlandı
+Host disconnected. Recovering room…	Hôte déconnecté. Récupération du salon…	Anfitrión desconectado. Recuperando sala…	انقطع اتصال المضيف. جارٍ استعادة الغرفة…	Ev sahibinin bağlantısı kesildi. Oda kurtarılıyor…
+You are now the room host.	Vous êtes maintenant l’hôte du salon.	Ahora eres el anfitrión de la sala.	أنت الآن مضيف الغرفة.	Artık odanın ev sahibisiniz.
+The host removed you from the room.	L’hôte vous a retiré du salon.	El anfitrión te expulsó de la sala.	أخرجك المضيف من الغرفة.	Ev sahibi sizi odadan çıkardı.
+Connection to the host ended. Rejoin from the room browser.	Connexion à l’hôte terminée. Rejoignez le salon depuis la liste.	Se perdió la conexión con el anfitrión. Vuelve a unirte desde la lista de salas.	انتهى الاتصال بالمضيف. انضم مجددًا من قائمة الغرف.	Ev sahibiyle bağlantı sona erdi. Oda listesinden yeniden katılın.
+A player disconnected during transfer and may need to rejoin.	Un joueur s’est déconnecté pendant le transfert et devra peut-être rejoindre le salon.	Un jugador se desconectó durante la transferencia y puede tener que volver a unirse.	انقطع اتصال لاعب أثناء النقل وقد يحتاج إلى الانضمام مجددًا.	Devir sırasında bir oyuncunun bağlantısı kesildi ve yeniden katılması gerekebilir.
+Host transfer was interrupted. Rejoin the room at {0} if it is available.	Transfert de l’hôte interrompu. Rejoignez le salon à {0} s’il est disponible.	Se interrumpió la transferencia del anfitrión. Vuelve a unirte a {0} si está disponible.	انقطع نقل الاستضافة. انضم مجددًا إلى الغرفة على {0} إن كانت متاحة.	Ev sahibi devri kesintiye uğradı. Kullanılabiliyorsa {0} adresindeki odaya yeniden katılın.
+Launch could not reach: {0}. Ask them to reconnect or use Launch mine.	Lancement impossible pour : {0}. Demandez-leur de se reconnecter ou de lancer leur jeu.	No se pudo iniciar para: {0}. Pídeles que se reconecten o inicien su juego.	تعذر الوصول لتشغيل اللعبة: {0}. اطلب منهم إعادة الاتصال أو تشغيل لعبتهم.	Başlatma isteği ulaşmadı: {0}. Yeniden bağlanmalarını veya kendi oyunlarını başlatmalarını isteyin.

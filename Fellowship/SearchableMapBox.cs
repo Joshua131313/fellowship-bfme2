@@ -13,7 +13,7 @@ public sealed class SearchableMapBox : ComboBox
     public override void OnApplyTemplate()
     {
         if(search!=null){search.TextChanged-=FilterChanged;search.PreviewKeyDown-=SearchKey;}
-        base.OnApplyTemplate();
+        base.OnApplyTemplate();if(Template.FindName("PART_NoMaps",this) is TextBlock emptyLabel)L.Bind(emptyLabel,TextBlock.TextProperty,"No maps match your search");
         search=GetTemplateChild("PART_MapSearch") as TextBox;empty=GetTemplateChild("PART_NoMaps") as TextBlock;
         if(search!=null){search.Visibility=Visibility.Visible;search.ToolTip="Search map names";System.Windows.Automation.AutomationProperties.SetName(search,"Search maps");search.TextChanged+=FilterChanged;search.PreviewKeyDown+=SearchKey;}
     }

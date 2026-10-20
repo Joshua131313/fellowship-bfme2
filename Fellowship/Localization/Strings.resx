@@ -715,4 +715,940 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="○ Not connected" xml:space="preserve">
     <value>○ Not connected</value>
   </data>
+  <data name="Private messages" xml:space="preserve">
+    <value>Private messages</value>
+  </data>
+  <data name="Messages sent" xml:space="preserve">
+    <value>Messages sent</value>
+  </data>
+  <data name="Room messages" xml:space="preserve">
+    <value>Room messages</value>
+  </data>
+  <data name="Invitations" xml:space="preserve">
+    <value>Invitations</value>
+  </data>
+  <data name="Player joins room" xml:space="preserve">
+    <value>Player joins room</value>
+  </data>
+  <data name="Player leaves room" xml:space="preserve">
+    <value>Player leaves room</value>
+  </data>
+  <data name="Friend online" xml:space="preserve">
+    <value>Friend online</value>
+  </data>
+  <data name="Friend offline" xml:space="preserve">
+    <value>Friend offline</value>
+  </data>
+  <data name="No team / free for all" xml:space="preserve">
+    <value>No team / free for all</value>
+  </data>
+  <data name="No team" xml:space="preserve">
+    <value>No team</value>
+  </data>
+  <data name="Team {0}" xml:space="preserve">
+    <value>Team {0}</value>
+  </data>
+  <data name="Balanced teams" xml:space="preserve">
+    <value>Balanced teams</value>
+  </data>
+  <data name="Free for all" xml:space="preserve">
+    <value>Free for all</value>
+  </data>
+  <data name="No maps match your search" xml:space="preserve">
+    <value>No maps match your search</value>
+  </data>
+  <data name="Search map names" xml:space="preserve">
+    <value>Search map names</value>
+  </data>
+  <data name="Search players or VPN address" xml:space="preserve">
+    <value>Search players or VPN address</value>
+  </data>
+  <data name="Filter rooms by mode" xml:space="preserve">
+    <value>Filter rooms by mode</value>
+  </data>
+  <data name="Filter rooms by name, host or map" xml:space="preserve">
+    <value>Filter rooms by name, host or map</value>
+  </data>
+  <data name="Switch network · leaves your current room" xml:space="preserve">
+    <value>Switch network · leaves your current room</value>
+  </data>
+  <data name="Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic." xml:space="preserve">
+    <value>Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic.</value>
+  </data>
+  <data name="Check which friends are online" xml:space="preserve">
+    <value>Check which friends are online</value>
+  </data>
+  <data name="Choose a saved room preset" xml:space="preserve">
+    <value>Choose a saved room preset</value>
+  </data>
+  <data name="Starting team arrangement; players can change teams in the lobby" xml:space="preserve">
+    <value>Starting team arrangement; players can change teams in the lobby</value>
+  </data>
+  <data name="Starting locations — preview only" xml:space="preserve">
+    <value>Starting locations — preview only</value>
+  </data>
+  <data name="Stop BFME2 on this computer" xml:space="preserve">
+    <value>Stop BFME2 on this computer</value>
+  </data>
+  <data name="Host's selected VPN IPv4 address" xml:space="preserve">
+    <value>Host's selected VPN IPv4 address</value>
+  </data>
+  <data name="Write a message · Enter to send" xml:space="preserve">
+    <value>Write a message · Enter to send</value>
+  </data>
+  <data name="Message your room · Enter to send" xml:space="preserve">
+    <value>Message your room · Enter to send</value>
+  </data>
+  <data name="Clipboard busy · try again" xml:space="preserve">
+    <value>Clipboard busy · try again</value>
+  </data>
+  <data name="Clipboard is busy. Try copying again." xml:space="preserve">
+    <value>Clipboard is busy. Try copying again.</value>
+  </data>
+  <data name="Complete the required fields to enable this action." xml:space="preserve">
+    <value>Complete the required fields to enable this action.</value>
+  </data>
+  <data name="Synchronize map, rules, team, starting spot and color in the native LAN lobby." xml:space="preserve">
+    <value>Synchronize map, rules, team, starting spot and color in the native LAN lobby.</value>
+  </data>
+  <data name="Fellowship room capacity. BFME2 matches still support at most 8 players." xml:space="preserve">
+    <value>Fellowship room capacity. BFME2 matches still support at most 8 players.</value>
+  </data>
+  <data name="Fellowship room limit: 2–64. BFME2 matches support at most 8 players." xml:space="preserve">
+    <value>Fellowship room limit: 2–64. BFME2 matches support at most 8 players.</value>
+  </data>
+  <data name="NAME" xml:space="preserve">
+    <value>NAME</value>
+  </data>
+  <data name="RADMIN IPv4 ADDRESS" xml:space="preserve">
+    <value>RADMIN IPv4 ADDRESS</value>
+  </data>
+  <data name="No other players online" xml:space="preserve">
+    <value>No other players online</value>
+  </data>
+  <data name="Room is no longer available · showing last known details" xml:space="preserve">
+    <value>Room is no longer available · showing last known details</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="An unexpected error occurred. Please retry. Copy diagnostic details if you need support." xml:space="preserve">
+    <value>An unexpected error occurred. Please retry. Copy diagnostic details if you need support.</value>
+  </data>
+  <data name="Copy diagnostic details" xml:space="preserve">
+    <value>Copy diagnostic details</value>
+  </data>
+  <data name="Enter a nickname." xml:space="preserve">
+    <value>Enter a nickname.</value>
+  </data>
+  <data name="Enter a room name and choose between 2 and 64 players." xml:space="preserve">
+    <value>Enter a room name and choose between 2 and 64 players.</value>
+  </data>
+  <data name="Enter the host’s IPv4 address on your selected VPN network." xml:space="preserve">
+    <value>Enter the host’s IPv4 address on your selected VPN network.</value>
+  </data>
+  <data name="Check the room name, patch and player limit." xml:space="preserve">
+    <value>Check the room name, patch and player limit.</value>
+  </data>
+  <data name="Choose a BFME2 player color." xml:space="preserve">
+    <value>Choose a BFME2 player color.</value>
+  </data>
+  <data name="Choose a valid team and map spot in Fellowship." xml:space="preserve">
+    <value>Choose a valid team and map spot in Fellowship.</value>
+  </data>
+  <data name="Choose no team or team 1–4." xml:space="preserve">
+    <value>Choose no team or team 1–4.</value>
+  </data>
+  <data name="Choose supported BFME2 1.00 rules." xml:space="preserve">
+    <value>Choose supported BFME2 1.00 rules.</value>
+  </data>
+  <data name="Choose an unblocked friend." xml:space="preserve">
+    <value>Choose an unblocked friend.</value>
+  </data>
+  <data name="Choose another player's VPN address." xml:space="preserve">
+    <value>Choose another player's VPN address.</value>
+  </data>
+  <data name="Select a connected player." xml:space="preserve">
+    <value>Select a connected player.</value>
+  </data>
+  <data name="Another player has claimed this color. Choose another." xml:space="preserve">
+    <value>Another player has claimed this color. Choose another.</value>
+  </data>
+  <data name="Another player has claimed this spot. Choose another." xml:space="preserve">
+    <value>Another player has claimed this spot. Choose another.</value>
+  </data>
+  <data name="That starting spot is unavailable on this map." xml:space="preserve">
+    <value>That starting spot is unavailable on this map.</value>
+  </data>
+  <data name="The map changed. Choose a spot on the new map." xml:space="preserve">
+    <value>The map changed. Choose a spot on the new map.</value>
+  </data>
+  <data name="Every player must be ready before launching." xml:space="preserve">
+    <value>Every player must be ready before launching.</value>
+  </data>
+  <data name="Join a Fellowship room first." xml:space="preserve">
+    <value>Join a Fellowship room first.</value>
+  </data>
+  <data name="Join a room first." xml:space="preserve">
+    <value>Join a room first.</value>
+  </data>
+  <data name="Join or host a room first." xml:space="preserve">
+    <value>Join or host a room first.</value>
+  </data>
+  <data name="Only the host can edit this room." xml:space="preserve">
+    <value>Only the host can edit this room.</value>
+  </data>
+  <data name="Only the host can remove players." xml:space="preserve">
+    <value>Only the host can remove players.</value>
+  </data>
+  <data name="Only the host can promote players." xml:space="preserve">
+    <value>Only the host can promote players.</value>
+  </data>
+  <data name="That player is no longer connected." xml:space="preserve">
+    <value>That player is no longer connected.</value>
+  </data>
+  <data name="Player is no longer in the room." xml:space="preserve">
+    <value>Player is no longer in the room.</value>
+  </data>
+  <data name="Host transfer in progress." xml:space="preserve">
+    <value>Host transfer in progress.</value>
+  </data>
+  <data name="Host transfer already in progress." xml:space="preserve">
+    <value>Host transfer already in progress.</value>
+  </data>
+  <data name="Wait for host transfer to finish." xml:space="preserve">
+    <value>Wait for host transfer to finish.</value>
+  </data>
+  <data name="All room members must update Fellowship before transferring the host." xml:space="preserve">
+    <value>All room members must update Fellowship before transferring the host.</value>
+  </data>
+  <data name="The next player must update Fellowship and connect its VPN listener before becoming host." xml:space="preserve">
+    <value>The next player must update Fellowship and connect its VPN listener before becoming host.</value>
+  </data>
+  <data name="New host did not confirm the room." xml:space="preserve">
+    <value>New host did not confirm the room.</value>
+  </data>
+  <data name="Disconnected from host." xml:space="preserve">
+    <value>Disconnected from host.</value>
+  </data>
+  <data name="The room is closed." xml:space="preserve">
+    <value>The room is closed.</value>
+  </data>
+  <data name="This room is no longer available." xml:space="preserve">
+    <value>This room is no longer available.</value>
+  </data>
+  <data name="This room is no longer available or is private." xml:space="preserve">
+    <value>This room is no longer available or is private.</value>
+  </data>
+  <data name="This invitation has expired or the room moved. Ask for a new invitation." xml:space="preserve">
+    <value>This invitation has expired or the room moved. Ask for a new invitation.</value>
+  </data>
+  <data name="Unblock this player before joining." xml:space="preserve">
+    <value>Unblock this player before joining.</value>
+  </data>
+  <data name="Unblock this player before messaging." xml:space="preserve">
+    <value>Unblock this player before messaging.</value>
+  </data>
+  <data name="Leave the room before switching networks." xml:space="preserve">
+    <value>Leave the room before switching networks.</value>
+  </data>
+  <data name="Leave your room before restoring a backup." xml:space="preserve">
+    <value>Leave your room before restoring a backup.</value>
+  </data>
+  <data name="The player limit cannot be lower than the current roster." xml:space="preserve">
+    <value>The player limit cannot be lower than the current roster.</value>
+  </data>
+  <data name="Room creation cancelled. Your current room is unchanged." xml:space="preserve">
+    <value>Room creation cancelled. Your current room is unchanged.</value>
+  </data>
+  <data name="Message is too large." xml:space="preserve">
+    <value>Message is too large.</value>
+  </data>
+  <data name="Message was not acknowledged." xml:space="preserve">
+    <value>Message was not acknowledged.</value>
+  </data>
+  <data name="Backup is too large." xml:space="preserve">
+    <value>Backup is too large.</value>
+  </data>
+  <data name="Invalid backup." xml:space="preserve">
+    <value>Invalid backup.</value>
+  </data>
+  <data name="Unsupported backup format." xml:space="preserve">
+    <value>Unsupported backup format.</value>
+  </data>
+  <data name="Invalid appearance or sound preferences." xml:space="preserve">
+    <value>Invalid appearance or sound preferences.</value>
+  </data>
+  <data name="Invalid friend or blocked-user entry." xml:space="preserve">
+    <value>Invalid friend or blocked-user entry.</value>
+  </data>
+  <data name="Invalid preferences in backup." xml:space="preserve">
+    <value>Invalid preferences in backup.</value>
+  </data>
+  <data name="Invalid map preferences." xml:space="preserve">
+    <value>Invalid map preferences.</value>
+  </data>
+  <data name="Invalid room preset." xml:space="preserve">
+    <value>Invalid room preset.</value>
+  </data>
+  <data name="Invalid preset." xml:space="preserve">
+    <value>Invalid preset.</value>
+  </data>
+  <data name="Invalid player color." xml:space="preserve">
+    <value>Invalid player color.</value>
+  </data>
+  <data name="Invalid team or spot." xml:space="preserve">
+    <value>Invalid team or spot.</value>
+  </data>
+  <data name="Invalid team or starting spot." xml:space="preserve">
+    <value>Invalid team or starting spot.</value>
+  </data>
+  <data name="Invalid peer response." xml:space="preserve">
+    <value>Invalid peer response.</value>
+  </data>
+  <data name="Invalid message size." xml:space="preserve">
+    <value>Invalid message size.</value>
+  </data>
+  <data name="Invalid sound data." xml:space="preserve">
+    <value>Invalid sound data.</value>
+  </data>
+  <data name="Unsupported sound format." xml:space="preserve">
+    <value>Unsupported sound format.</value>
+  </data>
+  <data name="Missing room." xml:space="preserve">
+    <value>Missing room.</value>
+  </data>
+  <data name="Missing map coordinates" xml:space="preserve">
+    <value>Missing map coordinates</value>
+  </data>
+  <data name="Invalid map bounds" xml:space="preserve">
+    <value>Invalid map bounds</value>
+  </data>
+  <data name="Map spot outside bounds" xml:space="preserve">
+    <value>Map spot outside bounds</value>
+  </data>
+  <data name="Map path too long." xml:space="preserve">
+    <value>Map path too long.</value>
+  </data>
+  <data name="Unsupported map preview" xml:space="preserve">
+    <value>Unsupported map preview</value>
+  </data>
+  <data name="Map is not installed." xml:space="preserve">
+    <value>Map is not installed.</value>
+  </data>
+  <data name="Selected map is not installed." xml:space="preserve">
+    <value>Selected map is not installed.</value>
+  </data>
+  <data name="Selected map was not found in this installation." xml:space="preserve">
+    <value>Selected map was not found in this installation.</value>
+  </data>
+  <data name="Only BFME2 1.00 is supported by this build." xml:space="preserve">
+    <value>Only BFME2 1.00 is supported by this build.</value>
+  </data>
+  <data name="Select lotrbfme2.exe from your BFME2 installation in Settings first." xml:space="preserve">
+    <value>Select lotrbfme2.exe from your BFME2 installation in Settings first.</value>
+  </data>
+  <data name="Select lotrbfme2.exe from your BFME2 installation folder; game.dat was not found beside it." xml:space="preserve">
+    <value>Select lotrbfme2.exe from your BFME2 installation folder; game.dat was not found beside it.</value>
+  </data>
+  <data name="Run BFME2 once to create its player profile first." xml:space="preserve">
+    <value>Run BFME2 once to create its player profile first.</value>
+  </data>
+  <data name="Exit BFME2 before applying the host preset." xml:space="preserve">
+    <value>Exit BFME2 before applying the host preset.</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again." xml:space="preserve">
+    <value>BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again.</value>
+  </data>
+  <data name="Windows permission was cancelled." xml:space="preserve">
+    <value>Windows permission was cancelled.</value>
+  </data>
+  <data name="BFME2 is still stopping. Try Abort again." xml:space="preserve">
+    <value>BFME2 is still stopping. Try Abort again.</value>
+  </data>
+  <data name="Windows could not stop BFME2. Close the game manually or try Abort again." xml:space="preserve">
+    <value>Windows could not stop BFME2. Close the game manually or try Abort again.</value>
+  </data>
+  <data name="BFME2 belongs to another Windows session." xml:space="preserve">
+    <value>BFME2 belongs to another Windows session.</value>
+  </data>
+  <data name="The running BFME2 does not match the configured installation." xml:space="preserve">
+    <value>The running BFME2 does not match the configured installation.</value>
+  </data>
+  <data name="The launcher did not create a BFME2 process within 60 seconds." xml:space="preserve">
+    <value>The launcher did not create a BFME2 process within 60 seconds.</value>
+  </data>
+  <data name="Cannot inspect BFME2." xml:space="preserve">
+    <value>Cannot inspect BFME2.</value>
+  </data>
+  <data name="Cannot read the BFME2 LAN lobby. Continue manually." xml:space="preserve">
+    <value>Cannot read the BFME2 LAN lobby. Continue manually.</value>
+  </data>
+  <data name="Unrecognized BFME2 LAN state. Continue manually." xml:space="preserve">
+    <value>Unrecognized BFME2 LAN state. Continue manually.</value>
+  </data>
+  <data name="BFME2 has a different map selected. Select the Fellowship map before applying." xml:space="preserve">
+    <value>BFME2 has a different map selected. Select the Fellowship map before applying.</value>
+  </data>
+  <data name="BFME2 is connected to a different host. Join the Fellowship host's LAN game first." xml:space="preserve">
+    <value>BFME2 is connected to a different host. Join the Fellowship host's LAN game first.</value>
+  </data>
+  <data name="BFME2 did not retain the map and rules." xml:space="preserve">
+    <value>BFME2 did not retain the map and rules.</value>
+  </data>
+  <data name="BFME2 did not retain the selected team and spot. Review its native lobby manually." xml:space="preserve">
+    <value>BFME2 did not retain the selected team and spot. Review its native lobby manually.</value>
+  </data>
+  <data name="BFME2 preset readback failed." xml:space="preserve">
+    <value>BFME2 preset readback failed.</value>
+  </data>
+  <data name="BFME2 rule data differs from the verified 1.00 layout. Preset was not applied." xml:space="preserve">
+    <value>BFME2 rule data differs from the verified 1.00 layout. Preset was not applied.</value>
+  </data>
+  <data name="Fellowship's host must also host the BFME2 lobby to sync map and rules." xml:space="preserve">
+    <value>Fellowship's host must also host the BFME2 lobby to sync map and rules.</value>
+  </data>
+  <data name="Room or choices changed; apply the current selections again." xml:space="preserve">
+    <value>Room or choices changed; apply the current selections again.</value>
+  </data>
+  <data name="No matching BFME2 LAN lobby became available. Open/create or join the matching lobby." xml:space="preserve">
+    <value>No matching BFME2 LAN lobby became available. Open/create or join the matching lobby.</value>
+  </data>
+  <data name="Host did not confirm the selection. Both players need this version of Fellowship." xml:space="preserve">
+    <value>Host did not confirm the selection. Both players need this version of Fellowship.</value>
+  </data>
+  <data name="The game sync connection ended. No further changes will be sent." xml:space="preserve">
+    <value>The game sync connection ended. No further changes will be sent.</value>
+  </data>
+  <data name="The sync helper disconnected while BFME2 is still running." xml:space="preserve">
+    <value>The sync helper disconnected while BFME2 is still running.</value>
+  </data>
+  <data name="The host did not finish sending the room. Please retry." xml:space="preserve">
+    <value>The host did not finish sending the room. Please retry.</value>
+  </data>
+  <data name="The release does not have a verified update package." xml:space="preserve">
+    <value>The release does not have a verified update package.</value>
+  </data>
+  <data name="The latest release has no installer yet. Your installed version is unchanged." xml:space="preserve">
+    <value>The latest release has no installer yet. Your installed version is unchanged.</value>
+  </data>
+  <data name="The latest release has no Windows update package yet." xml:space="preserve">
+    <value>The latest release has no Windows update package yet.</value>
+  </data>
+  <data name="No published release is available yet." xml:space="preserve">
+    <value>No published release is available yet.</value>
+  </data>
+  <data name="The download was incomplete. Please retry." xml:space="preserve">
+    <value>The download was incomplete. Please retry.</value>
+  </data>
+  <data name="Update checksum failed. Your current version has not changed." xml:space="preserve">
+    <value>Update checksum failed. Your current version has not changed.</value>
+  </data>
+  <data name="Update executable missing" xml:space="preserve">
+    <value>Update executable missing</value>
+  </data>
+  <data name="Update executable too large" xml:space="preserve">
+    <value>Update executable too large</value>
+  </data>
+  <data name="Update package too large" xml:space="preserve">
+    <value>Update package too large</value>
+  </data>
+  <data name="Update version mismatch" xml:space="preserve">
+    <value>Update version mismatch</value>
+  </data>
+  <data name="Could not start Windows Installer." xml:space="preserve">
+    <value>Could not start Windows Installer.</value>
+  </data>
+  <data name="Could not start the installer helper." xml:space="preserve">
+    <value>Could not start the installer helper.</value>
+  </data>
+  <data name="Cannot start installer repair." xml:space="preserve">
+    <value>Cannot start installer repair.</value>
+  </data>
+  <data name="Install Fellowship before enabling launch at sign-in." xml:space="preserve">
+    <value>Install Fellowship before enabling launch at sign-in.</value>
+  </data>
+  <data name="Installation finished but Fellowship.exe was not found. Open the log for details." xml:space="preserve">
+    <value>Installation finished but Fellowship.exe was not found. Open the log for details.</value>
+  </data>
+  <data name="The previous Fellowship is still running. Quit its tray icon, then retry." xml:space="preserve">
+    <value>The previous Fellowship is still running. Quit its tray icon, then retry.</value>
+  </data>
+  <data name="The original installer is not available in the official release." xml:space="preserve">
+    <value>The original installer is not available in the official release.</value>
+  </data>
+  <data name="Recovery installer does not match the registered Fellowship product." xml:space="preserve">
+    <value>Recovery installer does not match the registered Fellowship product.</value>
+  </data>
+  <data name="Recovery package is not verified." xml:space="preserve">
+    <value>Recovery package is not verified.</value>
+  </data>
+  <data name="Recovery release identity mismatch." xml:space="preserve">
+    <value>Recovery release identity mismatch.</value>
+  </data>
+  <data name="Could not start live sync." xml:space="preserve">
+    <value>Could not start live sync.</value>
+  </data>
+  <data name="Could not start native bridge." xml:space="preserve">
+    <value>Could not start native bridge.</value>
+  </data>
+  <data name="Could not start the native bridge." xml:space="preserve">
+    <value>Could not start the native bridge.</value>
+  </data>
+  <data name="Could not start the BFME2 stop helper." xml:space="preserve">
+    <value>Could not start the BFME2 stop helper.</value>
+  </data>
+  <data name="Could not start the direct placement helper." xml:space="preserve">
+    <value>Could not start the direct placement helper.</value>
+  </data>
+  <data name="Cannot resolve native helper path." xml:space="preserve">
+    <value>Cannot resolve native helper path.</value>
+  </data>
+  <data name="Native bridge is missing from this build." xml:space="preserve">
+    <value>Native bridge is missing from this build.</value>
+  </data>
+  <data name="Native setup unavailable." xml:space="preserve">
+    <value>Native setup unavailable.</value>
+  </data>
+  <data name="Native assignment cancelled." xml:space="preserve">
+    <value>Native assignment cancelled.</value>
+  </data>
+  <data name="Fellowship closed or its room changed; native assignment cancelled." xml:space="preserve">
+    <value>Fellowship closed or its room changed; native assignment cancelled.</value>
+  </data>
+  <data name="Native map is not installed." xml:space="preserve">
+    <value>Native map is not installed.</value>
+  </data>
+  <data name="Native map is not in Fellowship's installed-map catalog." xml:space="preserve">
+    <value>Native map is not in Fellowship's installed-map catalog.</value>
+  </data>
+  <data name="Invalid native map." xml:space="preserve">
+    <value>Invalid native map.</value>
+  </data>
+  <data name="Cursor navigation is disabled." xml:space="preserve">
+    <value>Cursor navigation is disabled.</value>
+  </data>
+  <data name="Cursor navigation is disabled. Set teams and spots in BFME2 manually." xml:space="preserve">
+    <value>Cursor navigation is disabled. Set teams and spots in BFME2 manually.</value>
+  </data>
+  <data name="Invalid sync message." xml:space="preserve">
+    <value>Invalid sync message.</value>
+  </data>
+  <data name="Invalid sync pipe name." xml:space="preserve">
+    <value>Invalid sync pipe name.</value>
+  </data>
+  <data name="Missing sync message." xml:space="preserve">
+    <value>Missing sync message.</value>
+  </data>
+  <data name="Sync message too large." xml:space="preserve">
+    <value>Sync message too large.</value>
+  </data>
+  <data name="Unexpected sync client." xml:space="preserve">
+    <value>Unexpected sync client.</value>
+  </data>
+  <data name="Sync preparation failed. Turn live sync off in Settings to launch without it." xml:space="preserve">
+    <value>Sync preparation failed. Turn live sync off in Settings to launch without it.</value>
+  </data>
+  <data name="Sync preparation failed. Save Settings to retry or disable live sync to launch manually." xml:space="preserve">
+    <value>Sync preparation failed. Save Settings to retry or disable live sync to launch manually.</value>
+  </data>
+  <data name="Automatic setup supports the verified BFME2 1.00 executable only. This game.dat differs; no game files were changed." xml:space="preserve">
+    <value>Automatic setup supports the verified BFME2 1.00 executable only. This game.dat differs; no game files were changed.</value>
+  </data>
+  <data name="Finding rooms…" xml:space="preserve">
+    <value>Finding rooms…</value>
+  </data>
+  <data name="No matching rooms" xml:space="preserve">
+    <value>No matching rooms</value>
+  </data>
+  <data name="Connecting to players on your VPN…" xml:space="preserve">
+    <value>Connecting to players on your VPN…</value>
+  </data>
+  <data name="Try another mode, room name, host or map." xml:space="preserve">
+    <value>Try another mode, room name, host or map.</value>
+  </data>
+  <data name="Finding peers and rooms…" xml:space="preserve">
+    <value>Finding peers and rooms…</value>
+  </data>
+  <data name="{0} room" xml:space="preserve">
+    <value>{0} room</value>
+  </data>
+  <data name="{0} rooms" xml:space="preserve">
+    <value>{0} rooms</value>
+  </data>
+  <data name="{0} online" xml:space="preserve">
+    <value>{0} online</value>
+  </data>
+  <data name="{0}/{1} players" xml:space="preserve">
+    <value>{0}/{1} players</value>
+  </data>
+  <data name="{0} / {1} players ready" xml:space="preserve">
+    <value>{0} / {1} players ready</value>
+  </data>
+  <data name="YOUR FRIENDS   {0}" xml:space="preserve">
+    <value>YOUR FRIENDS   {0}</value>
+  </data>
+  <data name="PLAYERS   {0} / {1}" xml:space="preserve">
+    <value>PLAYERS   {0} / {1}</value>
+  </data>
+  <data name="Hosted by {0}" xml:space="preserve">
+    <value>Hosted by {0}</value>
+  </data>
+  <data name="Connecting to {0}…" xml:space="preserve">
+    <value>Connecting to {0}…</value>
+  </data>
+  <data name="Your spot: {0}" xml:space="preserve">
+    <value>Your spot: {0}</value>
+  </data>
+  <data name="Spot {0}" xml:space="preserve">
+    <value>Spot {0}</value>
+  </data>
+  <data name="Random spot" xml:space="preserve">
+    <value>Random spot</value>
+  </data>
+  <data name="not selected" xml:space="preserve">
+    <value>not selected</value>
+  </data>
+  <data name="VPN discovery active" xml:space="preserve">
+    <value>VPN discovery active</value>
+  </data>
+  <data name="Ready to play" xml:space="preserve">
+    <value>Ready to play</value>
+  </data>
+  <data name="Connection unavailable" xml:space="preserve">
+    <value>Connection unavailable</value>
+  </data>
+  <data name="check Settings" xml:space="preserve">
+    <value>check Settings</value>
+  </data>
+  <data name="Discovery failed" xml:space="preserve">
+    <value>Discovery failed</value>
+  </data>
+  <data name="Could not save" xml:space="preserve">
+    <value>Could not save</value>
+  </data>
+  <data name="Connection failed" xml:space="preserve">
+    <value>Connection failed</value>
+  </data>
+  <data name="✓ Connected" xml:space="preserve">
+    <value>✓ Connected</value>
+  </data>
+  <data name="rooms and friends refreshed" xml:space="preserve">
+    <value>rooms and friends refreshed</value>
+  </data>
+  <data name="Select an existing lotrbfme2.exe file." xml:space="preserve">
+    <value>Select an existing lotrbfme2.exe file.</value>
+  </data>
+  <data name="Message not sent · reconnect and retry" xml:space="preserve">
+    <value>Message not sent · reconnect and retry</value>
+  </data>
+  <data name="Preset applied" xml:space="preserve">
+    <value>Preset applied</value>
+  </data>
+  <data name="Confirming with host…" xml:space="preserve">
+    <value>Confirming with host…</value>
+  </data>
+  <data name="Enter a room name." xml:space="preserve">
+    <value>Enter a room name.</value>
+  </data>
+  <data name="Visibility updated" xml:space="preserve">
+    <value>Visibility updated</value>
+  </data>
+  <data name="Room name updated" xml:space="preserve">
+    <value>Room name updated</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>Saving…</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="PLAYERS · DISCONNECTED" xml:space="preserve">
+    <value>PLAYERS · DISCONNECTED</value>
+  </data>
+  <data name="Disconnected · rejoin from the room browser" xml:space="preserve">
+    <value>Disconnected · rejoin from the room browser</value>
+  </data>
+  <data name="Return to Game rooms to reconnect." xml:space="preserve">
+    <value>Return to Game rooms to reconnect.</value>
+  </data>
+  <data name="Starting spots unavailable for this map." xml:space="preserve">
+    <value>Starting spots unavailable for this map.</value>
+  </data>
+  <data name="Automatic host preset" xml:space="preserve">
+    <value>Automatic host preset</value>
+  </data>
+  <data name="Manual setup in BFME2" xml:space="preserve">
+    <value>Manual setup in BFME2</value>
+  </data>
+  <data name="Manual teams" xml:space="preserve">
+    <value>Manual teams</value>
+  </data>
+  <data name="Launching BFME2…" xml:space="preserve">
+    <value>Launching BFME2…</value>
+  </data>
+  <data name="Ready for the host to launch" xml:space="preserve">
+    <value>Ready for the host to launch</value>
+  </data>
+  <data name="Check Ready when you want to play." xml:space="preserve">
+    <value>Check Ready when you want to play.</value>
+  </data>
+  <data name="Live sync paused. Native lobby remains available." xml:space="preserve">
+    <value>Live sync paused. Native lobby remains available.</value>
+  </data>
+  <data name="Live sync is off in Settings. Set game rules, team and spot in BFME2 manually." xml:space="preserve">
+    <value>Live sync is off in Settings. Set game rules, team and spot in BFME2 manually.</value>
+  </data>
+  <data name="Please wait for the current action to finish." xml:space="preserve">
+    <value>Please wait for the current action to finish.</value>
+  </data>
+  <data name="Wait for the current operation to finish." xml:space="preserve">
+    <value>Wait for the current operation to finish.</value>
+  </data>
+  <data name="Select a starting spot on the map before clearing it." xml:space="preserve">
+    <value>Select a starting spot on the map before clearing it.</value>
+  </data>
+  <data name="Only your saved friends can see and join." xml:space="preserve">
+    <value>Only your saved friends can see and join.</value>
+  </data>
+  <data name="Everyone on your VPN can see and join." xml:space="preserve">
+    <value>Everyone on your VPN can see and join.</value>
+  </data>
+  <data name="Fellowship update" xml:space="preserve">
+    <value>Fellowship update</value>
+  </data>
+  <data name="Update could not finish" xml:space="preserve">
+    <value>Update could not finish</value>
+  </data>
+  <data name="Fellowship {0} is available. Update for the latest improvements." xml:space="preserve">
+    <value>Fellowship {0} is available. Update for the latest improvements.</value>
+  </data>
+  <data name="Select your VPN network interface in Settings first." xml:space="preserve">
+    <value>Select your VPN network interface in Settings first.</value>
+  </data>
+  <data name="This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry." xml:space="preserve">
+    <value>This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry.</value>
+  </data>
+  <data name="Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings." xml:space="preserve">
+    <value>Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings.</value>
+  </data>
+  <data name="{0} ({1}) is not connected or its address has changed. Connect to your VPN network, then select its current interface in Settings." xml:space="preserve">
+    <value>{0} ({1}) is not connected or its address has changed. Connect to your VPN network, then select its current interface in Settings.</value>
+  </data>
+  <data name="Fellowship could not read your network adapters. Check {0} and refresh." xml:space="preserve">
+    <value>Fellowship could not read your network adapters. Check {0} and refresh.</value>
+  </data>
+  <data name="Windows reports no internet connection. Connect to the internet to use online updates and reach your VPN friends." xml:space="preserve">
+    <value>Windows reports no internet connection. Connect to the internet to use online updates and reach your VPN friends.</value>
+  </data>
+  <data name="Switch room" xml:space="preserve">
+    <value>Switch room</value>
+  </data>
+  <data name="Leave your current room? If you host, the next player takes over." xml:space="preserve">
+    <value>Leave your current room? If you host, the next player takes over.</value>
+  </data>
+  <data name="Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged." xml:space="preserve">
+    <value>Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged.</value>
+  </data>
+  <data name="Fellowship is still running" xml:space="preserve">
+    <value>Fellowship is still running</value>
+  </data>
+  <data name="The previous Fellowship is still running. Quit it and reopen the updated version." xml:space="preserve">
+    <value>The previous Fellowship is still running. Quit it and reopen the updated version.</value>
+  </data>
+  <data name="Installer repaired" xml:space="preserve">
+    <value>Installer repaired</value>
+  </data>
+  <data name="Repair could not finish" xml:space="preserve">
+    <value>Repair could not finish</value>
+  </data>
+  <data name="Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved." xml:space="preserve">
+    <value>Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved.</value>
+  </data>
+  <data name="Gathering" xml:space="preserve">
+    <value>Gathering</value>
+  </data>
+  <data name="Host in BFME2" xml:space="preserve">
+    <value>Host in BFME2</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>Blocked</value>
+  </data>
+  <data name="NOT IN GAME" xml:space="preserve">
+    <value>NOT IN GAME</value>
+  </data>
+  <data name="✓ Settings saved" xml:space="preserve">
+    <value>✓ Settings saved</value>
+  </data>
+  <data name="✓ Game preferences saved" xml:space="preserve">
+    <value>✓ Game preferences saved</value>
+  </data>
+  <data name="Private chat" xml:space="preserve">
+    <value>Private chat</value>
+  </data>
+  <data name="Direct connection" xml:space="preserve">
+    <value>Direct connection</value>
+  </data>
+  <data name="This conversation stays between these app windows. Messages aren't saved when you close the chat." xml:space="preserve">
+    <value>This conversation stays between these app windows. Messages aren't saved when you close the chat.</value>
+  </data>
+  <data name="Choose a valid recipient VPN address." xml:space="preserve">
+    <value>Choose a valid recipient VPN address.</value>
+  </data>
+  <data name="Sending…" xml:space="preserve">
+    <value>Sending…</value>
+  </data>
+  <data name="Message sent" xml:space="preserve">
+    <value>Message sent</value>
+  </data>
+  <data name="Enter to send" xml:space="preserve">
+    <value>Enter to send</value>
+  </data>
+  <data name="Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry." xml:space="preserve">
+    <value>Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry.</value>
+  </data>
+  <data name="Type a message and use a valid recipient VPN address." xml:space="preserve">
+    <value>Type a message and use a valid recipient VPN address.</value>
+  </data>
+  <data name="Updates automatically" xml:space="preserve">
+    <value>Updates automatically</value>
+  </data>
+  <data name="{0} / {1} players" xml:space="preserve">
+    <value>{0} / {1} players</value>
+  </data>
+  <data name="{0} invited you" xml:space="preserve">
+    <value>{0} invited you</value>
+  </data>
+  <data name="No players match your search" xml:space="preserve">
+    <value>No players match your search</value>
+  </data>
+  <data name="Verifying download…" xml:space="preserve">
+    <value>Verifying download…</value>
+  </data>
+  <data name="Downloading update…" xml:space="preserve">
+    <value>Downloading update…</value>
+  </data>
+  <data name="Checking the package before installation." xml:space="preserve">
+    <value>Checking the package before installation.</value>
+  </data>
+  <data name="Preparing installation…" xml:space="preserve">
+    <value>Preparing installation…</value>
+  </data>
+  <data name="Fellowship will close. The installer will keep you informed." xml:space="preserve">
+    <value>Fellowship will close. The installer will keep you informed.</value>
+  </data>
+  <data name="Closing Fellowship…" xml:space="preserve">
+    <value>Closing Fellowship…</value>
+  </data>
+  <data name="Waiting for the previous version to finish safely." xml:space="preserve">
+    <value>Waiting for the previous version to finish safely.</value>
+  </data>
+  <data name="Installing update…" xml:space="preserve">
+    <value>Installing update…</value>
+  </data>
+  <data name="Keep this window open. Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>Keep this window open. Fellowship will reopen when installation finishes.</value>
+  </data>
+  <data name="Waiting for Windows Installer…" xml:space="preserve">
+    <value>Waiting for Windows Installer…</value>
+  </data>
+  <data name="Another installation is running. Retrying automatically…" xml:space="preserve">
+    <value>Another installation is running. Retrying automatically…</value>
+  </data>
+  <data name="Opening Fellowship…" xml:space="preserve">
+    <value>Opening Fellowship…</value>
+  </data>
+  <data name="Update installed. Windows may require a restart." xml:space="preserve">
+    <value>Update installed. Windows may require a restart.</value>
+  </data>
+  <data name="Update installed successfully." xml:space="preserve">
+    <value>Update installed successfully.</value>
+  </data>
+  <data name="Repairing Windows Installer…" xml:space="preserve">
+    <value>Repairing Windows Installer…</value>
+  </data>
+  <data name="Restoring installer files…" xml:space="preserve">
+    <value>Restoring installer files…</value>
+  </data>
+  <data name="Your preferences and friends will be preserved." xml:space="preserve">
+    <value>Your preferences and friends will be preserved.</value>
+  </data>
+  <data name="Downloading the original Fellowship {0} installer." xml:space="preserve">
+    <value>Downloading the original Fellowship {0} installer.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Edit your profile" xml:space="preserve">
+    <value>Edit your profile</value>
+  </data>
+  <data name="RUNS IN SYSTEM TRAY" xml:space="preserve">
+    <value>RUNS IN SYSTEM TRAY</value>
+  </data>
+  <data name="Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it." xml:space="preserve">
+    <value>Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it.</value>
+  </data>
+  <data name="BFME2 stopped. You remain in the Fellowship room." xml:space="preserve">
+    <value>BFME2 stopped. You remain in the Fellowship room.</value>
+  </data>
+  <data name="Launching BFME2. Your rules will sync when the LAN lobby opens." xml:space="preserve">
+    <value>Launching BFME2. Your rules will sync when the LAN lobby opens.</value>
+  </data>
+  <data name="Returned to BFME2." xml:space="preserve">
+    <value>Returned to BFME2.</value>
+  </data>
+  <data name="BFME2 is starting; waiting for its window." xml:space="preserve">
+    <value>BFME2 is starting; waiting for its window.</value>
+  </data>
+  <data name="Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens." xml:space="preserve">
+    <value>Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens.</value>
+  </data>
+  <data name="Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens." xml:space="preserve">
+    <value>Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens.</value>
+  </data>
+  <data name="running in the background" xml:space="preserve">
+    <value>running in the background</value>
+  </data>
+  <data name="Creating room…" xml:space="preserve">
+    <value>Creating room…</value>
+  </data>
+  <data name="Checking GitHub…" xml:space="preserve">
+    <value>Checking GitHub…</value>
+  </data>
+  <data name="You have the latest published version." xml:space="preserve">
+    <value>You have the latest published version.</value>
+  </data>
+  <data name="Version {0} is available. Restarting closes Fellowship windows." xml:space="preserve">
+    <value>Version {0} is available. Restarting closes Fellowship windows.</value>
+  </data>
+  <data name="Host is now {0}" xml:space="preserve">
+    <value>Host is now {0}</value>
+  </data>
+  <data name="Room handed to {0}" xml:space="preserve">
+    <value>Room handed to {0}</value>
+  </data>
+  <data name="Room reconnected to {0}" xml:space="preserve">
+    <value>Room reconnected to {0}</value>
+  </data>
+  <data name="Host disconnected. Recovering room…" xml:space="preserve">
+    <value>Host disconnected. Recovering room…</value>
+  </data>
+  <data name="You are now the room host." xml:space="preserve">
+    <value>You are now the room host.</value>
+  </data>
+  <data name="The host removed you from the room." xml:space="preserve">
+    <value>The host removed you from the room.</value>
+  </data>
+  <data name="Connection to the host ended. Rejoin from the room browser." xml:space="preserve">
+    <value>Connection to the host ended. Rejoin from the room browser.</value>
+  </data>
+  <data name="A player disconnected during transfer and may need to rejoin." xml:space="preserve">
+    <value>A player disconnected during transfer and may need to rejoin.</value>
+  </data>
+  <data name="Host transfer was interrupted. Rejoin the room at {0} if it is available." xml:space="preserve">
+    <value>Host transfer was interrupted. Rejoin the room at {0} if it is available.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch mine." xml:space="preserve">
+    <value>Launch could not reach: {0}. Ask them to reconnect or use Launch mine.</value>
+  </data>
 </root>

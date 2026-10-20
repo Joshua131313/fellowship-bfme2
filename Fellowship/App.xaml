@@ -1,5 +1,6 @@
-﻿<Application x:Class="Fellowship.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<Application x:Class="Fellowship.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib">
 <Application.Resources>
+<DataTemplate DataType="{x:Type sys:String}"><TextBlock Text="{Binding}" TextWrapping="Wrap"/></DataTemplate>
 <SolidColorBrush x:Key="Theme193C31" Color="#193C31"/>
 <SolidColorBrush x:Key="Theme32664F" Color="#32664F"/>
 <SolidColorBrush x:Key="InteractionHover" Color="#273247"/>

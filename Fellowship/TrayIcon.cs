@@ -19,7 +19,8 @@ public sealed class TrayIcon : IDisposable
         using var stream=Application.GetResourceStream(new Uri("pack://application:,,,/Fellowship;component/Assets/Fellowship.ico")).Stream;
         using var loaded=new System.Drawing.Icon(stream);
         icon=(System.Drawing.Icon)loaded.Clone();
-        tray=new(){Icon=icon,Text="Fellowship · running in the background",Visible=true};
+        tray=new(){Icon=icon,Text=L.T("Fellowship · running in the background"),Visible=true};
+        L.Current.PropertyChanged+=LanguageChanged;
         tray.BalloonTipClicked+=(_,_)=>
         {
             var action=notificationAction;notificationAction=null;
@@ -32,6 +33,7 @@ public sealed class TrayIcon : IDisposable
             if(e.Button==System.Windows.Forms.MouseButtons.Right)ShowMenu();
         });
     }
+    void LanguageChanged(object? sender,System.ComponentModel.PropertyChangedEventArgs args)=>tray.Text=L.T("Fellowship · running in the background");
     public void Notify(string title,string message,Action action)
     {
         if(notifications.Count>=32)return;
@@ -41,7 +43,7 @@ public sealed class TrayIcon : IDisposable
     {
         if(!notifications.TryDequeue(out var next))return;
         notificationAction=next.Action;notificationVisible=true;
-        try{tray.ShowBalloonTip(5000,next.Title,next.Message,System.Windows.Forms.ToolTipIcon.Info);}
+        try{tray.ShowBalloonTip(5000,L.T(next.Title),next.Message,System.Windows.Forms.ToolTipIcon.Info);}
         catch(System.ComponentModel.Win32Exception){notificationAction=null;notificationVisible=false;}
     }
     void ShowMenu()
@@ -60,5 +62,5 @@ public sealed class TrayIcon : IDisposable
         Item("Quit Fellowship",()=>((App)Application.Current).Quit());
         menu.IsOpen=true;
     }
-    public void Dispose(){if(menu!=null)menu.IsOpen=false;tray.Visible=false;tray.Dispose();icon.Dispose();}
+    public void Dispose(){L.Current.PropertyChanged-=LanguageChanged;if(menu!=null)menu.IsOpen=false;tray.Visible=false;tray.Dispose();icon.Dispose();}
 }

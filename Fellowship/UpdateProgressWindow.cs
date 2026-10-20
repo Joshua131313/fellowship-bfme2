@@ -14,7 +14,7 @@ public sealed class UpdateProgressWindow : Window
     public UpdateProgressWindow(string version)
     {
         progress.Style=(Style)Application.Current.FindResource("FellowshipProgress");
-        var body=UI.Shell(this,"Fellowship update",460,260);MinHeight=260;ResizeMode=ResizeMode.NoResize;WindowStartupLocation=WindowStartupLocation.CenterScreen;
+        var body=UI.Shell(this,"Fellowship update",460,260);MinHeight=260;SizeToContent=SizeToContent.Height;ResizeMode=ResizeMode.NoResize;WindowStartupLocation=WindowStartupLocation.CenterScreen;
         var panel=new StackPanel{Margin=new(24)};body.Children.Add(panel);
         panel.Children.Add(UI.LocalizedText("FELLOWSHIP "+version,10,UI.Accent,true));stage.Margin=new(0,14,0,9);panel.Children.Add(stage);
         detail.TextWrapping=TextWrapping.Wrap;detail.Margin=new(0,0,0,18);panel.Children.Add(detail);panel.Children.Add(progress);panel.Children.Add(actions);
@@ -22,7 +22,7 @@ public sealed class UpdateProgressWindow : Window
     }
     public void Report(string title,string text,double? percent=null)
     {
-        stage.Text=title;detail.Text=text;progress.IsIndeterminate=percent==null;
+        L.Bind(stage,TextBlock.TextProperty,title);L.Bind(detail,TextBlock.TextProperty,text);progress.IsIndeterminate=percent==null;
         if(percent.HasValue){if(IsLoaded)progress.BeginAnimation(ProgressBar.ValueProperty,new DoubleAnimation(Math.Clamp(percent.Value,0,100),TimeSpan.FromMilliseconds(180)));else progress.Value=Math.Clamp(percent.Value,0,100);}
     }
     public void AllowCancel(Action cancel)
@@ -31,7 +31,7 @@ public sealed class UpdateProgressWindow : Window
     }
     public void Failure(string message,Action? retry=null,string? log=null)
     {
-        busy=false;SizeToContent=SizeToContent.Height;Report("Update could not finish",message,0);actions.Children.Clear();
+        busy=false;SizeToContent=SizeToContent.Height;Report("Update could not finish",message,0);L.BindError(detail,TextBlock.TextProperty,message);actions.Children.Clear();
         if(log!=null)actions.Children.Add(UI.Button("Open log",()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("notepad.exe"){ArgumentList={log},UseShellExecute=true})));
         if(retry!=null)actions.Children.Add(UI.Button("Retry",()=>{busy=true;actions.Children.Clear();retry();},true));
         actions.Children.Add(UI.Button("Close",Close));

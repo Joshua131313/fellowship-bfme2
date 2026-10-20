@@ -715,4 +715,940 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="○ Not connected" xml:space="preserve">
     <value>○ Bağlı değil</value>
   </data>
+  <data name="Private messages" xml:space="preserve">
+    <value>Özel mesajlar</value>
+  </data>
+  <data name="Messages sent" xml:space="preserve">
+    <value>Gönderilen mesajlar</value>
+  </data>
+  <data name="Room messages" xml:space="preserve">
+    <value>Oda mesajları</value>
+  </data>
+  <data name="Invitations" xml:space="preserve">
+    <value>Davetler</value>
+  </data>
+  <data name="Player joins room" xml:space="preserve">
+    <value>Oyuncu odaya katılır</value>
+  </data>
+  <data name="Player leaves room" xml:space="preserve">
+    <value>Oyuncu odadan ayrılır</value>
+  </data>
+  <data name="Friend online" xml:space="preserve">
+    <value>Arkadaş çevrimiçi</value>
+  </data>
+  <data name="Friend offline" xml:space="preserve">
+    <value>Arkadaş çevrimdışı</value>
+  </data>
+  <data name="No team / free for all" xml:space="preserve">
+    <value>Takım yok / herkes tek</value>
+  </data>
+  <data name="No team" xml:space="preserve">
+    <value>Takım yok</value>
+  </data>
+  <data name="Team {0}" xml:space="preserve">
+    <value>Takım {0}</value>
+  </data>
+  <data name="Balanced teams" xml:space="preserve">
+    <value>Dengeli takımlar</value>
+  </data>
+  <data name="Free for all" xml:space="preserve">
+    <value>Herkes tek</value>
+  </data>
+  <data name="No maps match your search" xml:space="preserve">
+    <value>Aramanızla eşleşen harita yok</value>
+  </data>
+  <data name="Search map names" xml:space="preserve">
+    <value>Harita adı ara</value>
+  </data>
+  <data name="Search players or VPN address" xml:space="preserve">
+    <value>Oyuncu veya VPN adresi ara</value>
+  </data>
+  <data name="Filter rooms by mode" xml:space="preserve">
+    <value>Odaları moda göre filtrele</value>
+  </data>
+  <data name="Filter rooms by name, host or map" xml:space="preserve">
+    <value>Ada, kurucuya veya haritaya göre filtrele</value>
+  </data>
+  <data name="Switch network · leaves your current room" xml:space="preserve">
+    <value>Ağı değiştir · mevcut odadan çıkar</value>
+  </data>
+  <data name="Manual AFK stays on until you choose Set available. Otherwise idle detection is automatic." xml:space="preserve">
+    <value>Elle ayarlanan uzak durumu, müsait olana kadar sürer. Diğer durumlarda boşta kalma otomatik algılanır.</value>
+  </data>
+  <data name="Check which friends are online" xml:space="preserve">
+    <value>Çevrimiçi arkadaşları kontrol et</value>
+  </data>
+  <data name="Choose a saved room preset" xml:space="preserve">
+    <value>Kayıtlı oda ön ayarı seçin</value>
+  </data>
+  <data name="Starting team arrangement; players can change teams in the lobby" xml:space="preserve">
+    <value>Başlangıç takımları; oyuncular lobide takım değiştirebilir</value>
+  </data>
+  <data name="Starting locations — preview only" xml:space="preserve">
+    <value>Başlangıç konumları — yalnızca önizleme</value>
+  </data>
+  <data name="Stop BFME2 on this computer" xml:space="preserve">
+    <value>Bu bilgisayarda BFME2’yi durdur</value>
+  </data>
+  <data name="Host's selected VPN IPv4 address" xml:space="preserve">
+    <value>Kurucunun seçili VPN IPv4 adresi</value>
+  </data>
+  <data name="Write a message · Enter to send" xml:space="preserve">
+    <value>Mesaj yazın · göndermek için Enter</value>
+  </data>
+  <data name="Message your room · Enter to send" xml:space="preserve">
+    <value>Odanıza mesaj yazın · göndermek için Enter</value>
+  </data>
+  <data name="Clipboard busy · try again" xml:space="preserve">
+    <value>Pano meşgul · yeniden deneyin</value>
+  </data>
+  <data name="Clipboard is busy. Try copying again." xml:space="preserve">
+    <value>Pano meşgul. Yeniden kopyalamayı deneyin.</value>
+  </data>
+  <data name="Complete the required fields to enable this action." xml:space="preserve">
+    <value>Bu işlemi etkinleştirmek için gerekli alanları doldurun.</value>
+  </data>
+  <data name="Synchronize map, rules, team, starting spot and color in the native LAN lobby." xml:space="preserve">
+    <value>Oyun LAN lobisinde harita, kurallar, takım, konum ve rengi eşitle.</value>
+  </data>
+  <data name="Fellowship room capacity. BFME2 matches still support at most 8 players." xml:space="preserve">
+    <value>Fellowship oda kapasitesi. BFME2 maçları en fazla 8 oyuncuyu destekler.</value>
+  </data>
+  <data name="Fellowship room limit: 2–64. BFME2 matches support at most 8 players." xml:space="preserve">
+    <value>Fellowship oda sınırı: 2–64. BFME2 en fazla 8 oyuncu destekler.</value>
+  </data>
+  <data name="NAME" xml:space="preserve">
+    <value>AD</value>
+  </data>
+  <data name="RADMIN IPv4 ADDRESS" xml:space="preserve">
+    <value>RADMIN IPv4 ADRESİ</value>
+  </data>
+  <data name="No other players online" xml:space="preserve">
+    <value>Başka çevrimiçi oyuncu yok</value>
+  </data>
+  <data name="Room is no longer available · showing last known details" xml:space="preserve">
+    <value>Oda artık yok · son bilinen bilgiler gösteriliyor</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="An unexpected error occurred. Please retry. Copy diagnostic details if you need support." xml:space="preserve">
+    <value>Beklenmeyen bir hata oluştu. Yeniden deneyin. Destek için tanılama ayrıntılarını kopyalayın.</value>
+  </data>
+  <data name="Copy diagnostic details" xml:space="preserve">
+    <value>Tanılama ayrıntılarını kopyala</value>
+  </data>
+  <data name="Enter a nickname." xml:space="preserve">
+    <value>Bir takma ad girin.</value>
+  </data>
+  <data name="Enter a room name and choose between 2 and 64 players." xml:space="preserve">
+    <value>Oda adı girin ve 2 ile 64 arasında oyuncu seçin.</value>
+  </data>
+  <data name="Enter the host’s IPv4 address on your selected VPN network." xml:space="preserve">
+    <value>Seçili VPN ağındaki kurucunun IPv4 adresini girin.</value>
+  </data>
+  <data name="Check the room name, patch and player limit." xml:space="preserve">
+    <value>Oda adını, sürümü ve oyuncu sınırını kontrol edin.</value>
+  </data>
+  <data name="Choose a BFME2 player color." xml:space="preserve">
+    <value>Bir BFME2 oyuncu rengi seçin.</value>
+  </data>
+  <data name="Choose a valid team and map spot in Fellowship." xml:space="preserve">
+    <value>Fellowship’te geçerli takım ve harita konumu seçin.</value>
+  </data>
+  <data name="Choose no team or team 1–4." xml:space="preserve">
+    <value>Takımsız veya 1–4 arası takım seçin.</value>
+  </data>
+  <data name="Choose supported BFME2 1.00 rules." xml:space="preserve">
+    <value>Desteklenen BFME2 1.00 kurallarını seçin.</value>
+  </data>
+  <data name="Choose an unblocked friend." xml:space="preserve">
+    <value>Engellenmemiş bir arkadaş seçin.</value>
+  </data>
+  <data name="Choose another player's VPN address." xml:space="preserve">
+    <value>Başka oyuncunun VPN adresini seçin.</value>
+  </data>
+  <data name="Select a connected player." xml:space="preserve">
+    <value>Bağlı bir oyuncu seçin.</value>
+  </data>
+  <data name="Another player has claimed this color. Choose another." xml:space="preserve">
+    <value>Başka oyuncu bu rengi seçti. Başkasını seçin.</value>
+  </data>
+  <data name="Another player has claimed this spot. Choose another." xml:space="preserve">
+    <value>Başka oyuncu bu konumu seçti. Başkasını seçin.</value>
+  </data>
+  <data name="That starting spot is unavailable on this map." xml:space="preserve">
+    <value>Bu haritada o başlangıç konumu kullanılamıyor.</value>
+  </data>
+  <data name="The map changed. Choose a spot on the new map." xml:space="preserve">
+    <value>Harita değişti. Yeni haritada bir konum seçin.</value>
+  </data>
+  <data name="Every player must be ready before launching." xml:space="preserve">
+    <value>Başlatmadan önce tüm oyuncular hazır olmalı.</value>
+  </data>
+  <data name="Join a Fellowship room first." xml:space="preserve">
+    <value>Önce bir Fellowship odasına katılın.</value>
+  </data>
+  <data name="Join a room first." xml:space="preserve">
+    <value>Önce bir odaya katılın.</value>
+  </data>
+  <data name="Join or host a room first." xml:space="preserve">
+    <value>Önce bir odaya katılın veya kurun.</value>
+  </data>
+  <data name="Only the host can edit this room." xml:space="preserve">
+    <value>Bu odayı yalnızca kurucu düzenleyebilir.</value>
+  </data>
+  <data name="Only the host can remove players." xml:space="preserve">
+    <value>Oyuncuları yalnızca kurucu çıkarabilir.</value>
+  </data>
+  <data name="Only the host can promote players." xml:space="preserve">
+    <value>Oyuncuları yalnızca kurucu yükseltebilir.</value>
+  </data>
+  <data name="That player is no longer connected." xml:space="preserve">
+    <value>Bu oyuncu artık bağlı değil.</value>
+  </data>
+  <data name="Player is no longer in the room." xml:space="preserve">
+    <value>Oyuncu artık odada değil.</value>
+  </data>
+  <data name="Host transfer in progress." xml:space="preserve">
+    <value>Kuruculuk aktarılıyor.</value>
+  </data>
+  <data name="Host transfer already in progress." xml:space="preserve">
+    <value>Kuruculuk aktarımı zaten sürüyor.</value>
+  </data>
+  <data name="Wait for host transfer to finish." xml:space="preserve">
+    <value>Kuruculuk aktarımının bitmesini bekleyin.</value>
+  </data>
+  <data name="All room members must update Fellowship before transferring the host." xml:space="preserve">
+    <value>Kuruculuk aktarılmadan tüm üyeler Fellowship’i güncellemeli.</value>
+  </data>
+  <data name="The next player must update Fellowship and connect its VPN listener before becoming host." xml:space="preserve">
+    <value>Yeni kurucu, görevi almadan Fellowship’i güncelleyip VPN bağlantısını açmalı.</value>
+  </data>
+  <data name="New host did not confirm the room." xml:space="preserve">
+    <value>Yeni kurucu odayı onaylamadı.</value>
+  </data>
+  <data name="Disconnected from host." xml:space="preserve">
+    <value>Kurucuyla bağlantı kesildi.</value>
+  </data>
+  <data name="The room is closed." xml:space="preserve">
+    <value>Oda kapalı.</value>
+  </data>
+  <data name="This room is no longer available." xml:space="preserve">
+    <value>Bu oda artık kullanılamıyor.</value>
+  </data>
+  <data name="This room is no longer available or is private." xml:space="preserve">
+    <value>Bu oda artık yok veya özel.</value>
+  </data>
+  <data name="This invitation has expired or the room moved. Ask for a new invitation." xml:space="preserve">
+    <value>Davetin süresi doldu veya oda taşındı. Yeni davet isteyin.</value>
+  </data>
+  <data name="Unblock this player before joining." xml:space="preserve">
+    <value>Katılmadan önce oyuncunun engelini kaldırın.</value>
+  </data>
+  <data name="Unblock this player before messaging." xml:space="preserve">
+    <value>Mesaj göndermeden oyuncunun engelini kaldırın.</value>
+  </data>
+  <data name="Leave the room before switching networks." xml:space="preserve">
+    <value>Ağ değiştirmeden odadan ayrılın.</value>
+  </data>
+  <data name="Leave your room before restoring a backup." xml:space="preserve">
+    <value>Yedek geri yüklemeden odadan ayrılın.</value>
+  </data>
+  <data name="The player limit cannot be lower than the current roster." xml:space="preserve">
+    <value>Oyuncu sınırı mevcut oyuncu sayısından az olamaz.</value>
+  </data>
+  <data name="Room creation cancelled. Your current room is unchanged." xml:space="preserve">
+    <value>Oda oluşturma iptal edildi. Mevcut odanız değişmedi.</value>
+  </data>
+  <data name="Message is too large." xml:space="preserve">
+    <value>Mesaj çok uzun.</value>
+  </data>
+  <data name="Message was not acknowledged." xml:space="preserve">
+    <value>Mesajın alındığı onaylanmadı.</value>
+  </data>
+  <data name="Backup is too large." xml:space="preserve">
+    <value>Yedek çok büyük.</value>
+  </data>
+  <data name="Invalid backup." xml:space="preserve">
+    <value>Geçersiz yedek.</value>
+  </data>
+  <data name="Unsupported backup format." xml:space="preserve">
+    <value>Desteklenmeyen yedek biçimi.</value>
+  </data>
+  <data name="Invalid appearance or sound preferences." xml:space="preserve">
+    <value>Geçersiz görünüm veya ses tercihleri.</value>
+  </data>
+  <data name="Invalid friend or blocked-user entry." xml:space="preserve">
+    <value>Geçersiz arkadaş veya engellenen kullanıcı kaydı.</value>
+  </data>
+  <data name="Invalid preferences in backup." xml:space="preserve">
+    <value>Yedekte geçersiz tercihler.</value>
+  </data>
+  <data name="Invalid map preferences." xml:space="preserve">
+    <value>Geçersiz harita tercihleri.</value>
+  </data>
+  <data name="Invalid room preset." xml:space="preserve">
+    <value>Geçersiz oda ön ayarı.</value>
+  </data>
+  <data name="Invalid preset." xml:space="preserve">
+    <value>Geçersiz ön ayar.</value>
+  </data>
+  <data name="Invalid player color." xml:space="preserve">
+    <value>Geçersiz oyuncu rengi.</value>
+  </data>
+  <data name="Invalid team or spot." xml:space="preserve">
+    <value>Geçersiz takım veya konum.</value>
+  </data>
+  <data name="Invalid team or starting spot." xml:space="preserve">
+    <value>Geçersiz takım veya başlangıç konumu.</value>
+  </data>
+  <data name="Invalid peer response." xml:space="preserve">
+    <value>Geçersiz oyuncu yanıtı.</value>
+  </data>
+  <data name="Invalid message size." xml:space="preserve">
+    <value>Geçersiz mesaj boyutu.</value>
+  </data>
+  <data name="Invalid sound data." xml:space="preserve">
+    <value>Geçersiz ses verisi.</value>
+  </data>
+  <data name="Unsupported sound format." xml:space="preserve">
+    <value>Desteklenmeyen ses biçimi.</value>
+  </data>
+  <data name="Missing room." xml:space="preserve">
+    <value>Oda bulunamadı.</value>
+  </data>
+  <data name="Missing map coordinates" xml:space="preserve">
+    <value>Harita koordinatları eksik</value>
+  </data>
+  <data name="Invalid map bounds" xml:space="preserve">
+    <value>Geçersiz harita sınırları</value>
+  </data>
+  <data name="Map spot outside bounds" xml:space="preserve">
+    <value>Konum harita sınırları dışında</value>
+  </data>
+  <data name="Map path too long." xml:space="preserve">
+    <value>Harita yolu çok uzun.</value>
+  </data>
+  <data name="Unsupported map preview" xml:space="preserve">
+    <value>Desteklenmeyen harita önizlemesi</value>
+  </data>
+  <data name="Map is not installed." xml:space="preserve">
+    <value>Harita yüklü değil.</value>
+  </data>
+  <data name="Selected map is not installed." xml:space="preserve">
+    <value>Seçili harita yüklü değil.</value>
+  </data>
+  <data name="Selected map was not found in this installation." xml:space="preserve">
+    <value>Seçili harita bu kurulumda bulunamadı.</value>
+  </data>
+  <data name="Only BFME2 1.00 is supported by this build." xml:space="preserve">
+    <value>Bu sürüm yalnızca BFME2 1.00 destekler.</value>
+  </data>
+  <data name="Select lotrbfme2.exe from your BFME2 installation in Settings first." xml:space="preserve">
+    <value>Önce Ayarlar’dan lotrbfme2.exe dosyasını seçin.</value>
+  </data>
+  <data name="Select lotrbfme2.exe from your BFME2 installation folder; game.dat was not found beside it." xml:space="preserve">
+    <value>Oyun klasöründen lotrbfme2.exe seçin; yanında game.dat bulunamadı.</value>
+  </data>
+  <data name="Run BFME2 once to create its player profile first." xml:space="preserve">
+    <value>Oyuncu profilini oluşturmak için önce BFME2’yi bir kez çalıştırın.</value>
+  </data>
+  <data name="Exit BFME2 before applying the host preset." xml:space="preserve">
+    <value>Kurucu ön ayarını uygulamadan BFME2’den çıkın.</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again." xml:space="preserve">
+    <value>Windows izni iptal edildiğinden BFME2 başlamadı. Yeniden denemek için Oyunumu başlat’a tıklayın.</value>
+  </data>
+  <data name="Windows permission was cancelled." xml:space="preserve">
+    <value>Windows izni iptal edildi.</value>
+  </data>
+  <data name="BFME2 is still stopping. Try Abort again." xml:space="preserve">
+    <value>BFME2 hâlâ kapanıyor. Durdur’u yeniden deneyin.</value>
+  </data>
+  <data name="Windows could not stop BFME2. Close the game manually or try Abort again." xml:space="preserve">
+    <value>Windows BFME2’yi durduramadı. Oyunu elle kapatın veya yeniden deneyin.</value>
+  </data>
+  <data name="BFME2 belongs to another Windows session." xml:space="preserve">
+    <value>BFME2 başka Windows oturumuna ait.</value>
+  </data>
+  <data name="The running BFME2 does not match the configured installation." xml:space="preserve">
+    <value>Çalışan BFME2 yapılandırılmış kurulumla eşleşmiyor.</value>
+  </data>
+  <data name="The launcher did not create a BFME2 process within 60 seconds." xml:space="preserve">
+    <value>Başlatıcı 60 saniyede BFME2 işlemi oluşturmadı.</value>
+  </data>
+  <data name="Cannot inspect BFME2." xml:space="preserve">
+    <value>BFME2 incelenemiyor.</value>
+  </data>
+  <data name="Cannot read the BFME2 LAN lobby. Continue manually." xml:space="preserve">
+    <value>BFME2 LAN lobisi okunamıyor. Elle devam edin.</value>
+  </data>
+  <data name="Unrecognized BFME2 LAN state. Continue manually." xml:space="preserve">
+    <value>BFME2 LAN durumu tanınmıyor. Elle devam edin.</value>
+  </data>
+  <data name="BFME2 has a different map selected. Select the Fellowship map before applying." xml:space="preserve">
+    <value>BFME2’de farklı harita seçili. Uygulamadan önce Fellowship haritasını seçin.</value>
+  </data>
+  <data name="BFME2 is connected to a different host. Join the Fellowship host's LAN game first." xml:space="preserve">
+    <value>BFME2 başka kurucuya bağlı. Önce Fellowship kurucusunun LAN oyununa katılın.</value>
+  </data>
+  <data name="BFME2 did not retain the map and rules." xml:space="preserve">
+    <value>BFME2 harita ve kuralları kaydetmedi.</value>
+  </data>
+  <data name="BFME2 did not retain the selected team and spot. Review its native lobby manually." xml:space="preserve">
+    <value>BFME2 takım ve konumu kaydetmedi. Oyun lobisini elle kontrol edin.</value>
+  </data>
+  <data name="BFME2 preset readback failed." xml:space="preserve">
+    <value>BFME2 ön ayarı doğrulanamadı.</value>
+  </data>
+  <data name="BFME2 rule data differs from the verified 1.00 layout. Preset was not applied." xml:space="preserve">
+    <value>Kural verileri doğrulanmış 1.00 düzeninden farklı. Ön ayar uygulanmadı.</value>
+  </data>
+  <data name="Fellowship's host must also host the BFME2 lobby to sync map and rules." xml:space="preserve">
+    <value>Harita ve kurallar için Fellowship kurucusu BFME2 lobisini de kurmalı.</value>
+  </data>
+  <data name="Room or choices changed; apply the current selections again." xml:space="preserve">
+    <value>Oda veya seçimler değişti; mevcut seçimleri yeniden uygulayın.</value>
+  </data>
+  <data name="No matching BFME2 LAN lobby became available. Open/create or join the matching lobby." xml:space="preserve">
+    <value>Eşleşen BFME2 LAN lobisi bulunamadı. Uygun lobiyi oluşturun veya katılın.</value>
+  </data>
+  <data name="Host did not confirm the selection. Both players need this version of Fellowship." xml:space="preserve">
+    <value>Kurucu seçimi onaylamadı. İki oyuncu da bu Fellowship sürümünü kullanmalı.</value>
+  </data>
+  <data name="The game sync connection ended. No further changes will be sent." xml:space="preserve">
+    <value>Oyun eşitleme bağlantısı sona erdi. Başka değişiklik gönderilmeyecek.</value>
+  </data>
+  <data name="The sync helper disconnected while BFME2 is still running." xml:space="preserve">
+    <value>BFME2 çalışırken eşitleme yardımcısının bağlantısı kesildi.</value>
+  </data>
+  <data name="The host did not finish sending the room. Please retry." xml:space="preserve">
+    <value>Kurucu oda bilgilerini göndermeyi bitiremedi. Yeniden deneyin.</value>
+  </data>
+  <data name="The release does not have a verified update package." xml:space="preserve">
+    <value>Sürümün doğrulanmış güncelleme paketi yok.</value>
+  </data>
+  <data name="The latest release has no installer yet. Your installed version is unchanged." xml:space="preserve">
+    <value>Son sürümün yükleyicisi henüz yok. Kurulu sürüm değişmedi.</value>
+  </data>
+  <data name="The latest release has no Windows update package yet." xml:space="preserve">
+    <value>Son sürümün Windows güncelleme paketi henüz yok.</value>
+  </data>
+  <data name="No published release is available yet." xml:space="preserve">
+    <value>Henüz yayımlanmış sürüm yok.</value>
+  </data>
+  <data name="The download was incomplete. Please retry." xml:space="preserve">
+    <value>İndirme tamamlanmadı. Yeniden deneyin.</value>
+  </data>
+  <data name="Update checksum failed. Your current version has not changed." xml:space="preserve">
+    <value>Güncelleme doğrulaması başarısız. Mevcut sürüm değişmedi.</value>
+  </data>
+  <data name="Update executable missing" xml:space="preserve">
+    <value>Güncelleme çalıştırılabilir dosyası eksik</value>
+  </data>
+  <data name="Update executable too large" xml:space="preserve">
+    <value>Güncelleme dosyası çok büyük</value>
+  </data>
+  <data name="Update package too large" xml:space="preserve">
+    <value>Güncelleme paketi çok büyük</value>
+  </data>
+  <data name="Update version mismatch" xml:space="preserve">
+    <value>Güncelleme sürümü eşleşmiyor</value>
+  </data>
+  <data name="Could not start Windows Installer." xml:space="preserve">
+    <value>Windows Installer başlatılamadı.</value>
+  </data>
+  <data name="Could not start the installer helper." xml:space="preserve">
+    <value>Yükleme yardımcısı başlatılamadı.</value>
+  </data>
+  <data name="Cannot start installer repair." xml:space="preserve">
+    <value>Yükleyici onarımı başlatılamıyor.</value>
+  </data>
+  <data name="Install Fellowship before enabling launch at sign-in." xml:space="preserve">
+    <value>Oturum açılışında başlatmayı etkinleştirmeden Fellowship’i yükleyin.</value>
+  </data>
+  <data name="Installation finished but Fellowship.exe was not found. Open the log for details." xml:space="preserve">
+    <value>Yükleme bitti ancak Fellowship.exe bulunamadı. Ayrıntılar için günlüğü açın.</value>
+  </data>
+  <data name="The previous Fellowship is still running. Quit its tray icon, then retry." xml:space="preserve">
+    <value>Önceki Fellowship hâlâ çalışıyor. Sistem tepsisinden kapatıp yeniden deneyin.</value>
+  </data>
+  <data name="The original installer is not available in the official release." xml:space="preserve">
+    <value>Özgün yükleyici resmi sürümde bulunmuyor.</value>
+  </data>
+  <data name="Recovery installer does not match the registered Fellowship product." xml:space="preserve">
+    <value>Kurtarma yükleyicisi kayıtlı Fellowship ürünüyle eşleşmiyor.</value>
+  </data>
+  <data name="Recovery package is not verified." xml:space="preserve">
+    <value>Kurtarma paketi doğrulanmamış.</value>
+  </data>
+  <data name="Recovery release identity mismatch." xml:space="preserve">
+    <value>Kurtarma sürümü kimliği eşleşmiyor.</value>
+  </data>
+  <data name="Could not start live sync." xml:space="preserve">
+    <value>Canlı eşitleme başlatılamadı.</value>
+  </data>
+  <data name="Could not start native bridge." xml:space="preserve">
+    <value>Oyun köprüsü başlatılamadı.</value>
+  </data>
+  <data name="Could not start the native bridge." xml:space="preserve">
+    <value>Oyun köprüsü başlatılamadı.</value>
+  </data>
+  <data name="Could not start the BFME2 stop helper." xml:space="preserve">
+    <value>BFME2 durdurma yardımcısı başlatılamadı.</value>
+  </data>
+  <data name="Could not start the direct placement helper." xml:space="preserve">
+    <value>Konumlandırma yardımcısı başlatılamadı.</value>
+  </data>
+  <data name="Cannot resolve native helper path." xml:space="preserve">
+    <value>Oyun yardımcısının yolu bulunamıyor.</value>
+  </data>
+  <data name="Native bridge is missing from this build." xml:space="preserve">
+    <value>Bu sürümde oyun köprüsü eksik.</value>
+  </data>
+  <data name="Native setup unavailable." xml:space="preserve">
+    <value>Oyun kurulumu kullanılamıyor.</value>
+  </data>
+  <data name="Native assignment cancelled." xml:space="preserve">
+    <value>Oyun içi atama iptal edildi.</value>
+  </data>
+  <data name="Fellowship closed or its room changed; native assignment cancelled." xml:space="preserve">
+    <value>Fellowship kapandı veya oda değişti; atama iptal edildi.</value>
+  </data>
+  <data name="Native map is not installed." xml:space="preserve">
+    <value>Oyun haritası yüklü değil.</value>
+  </data>
+  <data name="Native map is not in Fellowship's installed-map catalog." xml:space="preserve">
+    <value>Oyun haritası Fellowship kataloğunda yok.</value>
+  </data>
+  <data name="Invalid native map." xml:space="preserve">
+    <value>Geçersiz oyun haritası.</value>
+  </data>
+  <data name="Cursor navigation is disabled." xml:space="preserve">
+    <value>İmleç gezinmesi devre dışı.</value>
+  </data>
+  <data name="Cursor navigation is disabled. Set teams and spots in BFME2 manually." xml:space="preserve">
+    <value>İmleç gezinmesi kapalı. BFME2’de takım ve konumları elle ayarlayın.</value>
+  </data>
+  <data name="Invalid sync message." xml:space="preserve">
+    <value>Geçersiz eşitleme mesajı.</value>
+  </data>
+  <data name="Invalid sync pipe name." xml:space="preserve">
+    <value>Geçersiz eşitleme kanalı.</value>
+  </data>
+  <data name="Missing sync message." xml:space="preserve">
+    <value>Eşitleme mesajı eksik.</value>
+  </data>
+  <data name="Sync message too large." xml:space="preserve">
+    <value>Eşitleme mesajı çok büyük.</value>
+  </data>
+  <data name="Unexpected sync client." xml:space="preserve">
+    <value>Beklenmeyen eşitleme istemcisi.</value>
+  </data>
+  <data name="Sync preparation failed. Turn live sync off in Settings to launch without it." xml:space="preserve">
+    <value>Eşitleme hazırlığı başarısız. Onsuz başlatmak için Ayarlar’dan kapatın.</value>
+  </data>
+  <data name="Sync preparation failed. Save Settings to retry or disable live sync to launch manually." xml:space="preserve">
+    <value>Eşitleme hazırlığı başarısız. Ayarlar’dan yeniden deneyin veya elle başlatmak için eşitlemeyi kapatın.</value>
+  </data>
+  <data name="Automatic setup supports the verified BFME2 1.00 executable only. This game.dat differs; no game files were changed." xml:space="preserve">
+    <value>Otomatik kurulum yalnızca doğrulanmış BFME2 1.00’ı destekler. Bu game.dat farklı; oyun dosyaları değiştirilmedi.</value>
+  </data>
+  <data name="Finding rooms…" xml:space="preserve">
+    <value>Odalar aranıyor…</value>
+  </data>
+  <data name="No matching rooms" xml:space="preserve">
+    <value>Eşleşen oda yok</value>
+  </data>
+  <data name="Connecting to players on your VPN…" xml:space="preserve">
+    <value>VPN’inizdeki oyunculara bağlanılıyor…</value>
+  </data>
+  <data name="Try another mode, room name, host or map." xml:space="preserve">
+    <value>Başka mod, oda adı, kurucu veya harita deneyin.</value>
+  </data>
+  <data name="Finding peers and rooms…" xml:space="preserve">
+    <value>Oyuncular ve odalar aranıyor…</value>
+  </data>
+  <data name="{0} room" xml:space="preserve">
+    <value>{0} oda</value>
+  </data>
+  <data name="{0} rooms" xml:space="preserve">
+    <value>{0} oda</value>
+  </data>
+  <data name="{0} online" xml:space="preserve">
+    <value>{0} çevrimiçi</value>
+  </data>
+  <data name="{0}/{1} players" xml:space="preserve">
+    <value>{0}/{1} oyuncu</value>
+  </data>
+  <data name="{0} / {1} players ready" xml:space="preserve">
+    <value>{0} / {1} oyuncu hazır</value>
+  </data>
+  <data name="YOUR FRIENDS   {0}" xml:space="preserve">
+    <value>ARKADAŞLARINIZ   {0}</value>
+  </data>
+  <data name="PLAYERS   {0} / {1}" xml:space="preserve">
+    <value>OYUNCULAR   {0} / {1}</value>
+  </data>
+  <data name="Hosted by {0}" xml:space="preserve">
+    <value>Kurucu: {0}</value>
+  </data>
+  <data name="Connecting to {0}…" xml:space="preserve">
+    <value>{0} bağlantısı kuruluyor…</value>
+  </data>
+  <data name="Your spot: {0}" xml:space="preserve">
+    <value>Konumunuz: {0}</value>
+  </data>
+  <data name="Spot {0}" xml:space="preserve">
+    <value>Konum {0}</value>
+  </data>
+  <data name="Random spot" xml:space="preserve">
+    <value>Rastgele konum</value>
+  </data>
+  <data name="not selected" xml:space="preserve">
+    <value>seçilmedi</value>
+  </data>
+  <data name="VPN discovery active" xml:space="preserve">
+    <value>VPN keşfi etkin</value>
+  </data>
+  <data name="Ready to play" xml:space="preserve">
+    <value>Oynamaya hazır</value>
+  </data>
+  <data name="Connection unavailable" xml:space="preserve">
+    <value>Bağlantı kullanılamıyor</value>
+  </data>
+  <data name="check Settings" xml:space="preserve">
+    <value>Ayarları kontrol edin</value>
+  </data>
+  <data name="Discovery failed" xml:space="preserve">
+    <value>Keşif başarısız</value>
+  </data>
+  <data name="Could not save" xml:space="preserve">
+    <value>Kaydedilemedi</value>
+  </data>
+  <data name="Connection failed" xml:space="preserve">
+    <value>Bağlantı başarısız</value>
+  </data>
+  <data name="✓ Connected" xml:space="preserve">
+    <value>✓ Bağlandı</value>
+  </data>
+  <data name="rooms and friends refreshed" xml:space="preserve">
+    <value>odalar ve arkadaşlar yenilendi</value>
+  </data>
+  <data name="Select an existing lotrbfme2.exe file." xml:space="preserve">
+    <value>Mevcut bir lotrbfme2.exe dosyası seçin.</value>
+  </data>
+  <data name="Message not sent · reconnect and retry" xml:space="preserve">
+    <value>Mesaj gönderilmedi · yeniden bağlanıp deneyin</value>
+  </data>
+  <data name="Preset applied" xml:space="preserve">
+    <value>Ön ayar uygulandı</value>
+  </data>
+  <data name="Confirming with host…" xml:space="preserve">
+    <value>Kurucuyla onaylanıyor…</value>
+  </data>
+  <data name="Enter a room name." xml:space="preserve">
+    <value>Bir oda adı girin.</value>
+  </data>
+  <data name="Visibility updated" xml:space="preserve">
+    <value>Görünürlük güncellendi</value>
+  </data>
+  <data name="Room name updated" xml:space="preserve">
+    <value>Oda adı güncellendi</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>Kaydediliyor…</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Kaydedildi</value>
+  </data>
+  <data name="PLAYERS · DISCONNECTED" xml:space="preserve">
+    <value>OYUNCULAR · BAĞLANTI KESİLDİ</value>
+  </data>
+  <data name="Disconnected · rejoin from the room browser" xml:space="preserve">
+    <value>Bağlantı kesildi · oda tarayıcısından yeniden katılın</value>
+  </data>
+  <data name="Return to Game rooms to reconnect." xml:space="preserve">
+    <value>Yeniden bağlanmak için Oyun odaları’na dönün.</value>
+  </data>
+  <data name="Starting spots unavailable for this map." xml:space="preserve">
+    <value>Bu harita için başlangıç konumları yok.</value>
+  </data>
+  <data name="Automatic host preset" xml:space="preserve">
+    <value>Otomatik kurucu ön ayarı</value>
+  </data>
+  <data name="Manual setup in BFME2" xml:space="preserve">
+    <value>BFME2’de elle kurulum</value>
+  </data>
+  <data name="Manual teams" xml:space="preserve">
+    <value>Elle takımlar</value>
+  </data>
+  <data name="Launching BFME2…" xml:space="preserve">
+    <value>BFME2 başlatılıyor…</value>
+  </data>
+  <data name="Ready for the host to launch" xml:space="preserve">
+    <value>Kurucunun başlatmasına hazır</value>
+  </data>
+  <data name="Check Ready when you want to play." xml:space="preserve">
+    <value>Oynamak istediğinizde Hazır’ı işaretleyin.</value>
+  </data>
+  <data name="Live sync paused. Native lobby remains available." xml:space="preserve">
+    <value>Canlı eşitleme duraklatıldı. Oyun lobisi kullanılabilir.</value>
+  </data>
+  <data name="Live sync is off in Settings. Set game rules, team and spot in BFME2 manually." xml:space="preserve">
+    <value>Canlı eşitleme kapalı. BFME2’de kuralları, takım ve konumu elle ayarlayın.</value>
+  </data>
+  <data name="Please wait for the current action to finish." xml:space="preserve">
+    <value>Mevcut işlemin bitmesini bekleyin.</value>
+  </data>
+  <data name="Wait for the current operation to finish." xml:space="preserve">
+    <value>Mevcut işlemin bitmesini bekleyin.</value>
+  </data>
+  <data name="Select a starting spot on the map before clearing it." xml:space="preserve">
+    <value>Temizlemeden önce haritada başlangıç konumu seçin.</value>
+  </data>
+  <data name="Only your saved friends can see and join." xml:space="preserve">
+    <value>Yalnızca kayıtlı arkadaşlarınız görüp katılabilir.</value>
+  </data>
+  <data name="Everyone on your VPN can see and join." xml:space="preserve">
+    <value>VPN’inizdeki herkes görüp katılabilir.</value>
+  </data>
+  <data name="Fellowship update" xml:space="preserve">
+    <value>Fellowship güncellemesi</value>
+  </data>
+  <data name="Update could not finish" xml:space="preserve">
+    <value>Güncelleme tamamlanamadı</value>
+  </data>
+  <data name="Fellowship {0} is available. Update for the latest improvements." xml:space="preserve">
+    <value>Fellowship {0} kullanılabilir. Son iyileştirmeler için güncelleyin.</value>
+  </data>
+  <data name="Select your VPN network interface in Settings first." xml:space="preserve">
+    <value>Önce Ayarlar’dan VPN ağ arayüzünü seçin.</value>
+  </data>
+  <data name="This VPN address is already in use on port 28742. Close any older Fellowship version, then click Refresh to retry." xml:space="preserve">
+    <value>Bu VPN adresinin 28742 bağlantı noktası kullanımda. Eski Fellowship sürümlerini kapatıp Yenile’ye tıklayın.</value>
+  </data>
+  <data name="Could not connect on the selected interface. Check that the selected VPN is connected and choose its current address in Settings." xml:space="preserve">
+    <value>Seçili arayüzde bağlantı kurulamadı. VPN’i kontrol edip Ayarlar’dan güncel adresini seçin.</value>
+  </data>
+  <data name="{0} ({1}) is not connected or its address has changed. Connect to your VPN network, then select its current interface in Settings." xml:space="preserve">
+    <value>{0} ({1}) bağlı değil veya adresi değişti. VPN’e bağlanıp Ayarlar’dan güncel arayüzünü seçin.</value>
+  </data>
+  <data name="Fellowship could not read your network adapters. Check {0} and refresh." xml:space="preserve">
+    <value>Fellowship ağ bağdaştırıcılarını okuyamadı. {0} bağlantısını kontrol edip yenileyin.</value>
+  </data>
+  <data name="Windows reports no internet connection. Connect to the internet to use online updates and reach your VPN friends." xml:space="preserve">
+    <value>Windows internet bağlantısı olmadığını bildiriyor. Güncellemeler ve VPN arkadaşlarınız için internete bağlanın.</value>
+  </data>
+  <data name="Switch room" xml:space="preserve">
+    <value>Oda değiştir</value>
+  </data>
+  <data name="Leave your current room? If you host, the next player takes over." xml:space="preserve">
+    <value>Mevcut odadan ayrılsın mı? Kurucuysanız sıradaki oyuncu devralır.</value>
+  </data>
+  <data name="Replace preferences, friends, blocked users and room presets with this backup? Your game path and VPN interface will stay unchanged." xml:space="preserve">
+    <value>Tercihler, arkadaşlar, engellenenler ve ön ayarlar bu yedekle değiştirilsin mi? Oyun yolu ve VPN arayüzü korunur.</value>
+  </data>
+  <data name="Fellowship is still running" xml:space="preserve">
+    <value>Fellowship hâlâ çalışıyor</value>
+  </data>
+  <data name="The previous Fellowship is still running. Quit it and reopen the updated version." xml:space="preserve">
+    <value>Önceki Fellowship hâlâ çalışıyor. Kapatıp güncel sürümü açın.</value>
+  </data>
+  <data name="Installer repaired" xml:space="preserve">
+    <value>Yükleyici onarıldı</value>
+  </data>
+  <data name="Repair could not finish" xml:space="preserve">
+    <value>Onarım tamamlanamadı</value>
+  </data>
+  <data name="Fellowship’s installer files are restored. Open Fellowship and retry the update. Your preferences and friends have been preserved." xml:space="preserve">
+    <value>Yükleyici dosyaları geri yüklendi. Fellowship’i açıp güncellemeyi yeniden deneyin. Tercihleriniz ve arkadaşlarınız korundu.</value>
+  </data>
+  <data name="Gathering" xml:space="preserve">
+    <value>Oyuncular toplanıyor</value>
+  </data>
+  <data name="Host in BFME2" xml:space="preserve">
+    <value>Kurucu BFME2’de</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>Engellendi</value>
+  </data>
+  <data name="NOT IN GAME" xml:space="preserve">
+    <value>OYUNDA DEĞİL</value>
+  </data>
+  <data name="✓ Settings saved" xml:space="preserve">
+    <value>✓ Ayarlar kaydedildi</value>
+  </data>
+  <data name="✓ Game preferences saved" xml:space="preserve">
+    <value>✓ Oyun tercihleri kaydedildi</value>
+  </data>
+  <data name="Private chat" xml:space="preserve">
+    <value>Özel sohbet</value>
+  </data>
+  <data name="Direct connection" xml:space="preserve">
+    <value>Doğrudan bağlantı</value>
+  </data>
+  <data name="This conversation stays between these app windows. Messages aren't saved when you close the chat." xml:space="preserve">
+    <value>Bu konuşma bu uygulama pencereleri arasında kalır. Sohbet kapatıldığında mesajlar kaydedilmez.</value>
+  </data>
+  <data name="Choose a valid recipient VPN address." xml:space="preserve">
+    <value>Geçerli bir alıcı VPN adresi seçin.</value>
+  </data>
+  <data name="Sending…" xml:space="preserve">
+    <value>Gönderiliyor…</value>
+  </data>
+  <data name="Message sent" xml:space="preserve">
+    <value>Mesaj gönderildi</value>
+  </data>
+  <data name="Enter to send" xml:space="preserve">
+    <value>Göndermek için Enter</value>
+  </data>
+  <data name="Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry." xml:space="preserve">
+    <value>Teslimat doğrulanamadı. Alıcı çevrimdışı olabilir veya yeniden bağlanıyor olabilir. Taslağınız korundu; yeniden denemek için Enter'a basın.</value>
+  </data>
+  <data name="Type a message and use a valid recipient VPN address." xml:space="preserve">
+    <value>Bir mesaj yazın ve geçerli bir alıcı VPN adresi kullanın.</value>
+  </data>
+  <data name="Updates automatically" xml:space="preserve">
+    <value>Otomatik güncellenir</value>
+  </data>
+  <data name="{0} / {1} players" xml:space="preserve">
+    <value>{0} / {1} oyuncu</value>
+  </data>
+  <data name="{0} invited you" xml:space="preserve">
+    <value>{0} sizi davet etti</value>
+  </data>
+  <data name="No players match your search" xml:space="preserve">
+    <value>Aramanızla eşleşen oyuncu yok</value>
+  </data>
+  <data name="Verifying download…" xml:space="preserve">
+    <value>İndirme doğrulanıyor…</value>
+  </data>
+  <data name="Downloading update…" xml:space="preserve">
+    <value>Güncelleme indiriliyor…</value>
+  </data>
+  <data name="Checking the package before installation." xml:space="preserve">
+    <value>Paket kurulumdan önce denetleniyor.</value>
+  </data>
+  <data name="Preparing installation…" xml:space="preserve">
+    <value>Kurulum hazırlanıyor…</value>
+  </data>
+  <data name="Fellowship will close. The installer will keep you informed." xml:space="preserve">
+    <value>Fellowship kapanacak. Yükleyici ilerlemeyi gösterecek.</value>
+  </data>
+  <data name="Closing Fellowship…" xml:space="preserve">
+    <value>Fellowship kapatılıyor…</value>
+  </data>
+  <data name="Waiting for the previous version to finish safely." xml:space="preserve">
+    <value>Önceki sürümün güvenle kapanması bekleniyor.</value>
+  </data>
+  <data name="Installing update…" xml:space="preserve">
+    <value>Güncelleme yükleniyor…</value>
+  </data>
+  <data name="Keep this window open. Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>Bu pencereyi açık tutun. Kurulum tamamlandığında Fellowship yeniden açılacak.</value>
+  </data>
+  <data name="Waiting for Windows Installer…" xml:space="preserve">
+    <value>Windows Installer bekleniyor…</value>
+  </data>
+  <data name="Another installation is running. Retrying automatically…" xml:space="preserve">
+    <value>Başka bir kurulum sürüyor. Otomatik olarak yeniden deneniyor…</value>
+  </data>
+  <data name="Opening Fellowship…" xml:space="preserve">
+    <value>Fellowship açılıyor…</value>
+  </data>
+  <data name="Update installed. Windows may require a restart." xml:space="preserve">
+    <value>Güncelleme yüklendi. Windows'un yeniden başlatılması gerekebilir.</value>
+  </data>
+  <data name="Update installed successfully." xml:space="preserve">
+    <value>Güncelleme başarıyla yüklendi.</value>
+  </data>
+  <data name="Repairing Windows Installer…" xml:space="preserve">
+    <value>Windows Installer onarılıyor…</value>
+  </data>
+  <data name="Restoring installer files…" xml:space="preserve">
+    <value>Yükleyici dosyaları geri yükleniyor…</value>
+  </data>
+  <data name="Your preferences and friends will be preserved." xml:space="preserve">
+    <value>Tercihleriniz ve arkadaşlarınız korunacak.</value>
+  </data>
+  <data name="Downloading the original Fellowship {0} installer." xml:space="preserve">
+    <value>Orijinal Fellowship {0} yükleyicisi indiriliyor.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="Edit your profile" xml:space="preserve">
+    <value>Profilinizi düzenleyin</value>
+  </data>
+  <data name="RUNS IN SYSTEM TRAY" xml:space="preserve">
+    <value>SİSTEM TEPSİSİNDE ÇALIŞIR</value>
+  </data>
+  <data name="Abort cancelled. BFME2 is still running; approve the Windows permission prompt to stop it." xml:space="preserve">
+    <value>Durdurma iptal edildi. BFME2 hâlâ çalışıyor; durdurmak için Windows izin isteğini onaylayın.</value>
+  </data>
+  <data name="BFME2 stopped. You remain in the Fellowship room." xml:space="preserve">
+    <value>BFME2 durduruldu. Fellowship odasında kalmaya devam ediyorsunuz.</value>
+  </data>
+  <data name="Launching BFME2. Your rules will sync when the LAN lobby opens." xml:space="preserve">
+    <value>BFME2 başlatılıyor. LAN lobisi açıldığında kurallarınız eşitlenecek.</value>
+  </data>
+  <data name="Returned to BFME2." xml:space="preserve">
+    <value>BFME2'ye dönüldü.</value>
+  </data>
+  <data name="BFME2 is starting; waiting for its window." xml:space="preserve">
+    <value>BFME2 başlatılıyor; penceresi bekleniyor.</value>
+  </data>
+  <data name="Open Multiplayer → Network and create/join the host lobby. Team and spot sync starts automatically when the matching lobby opens." xml:space="preserve">
+    <value>Çok Oyunculu → Ağ bölümünden ev sahibinin lobisini oluşturun veya katılın. Eşleşen lobi açıldığında takım ve konum otomatik eşitlenir.</value>
+  </data>
+  <data name="Live sync is off. Open Multiplayer → Network and set rules, team and spot manually, or re-enable sync after the lobby opens." xml:space="preserve">
+    <value>Canlı eşitleme kapalı. Çok Oyunculu → Ağ bölümünden kuralları, takımı ve konumu elle ayarlayın veya lobi açıldıktan sonra eşitlemeyi yeniden açın.</value>
+  </data>
+  <data name="running in the background" xml:space="preserve">
+    <value>arka planda çalışıyor</value>
+  </data>
+  <data name="Creating room…" xml:space="preserve">
+    <value>Oda oluşturuluyor…</value>
+  </data>
+  <data name="Checking GitHub…" xml:space="preserve">
+    <value>GitHub denetleniyor…</value>
+  </data>
+  <data name="You have the latest published version." xml:space="preserve">
+    <value>En son yayımlanan sürümü kullanıyorsunuz.</value>
+  </data>
+  <data name="Version {0} is available. Restarting closes Fellowship windows." xml:space="preserve">
+    <value>{0} sürümü hazır. Yeniden başlatma Fellowship pencerelerini kapatır.</value>
+  </data>
+  <data name="Host is now {0}" xml:space="preserve">
+    <value>Yeni ev sahibi: {0}</value>
+  </data>
+  <data name="Room handed to {0}" xml:space="preserve">
+    <value>Oda {0} oyuncusuna devredildi</value>
+  </data>
+  <data name="Room reconnected to {0}" xml:space="preserve">
+    <value>Oda {0} oyuncusuna yeniden bağlandı</value>
+  </data>
+  <data name="Host disconnected. Recovering room…" xml:space="preserve">
+    <value>Ev sahibinin bağlantısı kesildi. Oda kurtarılıyor…</value>
+  </data>
+  <data name="You are now the room host." xml:space="preserve">
+    <value>Artık odanın ev sahibisiniz.</value>
+  </data>
+  <data name="The host removed you from the room." xml:space="preserve">
+    <value>Ev sahibi sizi odadan çıkardı.</value>
+  </data>
+  <data name="Connection to the host ended. Rejoin from the room browser." xml:space="preserve">
+    <value>Ev sahibiyle bağlantı sona erdi. Oda listesinden yeniden katılın.</value>
+  </data>
+  <data name="A player disconnected during transfer and may need to rejoin." xml:space="preserve">
+    <value>Devir sırasında bir oyuncunun bağlantısı kesildi ve yeniden katılması gerekebilir.</value>
+  </data>
+  <data name="Host transfer was interrupted. Rejoin the room at {0} if it is available." xml:space="preserve">
+    <value>Ev sahibi devri kesintiye uğradı. Kullanılabiliyorsa {0} adresindeki odaya yeniden katılın.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch mine." xml:space="preserve">
+    <value>Başlatma isteği ulaşmadı: {0}. Yeniden bağlanmalarını veya kendi oyunlarını başlatmalarını isteyin.</value>
+  </data>
 </root>

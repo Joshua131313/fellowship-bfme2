@@ -11,12 +11,12 @@ public sealed class RoomPreviewWindow : Window
         string? lastSnapshot=null;
         void Render(Room current,bool unavailable=false)
         {
-        var snapshot=System.Text.Json.JsonSerializer.Serialize(current)+unavailable;
+        var snapshot=System.Text.Json.JsonSerializer.Serialize(current)+unavailable+L.Code;
         if(snapshot==lastSnapshot)return;lastSnapshot=snapshot;
         room=current;body.Children.Clear();
         var content=new StackPanel{Margin=new(24)};
         content.Children.Add(UI.Text(room.Title,24,bold:true));
-        var subtitle=UI.Text($"Hosted by {room.Host}  ·  {room.Players.Count} / {room.Capacity} players",12,UI.Muted);subtitle.Margin=new(0,6,0,16);content.Children.Add(subtitle);
+        var subtitle=UI.LocalizedText($"Hosted by {room.Host}  ·  {room.Players.Count} / {room.Capacity} players",12,UI.Muted);subtitle.Margin=new(0,6,0,16);content.Children.Add(subtitle);
         content.Children.Add(UI.Row(UI.Badge(room.FriendsOnly?"FRIENDS ONLY":"PUBLIC ON VPN"),UI.LocalizedText("   BFME2 1.00",11,UI.Muted)));
         var columns=new Grid{Margin=new(0,18,0,18)};columns.ColumnDefinitions.Add(new());columns.ColumnDefinitions.Add(new(){Width=new GridLength(20)});columns.ColumnDefinitions.Add(new());
         var map=new MapPreview{PreviewHeight=190,Margin=new(0,8,0,0)};map.ShowMap(gamePath,room.MapPath);map.ShowSelections(room,"",false);
@@ -30,8 +30,8 @@ public sealed class RoomPreviewWindow : Window
         {
             var row=new DockPanel{Margin=new(0,0,0,6),Background=System.Windows.Media.Brushes.Transparent};
             if(!unavailable&&owner is BrowserWindow browser)row.ContextMenu=browser.PlayerMenu(this,player.Name,player.Address,player);
-            var state=UI.Text(player.Ready?"Ready":"Not ready",11,player.Ready?UI.Green:UI.Muted);DockPanel.SetDock(state,Dock.Right);row.Children.Add(state);
-            row.Children.Add(UI.Avatar(player.Name,28));row.Children.Add(UI.Text(player.Name+(player.Id=="host"?"  ·  Host":"")+(IdlePresence.IsAfk(player.IdleSeconds,player.ManualAfk)?" · AFK":""),13,IdlePresence.IsAfk(player.IdleSeconds,player.ManualAfk)?UI.Muted:"#EFF1F5"));roster.Children.Add(row);
+            var state=UI.LocalizedText(player.Ready?"Ready":"Not ready",11,player.Ready?UI.Green:UI.Muted);DockPanel.SetDock(state,Dock.Right);row.Children.Add(state);
+            row.Children.Add(UI.Avatar(player.Name,28));row.Children.Add(UI.Text(player.Name+(player.Id=="host"?"  ·  "+L.T("Host"):"")+(IdlePresence.IsAfk(player.IdleSeconds,player.ManualAfk)?" · "+L.T("AFK"):""),13,IdlePresence.IsAfk(player.IdleSeconds,player.ManualAfk)?UI.Muted:"#EFF1F5"));roster.Children.Add(row);
         }
         content.Children.Add(roster);
         if(owner is BrowserWindow host)
@@ -40,10 +40,11 @@ public sealed class RoomPreviewWindow : Window
             UI.Require(join,()=>!unavailable&&(host.Peer.Current?.Id==room.Id||room.Players.Count<room.Capacity),()=>unavailable?"This room is no longer available.":"This room is full.");
             join.HorizontalAlignment=HorizontalAlignment.Right;join.Margin=new(0,18,0,0);content.Children.Add(join);
         }
-        var foot=UI.Text(unavailable?"Room is no longer available · showing last known details":"Updates automatically",11,UI.Muted);foot.Margin=new(0,16,0,0);content.Children.Add(foot);
+        var foot=UI.LocalizedText(unavailable?"Room is no longer available · showing last known details":"Updates automatically",11,UI.Muted);foot.Margin=new(0,16,0,0);content.Children.Add(foot);
         body.Children.Add(UI.Scroll(content));
         }
         Render(room);
+        void LanguageChanged(object? sender,System.ComponentModel.PropertyChangedEventArgs args)=>Render(room);L.Current.PropertyChanged+=LanguageChanged;Closed+=(_,_)=>L.Current.PropertyChanged-=LanguageChanged;
         if(owner is BrowserWindow app)
         {
             var roomId=room.Id;

@@ -12,8 +12,8 @@ public sealed class MatchSummary : Grid
         void Detail(string label,string value)
         {
             int row=RowDefinitions.Count;RowDefinitions.Add(new(){Height=GridLength.Auto});
-            var key=UI.Text(label,11,UI.Muted);key.Margin=new(0,5,14,5);
-            var text=UI.Text(value,12,bold:true);text.Margin=new(0,5,0,5);text.HorizontalAlignment=HorizontalAlignment.Right;text.TextAlignment=TextAlignment.Right;
+            var key=UI.LocalizedText(label,11,UI.Muted);key.Margin=new(0,5,14,5);
+            var text=label=="Map"?UI.Text(value,12,bold:true):UI.LocalizedText(value,12,bold:true);text.Margin=new(0,5,0,5);text.HorizontalAlignment=HorizontalAlignment.Right;text.TextAlignment=TextAlignment.Right;
             SetRow(key,row);SetRow(text,row);SetColumn(text,1);Children.Add(key);Children.Add(text);
         }
         Detail("Mode",room.Mode);

@@ -38,17 +38,17 @@ public sealed partial class BrowserWindow
         {
             if(loadingNetworks||switchingNetwork||networkCaption.SelectedItem is not NetworkChoice chosen||chosen.Address==Settings.BindAddress)return;
             switchingNetwork=true;networkCaption.IsEnabled=false;
-            status.Text=$"Connecting to {chosen.Name}…";status.Foreground=UI.Brush(UI.Accent);
+            L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,$"Connecting to {chosen.Name}…");status.Foreground=UI.Brush(UI.Accent);
             try
             {
                 await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
                 await ChangeNetwork(chosen.Name,chosen.Address);
-                status.Text=$"Refreshing rooms and friends on {chosen.Name}…";
+                L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,$"Refreshing rooms and friends on {chosen.Name}…");
                 while(refreshing)await Task.Delay(50);
                 await Task.WhenAll(peerQueries.Values.ToArray());await Refresh();
-                status.Text=$"● Connected to {chosen.Name} · {chosen.Address} · Rooms and friends refreshed";status.Foreground=UI.Brush(UI.Green);
+                L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,$"● Connected to {chosen.Name} · {chosen.Address} · Rooms and friends refreshed");status.Foreground=UI.Brush(UI.Green);
             }
-            catch(Exception error){status.Text="Network switch failed · "+error.Message;status.Foreground=UI.Brush("#E5B77A");UI.Error(error.Message);}
+            catch(Exception error){L.Bind(status,System.Windows.Controls.TextBlock.TextProperty,"Network switch failed · "+error.Message);status.Foreground=UI.Brush("#E5B77A");UI.Error(error.Message);}
             finally{switchingNetwork=false;networkCaption.IsEnabled=true;LoadNetworkChoices();}
         };
     }

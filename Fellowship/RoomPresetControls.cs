@@ -20,7 +20,7 @@ public sealed class RoomPresetPicker : ComboBox
     public void Reload()
     {
         var previous=(SelectedItem as ComboBoxItem)?.Tag as RoomPreset;refreshing=true;
-        Items.Clear();Items.Add(new ComboBoxItem{Content="Custom preset",Padding=new(10,5,10,5)});
+        Items.Clear();Items.Add(new ComboBoxItem{Content=UI.LocalizedText("Custom preset",12),Padding=new(10,5,10,5)});
         foreach(var preset in RoomPreset.Defaults(GameInstallation.Maps(settings.GamePath)).Concat(settings.RoomPresets))
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=GridLength.Auto});

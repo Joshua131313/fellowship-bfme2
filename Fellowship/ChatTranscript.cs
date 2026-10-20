@@ -24,6 +24,11 @@ public sealed class ChatTranscript : RichTextBox
     {
         var section=CreateSection(name,mine);section.Blocks.Add(Body(text));Document.Blocks.Add(section);Trim();
     }
+    public void AppendSystem(string text)
+    {
+        var section=CreateSection("",false);var header=((Paragraph)section.Blocks.FirstBlock).Inlines.FirstInline;L.Bind(header,Run.TextProperty,"SYSTEM"+"  ·  "+DateTime.Now.ToString("HH:mm"));
+        var run=new Run();L.Bind(run,Run.TextProperty,text);section.Blocks.Add(new Paragraph(run){Margin=new(0),Foreground=UI.Brush("#DEE3ED")});Document.Blocks.Add(section);Trim();
+    }
     Section CreateSection(string name,bool mine)
     {
         var section=new Section{Margin=new(0,0,0,12),Padding=new(10),Background=UI.Brush(mine?"#263657":"#1E232C")};
@@ -34,7 +39,7 @@ public sealed class ChatTranscript : RichTextBox
     {
         var section=CreateSection(name+" · Blocked",false);var body=Body(text);bool shown=false;
         var toggle=UI.Button("Show blocked message",()=>{shown=!shown;if(shown)section.Blocks.Add(body);else section.Blocks.Remove(body);});
-        toggle.Click+=(_,_)=>toggle.Content=shown?"Hide message":"Show blocked message";
+        toggle.Click+=(_,_)=>L.Bind(toggle,ContentControl.ContentProperty,shown?"Hide message":"Show blocked message");
         section.Blocks.Add(new BlockUIContainer(toggle));Document.Blocks.Add(section);Trim();
     }
     void Trim(){while(Document.Blocks.Count>200)Document.Blocks.Remove(Document.Blocks.FirstBlock);if(Selection.IsEmpty)ScrollToEnd();}
