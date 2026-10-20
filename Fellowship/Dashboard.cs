@@ -101,7 +101,7 @@ public sealed partial class BrowserWindow
     }
     void RenderOnlinePlayers()
     {
-        var peers=Presence.Active(DateTimeOffset.UtcNow).Where(p=>p.Address!=Peer.Address&&!Settings.IsBlocked(p.Address)).OrderBy(p=>p.Reconnecting).ThenBy(p=>p.IsAfk).ThenBy(p=>p.Name,StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var peers=Presence.Active(DateTimeOffset.UtcNow).Where(p=>p.Address!=Peer.Address&&Peer.AllowsPeer(p.Address)&&!Settings.IsBlocked(p.Address)).OrderBy(p=>p.Reconnecting).ThenBy(p=>p.IsAfk).ThenBy(p=>p.Name,StringComparer.CurrentCultureIgnoreCase).ToArray();
         var network=UI.Text(Settings.NetworkName,13,bold:true);
         var hint=UI.LocalizedText("Players discovered on your selected network. This list updates automatically.",12,UI.Muted);hint.Margin=new(0,6,0,12);
         var refresh=UI.AsyncButton("Refresh presence",Refresh);refresh.HorizontalAlignment=HorizontalAlignment.Left;refresh.Margin=new(0,0,0,18);
@@ -135,7 +135,7 @@ public sealed partial class BrowserWindow
         }
         var contacts=dashboardPage=="Friends"?Settings.Friends:Settings.Friends.Concat(chats.Select(c=>new Friend(c.Value.ContactName,c.Key))).DistinctBy(f=>f.Address).ToList();
         if(contacts.Count==0)dashboardSocial.Children.Add(UI.LocalizedText(dashboardPage=="Friends"?"No friends added yet.":"Find a player using the search above to start a conversation.",13,UI.Muted));
-        foreach(var friend in contacts)
+        foreach(var friend in contacts.Where(f=>Peer.AllowsPeer(f.Address)))
         {
             var presence=Presence.Find(friend.Address,DateTimeOffset.UtcNow);
             string state=presence==null?"Offline":presence.Reconnecting?"Reconnecting":presence.IsAfk?"AFK":presence.GameRunning?"In BFME2":presence.Room!=null?"In a room":"Online";

@@ -1756,4 +1756,46 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="No Fellowship room is available for this player." xml:space="preserve">
     <value>No hay una sala de Fellowship disponible para este jugador.</value>
   </data>
+  <data name="RADMIN GROUP" xml:space="preserve">
+    <value>GRUPO RADMIN</value>
+  </data>
+  <data name="All Radmin groups" xml:space="preserve">
+    <value>Todos los grupos de Radmin</value>
+  </data>
+  <data name="Refresh Radmin groups" xml:space="preserve">
+    <value>Actualizar grupos de Radmin</value>
+  </data>
+  <data name="Reading Radmin groups…" xml:space="preserve">
+    <value>Leyendo grupos de Radmin…</value>
+  </data>
+  <data name="Choose a group to limit Fellowship. Other Radmin connections stay active." xml:space="preserve">
+    <value>Elige un grupo para limitar Fellowship. Las demás conexiones de Radmin siguen activas.</value>
+  </data>
+  <data name="Only this group's members are used by Fellowship. Other Radmin connections stay active." xml:space="preserve">
+    <value>Fellowship solo utiliza los miembros de este grupo. Las demás conexiones de Radmin siguen activas.</value>
+  </data>
+  <data name="Limit Fellowship to one Radmin group. Changing groups leaves your current room." xml:space="preserve">
+    <value>Limita Fellowship a un grupo de Radmin. Cambiar de grupo abandona la sala actual.</value>
+  </data>
+  <data name="Open Radmin VPN to read its groups." xml:space="preserve">
+    <value>Abre Radmin VPN para leer sus grupos.</value>
+  </data>
+  <data name="The selected Radmin group is unavailable." xml:space="preserve">
+    <value>El grupo de Radmin seleccionado no está disponible.</value>
+  </data>
+  <data name="Radmin group members could not be read." xml:space="preserve">
+    <value>No se pudieron leer los miembros del grupo de Radmin.</value>
+  </data>
+  <data name="Radmin group reading timed out. Try refreshing again." xml:space="preserve">
+    <value>Se agotó el tiempo de lectura del grupo de Radmin. Intenta actualizar de nuevo.</value>
+  </data>
+  <data name="The Radmin address does not match the selected network interface." xml:space="preserve">
+    <value>La dirección de Radmin no coincide con la interfaz de red seleccionada.</value>
+  </data>
+  <data name="The room includes players outside the selected Radmin group." xml:space="preserve">
+    <value>La sala incluye jugadores ajenos al grupo de Radmin seleccionado.</value>
+  </data>
+  <data name="This player is outside the selected Radmin group." xml:space="preserve">
+    <value>Este jugador no pertenece al grupo de Radmin seleccionado.</value>
+  </data>
 </root>

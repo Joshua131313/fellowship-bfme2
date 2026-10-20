@@ -32,6 +32,7 @@ public sealed partial class PeerService
                 var packet=await socket.ReceiveAsync(token);
                 if(token.IsCancellationRequested||packet.Buffer.Length>128||packet.RemoteEndPoint.Address.ToString()==localAddress)continue;
                 var remote=packet.RemoteEndPoint.Address.ToString();
+                if(!AllowsPeer(remote))continue;
                 if(settings.IsBlocked(remote)&&!settings.Friends.Any(f=>f.Address==remote))continue;
                 var text=Encoding.ASCII.GetString(packet.Buffer);
                 if(text==PresenceProbe)
@@ -63,6 +64,10 @@ public sealed partial class PeerService
         var socket=discovery;var source=Address;if(socket==null)return;
         var destinations=new HashSet<string>();
         if(target!=null)destinations.Add(target);
+        else if(settings.RestrictRadmin)
+        {
+            foreach(var member in settings.RadminMembership.Members)if(member!=Address&&AllowsPeer(member))destinations.Add(member);
+        }
         else
         {
             foreach(var adapter in NetworkInterface.GetAllNetworkInterfaces())
@@ -76,7 +81,7 @@ public sealed partial class PeerService
             }
             foreach(var friend in settings.Friends)destinations.Add(friend.Address);
         }
-        foreach(var destination in destinations.Where(d=>!settings.IsBlocked(d)))
+        foreach(var destination in destinations.Where(d=>!settings.IsBlocked(d)&&AllowsPeer(d)))
             try{await socket.SendAsync(Encoding.ASCII.GetBytes(presence?PresenceProbe:Probe),new IPEndPoint(IPAddress.Parse(destination),DiscoveryPort),stop.Token);}
             catch(Exception e) when(e is SocketException or OperationCanceledException or ObjectDisposedException or FormatException){}
     }

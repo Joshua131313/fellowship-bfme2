@@ -16,6 +16,7 @@ public sealed class PeerDirectory
     void Expire(DateTimeOffset now){foreach(var entry in entries.Values.Where(e=>now-e.Seen>Grace))if(history.TryGetValue(entry.Address,out var activity)&&offlineRecorded.Add(entry.Address)){activity.OfflineAt=entry.Seen+Grace;Save(now,true);}}
 
     public void Clear()=>entries.Clear();
+    public void Keep(Func<string,bool> allowed){foreach(var key in entries.Keys.Where(k=>!allowed(k)).ToArray())entries.Remove(key);}
     public static readonly TimeSpan Grace=TimeSpan.FromSeconds(20);
     public void Success(string address,string name,Room? room,DateTimeOffset now,bool gameRunning=false,int? idleSeconds=null,bool manualAfk=false)
     {

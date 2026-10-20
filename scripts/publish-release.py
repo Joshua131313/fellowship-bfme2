@@ -19,11 +19,16 @@ try:release=request(base+'/releases/tags/'+tag)
 except urllib.error.HTTPError as error:
     if error.code!=404:raise
     release=request(base+'/releases',json.dumps({'tag_name':tag,'target_commitish':commit,'name':'Fellowship '+version,'body':pathlib.Path(notes).read_text(encoding='utf-8-sig'),'draft':True}).encode(),'POST')
-for p in [p]+[pathlib.Path(i) for i in installers]:
+packages=[p]+[pathlib.Path(i) for i in installers]
+for p in packages:
     if p.name not in (f'Fellowship-{version}-win-x64.zip',f'Fellowship-{version}-win-x64.msi',f'Fellowship-Repair-{version}.exe'):raise ValueError('Unexpected asset name')
+assets_to_upload=[(p.name,p) for p in packages]
+installer=next((p for p in packages if p.name==f'Fellowship-{version}-win-x64.msi'),None)
+if installer is not None:assets_to_upload.append(('Fellowship-Setup.msi',installer))
+for asset_name,p in assets_to_upload:
     payload=p.read_bytes();assets=request(base+'/releases/'+str(release['id'])+'/assets')
-    asset=next((a for a in assets if a['name']==p.name),None)
-    if asset is None:asset=request(release['upload_url'].split('{')[0]+'?name='+p.name,payload,'POST','application/octet-stream')
+    asset=next((a for a in assets if a['name']==asset_name),None)
+    if asset is None:asset=request(release['upload_url'].split('{')[0]+'?name='+asset_name,payload,'POST','application/octet-stream')
     if asset['digest']!='sha256:'+hashlib.sha256(payload).hexdigest():raise ValueError('Published package differs. Bump version; do not overwrite an existing release.')
 release=request(base+'/releases/'+str(release['id']),json.dumps({'draft':False,'prerelease':False,'make_latest':'true'}).encode(),'PATCH')
 if request(base+'/releases/latest')['tag_name']!=tag:raise ValueError('Latest release did not update')

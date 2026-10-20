@@ -35,6 +35,11 @@ public sealed class Settings
     public bool RoomSortDescending { get; set; }
     public string RoomModeFilter { get; set; } = "All modes";
     public string NetworkName { get; set; } = "Radmin VPN";
+    public string RadminGroup {get;set;}="";
+    public string[] RadminKnownGroups {get;set;}=[];
+    [System.Text.Json.Serialization.JsonIgnore]public RadminMembership RadminMembership {get;set;}=RadminMembership.Empty;
+    [System.Text.Json.Serialization.JsonIgnore]public bool RestrictRadmin=>RadminGroup.Length>0&&NetworkName.Contains("Radmin",StringComparison.OrdinalIgnoreCase);
+    public bool AllowsNetworkPeer(string address)=>!RestrictRadmin||RadminMembership.Allows(RadminGroup,address);
     public void SelectDefaultNetwork(IEnumerable<(string Name,string Address)> interfaces)
     {
         if(!string.IsNullOrWhiteSpace(BindAddress))return;

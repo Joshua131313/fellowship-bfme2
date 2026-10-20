@@ -19,10 +19,10 @@ public sealed class ActivityAlerts
     Dictionary<string,string> onlinePlayers=new();
     public List<Alert> Observe(Settings settings,IEnumerable<PeerDirectory.Entry> peers)
     {
-        var active=peers.ToArray();var result=new List<Alert>();
-        var addresses=settings.Friends.Select(f=>f.Address).ToHashSet();
+        var active=peers.Where(p=>settings.AllowsNetworkPeer(p.Address)).ToArray();var result=new List<Alert>();
+        var addresses=settings.Friends.Where(f=>settings.AllowsNetworkPeer(f.Address)).Select(f=>f.Address).ToHashSet();
         foreach(var removed in friends.Keys.Where(a=>!addresses.Contains(a)).ToArray())friends.Remove(removed);
-        foreach(var friend in settings.Friends)
+        foreach(var friend in settings.Friends.Where(f=>settings.AllowsNetworkPeer(f.Address)))
         {
             bool online=active.Any(p=>p.Address==friend.Address);
             if(initialized&&friends.TryGetValue(friend.Address,out var previous)&&previous!=online&&!settings.IsBlocked(friend.Address))

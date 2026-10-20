@@ -57,6 +57,18 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if(e.Args.Length==2&&e.Args[0]=="--radmin-groups")
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try
+            {
+                var snapshot=await Task.Run(()=>RadminNetworks.Read(e.Args[1]));
+                using var output=new System.IO.StreamWriter(Console.OpenStandardOutput(),new System.Text.UTF8Encoding(false)){AutoFlush=true};
+                await output.WriteAsync(System.Text.Json.JsonSerializer.Serialize(snapshot));Shutdown(0);
+            }
+            catch{Shutdown(1);}
+            return;
+        }
         var startupSettings=Settings.Load();
         L.Apply(startupSettings.Language);
         Appearance.Apply(startupSettings.Appearance);

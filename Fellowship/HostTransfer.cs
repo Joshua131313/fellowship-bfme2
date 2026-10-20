@@ -48,13 +48,13 @@ public sealed partial class PeerService
         try
         {
             // Confirm that the successor's listening address is reachable before relinquishing ownership.
-            await Query(address,Address);
+            await Query(address,Address,AllowsPeer);
             await successor.Send(new(){Type="become-host",RequestId=handoffId,Room=snapshot,Tickets=tickets,Token=recoveryToken});sent=true;
             string result;
             try{result=await handoffReady!.Task.WaitAsync(TimeSpan.FromSeconds(7));}
             catch(TimeoutException)
             {
-                var probe=await Query(address,Address);
+                var probe=await Query(address,Address,AllowsPeer);
                 if(probe?.Id!=snapshot.Id||probe.HostAddress!=address)throw new IOException("New host did not confirm the room.");
                 result="";
             }
@@ -62,7 +62,7 @@ public sealed partial class PeerService
             // Query through the successor's visibility policy before showing its room.
             try
             {
-                var visible=await QueryPeer(address,Address);
+                var visible=await QueryPeer(address,Address,true,AllowsPeer);
                 HostTransferred?.Invoke(address,visible.Name,visible.Room);
             }
             catch(IOException){ /* Discovery can retry without disrupting the confirmed transfer. */ }
@@ -113,7 +113,7 @@ public sealed partial class PeerService
             if(Current!=room||stop.IsCancellationRequested)return true;
             try
             {
-                var active=await Query(successor.Address,Address);
+                var active=await Query(successor.Address,Address,AllowsPeer);
                 if(active?.Id==room.Id&&active.HostAddress==successor.Address)
                 {
                     if(Current!=room||stop.IsCancellationRequested)return true;
@@ -128,7 +128,7 @@ public sealed partial class PeerService
     }
     async Task ResumeRoom(string address,string id,string token)
     {
-        var connection=await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
+        var connection=await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         try
         {
             await connection.Send(new(){Type="resume",Id=id,Token=token});

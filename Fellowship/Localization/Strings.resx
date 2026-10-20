@@ -1756,4 +1756,46 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="No Fellowship room is available for this player." xml:space="preserve">
     <value>No Fellowship room is available for this player.</value>
   </data>
+  <data name="RADMIN GROUP" xml:space="preserve">
+    <value>RADMIN GROUP</value>
+  </data>
+  <data name="All Radmin groups" xml:space="preserve">
+    <value>All Radmin groups</value>
+  </data>
+  <data name="Refresh Radmin groups" xml:space="preserve">
+    <value>Refresh Radmin groups</value>
+  </data>
+  <data name="Reading Radmin groups…" xml:space="preserve">
+    <value>Reading Radmin groups…</value>
+  </data>
+  <data name="Choose a group to limit Fellowship. Other Radmin connections stay active." xml:space="preserve">
+    <value>Choose a group to limit Fellowship. Other Radmin connections stay active.</value>
+  </data>
+  <data name="Only this group's members are used by Fellowship. Other Radmin connections stay active." xml:space="preserve">
+    <value>Only this group's members are used by Fellowship. Other Radmin connections stay active.</value>
+  </data>
+  <data name="Limit Fellowship to one Radmin group. Changing groups leaves your current room." xml:space="preserve">
+    <value>Limit Fellowship to one Radmin group. Changing groups leaves your current room.</value>
+  </data>
+  <data name="Open Radmin VPN to read its groups." xml:space="preserve">
+    <value>Open Radmin VPN to read its groups.</value>
+  </data>
+  <data name="The selected Radmin group is unavailable." xml:space="preserve">
+    <value>The selected Radmin group is unavailable.</value>
+  </data>
+  <data name="Radmin group members could not be read." xml:space="preserve">
+    <value>Radmin group members could not be read.</value>
+  </data>
+  <data name="Radmin group reading timed out. Try refreshing again." xml:space="preserve">
+    <value>Radmin group reading timed out. Try refreshing again.</value>
+  </data>
+  <data name="The Radmin address does not match the selected network interface." xml:space="preserve">
+    <value>The Radmin address does not match the selected network interface.</value>
+  </data>
+  <data name="The room includes players outside the selected Radmin group." xml:space="preserve">
+    <value>The room includes players outside the selected Radmin group.</value>
+  </data>
+  <data name="This player is outside the selected Radmin group." xml:space="preserve">
+    <value>This player is outside the selected Radmin group.</value>
+  </data>
 </root>

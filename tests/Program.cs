@@ -3,6 +3,28 @@ using Fellowship;
 using System.Net;
 using System.Net.Sockets;
 Settings MemorySettings(string name){var settings=Settings.InMemory();settings.Name=name;return settings;}
+if(args.Length==0||args.Contains("--radmin-group"))
+{
+    var hs=MemorySettings("Group host");hs.RadminGroup="Server A";hs.RadminMembership=new("Server A",["127.0.0.122"],DateTimeOffset.UtcNow);
+    using var h=new PeerService(hs);using var a=new PeerService(MemorySettings("Member A"));using var b=new PeerService(MemorySettings("Member B"));
+    h.Start("127.0.0.121");a.Start("127.0.0.122");b.Start("127.0.0.123");h.Host(new(){Capacity=3});b.Host(new(){Title="Other group"});
+    async Task Denied(Func<Task> action,string description){bool denied=false;try{await action();}catch(Exception e) when(e is IOException or SocketException){denied=true;}if(!denied)throw new Exception(description);}
+    await Denied(()=>b.Join(h.Address),"Other group joined filtered host");await a.Join(h.Address);await Until(()=>h.Current?.Players.Count==2,"selected group member joins");
+    bool delivered=false;a.PrivateMessage+=(_,_,_)=>delivered=true;await h.SendPrivate(a.Address,"Selected group message");await Until(()=>delivered,"selected group private messages work");
+    await Denied(()=>h.SendPrivate(b.Address,"Must not send"),"Outgoing message escaped group");await Denied(()=>b.SendPrivate(h.Address,"Must not arrive"),"Incoming message escaped group");
+    await Denied(()=>h.Join(b.Address),"Direct-IP join escaped group");
+    var incoming=new HashSet<string>();h.Discovered+=ip=>incoming.Add(ip);bool outsideDiscoveredHost=false;b.Discovered+=ip=>{if(ip==h.Address)outsideDiscoveredHost=true;};
+    await a.Discover(h.Address,true);await b.Discover(h.Address,true);await h.Discover(presence:true);await h.Discover(b.Address,true);await Task.Delay(250);
+    if(!incoming.Contains(a.Address)||incoming.Contains(b.Address)||outsideDiscoveredHost)throw new Exception("UDP discovery leaked outside selected group");
+    hs.RadminMembership=new("Server A",[b.Address],DateTimeOffset.UtcNow);h.RecheckNetworkScope();if(h.Current!=null)throw new Exception("Removed group member retained the old room");
+    if((await PeerService.QueryPeer(b.Address,a.Address)).Name!="Member B")throw new Exception("Unrelated peer connection was modified");
+    hs.RadminMembership=new("Server A",[b.Address],DateTimeOffset.UtcNow.AddMinutes(-3));if(h.AllowsPeer(b.Address))throw new Exception("Expired membership enabled connections");
+    hs.RadminMembership=RadminMembership.Empty;if(h.AllowsPeer(b.Address))throw new Exception("Missing membership fell back to all groups");
+    hs.NetworkName="Ethernet";if(!h.AllowsPeer(b.Address))throw new Exception("Radmin setting incorrectly filtered a different adapter");
+    var restored=System.Text.Json.JsonSerializer.Deserialize<Settings>(System.Text.Json.JsonSerializer.Serialize(hs))!;if(restored.RadminGroup!="Server A"||restored.RadminMembership!=RadminMembership.Empty)throw new Exception("Group preference/runtime membership persistence incorrect");
+    Console.WriteLine("PASS Radmin group inbound/outbound messaging and joins, scoped UDP, roster changes, expired/unknown data, independent other peers and persistence");
+    if(args.Contains("--radmin-group"))return;
+}
 if(args.Length==0||args.Contains("--player-room"))
 {
     var hs=MemorySettings("Room owner");hs.Friends.Add(new("Participant","127.0.0.122"));

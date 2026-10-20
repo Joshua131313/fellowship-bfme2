@@ -41,6 +41,12 @@ public sealed partial class PeerService : IDisposable
         .Where(n => n.OperationalStatus == OperationalStatus.Up)
         .SelectMany(n => n.GetIPProperties().UnicastAddresses.Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
         .Select(a => (n.Name, a.Address.ToString()))).ToList();
+    public bool AllowsPeer(string address)=>address==Address||settings.AllowsNetworkPeer(address);
+    public bool AllowsRoom(Room room)=>AllowsPeer(room.HostAddress)&&room.Players.All(p=>AllowsPeer(p.Address));
+    public void RecheckNetworkScope()
+    {
+        if(Current is {} room&&!AllowsRoom(room)){Leave();Notice?.Invoke("The room includes players outside the selected Radmin group.");}
+    }
     public void Start(string address)
     {
         if(listener!=null&&Address==address)return;
@@ -66,6 +72,7 @@ public sealed partial class PeerService : IDisposable
     }
     async Task Accept(TcpClient tcp)
     {
+        if(!AllowsPeer(((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString())){tcp.Dispose();return;}
         using var c = new Connection(tcp);
         string id = Guid.NewGuid().ToString("N");
         bool joined = false;
@@ -135,7 +142,7 @@ public sealed partial class PeerService : IDisposable
             await BroadcastState();
             while (await c.Read(stop.Token) is { } msg)
             {
-                if(settings.IsBlocked(remoteAddress))break;
+                if(settings.IsBlocked(remoteAddress)||!AllowsPeer(remoteAddress))break;
                 if(msg.Type=="handoff-ready")
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
@@ -223,10 +230,10 @@ public sealed partial class PeerService : IDisposable
     public async Task Join(string address)
     {
         if(settings.IsBlocked(address))throw new InvalidOperationException("Unblock this player before joining.");
-        var advertised=await Query(address,string.IsNullOrEmpty(Address)?null:Address);
+        var advertised=await Query(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         if(advertised==null)throw new IOException("This room is no longer available or is private.");
         Leave();
-        var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
+        var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         try
         {
             await c.Send(new() { Type = "join",LastSelectedColor=settings.LastSelectedColor, PreferredMapSpots=new(settings.PreferredMapSpots),Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
@@ -250,6 +257,8 @@ public sealed partial class PeerService : IDisposable
                 // A disposed connection can still finish a buffered read after switching rooms.
                 // Never let its final messages replace the new room or launch its game.
                 if(!ReferenceEquals(upstream,c))break;
+                if(!AllowsPeer(c.RemoteAddress)){Leave();return;}
+                if(msg.Room is {} incoming&&!AllowsRoom(incoming)){Leave();Notice?.Invoke("The room includes players outside the selected Radmin group.");return;}
                 if(msg.Type=="become-host")
                 {
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
@@ -267,6 +276,7 @@ public sealed partial class PeerService : IDisposable
                 {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
                 if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room))
                 {
+                    if(msg.Room is {} scoped&&!AllowsRoom(scoped)){Notice?.Invoke("The room includes players outside the selected Radmin group.");break;}
                     Current=msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress;
                     Changed?.Invoke();
                 }
@@ -291,10 +301,10 @@ public sealed partial class PeerService : IDisposable
             c.Dispose();
         }
     }
-    public static async Task<Room?> Query(string address,string? source=null)=>(await QueryPeer(address,source,false)).Room;
-    public static async Task<(string Name,Room? Room,bool GameRunning,int? IdleSeconds,bool ManualAfk)> QueryPeer(string address,string? source=null,bool resolveRoom=true)
+    public static async Task<Room?> Query(string address,string? source=null,Func<string,bool>? allowed=null)=>(await QueryPeer(address,source,false,allowed)).Room;
+    public static async Task<(string Name,Room? Room,bool GameRunning,int? IdleSeconds,bool ManualAfk)> QueryPeer(string address,string? source=null,bool resolveRoom=true,Func<string,bool>? allowed=null)
     {
-        using var c = await Connect(address,source);
+        using var c = await Connect(address,source,allowed);
         await c.Send(new() { Type = "query" });
         using var timeout = new CancellationTokenSource(3000);
         var reply=await c.Read(timeout.Token);
@@ -307,17 +317,18 @@ public sealed partial class PeerService : IDisposable
             // One hop only: a stale or cyclic reference cannot redirect indefinitely.
             try
             {
-                var host=await QueryPeer(hostAddress.ToString(),source,false);
+                var host=await QueryPeer(hostAddress.ToString(),source,false,allowed);
                 if(host.Room is {} room&&room.Id==reply.Id&&room.HostAddress==hostAddress.ToString()&&room.Players.Any(p=>p.Address==address))reply.Room=room;
             }
             catch(Exception error) when(error is IOException or SocketException or OperationCanceledException){}
         }
+        if(allowed!=null&&reply.Room is {} advertised&&(!allowed(advertised.HostAddress)||advertised.Players.Any(p=>!allowed(p.Address))))reply.Room=null;
         return (Clean(reply.Name,40),reply.Room,reply.GameRunning,IdlePresence.Normalize(reply.IdleSeconds),reply.ManualAfk);
     }
     public async Task SendPrivate(string address, string text)
     {
         if(settings.IsBlocked(address))throw new InvalidOperationException("Unblock this player before messaging.");
-        using var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
+        using var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         await c.Send(new() { Type = "dm", Name = settings.Name, Text = Clean(text, 2000) });
         using var timeout = new CancellationTokenSource(3000);
         if ((await c.Read(timeout.Token))?.Type != "ack") throw new IOException("Message was not acknowledged.");
@@ -492,7 +503,7 @@ public sealed partial class PeerService : IDisposable
     {
         var room=Current??throw new InvalidOperationException("Join or host a room first.");
         if(settings.IsBlocked(address)||!settings.Friends.Any(f=>f.Address==address))throw new InvalidOperationException("Choose an unblocked friend.");
-        using var connection=await Connect(address,string.IsNullOrEmpty(Address)?null:Address);
+        using var connection=await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         await connection.Send(new(){Type="invite",Name=settings.Name,Room=new(){Id=room.Id,Title=room.Title,HostAddress=room.HostAddress}});
         using var timeout=new CancellationTokenSource(5000);
         var reply=await connection.Read(timeout.Token);if(reply?.Type!="ack")throw new IOException(reply?.Text??"Invitation was not acknowledged.");
@@ -541,8 +552,9 @@ public sealed partial class PeerService : IDisposable
         await Task.WhenAll(guests.Values.Select(async c => { try { await c.Send(msg); } catch { c.Dispose(); } }));
     }
     static string Clean(string s, int max) => new(s.Take(max).Where(c => !char.IsControl(c) || c == '\n').ToArray());
-    static async Task<Connection> Connect(string address,string? source=null)
+    static async Task<Connection> Connect(string address,string? source=null,Func<string,bool>? allowed=null)
     {
+        if(allowed!=null&&!allowed(address))throw new IOException("This player is outside the selected Radmin group.");
         if (!IPAddress.TryParse(address, out var ip) || ip.AddressFamily != AddressFamily.InterNetwork) throw new ArgumentException("Enter the host’s IPv4 address on your selected VPN network.");
         var tcp = source==null?new TcpClient():new TcpClient(new IPEndPoint(IPAddress.Parse(source),0));
         try { using var timeout = new CancellationTokenSource(3000); await tcp.ConnectAsync(ip, Port, timeout.Token); return new(tcp); }

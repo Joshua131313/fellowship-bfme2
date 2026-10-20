@@ -2,9 +2,11 @@
 
 ### Your BFME2 games, together in one place.
 
+[![Download Fellowship for Windows — direct MSI installer download](docs/download-windows.svg)](https://github.com/Joshua131313/fellowship-bfme2/releases/latest/download/Fellowship-Setup.msi)
+
 **Fellowship is a Windows companion for The Battle for Middle-earth II 1.00.** Find games on your VPN, gather your friends, plan teams and starting positions, and carry supported selections into the native BFME2 lobby. A desktop dashboard brings rooms, online players, messages, and preferences together, with separate windows when you need them.
 
-**[Download for Windows](https://github.com/Joshua131313/fellowship-bfme2/releases/latest)** · **[What's new](https://github.com/Joshua131313/fellowship-bfme2/releases)** · **[Report an issue](https://github.com/Joshua131313/fellowship-bfme2/issues)**
+**[Other downloads & release notes](https://github.com/Joshua131313/fellowship-bfme2/releases/latest)** · **[Report an issue](https://github.com/Joshua131313/fellowship-bfme2/issues)**
 
 ![Fellowship dashboard in dark mode, showing room discovery, server selection, search, ping, and direct-IP joining](docs/screenshots/room-browser.png)
 
@@ -18,6 +20,14 @@
 - **Search and filter** by room name and game mode, then inspect the map, rules, and roster before joining. Direct host-IP joining is available when discovery misses a room.
 - **Sort the room table** by its column headers, with ascending and descending indicators. Sorting and resized column widths survive tab changes and app restarts; reset widths whenever you want the default layout back.
 - **See connection quality** with ping indicators in the room browser, player roster, and player information.
+
+### Use one Radmin group while staying connected to the others
+
+Choose **Radmin VPN → Radmin group** in the room browser, or use the group selector in Settings. Fellowship reads the actual group names and members from your running Radmin client, remembers your choice, and refreshes membership automatically.
+
+Only members of the selected group are used for Fellowship discovery, player lists, messaging, and room connections. Your other Radmin groups remain connected. Choose **All Radmin groups** to remove the filter. Switching groups leaves the current Fellowship room.
+
+This filters Fellowship; BFME2's own LAN traffic and other applications keep using Radmin normally. Keep Radmin running so the member list can refresh. [Integration details and limits](docs/radmin-groups.md).
 
 ### Build a room around your group
 
@@ -84,7 +94,7 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 ### Your first game
 
 1. **Install Fellowship.** Download the `.msi` from [the latest release](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). The installer creates desktop and Start menu shortcuts. A portable ZIP is also available.
-2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface; room discovery follows that selection.
+2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface. With Radmin, choose a specific **Radmin group** to limit Fellowship to its members while keeping other groups connected.
 3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
 4. **Host or join.** Create a room using the default 3v3 preset or choose another setup. Join a discovered room, preview it first, or enter the host's VPN IP directly.
 5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.
@@ -174,6 +184,7 @@ Closing the dashboard keeps Fellowship running in the system tray. Closing a bat
 | --- | --- |
 | Rooms or players are missing | Confirm all PCs use the same VPN network, selected interface, and current app version. Refresh presence or join by host IP. Check Windows Firewall access for Fellowship on that network. |
 | A player stays Reconnecting | Check that their VPN and Fellowship are still running. A brief interruption can clear after subsequent presence checks. |
+| Radmin groups or members cannot be read | Keep Radmin VPN running and press the refresh button beside the group selector. If needed, open its main window. An unavailable selected group never silently switches to all groups. |
 | BFME2 reports a DirectX error at launch | Let sync preparation and its Windows permission prompt finish before launching. If needed, disable live sync, launch BFME2, then enable sync after the game loads. |
 | Live sync cannot apply a selection | Keep the native setup lobby open. Check the supported game version, matching map and participants, and occupied spots. Correct conflicting selections in BFME2 when sync pauses. |
 | Rhûn sides do not coordinate | Confirm **3v3 + Rhûn**, update every participant, enable live sync, and select native teams. The in-game host determines the hosting side. |
