@@ -21,11 +21,11 @@
 - **Sort the room table** by its column headers, with ascending and descending indicators. Sorting and resized column widths survive tab changes and app restarts; reset widths whenever you want the default layout back.
 - **See connection quality** with ping indicators in the room browser, player roster, and player information.
 
-The room browser aligns server, mode, and search filters above the room list. Use **View → Reset column ordering** or the table context menu to restore the original column order; resetting column widths is available separately.
+The room browser aligns server, mode, and search filters above the room list. The Create room form remembers your last successfully created room title, including after a restart. Use **View → Reset column ordering** or the table context menu to restore the original column order; resetting column widths is available separately.
 
 ### Use one Radmin group while staying connected to the others
 
-Open the **Server** menu and hover over **Radmin VPN** to choose a group from its side menu, or use the group selector in Settings. Click **Radmin VPN** itself to use all groups. Fellowship reads the actual group names and members from your running Radmin client, remembers your choice, and refreshes membership automatically.
+Open the **Server** menu and hover over **Radmin VPN** to choose a group from its side menu, or use the group selector in Settings. Click **Radmin VPN** itself to use all groups. The side menu opens to the left in Arabic and to the right in the other languages; refreshing keeps it open. Fellowship reads the actual group names and members from your running Radmin client, remembers your choice, and refreshes membership automatically.
 
 Only members of the selected group are used for Fellowship discovery, player lists, messaging, and room connections. Your other Radmin groups remain connected. Click **Radmin VPN** in the Server menu, or choose **All Radmin groups** in Settings, to remove the filter. Switching groups leaves the current Fellowship room.
 
@@ -68,7 +68,7 @@ AFK status can follow idle detection automatically, or you can set it yourself. 
 
 ### Chat while you organize
 
-Use room chat for the group and private messages for individual conversations. Compact bubbles keep your messages on the right and incoming messages on the left. Opening a chat focuses the composer, and new messages stay in view unless you scroll back to read earlier messages. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
+Use room chat for the group and private messages for individual conversations. Compact bubbles keep your messages on the right and incoming messages on the left. Opening a chat focuses the composer, and new messages stay in view unless you scroll back to read earlier messages. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Player context menus open beside the cursor, preferring the right side. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
 
 ### Make Fellowship feel like yours
 

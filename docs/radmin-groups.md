@@ -1,6 +1,6 @@
 # Radmin group selection
 
-In the room browser, open **Server** and hover over **Radmin VPN**. Its right-hand menu lists the actual Radmin groups. Select a group to restrict Fellowship, or click the parent **Radmin VPN** item to use all groups. Settings also provides a group selector; **All Radmin groups** preserves the original adapter-wide behavior. The saved group preference survives restarting Fellowship.
+In the room browser, open **Server** and hover over **Radmin VPN**. Its side menu lists the actual Radmin groups, opening to the right in English, French, Spanish and Turkish, and to the left in Arabic. Refreshing groups keeps the menu open. Select a group to restrict Fellowship, or click the parent **Radmin VPN** item to use all groups. Settings also provides a group selector; **All Radmin groups** preserves the original adapter-wide behavior. The saved group preference survives restarting Fellowship.
 
 ![Fellowship Radmin group selector with a saved group and filtered player scope](screenshots/radmin-group.png)
 

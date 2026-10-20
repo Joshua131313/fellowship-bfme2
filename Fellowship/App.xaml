@@ -180,6 +180,7 @@
 </Style>
 <DataTemplate x:Key="MenuLabelTemplate"><AccessText Text="{Binding}" TextWrapping="Wrap"/></DataTemplate>
 <Style TargetType="MenuItem">
+ <Setter Property="Cursor" Value="Hand"/>
  <Setter Property="HeaderTemplate" Value="{StaticResource MenuLabelTemplate}"/>
  <Setter Property="Foreground" Value="{DynamicResource ThemeDFE6F2}"/><Setter Property="FontSize" Value="12"/><Setter Property="Padding" Value="10,6"/><Setter Property="Margin" Value="0,2"/><Setter Property="MinWidth" Value="220"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem">
@@ -200,10 +201,11 @@
   </Grid>
   <ControlTemplate.Triggers>
    <Trigger Property="HasItems" Value="True"><Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/></Trigger>
+   <Trigger Property="FlowDirection" Value="RightToLeft"><Setter TargetName="PART_Popup" Property="Placement" Value="Left"/><Setter TargetName="PART_Popup" Property="HorizontalOffset" Value="1"/><Setter TargetName="SubmenuArrow" Property="Text" Value="‹"/></Trigger>
    <Trigger Property="IsChecked" Value="True"><Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/><Setter TargetName="MenuFrame" Property="Background" Value="{DynamicResource InteractionSelected}"/><Setter Property="Foreground" Value="{DynamicResource InteractionText}"/></Trigger>
    <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuFrame" Property="Background" Value="{DynamicResource InteractionHover}"/><Setter Property="Foreground" Value="{DynamicResource InteractionText}"/></Trigger>
    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsHighlighted" Value="True"/><Condition Property="Tag" Value="Danger"/></MultiTrigger.Conditions><Setter TargetName="MenuFrame" Property="Background" Value="{DynamicResource ThemeAD3545}"/><Setter Property="Foreground" Value="White"/></MultiTrigger>
-   <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+   <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/><Setter Property="Cursor" Value="Arrow"/></Trigger>
   </ControlTemplate.Triggers>
  </ControlTemplate></Setter.Value></Setter>
 </Style>
@@ -259,7 +261,7 @@
    <ToggleButton Focusable="False" Cursor="Hand" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
     <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent"><Path Data="M 0,0 L 5,5 L 10,0" Stroke="{DynamicResource ThemeA7B6CE}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" HorizontalAlignment="Right" Margin="0,0,13,0" VerticalAlignment="Center"/></Border></ControlTemplate></ToggleButton.Template>
    </ToggleButton>
-   <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Stretch" ClipToBounds="True" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
+   <ContentPresenter x:Name="SelectedContent" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" ClipToBounds="True" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
    <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Custom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
     <Border Background="{DynamicResource Theme1B222D}" BorderBrush="{DynamicResource Theme43516A}" BorderThickness="1" CornerRadius="7" Padding="4" Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" MaxHeight="300" FlowDirection="LeftToRight">
      <StackPanel>

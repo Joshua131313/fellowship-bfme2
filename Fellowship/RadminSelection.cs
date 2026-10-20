@@ -14,6 +14,7 @@ public sealed partial class BrowserWindow
     {
         var label=UI.LocalizedText("RADMIN GROUP",10,UI.Muted,true);
         var choice=new ComboBox{MinWidth=160,Height=34,HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Left};
+        var caption=new FrameworkElementFactory(typeof(TextBlock));caption.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding());caption.SetValue(TextBlock.FontSizeProperty,12d);caption.SetValue(TextBlock.TextWrappingProperty,TextWrapping.NoWrap);caption.SetValue(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis);choice.ItemTemplate=new DataTemplate{VisualTree=caption};
         System.Windows.Automation.AutomationProperties.SetName(choice,"Radmin group");
         L.Bind(choice,FrameworkElement.ToolTipProperty,"Limit Fellowship to one Radmin group. Changing groups leaves your current room.");
         var refresh=UI.AsyncButton("↻",async()=>await RefreshRadminGroups(true));refresh.Width=34;refresh.Padding=new(0);refresh.Margin=new(8,0,0,0);L.Bind(refresh,FrameworkElement.ToolTipProperty,"Refresh Radmin groups");
@@ -76,7 +77,7 @@ public sealed partial class BrowserWindow
                 if(!choice.IsDropDownOpen&&!choice.Items.OfType<ComboBoxItem>().Select(i=>(string)i.Tag).SequenceEqual(names))
                 {
                     choice.Items.Clear();
-                    foreach(var name in names)choice.Items.Add(new ComboBoxItem{Tag=name,HorizontalContentAlignment=HorizontalAlignment.Left,Content=name.Length==0?UI.LocalizedText("All Radmin groups",12):UI.Text(name,12),ToolTip=name});
+                    foreach(var name in names){var option=new ComboBoxItem{Tag=name,HorizontalContentAlignment=HorizontalAlignment.Left,Content=name,ToolTip=name};if(name.Length==0)L.Bind(option,ContentControl.ContentProperty,"All Radmin groups");choice.Items.Add(option);}
                 }
                 choice.SelectedItem=choice.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>(string)i.Tag==Settings.RadminGroup);
                 L.Bind(status,TextBlock.TextProperty,readingGroups?"Reading Radmin groups…":groupReadError.Length>0?groupReadError:Settings.RadminGroup.Length==0?"Choose a group to limit Fellowship. Other Radmin connections stay active.":"Only this group's members are used by Fellowship. Other Radmin connections stay active.");

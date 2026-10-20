@@ -20,20 +20,24 @@ public sealed class RoomPresetPicker : ComboBox
     public void Reload()
     {
         var previous=(SelectedItem as ComboBoxItem)?.Tag as RoomPreset;refreshing=true;
-        Items.Clear();Items.Add(new ComboBoxItem{Content=UI.LocalizedText("Custom preset",12),Padding=new(10,5,10,5)});
+        Items.Clear();var custom=new ComboBoxItem{Padding=new(10,5,10,5),ContentTemplate=Caption(null)};L.Bind(custom,ContentControl.ContentProperty,"Custom preset");Items.Add(custom);
         foreach(var preset in RoomPreset.Defaults(GameInstallation.Maps(settings.GamePath)).Concat(settings.RoomPresets))
         {
-            var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
-            row.Children.Add(UI.Text(preset.Name,12));
-            if(!preset.BuiltIn)
-            {
-                var delete=UI.Button("×",()=>{});delete.Width=28;delete.Height=22;delete.Padding=new(0);delete.Margin=new(12,0,0,0);delete.ToolTip="Delete "+preset.Name;delete.Tag="Danger";
-                delete.SetBinding(VisibilityProperty,new Binding(nameof(IsDropDownOpen)){Source=this,Converter=new BooleanToVisibilityConverter()});
-                delete.Click+=(_,e)=>{e.Handled=true;settings.RoomPresets.Remove(preset);settings.Save();Reload();};Grid.SetColumn(delete,1);row.Children.Add(delete);
-            }
-            Items.Add(new ComboBoxItem{Tag=preset,Content=row,Padding=new(10,5,10,5),HorizontalContentAlignment=HorizontalAlignment.Stretch});
+            Items.Add(new ComboBoxItem{Tag=preset,Content=preset.Name,ContentTemplate=Caption(preset),Padding=new(10,5,10,5),HorizontalContentAlignment=HorizontalAlignment.Stretch});
         }
         SelectedItem=Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.Tag is RoomPreset p&&p.Name==previous?.Name&&p.BuiltIn==previous.BuiltIn)??Items[0];refreshing=false;ModeChanged?.Invoke();
+    }
+    DataTemplate Caption(RoomPreset? preset)
+    {
+        // Data-backed captions render directly; UIElement snapshots can center or disappear.
+        var template=new DataTemplate();var row=new FrameworkElementFactory(typeof(DockPanel));
+        if(preset is {BuiltIn:false})
+        {
+            var delete=new FrameworkElementFactory(typeof(Button));delete.SetValue(DockPanel.DockProperty,Dock.Right);delete.SetValue(ContentControl.ContentProperty,"×");delete.SetValue(WidthProperty,28d);delete.SetValue(HeightProperty,22d);delete.SetValue(Control.PaddingProperty,new Thickness(0));delete.SetValue(MarginProperty,new Thickness(12,0,0,0));delete.SetValue(ToolTipProperty,"Delete "+preset.Name);delete.SetValue(TagProperty,"Danger");
+            delete.SetBinding(VisibilityProperty,new Binding(nameof(IsDropDownOpen)){Source=this,Converter=new BooleanToVisibilityConverter()});
+            delete.AddHandler(Button.ClickEvent,new RoutedEventHandler((_,e)=>{e.Handled=true;settings.RoomPresets.Remove(preset);settings.Save();Reload();}));row.AppendChild(delete);
+        }
+        var text=new FrameworkElementFactory(typeof(TextBlock));text.SetBinding(TextBlock.TextProperty,new Binding());text.SetValue(TextBlock.FontSizeProperty,12d);text.SetValue(TextBlock.VerticalAlignmentProperty,VerticalAlignment.Center);text.SetValue(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis);text.SetValue(TextBlock.TextWrappingProperty,TextWrapping.NoWrap);row.AppendChild(text);template.VisualTree=row;template.Seal();return template;
     }
     public static async Task<string?> PromptName(Window owner)
     {

@@ -58,20 +58,33 @@ public sealed partial class BrowserWindow
             item.Click+=async(_,e)=>{if(!ReferenceEquals(e.OriginalSource,item))return;networkMenu.IsOpen=false;await SelectServer(choice,"");};
             if(choice.Radmin)
             {
+                var placeholder=new MenuItem{IsEnabled=false};
+                MenuItem? refresh=null;
+                refresh=UI.MenuAction("Refresh Radmin groups",async()=>
+                {
+                    refresh!.IsEnabled=false;L.Bind(refresh,HeaderedItemsControl.HeaderProperty,"Reading Radmin groups…");
+                    try{await ReadRadminMenuGroups();Groups();LoadNetworkChoices();}
+                    finally{refresh.IsEnabled=true;L.Bind(refresh,HeaderedItemsControl.HeaderProperty,"Refresh Radmin groups");}
+                });
+                refresh.StaysOpenOnClick=true;
+                item.Items.Add(new Separator());item.Items.Add(refresh);
                 void Groups()
                 {
-                    item.Items.Clear();
-                    foreach(var group in Settings.RadminKnownGroups.Append(Settings.RadminGroup).Where(n=>n.Length>0).Distinct(StringComparer.Ordinal).OrderBy(n=>n,StringComparer.CurrentCultureIgnoreCase))
+                    var groups=Settings.RadminKnownGroups.Append(Settings.RadminGroup).Where(n=>n.Length>0).Distinct(StringComparer.Ordinal).OrderBy(n=>n,StringComparer.CurrentCultureIgnoreCase).ToArray();
+                    foreach(var stale in item.Items.OfType<MenuItem>().Where(option=>option.Tag is string name&&!groups.Contains(name,StringComparer.Ordinal)).ToArray())item.Items.Remove(stale);
+                    for(int index=0;index<groups.Length;index++)
                     {
+                        var group=groups[index];
+                        if(item.Items.OfType<MenuItem>().FirstOrDefault(option=>option.Tag as string==group) is {} existing)
+                        {existing.IsChecked=choice.Address==Settings.BindAddress&&Settings.RadminGroup==group;continue;}
                         var option=new MenuItem{Tag=group,ToolTip=group,IsChecked=choice.Address==Settings.BindAddress&&Settings.RadminGroup==group};
                         option.SetBinding(HeaderedItemsControl.HeaderProperty,new System.Windows.Data.Binding{Source=group});
-                        option.Click+=async(_,e)=>{e.Handled=true;networkMenu.IsOpen=false;await SelectServer(choice,group);};item.Items.Add(option);
+                        option.Click+=async(_,e)=>{e.Handled=true;networkMenu.IsOpen=false;await SelectServer(choice,group);};item.Items.Insert(index,option);
                     }
-                    if(item.Items.Count==0)item.Items.Add(new MenuItem{Header=L.T(readingGroups?"Reading Radmin groups…":"Open Radmin VPN to read its groups."),IsEnabled=false});
-                    item.Items.Add(new Separator());
-                    item.Items.Add(UI.MenuAction("Refresh Radmin groups",async()=>{await ReadRadminMenuGroups();LoadNetworkChoices();}));
+                    if(groups.Length==0){L.Bind(placeholder,HeaderedItemsControl.HeaderProperty,readingGroups?"Reading Radmin groups…":"Open Radmin VPN to read its groups.");if(!item.Items.Contains(placeholder))item.Items.Insert(0,placeholder);}
+                    else item.Items.Remove(placeholder);
                 }
-                Groups();item.SubmenuOpened+=async(_,e)=>{if(!ReferenceEquals(e.OriginalSource,item)||Settings.RadminKnownGroups.Length>0)return;await ReadRadminMenuGroups();if(item.IsSubmenuOpen)Groups();};
+                Groups();MenuPlacement.Submenu(item);item.SubmenuOpened+=async(_,e)=>{if(!ReferenceEquals(e.OriginalSource,item)||Settings.RadminKnownGroups.Length>0)return;await ReadRadminMenuGroups();if(item.IsSubmenuOpen)Groups();};
             }
             networkMenu.Items.Add(item);
         }
@@ -88,6 +101,7 @@ public sealed partial class BrowserWindow
     void ConfigureNetworkPicker()
     {
         networkMenu.PlacementTarget=networkCaption;networkMenu.MinWidth=220;
+        networkMenu.SetBinding(FrameworkElement.FlowDirectionProperty,new System.Windows.Data.Binding(nameof(L.Direction)){Source=L.Current});
         networkCaption.ContextMenu=networkMenu;LoadNetworkChoices();
         networkCaption.Click+=(_,_)=>{PopulateNetworkMenu();networkMenu.IsOpen=true;};
         networkCaption.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Down||e.Key==Key.F4){e.Handled=true;PopulateNetworkMenu();networkMenu.IsOpen=true;}};

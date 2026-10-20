@@ -7,6 +7,8 @@ class Program
 {
  [STAThread] static void Main(string[] args)
  {
+  if(args.Length==1&&args[0]=="--menu-layout")
+  {var menuApp=new App();menuApp.InitializeComponent();Appearance.Apply("Dark");MenuUiTests.Run();return;}
   if(args.Length==2&&args[0]=="--radmin-read")
   {var read=RadminNetworks.Read(args[1]);Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new{read.Groups,read.Selected,MemberCount=read.Members.Length,read.LocalAddress,read.Complete,read.Error}));return;}
   if(args.Length==2&&args[0]=="--prewarm-probe")
@@ -199,12 +201,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.125-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.125/Fellowship-0.1.125-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.125",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.126-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.126/Fellowship-0.1.126-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.126",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.125","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.125",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.126","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.126",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -255,7 +257,7 @@ class Program
   if(manualWire?.ManualAfk!=true)throw new Exception("Manual presence not serialized");
   if(IdlePresence.LastOnline(activityTime.AddMinutes(-5),activityTime)!="5 minutes ago"||IdlePresence.LastOnline(activityTime.AddHours(-2),activityTime)!="2 hours ago"||IdlePresence.LastOnline(activityTime.AddDays(-2),activityTime)!=activityTime.AddDays(-2).ToLocalTime().ToString("d"))throw new Exception("Relative last online formatting failed");
   var legacyDirectory=new PeerDirectory();legacyDirectory.Success("10.0.0.2","Older app",null,activityTime);if(legacyDirectory.Find("10.0.0.2",activityTime)?.IdleSeconds!=null)throw new Exception("Older client idle status invented");
-  var app=new App();app.InitializeComponent();Appearance.Apply("Dark");ChatUiTests.Run();
+  var app=new App();app.InitializeComponent();Appearance.Apply("Dark");ChatUiTests.Run();MenuUiTests.Run();
   var transcript=new ChatTranscript();transcript.Append("Alice","First message");transcript.Append("Bob","Second message");transcript.SelectAll();
   if(!transcript.Selection.Text.Contains("First message")||!transcript.Selection.Text.Contains("Second message"))throw new Exception("Cross-message selection failed");
   transcript.AppendBlocked("Blocked","Hidden secret");transcript.SelectAll();if(transcript.Selection.Text.Contains("Hidden secret"))throw new Exception("Hidden blocked message leaked into selection");
@@ -315,7 +317,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.125"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.125/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.126"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.126/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -442,20 +444,22 @@ class Program
   foreach(var theme in new[]{"Light","Dark","Black","System"})
   {
     Appearance.Apply(theme);
-    var themedUpdate=new UpdateProgressWindow("0.1.125");themedUpdate.Report("Installing update…","Applying the update",60);
+    var themedUpdate=new UpdateProgressWindow("0.1.126");themedUpdate.Report("Installing update…","Applying the update",60);
     Render(themedUpdate,"dist/preview-update-"+theme.ToLowerInvariant()+".png");
   }
   Appearance.Apply("Dark");
-  var updatePreview=new UpdateProgressWindow("0.1.125");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.126");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
-  var deleteButton=((System.Windows.Controls.Grid)customItem.Content).Children.OfType<System.Windows.Controls.Button>().Single();
+  var presetOption=new System.Windows.Controls.ContentPresenter{Content=customItem.Content,ContentTemplate=customItem.ContentTemplate};presetOption.Measure(new Size(300,34));presetOption.Arrange(new Rect(0,0,300,34));presetOption.UpdateLayout();
+  IEnumerable<DependencyObject> PresetVisuals(DependencyObject root){yield return root;for(int i=0;i<VisualTreeHelper.GetChildrenCount(root);i++)foreach(var child in PresetVisuals(VisualTreeHelper.GetChild(root,i)))yield return child;}
+  var deleteButton=PresetVisuals(presetOption).OfType<System.Windows.Controls.Button>().Single();
   deleteButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.125\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.126\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
@@ -659,7 +663,13 @@ class Program
   if(!groupEntry.IsChecked||radminEntry.IsChecked||radminEntry.Items.OfType<System.Windows.Controls.MenuItem>().Count(i=>i.Tag is string)!=2)throw new Exception("Radmin submenu groups or selected scope indicator missing");
   radminEntry.ApplyTemplate();
   var groupPopup=(System.Windows.Controls.Primitives.Popup)radminEntry.Template.FindName("PART_Popup",radminEntry);
-  if(groupPopup.Placement!=System.Windows.Controls.Primitives.PlacementMode.Right)throw new Exception("Radmin submenu is not placed to the right");
+  var rightPlacements=groupPopup.CustomPopupPlacementCallback(new Size(240,180),new Size(220,34),new Point());
+  if(groupPopup.Placement!=System.Windows.Controls.Primitives.PlacementMode.Custom||rightPlacements[0].Point.X<=220)throw new Exception("Radmin submenu is not placed to the right");
+  radminEntry.FlowDirection=FlowDirection.RightToLeft;
+  if(groupPopup.CustomPopupPlacementCallback(new Size(240,180),new Size(220,34),new Point())[0].Point.X>=-240)throw new Exception("Arabic Radmin submenu is not placed to the left");
+  radminEntry.ClearValue(FrameworkElement.FlowDirectionProperty);
+  var refreshGroups=radminEntry.Items.OfType<System.Windows.Controls.MenuItem>().Single(i=>i.Header as string=="Refresh Radmin groups");
+  if(!refreshGroups.StaysOpenOnClick)throw new Exception("Refreshing Radmin groups would close its menu");
   var chatPreview=new ChatWindow(scopeBrowser,"10.0.0.9","Aragorn");
   if(System.Windows.Input.FocusManager.GetFocusedElement(chatPreview) is not System.Windows.Controls.TextBox)throw new Exception("New chat did not target its composer for focus");
   chatPreview.Receive("Aragorn","Ready for another game?");chatPreview.Append("You","Ready! Let's play.");chatPreview.Receive("Aragorn","I'll host the next one. Same teams?");
