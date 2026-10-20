@@ -61,13 +61,18 @@ public sealed class Settings
     public static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Fellowship");
     public static Settings Load()
     {
-        try { return JsonSerializer.Deserialize<Settings>(File.ReadAllText(Path.Combine(Folder, "settings.json"))) ?? new(); }
-        catch { return new(); }
+        Settings settings;
+        try { settings=JsonSerializer.Deserialize<Settings>(File.ReadAllText(Path.Combine(Folder, "settings.json"))) ?? new(); }
+        catch { settings=new(); }
+        settings.OnboardingCompleted|=OnboardingState.IsCompleted(Folder);
+        return settings;
     }
     public void Save()
     {
         if(!persist)return;
         Directory.CreateDirectory(Folder);
+        OnboardingCompleted|=OnboardingState.IsCompleted(Folder);
+        if(OnboardingCompleted)OnboardingState.Complete(Folder);
         var path = Path.Combine(Folder, "settings.json");
         File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(this));
         File.Move(path + ".tmp", path, true);

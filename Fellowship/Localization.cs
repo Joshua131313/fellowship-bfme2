@@ -91,9 +91,9 @@ public sealed class L : INotifyPropertyChanged
         public object Convert(object value,Type target,object parameter,CultureInfo culture)=>error?ErrorMessage(text):T(text);
         public object ConvertBack(object value,Type target,object parameter,CultureInfo culture)=>Binding.DoNothing;
     }
-    public static void Bind(DependencyObject target,DependencyProperty property,string text)=>BindingOperations.SetBinding(target,property,new Binding(nameof(Direction)){Source=Current,Converter=new Translation(text)});
-    public static void BindError(DependencyObject target,DependencyProperty property,string text)=>BindingOperations.SetBinding(target,property,new Binding(nameof(Direction)){Source=Current,Converter=new Translation(text,true)});
-    public static void Window(Window window)=>window.SetBinding(FrameworkElement.FlowDirectionProperty,new Binding(nameof(Direction)){Source=Current});
+    public static void Bind(DependencyObject target,DependencyProperty property,string text)=>BindingOperations.SetBinding(target,property,new Binding(nameof(Direction)){Mode=BindingMode.OneWay,Source=Current,Converter=new Translation(text)});
+    public static void BindError(DependencyObject target,DependencyProperty property,string text)=>BindingOperations.SetBinding(target,property,new Binding(nameof(Direction)){Mode=BindingMode.OneWay,Source=Current,Converter=new Translation(text,true)});
+    public static void Window(Window window)=>window.SetBinding(FrameworkElement.FlowDirectionProperty,new Binding(nameof(Direction)){Mode=BindingMode.OneWay,Source=Current});
     public static ComboBox LanguagePicker(Settings settings)
     {
         var box=new ComboBox{ItemsSource=Languages,DisplayMemberPath="Name",SelectedItem=Languages.FirstOrDefault(l=>l.Code==settings.Language)??Languages[0],MinWidth=180,FlowDirection=FlowDirection.LeftToRight};
@@ -107,11 +107,11 @@ public sealed class L : INotifyPropertyChanged
     }
     public static MultiBinding Display(string path)
     {
-        var binding=new MultiBinding{Converter=new DisplayConverter()};binding.Bindings.Add(new Binding(path));binding.Bindings.Add(new Binding(nameof(Direction)){Source=Current});return binding;
+        var binding=new MultiBinding{Mode=BindingMode.OneWay,Converter=new DisplayConverter()};binding.Bindings.Add(new Binding(path));binding.Bindings.Add(new Binding(nameof(Direction)){Mode=BindingMode.OneWay,Source=Current});return binding;
     }
     public static void Choices(ComboBox box)
     {
-        var binding=new MultiBinding{Converter=new DisplayConverter()};binding.Bindings.Add(new Binding());binding.Bindings.Add(new Binding(nameof(Direction)){Source=Current});
+        var binding=new MultiBinding{Mode=BindingMode.OneWay,Converter=new DisplayConverter()};binding.Bindings.Add(new Binding());binding.Bindings.Add(new Binding(nameof(Direction)){Mode=BindingMode.OneWay,Source=Current});
         var text=new FrameworkElementFactory(typeof(TextBlock));text.SetValue(TextBlock.TextWrappingProperty,TextWrapping.Wrap);text.SetBinding(TextBlock.TextProperty,binding);box.ItemTemplate=new DataTemplate{VisualTree=text};
     }
 }

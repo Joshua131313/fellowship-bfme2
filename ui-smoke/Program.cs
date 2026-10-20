@@ -188,12 +188,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.110-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.110/Fellowship-0.1.110-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.110",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.111-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.111/Fellowship-0.1.111-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.111",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.110","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.110",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.111","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.111",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -304,7 +304,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.110"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.110/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.111"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.111/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -409,7 +409,7 @@ class Program
   Console.WriteLine("PASS searchable player dropdown and 30-player layout");
   Render(browser.CreatePlayerInfo(browser,"Aragorn","26.42.214.47",new Player{Name="Aragorn",Team=2,Spot=3,Ready=true}),"dist/preview-player-info.png");
   Render(browser.CreateProfileEditor(browser),"dist/preview-profile-editor.png");
-  var updatePreview=new UpdateProgressWindow("0.1.110");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.111");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -418,7 +418,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.110\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.111\nBFME2 1.00 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);
@@ -527,6 +527,10 @@ class Program
   Appearance.Apply("Black");
   if(((SolidColorBrush)UI.Brush("#101216")).Color!=Colors.Black||((SolidColorBrush)UI.Brush("#171A20")).Color!=Colors.Black)throw new Exception("Black theme surfaces are not true black");
   customization.Appearance="Black";SettingsBackup.Restore(restoredCustomization,SettingsBackup.Parse(SettingsBackup.Export(customization)));if(restoredCustomization.Appearance!="Black")throw new Exception("Black theme backup failed");
+  var systemTranscript=new ChatTranscript();
+  systemTranscript.AppendSystem("BFME2 stopped. You remain in the Fellowship room.");
+  var systemRun=new System.Windows.Documents.Run();L.Bind(systemRun,System.Windows.Documents.Run.TextProperty,"Settings");
+  var errorRun=new System.Windows.Documents.Run();L.BindError(errorRun,System.Windows.Documents.Run.TextProperty,"Unknown native error");
   var localized=UI.LocalizedText("Settings");
   foreach(var locale in L.Languages)
   {
@@ -550,6 +554,11 @@ class Program
     Render(welcome,"dist/preview-onboarding-"+locale.Code+".png");
     Render(new RoomEditor(null,Settings.InMemory(),new Room{Title="Battle for Rhun"}),"dist/preview-room-editor-"+locale.Code+".png");
     if(localized.Text!=L.T("Settings"))throw new Exception("Live language binding stale");
+    if(systemRun.Text!=L.T("Settings")||errorRun.Text!=L.ErrorMessage("Unknown native error"))throw new Exception("Run translation binding stale");
+    systemTranscript.AppendSystem("You are now the room host.");
+    var transcriptText=new System.Windows.Documents.TextRange(systemTranscript.Document.ContentStart,systemTranscript.Document.ContentEnd).Text;
+    if(!transcriptText.Contains(L.T("BFME2 stopped. You remain in the Fellowship room.")))throw new Exception("Existing system message did not change language");
+
   }
   if(new MapPreview().FlowDirection!=FlowDirection.LeftToRight)throw new Exception("Arabic mirrored map coordinates");
   L.Apply("fr");var frenchBrowser=new BrowserWindow(Settings.InMemory());SelectTab(frenchBrowser,"Settings");if(TabNodes(frenchBrowser).OfType<System.Windows.Controls.Button>().Any(b=>(b.Content as string)==L.T("Open onboarding")))throw new Exception("Onboarding button remains");Render(frenchBrowser,"dist/preview-settings-fr.png");frenchBrowser.Peer.Dispose();
@@ -565,6 +574,17 @@ class Program
   if(roundTrip?.Language!="tr"||roundTrip.OnboardingCompleted!=true)throw new Exception("Language and onboarding persistence failed");
   L.Apply("en");
   Console.WriteLine("PASS five bundled languages, live translation and Arabic layout with unchanged map coordinates");
+  var onboardingFolder=Path.Combine(Path.GetTempPath(),"Fellowship-onboarding-"+Guid.NewGuid().ToString("N"));
+  try{
+    if(OnboardingState.IsCompleted(onboardingFolder))throw new Exception("Fresh install skipped onboarding");
+    OnboardingState.Complete(onboardingFolder);OnboardingState.Complete(onboardingFolder);
+    File.WriteAllText(Path.Combine(onboardingFolder,"settings.json"),"{\"OnboardingCompleted\":false}");
+    if(!OnboardingState.IsCompleted(onboardingFolder))throw new Exception("Old preferences reset onboarding");
+  }finally{if(Directory.Exists(onboardingFolder))Directory.Delete(onboardingFolder,true);}
+  var dismissedSettings=Settings.InMemory();var dismissed=new OnboardingWindow(dismissedSettings);dismissed.Close();
+  if(!dismissedSettings.OnboardingCompleted)throw new Exception("Dismissed onboarding would reopen");
+  Console.WriteLine("PASS onboarding completion and dismissal remain completed independently of preferences");
+
   tabsSettings.Appearance="Black";var blackBrowser=new BrowserWindow(tabsSettings);SelectTab(blackBrowser,"Settings");Render(blackBrowser,"dist/preview-settings-black.png");blackBrowser.Peer.Dispose();Appearance.Apply("Dark");
   Console.WriteLine("PASS customization backup, WAV volume processing, and light/dark theme rendering");
   Console.WriteLine("PASS WPF resources, icon, browser and room editor render without opening desktop windows");

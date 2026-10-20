@@ -10,7 +10,10 @@ public sealed class OnboardingWindow : Window
         var page=new Grid();UI.At(body,page,0);
         var footer=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new(24)};UI.At(body,footer,1);
         int step=0;
-        void Finish(){settings.OnboardingCompleted=true;settings.Save();Close();}
+        // Choices already autosave. Finishing or dismissing this first-run window
+        // completes onboarding; it must not reappear on the next launch.
+        Closing+=(_,_)=>{settings.OnboardingCompleted=true;settings.Save();};
+        void Finish(){Close();}
         var back=UI.Button("Back",()=>{});back.Margin=new(0,0,10,0);
         var next=UI.Button("Continue",()=>{},true);
         back.Click+=(_,_)=>{step=0;Render();};next.Click+=(_,_)=>{if(step==0){step=1;Render();}else Finish();};
