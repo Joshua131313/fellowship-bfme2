@@ -1693,4 +1693,7 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Only the host can request players to ready up." xml:space="preserve">
     <value>Yalnızca ev sahibi oyunculardan hazır olmalarını isteyebilir.</value>
   </data>
+  <data name="Ready check" xml:space="preserve">
+    <value>Hazırlık kontrolü</value>
+  </data>
 </root>

@@ -6,7 +6,7 @@ internal static class MessageAlert
     static Settings preferences=new();
     static readonly Dictionary<string,SoundPlayer> players=new();
     public static void Configure(Settings settings){preferences=settings;if(!settings.SoundsEnabled||settings.SoundVolume==0)foreach(var player in players.Values)player.Stop();}
-    public static readonly (string Key,string Label)[] Choices=[("message","Private messages"),("sent","Messages sent"),("room-message","Room messages"),("invite","Invitations"),("room-join","Player joins room"),("room-leave","Player leaves room"),("friend-online","Friend online"),("friend-offline","Friend offline")];
+    public static readonly (string Key,string Label)[] Choices=[("ready-request","Ready check"),("message","Private messages"),("sent","Messages sent"),("room-message","Room messages"),("invite","Invitations"),("room-join","Player joins room"),("room-leave","Player leaves room"),("friend-online","Friend online"),("friend-offline","Friend offline")];
     public static void PlayPresence(bool online)=>PlaySound(online?"friend-online":"friend-offline");
     public static void Effect(string name)=>PlaySound(name);
     public static void Play()=>PlaySound("message");

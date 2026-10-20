@@ -1693,4 +1693,7 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Only the host can request players to ready up." xml:space="preserve">
     <value>Solo el anfitrión puede pedir que los jugadores se preparen.</value>
   </data>
+  <data name="Ready check" xml:space="preserve">
+    <value>Comprobación de preparación</value>
+  </data>
 </root>

@@ -1693,4 +1693,7 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Only the host can request players to ready up." xml:space="preserve">
     <value>Seul l’hôte peut demander aux joueurs de se préparer.</value>
   </data>
+  <data name="Ready check" xml:space="preserve">
+    <value>Demande de préparation</value>
+  </data>
 </root>

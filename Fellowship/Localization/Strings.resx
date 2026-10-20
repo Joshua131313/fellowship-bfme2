@@ -1693,4 +1693,7 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Only the host can request players to ready up." xml:space="preserve">
     <value>Only the host can request players to ready up.</value>
   </data>
+  <data name="Ready check" xml:space="preserve">
+    <value>Ready check</value>
+  </data>
 </root>
