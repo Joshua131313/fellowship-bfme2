@@ -86,7 +86,7 @@ AFK status can follow idle detection automatically, or you can set it yourself. 
 
 Use room chat for the group and private messages for individual conversations. Compact Discord-style rows put every player's name, time, and message together on the left, with natural wrapping for longer text; Arabic follows the right-to-left layout. Short messages occupy one line so more of the conversation stays visible. Sent messages appear locally immediately, while delivery is still pending, and the composer stays available for your next message. Pending status stays inline and disappears after confirmation. If delivery cannot be confirmed, the message stays in place with a **Retry** action; retries and room echoes reuse its identity to avoid duplicates.
 
-The room name appears in the window title bar, leaving more space for the players list and chat. Their divider lets you adjust how much space each section uses.
+The room name appears in the window title bar, leaving more space for the players list and chat. The players panel initially fits eight compact rows, and chat uses the remaining height. Their divider lets you adjust how much space each section uses; a compact bottom bar keeps readiness and room actions close at hand.
 
 Room chat shows player joins, departures, and Fellowship room host changes as compact system messages. Opening a room or recovering its connection does not repeat the existing roster as new joins.
 

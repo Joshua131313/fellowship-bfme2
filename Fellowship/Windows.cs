@@ -306,11 +306,7 @@ public sealed partial class BrowserWindow : Window
         updateTimer.Start();Dispatcher.BeginInvoke(new Action(async()=>await CheckUpdateNotice()));
         Activated+=async(_,_)=>await CheckUpdateNotice();
         Loaded+=async(_,_)=>await CheckUpdateNotice();Closed+=(_,_)=>{updateTimer.Stop();AppUpdates.AvailabilityChanged-=UpdateBanner;AppUpdates.InstallationChanged-=UpdateBanner;};
-        var toolbar = new Grid { Margin = new(24,20,24,16) }; toolbar.ColumnDefinitions.Add(new()); toolbar.ColumnDefinitions.Add(new() { Width = UI.Auto });
-        var gameCaption=UI.LocalizedText("THE BATTLE FOR MIDDLE-EARTH II",10,UI.Muted,true);gameCaption.Margin=new(0,6,0,0);
-        toolbar.Children.Add(UI.Stack(UI.LocalizedText("Game rooms",25,"#F3F4F8",true),gameCaption));
-        var actions = UI.Row(UI.Button("＋  Host room",CreateRoom,true)); foreach(var button in actions.Children.OfType<Button>()){button.Height=34;button.Padding=new(12,5,12,5);} Grid.SetColumn(actions,1); toolbar.Children.Add(actions); UI.At(body,toolbar,1);
-        var filters = new Grid();filters.ColumnDefinitions.Add(new(){Width=new(240)});filters.ColumnDefinitions.Add(new(){Width=new(172)});filters.ColumnDefinitions.Add(new());
+        var filters = new Grid();filters.ColumnDefinitions.Add(new(){Width=new(240)});filters.ColumnDefinitions.Add(new(){Width=new(172)});filters.ColumnDefinitions.Add(new());filters.ColumnDefinitions.Add(new(){Width=UI.Auto});
         ConfigureNetworkPicker();
         serverHint.Margin=new(0,10,0,0);
         var networkLabel=UI.LocalizedText("SERVER",10,UI.Muted,true);networkLabel.Margin=new(0,0,0,8);
@@ -321,6 +317,7 @@ public sealed partial class BrowserWindow : Window
         var modeLabel=UI.LocalizedText("MODE",10,UI.Muted,true);modeLabel.Margin=new(0,0,0,8);var modeField=UI.Stack(modeLabel,modeFilter);modeField.Margin=new(0,0,16,0);Grid.SetColumn(modeField,1);filters.Children.Add(modeField);
         var searchBox=new Grid();search.Width=double.NaN;searchBox.Children.Add(search);var searchHint=UI.LocalizedText("Search rooms…",12,UI.Muted);searchHint.Margin=new(12,0,0,0);searchHint.VerticalAlignment=VerticalAlignment.Center;searchHint.IsHitTestVisible=false;searchBox.Children.Add(searchHint);search.TextChanged+=(_,_)=>searchHint.Visibility=search.Text.Length==0?Visibility.Visible:Visibility.Collapsed;System.Windows.Automation.AutomationProperties.SetName(search,"Search rooms");
         var searchLabel=UI.LocalizedText("SEARCH",10,UI.Muted,true);searchLabel.Margin=new(0,0,0,8);var searchField=UI.Stack(searchLabel,searchBox);Grid.SetColumn(searchField,2);filters.Children.Add(searchField);
+        var hostRoom=UI.Button("＋  Host room",CreateRoom,true);hostRoom.Height=34;hostRoom.Padding=new(12,5,12,5);hostRoom.Margin=new(12,0,0,0);hostRoom.VerticalAlignment=VerticalAlignment.Bottom;System.Windows.Automation.AutomationProperties.SetName(hostRoom,"Host room");Grid.SetColumn(hostRoom,3);filters.Children.Add(hostRoom);
         var filterCard=UI.Card(UI.Stack(filters,serverHint),"#191D24",12);filterCard.Margin=new(24,0,24,12);UI.At(body,filterCard,2);ConfigureRadminGroups();
         var table = new Grid();
         void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, SortMemberPath=property=="Slots"?"PlayerCount":property, Binding = property=="Status"?L.Display(property):new Binding(property), MinWidth = star ? (property == "Title" ? 160 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
@@ -375,7 +372,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.132   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.133   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1095,11 +1092,18 @@ public sealed class RoomWindow : Window
         UI.At(body,patchWarning,0);
         var columns=new Grid{Margin=new(22,12,22,16)};columns.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});columns.ColumnDefinitions.Add(new(){Width=new(300)});
         var left=new Grid{Margin=new(0,0,14,0)};
-        left.RowDefinitions.Add(new(){Height=new(4,GridUnitType.Star),MinHeight=work.Height<700?72:100});
+        var rosterSize=new RowDefinition{Height=new(256),MinHeight=work.Height<700?72:100};left.RowDefinitions.Add(rosterSize);
         left.RowDefinitions.Add(new(){Height=new(12)});
-        left.RowDefinitions.Add(new(){Height=new(5,GridUnitType.Star),MinHeight=work.Height<700?100:160});
+        var chatSize=new RowDefinition{Height=UI.Star,MinHeight=work.Height<700?100:160};left.RowDefinitions.Add(chatSize);
+        left.SizeChanged+=(_,_)=>
+        {
+            // Keep the requested splitter height, but let the roster scroll on
+            // short windows before taking space from the chat composer/footer.
+            double maximum=Math.Max(rosterSize.MinHeight,left.ActualHeight-12-chatSize.MinHeight);
+            if(Math.Abs(rosterSize.MaxHeight-maximum)>.5)rosterSize.MaxHeight=maximum;
+        };
         var roster=new Grid();UI.Rows(roster,UI.Auto,UI.Star);playerCount.Margin=new(10,6,10,4);UI.At(roster,playerCount,0);UI.At(roster,players,1);UI.At(left,UI.Card(roster,"#191D24",0),0);
-        var resizeChat=new GridSplitter{HorizontalAlignment=HorizontalAlignment.Stretch,VerticalAlignment=VerticalAlignment.Stretch,Background=Brushes.Transparent,ResizeDirection=GridResizeDirection.Rows,ResizeBehavior=GridResizeBehavior.PreviousAndNext,ShowsPreview=true,Cursor=Cursors.SizeNS};
+        var resizeChat=new GridSplitter{HorizontalAlignment=HorizontalAlignment.Stretch,VerticalAlignment=VerticalAlignment.Stretch,Background=Brushes.Transparent,ResizeDirection=GridResizeDirection.Rows,ResizeBehavior=GridResizeBehavior.PreviousAndNext,ShowsPreview=true,Cursor=Cursors.SizeNS,Focusable=true,KeyboardIncrement=8};
         var splitterHit=new FrameworkElementFactory(typeof(Border));splitterHit.SetValue(Border.BackgroundProperty,Brushes.Transparent);
         var splitterGrip=new FrameworkElementFactory(typeof(Border));splitterGrip.SetValue(Border.WidthProperty,44d);splitterGrip.SetValue(Border.HeightProperty,3d);splitterGrip.SetValue(Border.CornerRadiusProperty,new CornerRadius(2));splitterGrip.SetValue(Border.BackgroundProperty,UI.Brush("#343F51"));splitterGrip.SetValue(FrameworkElement.HorizontalAlignmentProperty,HorizontalAlignment.Center);splitterGrip.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center);splitterHit.AppendChild(splitterGrip);
         resizeChat.Template=new ControlTemplate(typeof(GridSplitter)){VisualTree=splitterHit};System.Windows.Automation.AutomationProperties.SetName(resizeChat,L.T("ROOM CHAT"));UI.At(left,resizeChat,1);
@@ -1191,7 +1195,7 @@ public sealed class RoomWindow : Window
         var note=UI.LocalizedText("Any room member can host BFME2. Use the patch shown by the room and join the native lobby manually.",11,"#B5A98D");note.Margin=new(0,14,0,0);right.Children.Add(note);
         var settingsCard=UI.Card(UI.Scroll(right),"#191D24",16);Grid.SetColumn(settingsCard,1);columns.Children.Add(settingsCard);UI.At(body,columns,1);
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
-        var state=UI.Stack(consent,readySummary,UI.LocalizedText("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
+        var state=UI.Stack(consent,readySummary);state.Margin=new(22,8,10,8);state.VerticalAlignment=VerticalAlignment.Center;consent.Margin=new(0);L.Bind(consent,ContentControl.ContentProperty,"Ready · allow host to launch BFME2");readySummary.TextWrapping=TextWrapping.NoWrap;readySummary.TextTrimming=TextTrimming.CharacterEllipsis;readySummary.Visibility=Visibility.Collapsed;bottom.Children.Add(state);
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&!PatchChanging&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>PatchChanging?"Switching patch…":launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
@@ -1199,7 +1203,7 @@ public sealed class RoomWindow : Window
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
         requestReady=UI.AsyncButton("Request ready",async()=>{await app.Peer.RequestReady();nextReadyRequest=DateTimeOffset.UtcNow.AddSeconds(5);UpdateLaunchActions();AppendSystem("Ready request sent to room participants.");});
         requestReady.ToolTip="Ask everyone in the room to ready up";
-        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),requestReady,launchMine,launch,abort);actions.Margin=new(0,12,14,12);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
+        var actions=UI.Row(UI.AsyncButton("Leave",app.CloseRoom),requestReady,launchMine,launch,abort);actions.Margin=new(0,8,14,8);Grid.SetColumn(actions,1);bottom.Children.Add(actions);UI.At(body,bottom,2);
         launchStateTimer.Tick+=(_,_)=>{UpdateLaunchActions();UpdatePatchNotice();};Loaded+=(_,_)=>launchStateTimer.Start();Closed+=(_,_)=>{launchStateTimer.Stop();launchCancellation?.Cancel();readyPrompt?.Close();};UpdateLaunchActions();
 
         bool leaveQueued=false;
@@ -1389,7 +1393,7 @@ public sealed class RoomWindow : Window
         CommandManager.InvalidateRequerySuggested();
         var room=app.Peer.Current;
         ObserveRoomActivity(room,app.Peer.IsReconnecting);
-        if(room==null){players.Items.Clear();L.Bind(playerCount,TextBlock.TextProperty,"PLAYERS · DISCONNECTED");allowLaunch=false;launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=mapField.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;L.Bind(readySummary,TextBlock.TextProperty,"Return to Game rooms to reconnect.");return;}
+        if(room==null){players.Items.Clear();L.Bind(playerCount,TextBlock.TextProperty,"PLAYERS · DISCONNECTED");allowLaunch=false;launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=mapField.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;readySummary.Visibility=Visibility.Visible;L.Bind(readySummary,TextBlock.TextProperty,"Return to Game rooms to reconnect.");L.Bind(readySummary,FrameworkElement.ToolTipProperty,"Return to Game rooms to reconnect.");return;}
         if(app.Peer.IsHost)
         {
             try{app.Settings.RememberHost(room);}
@@ -1456,7 +1460,8 @@ public sealed class RoomWindow : Window
 
         if(!savingRules)SyncInlineRules(room);
         int readyCount=room.Players.Count(p=>p.Ready&&!p.Reconnecting);
-        L.Bind(readySummary,TextBlock.TextProperty,reconnecting?"Reconnecting to room…":room.Players.Any(p=>p.Reconnecting)?"Waiting for disconnected players to reconnect.":launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.");
+        string footerStatus=reconnecting?"Reconnecting to room…":room.Players.Any(p=>p.Reconnecting)?"Waiting for disconnected players to reconnect.":launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":"";
+        L.Bind(readySummary,TextBlock.TextProperty,footerStatus);L.Bind(readySummary,FrameworkElement.ToolTipProperty,footerStatus);readySummary.Visibility=footerStatus.Length>0?Visibility.Visible:Visibility.Collapsed;readySummary.Margin=new(0,!host&&footerStatus.Length>0?4:0,0,0);
         UpdateLaunchActions();
         launch.IsEnabled=!launching&&room.AllGuestsReady;
         consent.Visibility=host?Visibility.Collapsed:Visibility.Visible;consent.IsEnabled=!reconnecting;
