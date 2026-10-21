@@ -8,6 +8,8 @@ The native hosting player's team occupies the right side (Team 2); the other tea
 
 At native match start, the app records the actual BFME2 host and lineup. When the next native lobby has a different hosting team, that lineup determines the mirrored positions. Repeated reports do not toggle sides. A different host from the same team leaves that team on the right. Concurrent manual changes cancel a pending plan. History lasts for the Fellowship room; it is not persisted across a full application restart. All participants need the updated app and enabled live sync for coordinated changes.
 
+Replaying a match after a crash or out-of-sync error follows the same hosting-team rule; there is no game counter that automatically flips sides. Explicit native spot selections take priority. Players whose new-lobby spot is Random fall back to their previous match's vertical position, including when the same player hosts again. Known positions are allocated before players without a remembered position, and every target remains unique.
+
 The Fellowship room owner distributes the plan, but is not assumed to host BFME2. A protocol test uses different players for those roles and verifies the plan, positions, and native hosting history on every participant. Other modes and maps retain ordinary saved-preference behavior.
 
 ## Native evidence
@@ -33,6 +35,8 @@ Replacement history is retained while the sync helper remains alive, including s
 ## Validation
 
 `RotationTests` covers 2/3/4-player team layouts, observer versus Random, temporary joins, team ambiguity, simultaneous replacements, occupied/manual choices, map changes, and recreated/reused native lobby identities. Existing UI and protocol suites cover placement synchronization and multiplayer behavior. These are simulated lobby-state tests, not a completed live multi-PC substitution test.
+
+Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release -- --rhun-sides` for the focused rotation and side-plan regressions. Recreated-match coverage uses deliberately unsorted remembered positions, every possible hosting player, retained versus Random spots, and explicit new selections during same-team and opposing-team host changes. The protocol suite's `--rhun-sides` scenario checks propagation with a Fellowship room owner who is not the BFME2 host.
 
 # Installer source recovery
 

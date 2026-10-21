@@ -50,6 +50,43 @@ static class RhunSideTests
         Check(!RhunSides.Apply(room,next,second)&&ReferenceEquals(nextPlan,room.SidePlan),"Duplicate reports flipped the sides again");
         var edited=next.Lobby with{Slots=next.Lobby.Slots.Select(s=>s.Ip==first?s with{Team=3}:s).ToList()};
         Check(RhunSides.Apply(room,next with{Lobby=edited},second)&&room.SidePlan!.Cancelled,"Concurrent manual edit was overwritten");
+        Room PreviousMatch()
+        {
+            // Deliberately differ from connection-address order; sorted fixtures
+            // can hide unwanted top/middle/bottom reassignments.
+            int[] positions=[6,4,5,2,3,1];
+            var previous=new Room{Mode="3v3",Spots=room.Spots.ToList(),LastRhunHost=first,
+                Players=Enumerable.Range(1,6).Select(i=>new Player{Address="10.0.0."+i,Team=i<=3?2:1,Spot=positions[i-1]}).ToList()};
+            previous.LastRhunLineup=previous.Players.ToDictionary(p=>p.Address,p=>new LivePlacement.Choice(p.Team,p.Spot));
+            return previous;
+        }
+        foreach(string nativeHost in Enumerable.Range(1,6).Select(i=>"10.0.0."+i))
+        foreach(bool random in new[]{false,true})
+        {
+            room=PreviousMatch();
+            var remembered=room.LastRhunLineup.ToDictionary();
+            var replay=Snapshot(nativeHost);
+            if(random)replay=replay with{Slots=replay.Slots.Select(s=>s with{Spot=-1}).ToList()};
+            Check(RhunSides.Apply(room,new(Guid.NewGuid().ToString("N"),replay),nativeHost),"Recreated match did not produce a plan");
+            bool sameTeam=remembered[nativeHost].Team==remembered[first].Team;
+            foreach(var player in room.Players)
+            {
+                var old=room.Spots.Single(s=>s.Number==remembered[player.Address].Spot);
+                var assigned=room.Spots.Single(s=>s.Number==player.Spot);
+                Check(Math.Abs(old.Y-assigned.Y)<.001,"Recreated match lost a player's vertical position");
+                Check((old.X==assigned.X)==sameTeam,"Replay or same-team host change unexpectedly flipped sides");
+            }
+        }
+        foreach(string nativeHost in new[]{first,"10.0.0.2",second})
+        {
+            room=PreviousMatch();
+            var newSelection=Snapshot(nativeHost);
+            newSelection=newSelection with{Slots=newSelection.Slots.Select(s=>s with{Spot=s.Ip==first?4:-1}).ToList()};
+            Check(RhunSides.Apply(room,new(Guid.NewGuid().ToString("N"),newSelection),nativeHost),"Explicit new selection did not produce a plan");
+            Check(room.Players.First(p=>p.Address==first).Spot==(nativeHost==second?2:5),"Remembered position overwrote an explicit new native selection");
+            Check(room.Players.Select(p=>p.Spot).Distinct().Count()==6,"Explicit choice and remembered positions collided");
+        }
+        Console.WriteLine("PASS replayed matches preserve vertical positions with retained or Random spots for every host; explicit selections take priority without collisions");
         room.Mode="2v2";Check(!RhunSides.Apply(room,new(Guid.NewGuid().ToString("N"),Snapshot(first)),first),"2v2 received Rhun rules");
         room.Mode="Custom";Check(!RhunSides.Enabled(room),"Custom mode received Rhun rules");
         room.Mode="3v3";room.MapPath="maps\\other.map";Check(!RhunSides.Enabled(room),"Other map received Rhun rules");

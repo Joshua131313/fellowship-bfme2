@@ -61,9 +61,16 @@ public static class RhunSides
         {
             if(group.Count()>3)return false;
             var side=group.Key==2?right:left;var free=side.ToList();
-            foreach(var slot in group.OrderBy(s=>s.Ip,StringComparer.Ordinal))
+            int Original(NativeLobby.Slot slot)=>slot.Spot>=0?slot.Spot+1:
+                room.LastRhunLineup.TryGetValue(slot.Ip,out var old)?old.Spot:0;
+            // Current selections win; Random falls back to the last match even
+            // when the same player hosts a replay. Allocate known positions before
+            // new substitutes so an unknown preference cannot take a saved seat.
+            foreach(var slot in group.OrderByDescending(s=>s.Spot>=0)
+                .ThenByDescending(s=>room.Spots.Any(p=>p.Number==Original(s)))
+                .ThenBy(s=>s.Ip,StringComparer.Ordinal))
             {
-                int original=swapped&&room.LastRhunLineup.TryGetValue(slot.Ip,out var old)?old.Spot:slot.Spot+1;
+                int original=Original(slot);
                 var coordinate=room.Spots.FirstOrDefault(s=>s.Number==original);
                 var target=free.OrderBy(s=>coordinate==null?0:Math.Abs(s.Y-coordinate.Y)).ThenBy(s=>s.Number).First();
                 free.Remove(target);

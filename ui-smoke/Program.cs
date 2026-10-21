@@ -7,6 +7,8 @@ class Program
 {
  [STAThread] static void Main(string[] args)
  {
+  if(args.Length==1&&args[0]=="--rhun-sides")
+  {RotationTests.Run();RhunSideTests.Run();return;}
   if(args.Length==1&&args[0]=="--menu-layout")
   {var menuApp=new App(resourcesOnly:true);menuApp.InitializeComponent();Appearance.Apply("Dark");MenuUiTests.Run();return;}
   if(args.Length==2&&args[0]=="--radmin-read")
