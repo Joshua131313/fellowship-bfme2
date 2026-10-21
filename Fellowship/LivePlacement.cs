@@ -189,7 +189,7 @@ public static class LivePlacement
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
             (Choice Requested,Choice Confirmed)? rotationImport=null;
-            string nativeSession="",lastReport="",appliedSideSession="";long lastReportTick=0;NativeLobby.Snapshot? lastLobby=null;bool reportedStart=false;
+            string nativeSession="",lastReport="",appliedSidePlan="";long lastReportTick=0;NativeLobby.Snapshot? lastLobby=null;bool reportedStart=false;
             int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
@@ -291,12 +291,14 @@ public static class LivePlacement
                             if(lastReport!=fingerprint||Environment.TickCount64-lastReportTick>2000){lastReport=fingerprint;lastReportTick=Environment.TickCount64;await Send(pipe,new Reply("Coordinating Rhûn team sides…",Lobby:new(nativeSession,snapshot)),timeout.Token);continue;}
                         }
                         var plan=command.Sides;
-                        if(plan is {Cancelled:true}&&plan.Session!=appliedSideSession)
+                        if(plan is {Started:true})
+                        {await Send(pipe,new Reply("Waiting for the Rhûn host's team selection…"),timeout.Token);continue;}
+                        if(plan is {Cancelled:true}&&plan.Key!=appliedSidePlan)
                         {
-                            appliedSideSession=plan.Session;reconcile.Remember(command.Choice,actual);
+                            appliedSidePlan=plan.Key;reconcile.Remember(command.Choice,actual);
                             await Send(pipe,new Reply("Native selections kept",actual,actual!=command.Choice),timeout.Token);continue;
                         }
-                        if(plan is {Cancelled:false,Started:false}&&plan.Session!=appliedSideSession&&plan.Host==snapshot.HostAddress&&plan.Moves.TryGetValue(snapshot.Local.Ip,out var move)&&!snapshot.Local.Observer)
+                        if(plan is {Cancelled:false,Started:false}&&plan.Key!=appliedSidePlan&&plan.Host==snapshot.HostAddress&&plan.Moves.TryGetValue(snapshot.Local.Ip,out var move)&&!snapshot.Local.Observer)
                         {
                             var target=new Choice(move.Team,move.Spot,actual.Color);
                             if(actual.Team!=target.Team||actual.Spot!=target.Spot)
@@ -311,10 +313,13 @@ public static class LivePlacement
                                 }
                                 await Send(pipe,new Reply("Coordinating Rhûn team sides…"),timeout.Token);continue;
                             }
-                            appliedSideSession=plan.Session;reconcile.Remember(command.Choice,actual);
+                            appliedSidePlan=plan.Key;reconcile.Remember(command.Choice,actual);
                         }
                         else if((plan==null||plan.Host!=snapshot.HostAddress)&&snapshot.Local.Team>=0)
                         {await Send(pipe,new Reply("Waiting for the Rhûn host's team selection…"),timeout.Token);continue;}
+                        if(plan is {Cancelled:false,Started:false}&&plan.Host==snapshot.HostAddress&&
+                           snapshot.Local.Active&&!plan.Moves.ContainsKey(snapshot.Local.Ip))
+                        {await Send(pipe,new Reply("Coordinating Rhûn team sides…"),timeout.Token);continue;}
                     }
                     if(snapshot.Local.Observer)
                     {

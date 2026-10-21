@@ -58,13 +58,9 @@ public sealed class LobbyRotation
         var waiting=snapshot.Slots.Where(s=>s.State==6&&s.Active&&s.Team>=0&&s.Spot<0&&candidates.Contains(s.Key))
             .OrderBy(s=>s.Key,StringComparer.Ordinal).ToArray();
         var assigned=new Dictionary<string,int>();
-        // Returning players have first refusal on their own free position.
+        // Free spots are suggestions for Random players, never reservations for
+        // former occupants. Explicit native choices always take precedence.
         foreach(var slot in waiting)
-        {
-            var own=available.Where(s=>s.Value.Team==slot.Team&&s.Value.Player==slot.Key).OrderBy(s=>s.Key).Select(s=>(int?)s.Key).FirstOrDefault();
-            if(own is {} spot){assigned[slot.Key]=spot;available.Remove(spot);}
-        }
-        foreach(var slot in waiting.Where(s=>!assigned.ContainsKey(s.Key)))
         {
             var free=available.Where(s=>s.Value.Team==slot.Team).OrderBy(s=>s.Key).Select(s=>(int?)s.Key).FirstOrDefault();
             if(free is {} spot){assigned[slot.Key]=spot;available.Remove(spot);}

@@ -10,6 +10,10 @@ At native match start, the app records the actual BFME2 host and lineup. When th
 
 Replaying a match after a crash or out-of-sync error follows the same hosting-team rule; there is no game counter that automatically flips sides. Explicit native spot selections take priority. Players whose new-lobby spot is Random fall back to their previous match's vertical position, including when the same player hosts again. Known positions are allocated before players without a remembered position, and every target remains unique.
 
+Assignment starts with the players who have joined; it does not wait for six active players. The plan has revisions within the same native lobby, so late arrivals can be assigned after the current clear phase completes. Departing players and observers release their reservations. Continuing players retain their current selections, including a deliberate change to Random. Arrivals seen during the clear phase retain their chosen relationship to the host's team even if the native team labels change while clearing.
+
+Substitutes can choose any available position. A player can give up a position to a substitute and select another one; a remembered position is a fallback, not a reservation or a returning-player entitlement. Manual edits during an unfinished plan cancel its writes and import the native layout atomically, avoiding conflicts with the cancelled reservations. If a historical team cannot be identified unambiguously, or a side contains more than three active players, the app keeps the current layout instead of guessing or partially publishing a plan.
+
 The Fellowship room owner distributes the plan, but is not assumed to host BFME2. A protocol test uses different players for those roles and verifies the plan, positions, and native hosting history on every participant. Other modes and maps retain ordinary saved-preference behavior.
 
 ## Native evidence
@@ -26,7 +30,7 @@ Disassembly of the verified installed game.dat confirms that the faction adapter
 
 The helper requires five readings and two seconds of unchanged native roster/team/spot/faction data. Connecting players initially appearing as observers do not create a vacancy: the algorithm only learns positions actually occupied by active players.
 
-It remembers each occupied starting position's native team and last occupant. An active human with Random position can inherit a known free position for their selected team. Returning players have priority on their own available position; remaining replacements are allocated in connection-address order. Existing positions and manual changes to Random are respected. It never guesses a team for someone with no team selected, changes a faction, or writes another player's slot.
+It remembers each occupied starting position's native team. An active human with Random position can inherit a known free position for their selected team. Random replacements are allocated in connection-address order, with no priority for former occupants. Existing positions and manual changes to Random are respected. It never guesses a team for someone with no team selected, changes a faction, or writes another player's slot.
 
 A newly connected observer does not clear saved preferences until that player has been seen active in the native session. Observer selections are imported with their cleared position and are never overwritten by saved active assignments. Shared map/rules sync still runs for a host who observes. The existing countdown, native-session, map-validity, occupied-position and color protections remain. A separate automatic bridge mode rechecks that the local player is not observing, still has Random position, and still has the expected team before changing anything; native color is preserved.
 
@@ -37,6 +41,8 @@ Replacement history is retained while the sync helper remains alive, including s
 `RotationTests` covers 2/3/4-player team layouts, observer versus Random, temporary joins, team ambiguity, simultaneous replacements, occupied/manual choices, map changes, and recreated/reused native lobby identities. Existing UI and protocol suites cover placement synchronization and multiplayer behavior. These are simulated lobby-state tests, not a completed live multi-PC substitution test.
 
 Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release -- --rhun-sides` for the focused rotation and side-plan regressions. Recreated-match coverage uses deliberately unsorted remembered positions, every possible hosting player, retained versus Random spots, and explicit new selections during same-team and opposing-team host changes. The protocol suite's `--rhun-sides` scenario checks propagation with a Fellowship room owner who is not the BFME2 host.
+
+`RhunJoinTests` covers incremental joins during clear and claim, departed observers, explicit spot exchanges, returning players without priority, manual Random choices, native team-label changes, cancellation imports, occupied reservations, invalid/duplicate positions, oversubscribed teams, and frozen plans after match start.
 
 # Installer source recovery
 

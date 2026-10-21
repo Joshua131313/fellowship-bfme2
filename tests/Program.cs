@@ -58,8 +58,19 @@ if(args.Contains("--rhun-sides"))
     await b.SyncRhunLayout(report);
     await Task.Delay(100);
     if(h.Current.SidePlan!=null)throw new Exception("Accepted another player's native host report");
-    await a.SyncRhunLayout(report);
+    var early=lobby with{Slots=lobby.Slots.Take(1).ToList()};
+    await a.SyncRhunLayout(report with{Lobby=early});
     await Until(()=>h.Current.SidePlan?.Host==a.Address&&a.Current?.SidePlan?.Host==a.Address&&b.Current?.SidePlan?.Host==a.Address,"native host plan propagated independently of Fellowship ownership");
+    if(h.Current.SidePlan!.Moves.Count!=1)throw new Exception("Early native plan waited for the full roster");
+    await a.SyncRhunLayout(report with{Lobby=early with{Slots=early.Slots.Select(s=>s with{Team=1,Spot=-1}).ToList()}});
+    await Until(()=>b.Current?.SidePlan?.Ready==true,"early clear phase propagated");
+    string earlyKey=h.Current.SidePlan.Key;
+    lobby=lobby with{Slots=lobby.Slots.Select(s=>s.Ip==a.Address?s with{Team=1,Spot=3}:
+        s.Ip==h.Address?s with{Team=0,Spot=0}:s with{Team=1}).ToList()};
+    report=report with{Lobby=lobby};
+    await a.SyncRhunLayout(report);
+    await Until(()=>new[]{h,a,b}.All(p=>p.Current?.SidePlan is {} plan&&plan.Key!=earlyKey&&plan.Moves.Count==3),"late arrivals received a revised plan within the same native session");
+    if(new[]{h,a,b}.Any(p=>p.Current!.SidePlan!.Session!=report.Session))throw new Exception("Roster revision recreated the native session");
     foreach(var peer in new[]{h,a,b})
     {
         var room=peer.Current!;
