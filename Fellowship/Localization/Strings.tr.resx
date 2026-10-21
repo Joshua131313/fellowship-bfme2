@@ -1789,46 +1789,22 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="This player is outside the selected Radmin group." xml:space="preserve">
     <value>Bu oyuncu seçilen Radmin grubunun dışında.</value>
   </data>
-  <data name="Select one group to disable the others in Radmin VPN. All groups reconnects them." xml:space="preserve">
-    <value>Radmin VPN’de diğerlerini devre dışı bırakmak için bir grup seçin. Tüm gruplar seçeneği hepsini yeniden bağlar.</value>
-  </data>
-  <data name="Selecting a Radmin group disables the others in Radmin VPN. Changing groups leaves your current room." xml:space="preserve">
-    <value>Bir Radmin grubu seçmek diğer grupları Radmin VPN’de devre dışı bırakır. Grup değiştirmek mevcut odadan ayrılır.</value>
-  </data>
-  <data name="Switching Radmin connections…" xml:space="preserve">
-    <value>Radmin bağlantıları değiştiriliyor…</value>
-  </data>
-  <data name="Open Radmin VPN to change its group connections." xml:space="preserve">
-    <value>Grup bağlantılarını değiştirmek için Radmin VPN’i açın.</value>
-  </data>
-  <data name="Close the open Radmin menu and try selecting the group again." xml:space="preserve">
-    <value>Açık Radmin menüsünü kapatıp grubu tekrar seçin.</value>
-  </data>
-  <data name="Radmin group controls are unavailable." xml:space="preserve">
-    <value>Radmin grup denetimleri kullanılamıyor.</value>
-  </data>
-  <data name="Radmin connection commands could not be recognized. Update Radmin VPN and try again." xml:space="preserve">
-    <value>Radmin bağlantı komutları tanınamadı. Radmin VPN’i güncelleyip tekrar deneyin.</value>
-  </data>
-  <data name="Radmin could not change the group connection." xml:space="preserve">
-    <value>Radmin grup bağlantısını değiştiremedi.</value>
-  </data>
-  <data name="Radmin could not switch groups. Previous connections were restored." xml:space="preserve">
-    <value>Radmin grupları değiştiremedi. Önceki bağlantılar geri yüklendi.</value>
-  </data>
-  <data name="Radmin could not finish switching groups. Check the enabled networks in Radmin VPN and retry." xml:space="preserve">
-    <value>Radmin grup değiştirmeyi tamamlayamadı. Radmin VPN’de etkin ağları kontrol edip tekrar deneyin.</value>
-  </data>
-  <data name="Radmin connection switching timed out. Check Radmin VPN and retry." xml:space="preserve">
-    <value>Radmin bağlantı değiştirme işlemi zaman aşımına uğradı. Radmin VPN’i kontrol edip tekrar deneyin.</value>
-  </data>
-  <data name="Selecting this group enables it and disables the others in Radmin VPN." xml:space="preserve">
-    <value>Bu grubu seçmek onu etkinleştirir ve Radmin VPN’de diğer grupları devre dışı bırakır.</value>
-  </data>
   <data name="Reset column ordering" xml:space="preserve">
     <value>Sütun sırasını sıfırla</value>
   </data>
   <data name="SEARCH" xml:space="preserve">
     <value>ARA</value>
+  </data>
+  <data name="Filter Fellowship by Radmin group. Switching groups leaves your current room." xml:space="preserve">
+    <value>Fellowship’i Radmin grubuna göre filtreleyin. Grup değiştirmek mevcut odadan ayrılır.</value>
+  </data>
+  <data name="Group selection filters Fellowship only. Change VPN connections in Radmin." xml:space="preserve">
+    <value>Grup seçimi yalnızca Fellowship’i filtreler. VPN bağlantılarını Radmin’de değiştirin.</value>
+  </data>
+  <data name="Only this group's members are used by Fellowship. Manage VPN connections in Radmin." xml:space="preserve">
+    <value>Fellowship yalnızca bu grubun üyelerini kullanır. VPN bağlantılarını Radmin’de yönetin.</value>
+  </data>
+  <data name="Changing Fellowship group…" xml:space="preserve">
+    <value>Fellowship grubu değiştiriliyor…</value>
   </data>
 </root>

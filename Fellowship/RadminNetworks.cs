@@ -15,7 +15,7 @@ public sealed record RadminMembership(string Group,string[] Members,DateTimeOffs
     public static readonly RadminMembership Empty=new("",[],DateTimeOffset.MinValue);
     public bool Allows(string group,string address)=>Group==group&&DateTimeOffset.UtcNow-ReadAt<TimeSpan.FromMinutes(2)&&Members.Contains(address,StringComparer.Ordinal);
 }
-public static partial class RadminNetworks
+public static class RadminNetworks
 {
     public static bool CanSpawn=>System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name=="Fellowship";
     static bool Ipv4(string text)=>IPAddress.TryParse(text,out var ip)&&ip.AddressFamily==AddressFamily.InterNetwork&&!ip.Equals(IPAddress.Any)&&!ip.Equals(IPAddress.Broadcast);
@@ -44,8 +44,8 @@ public static partial class RadminNetworks
     }
     public static RadminSnapshot Read(string selected)
     {
-        // Refresh remains read-only: expansion is restored and connection actions
-        // are reserved for an explicit selection through SetConnections.
+        // Read membership only. Restore expansion and never invoke network
+        // connection controls; group selection filters Fellowship traffic only.
         var root=FindMainWindow();
         if(root==null)return new([],selected,[],"",false,"Open Radmin VPN to read its groups.");
         var elements=Children(root);

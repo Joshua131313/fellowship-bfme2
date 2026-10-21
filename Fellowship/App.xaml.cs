@@ -62,12 +62,15 @@ public partial class App : Application
     {
         if(resourcesOnly)return;
         base.OnStartup(e);
-        if(e.Args.Length==2&&(e.Args[0] is "--radmin-groups" or "--radmin-connect"))
+        // Reject the retired connection-automation worker rather than launching
+        // the dashboard or silently restoring the removed UI control behavior.
+        if(e.Args.FirstOrDefault()=="--radmin-connect"){Shutdown(1);return;}
+        if(e.Args.Length==2&&e.Args[0]=="--radmin-groups")
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             try
             {
-                object snapshot=await Task.Run<object>(()=>e.Args[0]=="--radmin-connect"?RadminNetworks.SetConnections(e.Args[1]):RadminNetworks.Read(e.Args[1]));
+                var snapshot=await Task.Run(()=>RadminNetworks.Read(e.Args[1]));
                 using var output=new System.IO.StreamWriter(Console.OpenStandardOutput(),new System.Text.UTF8Encoding(false)){AutoFlush=true};
                 await output.WriteAsync(System.Text.Json.JsonSerializer.Serialize(snapshot));Shutdown(0);
             }

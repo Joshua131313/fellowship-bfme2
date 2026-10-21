@@ -23,13 +23,13 @@
 
 The room browser aligns server, mode, and search filters above the room list. The Create room form remembers your last successfully created room title, including after a restart. Use **View → Reset column ordering** or the table context menu to restore the original column order; resetting column widths is available separately.
 
-### Choose which Radmin group is connected
+### Find players in one Radmin group
 
-Open the **Server** menu and hover over **Radmin VPN** to choose a group from its side menu, or use the group selector in Settings. Click **Radmin VPN** itself to use all groups. The side menu opens to the left in Arabic and to the right in the other languages; refreshing keeps it open. Fellowship reads the actual group names and members from your running Radmin client, remembers your choice, and refreshes membership automatically.
+Open the **Server** menu and hover over **Radmin VPN** to choose a group from its side menu, or use the group selector in Settings. Click **Radmin VPN** itself to use all groups available to Fellowship. The side menu opens to the left in Arabic and to the right in the other languages; refreshing keeps it open. Fellowship reads the actual group names and members from your running Radmin client and remembers your choice.
 
-Selecting a subgroup enables it and **disables the other groups in Radmin VPN itself**. The groups stay joined with their saved details intact. Only members of the selected group are used for Fellowship discovery, player lists, messaging, and room connections. Click **Radmin VPN** in the Server menu, or choose **All Radmin groups** in Settings, to enable every joined group again. Switching groups leaves the current Fellowship room.
+The selection filters Fellowship discovery, player lists, messaging and room connections. **Manage actual VPN group connections in Radmin.** The automatic menu-driving connection controller has been removed; Fellowship does not click Enable/Disable Network commands or fall back to that method. Switching groups leaves the current Fellowship room.
 
-Because this changes Radmin's actual connections, BFME2 and other applications also use the enabled group. Refreshing the list and periodic membership updates only read data; they do not change connections. Keep Radmin running. [Integration details and limits](docs/radmin-groups.md).
+BFME2 and other applications continue to use the groups connected in Radmin. Keep Radmin running so Fellowship can refresh its member list. [Integration details and current limits](docs/radmin-groups.md).
 
 ### Build a room around your group
 
@@ -96,7 +96,7 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 ### Your first game
 
 1. **Install Fellowship.** Download the `.msi` from [the latest release](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). The installer creates desktop and Start menu shortcuts. A portable ZIP is also available.
-2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface. With Radmin, choose a specific **Radmin group** to enable it and disable other groups in Radmin VPN, or choose **All Radmin groups** to enable them all.
+2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface. With Radmin, choose a specific **Radmin group** to filter Fellowship to its members. Enable or disable actual VPN group connections in Radmin itself.
 3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
 4. **Host or join.** Create a room using the default 3v3 preset or choose another setup. Join a discovered room, preview it first, or enter the host's VPN IP directly.
 5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.

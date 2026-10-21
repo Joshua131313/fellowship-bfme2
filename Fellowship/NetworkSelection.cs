@@ -77,7 +77,7 @@ public sealed partial class BrowserWindow
                         var group=groups[index];
                         if(item.Items.OfType<MenuItem>().FirstOrDefault(option=>option.Tag as string==group) is {} existing)
                         {existing.IsChecked=choice.Address==Settings.BindAddress&&Settings.RadminGroup==group;continue;}
-                        var option=new MenuItem{Tag=group,ToolTip=group,IsChecked=choice.Address==Settings.BindAddress&&Settings.RadminGroup==group};
+                        var option=new MenuItem{Tag=group,ToolTip=UI.LocalizedText("Group selection filters Fellowship only. Change VPN connections in Radmin.",11),IsChecked=choice.Address==Settings.BindAddress&&Settings.RadminGroup==group};
                         option.SetBinding(HeaderedItemsControl.HeaderProperty,new System.Windows.Data.Binding{Source=group});
                         option.Click+=async(_,e)=>{e.Handled=true;networkMenu.IsOpen=false;await SelectServer(choice,group);};item.Items.Insert(index,option);
                     }
