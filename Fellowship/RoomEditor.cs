@@ -33,7 +33,7 @@ public sealed class RoomEditor : Window
         var nameField=Field(form,"ROOM NAME");Grid.SetRow(nameField,0);
         var name=new TextBox{Text=initial.Title,MaxLength=80,Height=34,FontSize=12,Padding=new(9,4,9,4),AcceptsReturn=false,TextWrapping=TextWrapping.NoWrap,VerticalScrollBarVisibility=ScrollBarVisibility.Hidden,HorizontalScrollBarVisibility=ScrollBarVisibility.Hidden};nameField.Children.Add(name);
         System.Windows.Automation.AutomationProperties.SetName(name,"Room name");
-        ComboBox Choice(Panel parent,string title,object[] values,object selected,int column=0,bool searchable=false)
+        ComboBox Choice(Panel parent,string title,object[] values,object? selected,int column=0,bool searchable=false)
         {
             var field=Field(parent,title);Grid.SetColumn(field,column);
             ComboBox combo=searchable?new SearchableMapBox():new ComboBox();
@@ -43,9 +43,13 @@ public sealed class RoomEditor : Window
             combo.ItemContainerStyle.Setters.Add(new Setter(Control.FontSizeProperty,12d));
             System.Windows.Automation.AutomationProperties.SetName(combo,title);field.Children.Add(combo);return combo;
         }
+        var selectedPatch=GamePatches.Normalize(initial.Patch);
+        var presetRow=new Grid{Margin=new(0,6,0,0)};presetRow.ColumnDefinitions.Add(new(){Width=new(160)});presetRow.ColumnDefinitions.Add(new(){Width=new(12)});presetRow.ColumnDefinitions.Add(new());presetArea.Children.Add(presetRow);
+        var patch=Choice(presetRow,"PATCH",GamePatches.Labels(settings.GamePath).Cast<object>().ToArray(),selectedPatch);
+        if(patch.SelectedIndex<0){patch.ItemsSource=GamePatches.Labels(settings.GamePath).Append(selectedPatch).Distinct().Cast<object>().ToArray();patch.SelectedItem=selectedPatch;}
         var mapRow=new Grid();Grid.SetRow(mapRow,1);form.Children.Add(mapRow);
-        var maps=GameInstallation.Maps(settings.GamePath);
-        var map=Choice(mapRow,"MAP",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path==initial.MapPath)??maps[0],searchable:true);
+        var maps=GameInstallation.Maps(settings.GamePath,selectedPatch);
+        var map=Choice(mapRow,"MAP",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path.Equals(initial.MapPath,StringComparison.OrdinalIgnoreCase))??maps.FirstOrDefault(),searchable:true);
         var limits=Pair(2);
         var capacityField=Field(limits,"ROOM LIMIT (2–64)");var capacity=new TextBox{Text=initial.Capacity.ToString(),MaxLength=2,ToolTip="Fellowship room capacity. BFME2 matches still support at most 8 players."};capacityField.Children.Add(capacity);
         var resources=Choice(limits,"STARTING RESOURCES",MatchRules.ResourceValues.Cast<object>().ToArray(),initial.Match.Resources,2);
@@ -54,17 +58,22 @@ public sealed class RoomEditor : Window
         var command=Choice(options,"COMMAND POINTS",factors.Cast<object>().ToArray(),factors.First(f=>f.Value==initial.Match.CommandPoints));
         var privacy=Choice(options,"VISIBILITY",new object[]{"Public on VPN","Friends only"},initial.FriendsOnly?"Friends only":"Public on VPN",2);
         var preview=new MapPreview{PreviewHeight=166,Padding=new(6),Margin=new(0,5,0,8)};
-        var mapName=UI.LocalizedText("",12,"#EDF1F8",true);
+        var mapName=UI.LocalizedText("",12,"#EDF1F8",true);mapName.TextWrapping=TextWrapping.Wrap;
         var previewPanel=UI.Stack(UI.LocalizedText("MAP PREVIEW",9,UI.Muted,true),preview,mapName);
         Grid.SetColumn(previewPanel,2);setup.Children.Add(previewPanel);
-        void UpdatePreview(){if(map.SelectedItem is GameMap selected){preview.ShowMap(settings.GamePath,selected.Path);mapName.Text=selected.Name;map.ToolTip=selected.Name;}}
+        void UpdatePreview()
+        {
+            if(map.SelectedItem is GameMap selected){preview.Visibility=Visibility.Visible;preview.ShowMap(settings.GamePath,selected.Path,selectedPatch);System.Windows.Data.BindingOperations.ClearBinding(mapName,TextBlock.TextProperty);mapName.Text=selected.Name;map.ToolTip=selected.Name;}
+            else{preview.Visibility=Visibility.Collapsed;L.Bind(mapName,TextBlock.TextProperty,"Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps.");map.ToolTip=null;}
+        }
         map.SelectionChanged+=(_,_)=>UpdatePreview();UpdatePreview();
         var custom=new CheckBox{Content="Custom Heroes",IsChecked=initial.Match.CustomHeroes,FontSize=12,Margin=new(0,0,26,0)};
         var ring=new CheckBox{Content="Ring Heroes",IsChecked=initial.Match.RingHeroes,FontSize=12};L.Bind(custom,ContentControl.ContentProperty,"Custom Heroes");L.Bind(ring,ContentControl.ContentProperty,"Ring Heroes");
         var heroes=UI.Row(custom,ring);Grid.SetRow(heroes,2);panel.Children.Add(heroes);
         void UpdateVisibility()=>privacy.ToolTip=privacy.SelectedIndex==1?"Only your saved friends can see and join.":"Everyone on your VPN can see and join.";
         privacy.SelectionChanged+=(_,_)=>UpdateVisibility();UpdateVisibility();
-        var presetList=new RoomPresetPicker(settings){Margin=new(0,8,0,8)};presetArea.Children.Add(presetList);
+        var presetField=Field(presetRow,"PRESET");Grid.SetColumn(presetField,2);
+        var presetList=new RoomPresetPicker(settings,selectedPatch){Margin=new(0)};presetField.Children.Add(presetList);
         var layouts=new[]{new TeamLayout("Manual teams",[]),new TeamLayout("1v1",[1,2]),new TeamLayout("2v2",[1,1,2,2]),new TeamLayout("3v3",[1,1,1,2,2,2]),new TeamLayout("4v4",[1,1,1,1,2,2,2,2]),new TeamLayout("FFA",[0,0,0,0,0,0,0,0])};
         var teams=new ComboBox{ItemsSource=layouts,SelectedIndex=0,MinWidth=160,ToolTip="Starting team arrangement; players can change teams in the lobby"};L.Choices(teams);
         int[] selectedTeams=[];
@@ -84,16 +93,27 @@ public sealed class RoomEditor : Window
         }
         presetList.ModeChanged+=UpdatePresetEditing;UpdatePresetEditing();
         presetList.SelectedItem=presetList.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.Tag is RoomPreset{BuiltIn:true,Name:"3v3",MapPath.Length:>0})??presetList.SelectedItem;
+        patch.SelectionChanged+=(_,_)=>
+        {
+            if(patch.SelectedItem is not string selected||GamePatches.Normalize(selected)==selectedPatch)return;
+            var previousMap=(map.SelectedItem as GameMap)?.Path;selectedPatch=GamePatches.Normalize(selected);
+            maps=GameInstallation.Maps(settings.GamePath,selectedPatch);map.ItemsSource=maps;
+            map.SelectedItem=maps.FirstOrDefault(m=>m.Path.Equals(previousMap,StringComparison.OrdinalIgnoreCase))??maps.FirstOrDefault();
+            presetList.SetPatch(selectedPatch);
+            if(presetList.SelectedItem is ComboBoxItem{Tag:RoomPreset currentPreset}&&
+               !currentPreset.MapPath.Equals((map.SelectedItem as GameMap)?.Path,StringComparison.OrdinalIgnoreCase))presetList.SelectedIndex=0;
+            UpdatePreview();UpdatePresetEditing();
+        };
         var store=UI.AsyncButton("Save preset",async()=>
         {
             var title=await RoomPresetPicker.PromptName(this);if(title==null)return;var chosen=(GameMap)map.SelectedItem;
-            settings.RoomPresets.RemoveAll(p=>p.Name.Equals(title,StringComparison.OrdinalIgnoreCase));
-            var preset=new RoomPreset(title,chosen.Name,chosen.Path,int.Parse(capacity.Text),(int)resources.SelectedItem,((Factor)command.SelectedItem).Value,custom.IsChecked==true,ring.IsChecked==true,selectedTeams.ToArray());
+            settings.RoomPresets.RemoveAll(p=>p.Name.Equals(title,StringComparison.OrdinalIgnoreCase)&&GamePatches.Normalize(p.Patch)==selectedPatch);
+            var preset=new RoomPreset(title,chosen.Name,chosen.Path,int.Parse(capacity.Text),(int)resources.SelectedItem,((Factor)command.SelectedItem).Value,custom.IsChecked==true,ring.IsChecked==true,selectedTeams.ToArray(),Patch:selectedPatch);
             settings.RoomPresets.Add(preset);settings.Save();presetList.Reload();
         });
         UI.Require(store,()=>map.SelectedItem is GameMap&&int.TryParse(capacity.Text,out int n)&&n is >=2 and <=64,()=>"Select a map and a valid room limit.");
         teams.Margin=new(12,0,0,0);
-        var teamRow=UI.Row(UI.LocalizedText("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,8,0,0);presetArea.Children.Add(teamRow);
+        var teamRow=UI.Row(UI.LocalizedText("STARTING TEAMS",9,UI.Muted,true),teams);teamRow.Margin=new(0,6,0,0);presetArea.Children.Add(teamRow);
         var footer=new Grid{Margin=new(0,8,0,0)};footer.ColumnDefinitions.Add(new());footer.ColumnDefinitions.Add(new(){Width=new(100)});footer.ColumnDefinitions.Add(new(){Width=new(10)});footer.ColumnDefinitions.Add(new(){Width=new(146)});Grid.SetRow(footer,4);panel.Children.Add(footer);
         var cancel=UI.Button("Cancel",()=>UI.FinishPopup(this,false));cancel.IsCancel=true;cancel.Height=34;cancel.Padding=new(12,5,12,5);cancel.Margin=new(0);Grid.SetColumn(cancel,1);footer.Children.Add(cancel);
         store.HorizontalAlignment=HorizontalAlignment.Left;footer.Children.Add(store);
@@ -105,7 +125,7 @@ public sealed class RoomEditor : Window
             if(string.IsNullOrWhiteSpace(name.Text)){name.Focus();UI.Error("Enter a room name.");return;}
             Result=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(initial))!;
             Result.Mode=(presetList.SelectedItem as ComboBoxItem)?.Tag is RoomPreset chosenPreset?chosenPreset.Mode:"Custom";Result.InitialTeams=selectedTeams.ToArray();Result.Title=name.Text.Trim();Result.Capacity=int.Parse(capacity.Text);Result.FriendsOnly=privacy.SelectedIndex==1;
-            var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;
+            var selected=(GameMap)map.SelectedItem;Result.Map=selected.Name;Result.MapPath=selected.Path;Result.Patch=selectedPatch;
             Result.Match=new(){Resources=(int)resources.SelectedItem,CommandPoints=((Factor)command.SelectedItem).Value,CustomHeroes=custom.IsChecked==true,RingHeroes=ring.IsChecked==true};
             Result.Rules=Result.Match.Summary;
             creating=true;store.Visibility=Visibility.Collapsed;presetArea.IsEnabled=false;setup.IsEnabled=false;heroes.IsEnabled=false;cancel.IsEnabled=false;

@@ -1807,4 +1807,57 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Changing Fellowship group…" xml:space="preserve">
     <value>Fellowship grubu değiştiriliyor…</value>
   </data>
+  <data name="PRESET" xml:space="preserve">
+    <value>ÖN AYAR</value>
+  </data>
+  <data name="Choose supported BFME2 rules." xml:space="preserve">
+    <value>Desteklenen BFME2 kurallarını seçin.</value>
+  </data>
+  <data name="The selected game.dat is not a Windows game executable." xml:space="preserve">
+    <value>Seçilen game.dat bir Windows oyun yürütülebilir dosyası değil.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Check patch, rules, teams and spots" xml:space="preserve">
+    <value>1   Çok Oyunculu → Ağ bölümünü açın
+2   Ev sahibi lobiyi oluşturur, konuklar katılır
+3   Yamayı, kuralları, takımları ve konumları kontrol edin</value>
+  </data>
+  <data name="Any room member can host BFME2. Use the patch shown by the room and join the native lobby manually." xml:space="preserve">
+    <value>Odadaki herhangi bir oyuncu BFME2 oyununa ev sahipliği yapabilir. Odada gösterilen yamayı kullanın ve oyun içi lobiye elle katılın.</value>
+  </data>
+  <data name="Automatic lobby sync is available for verified BFME2 1.00 only. Set rules, teams and spots in BFME2 manually for this patch." xml:space="preserve">
+    <value>Otomatik lobi eşitleme yalnızca doğrulanmış BFME2 1.00 için kullanılabilir. Bu yama için kuralları, takımları ve konumları BFME2’de elle ayarlayın.</value>
+  </data>
+  <data name="Set the room's map, rules, teams and spots manually in BFME2. Fellowship keeps the room and chat open." xml:space="preserve">
+    <value>Odanın haritasını, kurallarını, takımlarını ve konumlarını BFME2’de elle ayarlayın. Fellowship odayı ve sohbeti açık tutar.</value>
+  </data>
+  <data name="Open Multiplayer → Network and set rules, teams and spots manually for this patch." xml:space="preserve">
+    <value>Çok Oyunculu → Ağ bölümünü açın ve bu yama için kuralları, takımları ve konumları elle ayarlayın.</value>
+  </data>
+  <data name="This room uses BFME2 {0}. Your installed patch could not be verified. You can join the room; check it in the patch switcher before playing." xml:space="preserve">
+    <value>Bu oda BFME2 {0} kullanıyor. Yüklü yamanız doğrulanamadı. Odaya katılabilirsiniz; oynamadan önce yama değiştiricide sürümünüzü kontrol edin.</value>
+  </data>
+  <data name="This room uses BFME2 {0}, but your installed patch is {1}. You can join the room; switch patches before playing." xml:space="preserve">
+    <value>Bu oda BFME2 {0} kullanıyor, ancak yüklü yamanız {1}. Odaya katılabilirsiniz; oynamadan önce yamayı değiştirin.</value>
+  </data>
+  <data name="The preset map is not installed" xml:space="preserve">
+    <value>Ön ayarın haritası yüklü değil</value>
+  </data>
+  <data name="Select Custom preset to edit." xml:space="preserve">
+    <value>Bu seçenekleri düzenlemek için Özel ön ayarı seçin.</value>
+  </data>
+  <data name="Enter a preset name." xml:space="preserve">
+    <value>Bir ön ayar adı girin.</value>
+  </data>
+  <data name="Select a map and a valid room limit." xml:space="preserve">
+    <value>Bir harita ve geçerli bir oda oyuncu sınırı seçin.</value>
+  </data>
+  <data name="Select a map, player limit, resources, command points and privacy." xml:space="preserve">
+    <value>Bir harita, oyuncu sınırı, kaynak miktarı, komuta puanı ve gizlilik seçin.</value>
+  </data>
+  <data name="BFME II  {0}   /   VPN" xml:space="preserve">
+    <value>BFME II  {0}   /   VPN</value>
+  </data>
+  <data name="Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps." xml:space="preserve">
+    <value>Bu yamanın harita dosyaları kullanılamıyor. Haritalarına göz atmak için yamayı Ecth's Patch Switcher üzerinden yükleyin.</value>
+  </data>
 </root>

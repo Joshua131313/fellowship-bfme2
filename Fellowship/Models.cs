@@ -193,21 +193,21 @@ public sealed class MatchRules
     public bool RingHeroes { get; set; }
     public void Validate()
     {
-        if(!ResourceValues.Contains(Resources)||!CommandValues.Contains(CommandPoints))throw new InvalidOperationException("Choose supported BFME2 1.00 rules.");
+        if(!ResourceValues.Contains(Resources)||!CommandValues.Contains(CommandPoints))throw new InvalidOperationException("Choose supported BFME2 rules.");
     }
     public string Summary => $"{Resources:N0} resources · {CommandPoints/100.0:0.##}× command points · Custom Heroes {(CustomHeroes?"on":"off")} · Ring Heroes {(RingHeroes?"on":"off")}";
 }
 
-public sealed record RoomPreset(string Name,string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int[] Teams,bool BuiltIn=false)
+public sealed record RoomPreset(string Name,string Map,string MapPath,int Capacity,int Resources,int CommandPoints,bool CustomHeroes,bool RingHeroes,int[] Teams,bool BuiltIn=false,string Patch="1.00")
 {
     public string Mode=>!BuiltIn?"Custom":Name.StartsWith("1v1")?"1v1":Name;
     public override string ToString()=>Name;
-    public static List<RoomPreset> Defaults(IEnumerable<GameMap> maps)
+    public static List<RoomPreset> Defaults(IEnumerable<GameMap> maps,string patch="1.00")
     {
         RoomPreset Make(string name,string map,int count,int resources,int[] teams)
         {
             var installed=maps.FirstOrDefault(m=>m.Name.Equals(map,StringComparison.OrdinalIgnoreCase));
-            return new(name,map,installed?.Path??"",count,resources,200,false,false,teams,true);
+            return new(name,map,installed?.Path??"",count,resources,200,false,false,teams,true,GamePatches.Normalize(patch));
         }
         return [Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),Make("2v2","Buckland",4,4000,[1,1,2,2]),Make("1v1 · 1,000 resources","Rohan",2,1000,[1,2]),Make("1v1 · 4,000 resources","Rohan",2,4000,[1,2]),Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])];
     }

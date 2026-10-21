@@ -6,7 +6,7 @@ public static class GameMapData
 {
     public static List<MapSpot> ParseSpots(string cache,string map)
     {
-        var blocks=System.Text.RegularExpressions.Regex.Matches(cache,@"(?im)^MapCache\s+(\S+)\s*\r?\n([\s\S]*?)^END\s*$");
+        var blocks=System.Text.RegularExpressions.Regex.Matches(cache,@"(?im)^MapCache\s+(\S+)\s*\r?\n([\s\S]*?)^END\s*$",System.Text.RegularExpressions.RegexOptions.None,TimeSpan.FromSeconds(1));
         foreach(System.Text.RegularExpressions.Match block in blocks)
         {
             var path=System.Text.RegularExpressions.Regex.Replace(block.Groups[1].Value,@"_([0-9a-fA-F]{2})",m=>((char)Convert.ToByte(m.Groups[1].Value,16)).ToString());
@@ -33,32 +33,6 @@ public static class GameMapData
         }
         return [];
     }
-    public static byte[]? ReadAsset(string executable,string wanted)
-    {
-        foreach(var archive in new[]{"_WSMaps.big","Maps.big"})
-        try
-        {
-            using var stream=File.OpenRead(Path.Combine(Path.GetDirectoryName(executable)!,archive));
-            using var r=new BinaryReader(stream,Encoding.ASCII);
-            if(Encoding.ASCII.GetString(r.ReadBytes(4)) is not ("BIGF" or "BIG4"))continue;
-            r.ReadBytes(4);int count=BinaryPrimitives.ReadInt32BigEndian(r.ReadBytes(4));r.ReadBytes(4);
-            if(count<0||count>100000)continue;
-            for(int i=0;i<count;i++)
-            {
-                uint offset=BinaryPrimitives.ReadUInt32BigEndian(r.ReadBytes(4)),size=BinaryPrimitives.ReadUInt32BigEndian(r.ReadBytes(4));
-                var name=new StringBuilder();byte b;
-                while((b=r.ReadByte())!=0){if(name.Length>512)throw new InvalidDataException();name.Append((char)b);}
-                if(!string.Equals(name.ToString(),wanted,StringComparison.OrdinalIgnoreCase))continue;
-                if(size>16000000||offset+(long)size>stream.Length)throw new InvalidDataException();
-                stream.Position=offset;return r.ReadBytes((int)size);
-            }
-        }
-        catch(Exception e) when(e is IOException or ArgumentException or UnauthorizedAccessException or OverflowException){}
-        return null;
-    }
-    public static List<MapSpot> Spots(string executable,string map)
-    {
-        try{var cache=ReadAsset(executable,@"maps\mapcache.ini");return cache==null?[]:ParseSpots(Encoding.ASCII.GetString(cache),map);}
-        catch(Exception e) when(e is IOException or ArgumentException or FormatException or OverflowException){return [];}
-    }
+    public static byte[]? ReadAsset(string executable,string wanted,string? patch=null)=>GameAssets.ReadAsset(GamePatches.Archives(executable,patch),wanted);
+    public static List<MapSpot> Spots(string executable,string map,string? patch=null)=>GameAssets.Spots(GamePatches.Archives(executable,patch),map);
 }

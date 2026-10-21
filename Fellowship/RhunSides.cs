@@ -19,7 +19,7 @@ public sealed class SidePlan
 }
 public static class RhunSides
 {
-    public static bool Enabled(Room room)=>room.Mode=="3v3"&&room.MapPath.Equals(GameMap.Rhun.Path,StringComparison.OrdinalIgnoreCase);
+    public static bool Enabled(Room room)=>room.Patch=="1.00"&&room.Mode=="3v3"&&room.MapPath.Equals(GameMap.Rhun.Path,StringComparison.OrdinalIgnoreCase);
     public static bool Apply(Room room,LobbyReport report,string sender)
     {
         var lobby=report.Lobby;

@@ -1807,4 +1807,57 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Changing Fellowship group…" xml:space="preserve">
     <value>Changing Fellowship group…</value>
   </data>
+  <data name="PRESET" xml:space="preserve">
+    <value>PRESET</value>
+  </data>
+  <data name="Choose supported BFME2 rules." xml:space="preserve">
+    <value>Choose supported BFME2 rules.</value>
+  </data>
+  <data name="The selected game.dat is not a Windows game executable." xml:space="preserve">
+    <value>The selected game.dat is not a Windows game executable.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Check patch, rules, teams and spots" xml:space="preserve">
+    <value>1   Open Multiplayer → Network
+2   Host creates; guests join
+3   Check patch, rules, teams and spots</value>
+  </data>
+  <data name="Any room member can host BFME2. Use the patch shown by the room and join the native lobby manually." xml:space="preserve">
+    <value>Any room member can host BFME2. Use the patch shown by the room and join the native lobby manually.</value>
+  </data>
+  <data name="Automatic lobby sync is available for verified BFME2 1.00 only. Set rules, teams and spots in BFME2 manually for this patch." xml:space="preserve">
+    <value>Automatic lobby sync is available for verified BFME2 1.00 only. Set rules, teams and spots in BFME2 manually for this patch.</value>
+  </data>
+  <data name="Set the room's map, rules, teams and spots manually in BFME2. Fellowship keeps the room and chat open." xml:space="preserve">
+    <value>Set the room's map, rules, teams and spots manually in BFME2. Fellowship keeps the room and chat open.</value>
+  </data>
+  <data name="Open Multiplayer → Network and set rules, teams and spots manually for this patch." xml:space="preserve">
+    <value>Open Multiplayer → Network and set rules, teams and spots manually for this patch.</value>
+  </data>
+  <data name="This room uses BFME2 {0}. Your installed patch could not be verified. You can join the room; check it in the patch switcher before playing." xml:space="preserve">
+    <value>This room uses BFME2 {0}. Your installed patch could not be verified. You can join the room; check it in the patch switcher before playing.</value>
+  </data>
+  <data name="This room uses BFME2 {0}, but your installed patch is {1}. You can join the room; switch patches before playing." xml:space="preserve">
+    <value>This room uses BFME2 {0}, but your installed patch is {1}. You can join the room; switch patches before playing.</value>
+  </data>
+  <data name="The preset map is not installed" xml:space="preserve">
+    <value>The preset map is not installed</value>
+  </data>
+  <data name="Select Custom preset to edit." xml:space="preserve">
+    <value>Select Custom preset to edit.</value>
+  </data>
+  <data name="Enter a preset name." xml:space="preserve">
+    <value>Enter a preset name.</value>
+  </data>
+  <data name="Select a map and a valid room limit." xml:space="preserve">
+    <value>Select a map and a valid room limit.</value>
+  </data>
+  <data name="Select a map, player limit, resources, command points and privacy." xml:space="preserve">
+    <value>Select a map, player limit, resources, command points and privacy.</value>
+  </data>
+  <data name="BFME II  {0}   /   VPN" xml:space="preserve">
+    <value>BFME II  {0}   /   VPN</value>
+  </data>
+  <data name="Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps." xml:space="preserve">
+    <value>Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps.</value>
+  </data>
 </root>

@@ -4,13 +4,13 @@
 
 [![Download Fellowship for Windows — direct MSI installer download](docs/download-windows.svg)](https://github.com/Joshua131313/fellowship-bfme2/releases/latest/download/Fellowship-Setup.msi)
 
-**Fellowship is a Windows companion for The Battle for Middle-earth II 1.00.** Find games on your VPN, gather your friends, plan teams and starting positions, and carry supported selections into the native BFME2 lobby. A desktop dashboard brings rooms, online players, messages, and preferences together, with separate windows when you need them.
+**Fellowship is a Windows companion for The Battle for Middle-earth II.** Find games on your VPN, gather your friends, choose a game patch, and plan teams and starting positions. Verified BFME2 1.00 installations can also carry supported selections into the native lobby. A desktop dashboard brings rooms, online players, messages, and preferences together, with separate windows when you need them.
 
 **[Other downloads & release notes](https://github.com/Joshua131313/fellowship-bfme2/releases/latest)** · **[Report an issue](https://github.com/Joshua131313/fellowship-bfme2/issues)**
 
 ![Fellowship dashboard in dark mode, showing room discovery, server selection, search, ping, and direct-IP joining](docs/screenshots/room-browser.png)
 
-[Features](#features) · [Get started](#get-started) · [Rhûn 3v3](#automatic-rhûn-3v3-sides-and-substitutions) · [Screenshots](#screenshots) · [Troubleshooting](#troubleshooting) · [Build from source](#build-from-source)
+[Features](#features) · [Get started](#get-started) · [Patch support](docs/patch-support.md) · [Rhûn 3v3](#automatic-rhûn-3v3-sides-and-substitutions) · [Screenshots](#screenshots) · [Troubleshooting](#troubleshooting) · [Build from source](#build-from-source)
 
 ## Features
 
@@ -37,15 +37,23 @@ New rooms default to the **3v3 preset** when Rhûn is installed:
 
 > **Rhûn · 6 players · 4,000 starting resources · 2× command points · Custom Heroes off · Ring Heroes off**
 
-Choose built-in **3v3, 2v2, 1v1, and FFA** presets, save your own, or select **Custom** to edit the setup. Search the installed map catalog, set the player limit and hero options, and choose a public or friends-only room.
+Choose built-in **3v3, 2v2, 1v1, and FFA** presets, save your own, or select **Custom** to edit the setup. Search the selected patch's locally available map catalog, set the player limit and hero options, and choose a public or friends-only room.
 
 Click the map preview to claim a starting spot, choose a team and player color, and save preferred colors and per-map positions in **Game preferences**. Valid, available preferences are applied when joining. Map previews use the active theme, and player information and preview windows let you keep interacting with the rest of Fellowship.
 
+### Choose the patch your group plays
+
+New rooms default to **1.00**. The patch selector includes **1.06, 1.09, 1.09v2, 1.09v3, 1.09v3.1**, and individual beta builds from Ecth's Patch Switcher catalog. Selecting a patch refreshes the map choices, previews, starting positions, and saved presets using its locally installed archives and dependencies. Presets belong to their patch, so you can keep different setups with the same name.
+
+Fellowship checks the installed patch and shows a warning when it differs from the room's patch or cannot be verified. **You can still join the Fellowship room and chat.** Before playing, use the patch switcher to match the room's exact patch, including the beta build. Selecting a room patch does not modify your game files or run the switcher. See [patch support and map availability](docs/patch-support.md).
+
 ### Keep the native lobby in sync
 
-With **Live BFME2 synchronization** enabled, Fellowship synchronizes supported map, rules, team, starting-position, and color selections through the game's own lobby controls. Changes can flow back from BFME2 into Fellowship, so you can make supported adjustments from inside the game.
+For a **verified BFME2 1.00 installation and a 1.00 room**, enabling **Live BFME2 synchronization** synchronizes supported map, rules, team, starting-position, and color selections through the game's own lobby controls. Changes can flow back from BFME2 into Fellowship, so you can make supported adjustments from inside the game.
 
 The helper validates the supported game binary, waits for a matching, stable LAN setup lobby, checks occupied positions, and pauses writes during match transitions. Each player's helper changes that player's selections. The **BFME2 lobby host can be a different player from the Fellowship room owner**.
+
+Other patches support Fellowship rooms, chat, readiness, and coordinated launching. Set their native maps, rules, teams, and spots manually in BFME2; their memory layouts have not been validated for automatic synchronization.
 
 For a closer look at the special Rhûn rules, see [Automatic Rhûn 3v3 sides and substitutions](#automatic-rhûn-3v3-sides-and-substitutions).
 
@@ -89,7 +97,7 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 ### Requirements
 
 - **Windows 10 or 11, x64.** The installer and portable build include the .NET runtime.
-- Your own **BFME2 1.00 installation**, with matching game files and maps across players. Fellowship does not include the game.
+- Your own **BFME2 installation**, with matching patch, game files, and maps across players. Native automatic synchronization requires the verified **1.00** build. Fellowship does not include the game or patches.
 - **Radmin VPN**, or another compatible IPv4 LAN/VPN connection, configured on every computer. Radmin is the default network choice when present.
 - The **same current Fellowship version** on all participants, especially when using coordinated live sync.
 
@@ -98,23 +106,25 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 1. **Install Fellowship.** Download the `.msi` from [the latest release](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). The installer creates desktop and Start menu shortcuts. A portable ZIP is also available.
 2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface. With Radmin, choose a specific **Radmin group** to filter Fellowship to its members. Enable or disable actual VPN group connections in Radmin itself.
 3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
-4. **Host or join.** Create a room using the default 3v3 preset or choose another setup. Join a discovered room, preview it first, or enter the host's VPN IP directly.
+4. **Host or join.** Choose a room patch, which defaults to **1.00**, and use the default 3v3 preset or another setup. Join a discovered room, preview it first, or enter the host's VPN IP directly. Resolve any patch warning in Ecth's Patch Switcher before playing.
 5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.
-6. **Prepare sync and launch.** With live sync enabled, approve Windows' permission prompt and wait for **Sync ready**. Use **Launch mine**, or let the host use **Launch all**.
-7. **Enter BFME2's LAN lobby.** The in-game host opens **Multiplayer → Network → Create Game**. Other players join that native lobby manually. Fellowship begins supported synchronization once the lobby matches.
+6. **Prepare and launch.** For verified 1.00 synchronization, approve Windows' permission prompt and wait for **Sync ready**. Other patches launch with manual native setup. Use **Launch mine**, or let the host use **Launch all**.
+7. **Enter BFME2's LAN lobby.** The in-game host opens **Multiplayer → Network → Create Game**. Other players join that native lobby manually. Fellowship begins supported 1.00 synchronization once the lobby matches; set the lobby options manually for other patches.
 
 Fellowship coordinates the group and supported lobby selections. **Creating and joining the native BFME2 lobby still happens inside BFME2.** Rejoining an already-running match or restoring an army after quitting is not supported.
 
 ## Automatic Rhûn 3v3 sides and substitutions
 
-These special rules apply **only when the Fellowship room uses the 3v3 preset/mode and the map is Rhûn**. Other modes and maps use normal preference and selection behavior.
+These special rules apply **only to a 1.00 room using the 3v3 preset/mode on Rhûn, with verified 1.00 native synchronization**. Other modes and maps use normal preference and selection behavior; other patches require manual native setup.
 
 | Situation | What Fellowship does |
 | --- | --- |
 | A team hosts the native BFME2 lobby | Put that team on the **right as Team 2**, with the opposing team on the **left as Team 1**. |
 | The opposing team hosts the next game | Mirror positions across the map while preserving each player's top, middle, or bottom position. |
 | A different player from the same team hosts | Keep the team's side and players' positions; changing the hosting player alone does not flip them. |
-| An active player replaces an observer | After the native roster settles, assign an eligible unassigned replacement a known, free position for their selected team. |
+| The same match is replayed after a crash or OOS | Follow the hosting team's side; restore remembered vertical positions when spots reset to Random, while respecting new explicit selections. |
+| Players join at different times | Assign the settled players first, then extend the plan as other players arrive. |
+| A substitute joins or players exchange positions | Respect chosen free positions. Remembered positions are fallbacks, so a player can give up a spot and choose another. |
 
 Fellowship reads the **actual BFME2 hosting player and native team selections**, then uses the previous match's lineup to identify the hosting team. The Fellowship room owner distributes the shared plan; room ownership does not decide which team hosts the game.
 
@@ -196,7 +206,9 @@ Closing the dashboard keeps Fellowship running in the system tray. Closing a bat
 | Radmin groups or members cannot be read | Keep Radmin VPN running and choose **Refresh Radmin groups** from the Radmin side menu, or use the refresh button in Settings. If needed, open its main window. An unavailable selected group never silently switches to all groups. |
 | BFME2 reports a DirectX error at launch | Let sync preparation and its Windows permission prompt finish before launching. If needed, disable live sync, launch BFME2, then enable sync after the game loads. |
 | Live sync cannot apply a selection | Keep the native setup lobby open. Check the supported game version, matching map and participants, and occupied spots. Correct conflicting selections in BFME2 when sync pauses. |
-| Rhûn sides do not coordinate | Confirm **3v3 + Rhûn**, update every participant, enable live sync, and select native teams. The in-game host determines the hosting side. |
+| The room shows a patch warning | Join and chat normally, then close BFME2 and use the patch switcher to select the room's exact patch before playing. An unknown or mixed installation cannot enable native automation. |
+| A patch's extra maps or previews are missing | Check that its files and required parent patches are downloaded locally in Ecth's Patch Switcher. Choosing a patch in Fellowship does not download or install its maps. See [patch support](docs/patch-support.md). |
+| Rhûn sides do not coordinate | Confirm **1.00 + 3v3 + Rhûn**, update every participant, enable verified live sync, and select native teams. The in-game host determines the hosting side. |
 | An older updater loops through repairs | Close Fellowship, run the latest release's `Fellowship-Repair-<version>.exe`, then install that release's MSI directly. The helper restores verified installer sources. If it still fails, include the installer/recovery log in your issue. |
 | An update fails | Use **Open log** in the updater and include the error code and log with your report. Error 1603 can have several causes; error 1622 concerns opening the installer log. |
 
@@ -226,7 +238,7 @@ dotnet build installer/Fellowship.wixproj -c Release
 
 Protocol checks use real loopback TCP/UDP peers. UI checks render screens offscreen and exercise selections, persistence, lifecycle, localization, and update behavior. These checks complement live testing with multiple PCs and BFME2 instances.
 
-Additional notes: [Rhûn rotation and native sync](docs/automatic-rotation.md) · [Player colors](docs/player-colors.md) · [Blocking](docs/blocking.md) · [Legacy room-isolation removal](docs/room-isolation.md)
+Additional notes: [Patch support](docs/patch-support.md) · [Rhûn rotation and native sync](docs/automatic-rotation.md) · [Player colors](docs/player-colors.md) · [Blocking](docs/blocking.md) · [Legacy room-isolation removal](docs/room-isolation.md)
 
 ---
 

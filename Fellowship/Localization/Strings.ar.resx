@@ -1807,4 +1807,57 @@
   <data name="Changing Fellowship group…" xml:space="preserve">
     <value>جارٍ تغيير مجموعة Fellowship…</value>
   </data>
+  <data name="PRESET" xml:space="preserve">
+    <value>إعداد مسبق</value>
+  </data>
+  <data name="Choose supported BFME2 rules." xml:space="preserve">
+    <value>اختر قواعد تدعمها BFME2.</value>
+  </data>
+  <data name="The selected game.dat is not a Windows game executable." xml:space="preserve">
+    <value>ملف game.dat المحدد ليس ملفًا تنفيذيًا للعبة على Windows.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Check patch, rules, teams and spots" xml:space="preserve">
+    <value>1   افتح اللعب الجماعي ← الشبكة
+2   ينشئ المضيف الردهة وينضم الضيوف
+3   تحقق من الإصدار والقواعد والفرق والمواقع</value>
+  </data>
+  <data name="Any room member can host BFME2. Use the patch shown by the room and join the native lobby manually." xml:space="preserve">
+    <value>يمكن لأي عضو في الغرفة استضافة BFME2. استخدم الإصدار المعروض في الغرفة وانضم إلى ردهة اللعبة يدويًا.</value>
+  </data>
+  <data name="Automatic lobby sync is available for verified BFME2 1.00 only. Set rules, teams and spots in BFME2 manually for this patch." xml:space="preserve">
+    <value>تتوفر المزامنة التلقائية للردهة فقط لنسخة BFME2 1.00 التي تم التحقق منها. لهذا الإصدار، اضبط القواعد والفرق والمواقع يدويًا في BFME2.</value>
+  </data>
+  <data name="Set the room's map, rules, teams and spots manually in BFME2. Fellowship keeps the room and chat open." xml:space="preserve">
+    <value>اضبط خريطة الغرفة وقواعدها وفرقها ومواقعها يدويًا في BFME2. يُبقي Fellowship الغرفة والدردشة مفتوحتين.</value>
+  </data>
+  <data name="Open Multiplayer → Network and set rules, teams and spots manually for this patch." xml:space="preserve">
+    <value>افتح اللعب الجماعي ← الشبكة واضبط القواعد والفرق والمواقع يدويًا لهذا الإصدار.</value>
+  </data>
+  <data name="This room uses BFME2 {0}. Your installed patch could not be verified. You can join the room; check it in the patch switcher before playing." xml:space="preserve">
+    <value>تستخدم هذه الغرفة BFME2 {0}. تعذر التحقق من الإصدار المثبّت لديك. يمكنك الانضمام إلى الغرفة؛ تحقق من إصدارك في أداة تبديل الإصدارات قبل اللعب.</value>
+  </data>
+  <data name="This room uses BFME2 {0}, but your installed patch is {1}. You can join the room; switch patches before playing." xml:space="preserve">
+    <value>تستخدم هذه الغرفة BFME2 {0}، لكن الإصدار المثبّت لديك هو {1}. يمكنك الانضمام إلى الغرفة؛ بدّل الإصدار قبل اللعب.</value>
+  </data>
+  <data name="The preset map is not installed" xml:space="preserve">
+    <value>خريطة الإعداد المسبق غير مثبّتة</value>
+  </data>
+  <data name="Select Custom preset to edit." xml:space="preserve">
+    <value>اختر إعدادًا مسبقًا مخصصًا لتعديل هذه الخيارات.</value>
+  </data>
+  <data name="Enter a preset name." xml:space="preserve">
+    <value>أدخل اسمًا للإعداد المسبق.</value>
+  </data>
+  <data name="Select a map and a valid room limit." xml:space="preserve">
+    <value>اختر خريطة وحدًا صالحًا للاعبين في الغرفة.</value>
+  </data>
+  <data name="Select a map, player limit, resources, command points and privacy." xml:space="preserve">
+    <value>اختر خريطة وحد اللاعبين والموارد ونقاط القيادة والخصوصية.</value>
+  </data>
+  <data name="BFME II  {0}   /   VPN" xml:space="preserve">
+    <value>BFME II  {0}   /   VPN</value>
+  </data>
+  <data name="Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps." xml:space="preserve">
+    <value>ملفات خرائط هذا الإصدار غير متاحة. ثبّته في Ecth's Patch Switcher لتصفح خرائطه.</value>
+  </data>
 </root>

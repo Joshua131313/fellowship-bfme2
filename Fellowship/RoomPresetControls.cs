@@ -5,27 +5,35 @@ namespace Fellowship;
 public sealed class RoomPresetPicker : ComboBox
 {
     readonly Settings settings;
+    string patch;
     bool refreshing;
     public event Action<RoomPreset>? Picked;
     public event Action? ModeChanged;
     public event Action? CustomPicked;
     public bool IsCustom=>SelectedItem is not ComboBoxItem{Tag:RoomPreset};
-    public RoomPresetPicker(Settings settings)
+    public RoomPresetPicker(Settings settings,string patch="1.00")
     {
-        this.settings=settings;Style=(Style)Application.Current.FindResource(typeof(ComboBox));Height=34;ToolTip="Choose a saved room preset";
+        this.settings=settings;this.patch=GamePatches.Normalize(patch);Style=(Style)Application.Current.FindResource(typeof(ComboBox));Height=34;ToolTip="Choose a saved room preset";
         DropDownOpened+=(_,_)=>Reload();
         SelectionChanged+=(_,_)=>{if(refreshing)return;if(SelectedItem is ComboBoxItem{Tag:RoomPreset preset})Picked?.Invoke(preset);else CustomPicked?.Invoke();ModeChanged?.Invoke();};
         Reload();
+    }
+    public void SetPatch(string selected)
+    {
+        selected=GamePatches.Normalize(selected);if(patch==selected)return;
+        patch=selected;Reload();
     }
     public void Reload()
     {
         var previous=(SelectedItem as ComboBoxItem)?.Tag as RoomPreset;refreshing=true;
         Items.Clear();var custom=new ComboBoxItem{Padding=new(10,5,10,5),ContentTemplate=Caption(null)};L.Bind(custom,ContentControl.ContentProperty,"Custom preset");Items.Add(custom);
-        foreach(var preset in RoomPreset.Defaults(GameInstallation.Maps(settings.GamePath)).Concat(settings.RoomPresets))
+        var maps=GameInstallation.Maps(settings.GamePath,patch);
+        foreach(var preset in RoomPreset.Defaults(maps,patch).Concat(settings.RoomPresets.Where(p=>GamePatches.Normalize(p.Patch)==patch)))
         {
-            Items.Add(new ComboBoxItem{Tag=preset,Content=preset.Name,ContentTemplate=Caption(preset),Padding=new(10,5,10,5),HorizontalContentAlignment=HorizontalAlignment.Stretch});
+            var item=new ComboBoxItem{Tag=preset,Content=preset.Name,ContentTemplate=Caption(preset),Padding=new(10,5,10,5),HorizontalContentAlignment=HorizontalAlignment.Stretch,IsEnabled=maps.Any(m=>m.Path.Equals(preset.MapPath,StringComparison.OrdinalIgnoreCase))};
+            if(!item.IsEnabled){item.ToolTip="The preset map is not installed: "+preset.Map;ToolTipService.SetShowOnDisabled(item,true);}Items.Add(item);
         }
-        SelectedItem=Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.Tag is RoomPreset p&&p.Name==previous?.Name&&p.BuiltIn==previous.BuiltIn)??Items[0];refreshing=false;ModeChanged?.Invoke();
+        SelectedItem=Items.OfType<ComboBoxItem>().FirstOrDefault(i=>i.IsEnabled&&i.Tag is RoomPreset p&&p.Name==previous?.Name&&p.BuiltIn==previous.BuiltIn&&(p.BuiltIn||GamePatches.Normalize(previous.Patch)==patch))??Items[0];refreshing=false;ModeChanged?.Invoke();
     }
     DataTemplate Caption(RoomPreset? preset)
     {

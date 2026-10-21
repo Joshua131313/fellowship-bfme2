@@ -17,9 +17,9 @@ public sealed class RoomPreviewWindow : Window
         var content=new StackPanel{Margin=new(24)};
         content.Children.Add(UI.Text(room.Title,24,bold:true));
         var subtitle=UI.LocalizedText($"Hosted by {room.Host}  ·  {room.Players.Count} / {room.Capacity} players",12,UI.Muted);subtitle.Margin=new(0,6,0,16);content.Children.Add(subtitle);
-        content.Children.Add(UI.Row(UI.Badge(room.FriendsOnly?"FRIENDS ONLY":"PUBLIC ON VPN"),UI.LocalizedText("   BFME2 1.00",11,UI.Muted)));
+        content.Children.Add(UI.Row(UI.Badge(room.FriendsOnly?"FRIENDS ONLY":"PUBLIC ON VPN"),UI.LocalizedText("   BFME2 "+room.Patch,11,UI.Muted)));
         var columns=new Grid{Margin=new(0,18,0,18)};columns.ColumnDefinitions.Add(new());columns.ColumnDefinitions.Add(new(){Width=new GridLength(20)});columns.ColumnDefinitions.Add(new());
-        var map=new MapPreview{PreviewHeight=190,Margin=new(0,8,0,0)};map.ShowMap(gamePath,room.MapPath);map.ShowSelections(room,"",false);
+        var map=new MapPreview{PreviewHeight=190,Margin=new(0,8,0,0)};map.ShowMap(gamePath,room.MapPath,room.Patch);map.ShowSelections(room,"",false);
         columns.Children.Add(UI.Card(UI.Stack(UI.Text(room.Map,16,bold:true),map)));
         var rules=UI.Stack(UI.LocalizedText("MATCH RULES",10,UI.Muted,true));
         var details=new MatchSummary{Margin=new(0,10,0,0)};details.Show(room,false);rules.Children.Add(details);

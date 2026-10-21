@@ -2,7 +2,9 @@
 using Fellowship;
 using System.Net;
 using System.Net.Sockets;
-Settings MemorySettings(string name){var settings=Settings.InMemory();settings.Name=name;return settings;}
+try
+{
+Settings MemorySettings(string name,string gamePath=""){var settings=Settings.InMemory();settings.Name=name;settings.GamePath=gamePath;return settings;}
 if(args.Length==0||args.Contains("--radmin-group"))
 {
     var hs=MemorySettings("Group host");hs.RadminGroup="Server A";hs.RadminMembership=new("Server A",["127.0.0.122"],DateTimeOffset.UtcNow);
@@ -102,6 +104,38 @@ if(args.Contains("--ready-request"))
     b.Leave();await Until(()=>h.Current!.Players.Count==2,"participant left");await h.RequestReady();await Until(()=>first==2,"remaining participant receives repeat request");
     Console.WriteLine("PASS host-only requests, all recipients, explicit consent, ready response and departure");return;
 }
+if(args.Contains("--patch-room"))
+{
+    var hs=MemorySettings("Patch host");var gs=MemorySettings("Default-patch guest");
+    using var h=new PeerService(hs);using var g=new PeerService(gs);
+    h.Start("127.0.0.131");g.Start("127.0.0.132");
+    h.Host(new(){Title="1.09 room",Patch="1.09",Mode="3v3",Capacity=4},[new(1,.2,.2),new(2,.8,.2)]);
+    if((await PeerService.Query(h.Address,g.Address))?.Patch!="1.09")throw new Exception("Discovery lost the selected room patch");
+    await g.Join(h.Address);
+    await Until(()=>g.Current?.Players.Count==2&&g.Current.Patch=="1.09","default-patch guest joins a different-patch room");
+    var persisted=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(g.Current))!;
+    if(persisted.Patch!="1.09")throw new Exception("Room serialization lost the patch");
+    string roomId=h.Current!.Id;
+    try{h.Host(new(){Patch="unknown-patch"});throw new Exception("Unknown hosted patch accepted");}catch(InvalidOperationException){}
+    if(h.Current.Id!=roomId||g.Current?.Id!=roomId)throw new Exception("Invalid host patch left the existing room");
+    h.Current.SidePlan=new(){Session=Guid.NewGuid().ToString("N")};h.Current.LastRhunHost=h.Address;
+    h.Current.LastRhunLineup[h.Address]=new(2,2);
+    var draft=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(h.Current))!;
+    draft.Patch="1.06";await h.EditRoom(draft);
+    await Until(()=>g.Current?.Patch=="1.06"&&g.Current.SidePlan==null,"patch edits propagate and invalidate the native side plan");
+    if(h.Current.LastRhunHost.Length!=0||h.Current.LastRhunLineup.Count!=0||h.Current.Spots.Count!=GameMapData.Spots(hs.GamePath,draft.MapPath,"1.06").Count)
+        throw new Exception("Patch edit retained stale history or map spots");
+    draft.Patch="unknown-patch";
+    try{await h.EditRoom(draft);throw new Exception("Unknown edited patch accepted");}catch(InvalidOperationException){}
+    if(h.Current.Patch!="1.06")throw new Exception("Invalid patch edit changed room state");
+    await h.UpdateRoom("Rhûn","1.09",h.Current.Rules);
+    await Until(()=>g.Current?.Patch=="1.09","legacy room update retains known patch selection");
+    try{await h.UpdateRoom("Rhûn","unknown-patch",h.Current.Rules);throw new Exception("Unknown legacy patch accepted");}catch(InvalidOperationException){}
+    await h.Promote(g.LocalId);
+    await Until(()=>g.IsHost&&h.Current?.Patch=="1.09"&&g.Current?.Patch=="1.09"&&g.Current.Players.Count==2,"host handoff preserves a different-patch room");
+    if(g.Current!.Id!=roomId)throw new Exception("Patch-room handoff recreated the room");
+    Console.WriteLine("PASS cross-patch joining, selected patch discovery/serialization/editing, stale-layout invalidation, unknown-patch validation and host handoff");return;
+}
 var installation=GameInstallation.Find();
 if(File.Exists(installation))
 {
@@ -118,7 +152,7 @@ if(decodedMap!=@"maps\map wor rhun\map wor rhun.map"||ProfilePreset.MapPreferenc
 Console.WriteLine("PASS Rhûn map encoding, preservation, duplicate replacement and idempotence");
 if (args.Length == 2 && args[0] == "--ui-peer")
 {
-    using var uiGuest = new PeerService(new() { Name = "Test player" });
+    using var uiGuest = new PeerService(MemorySettings("Test player"));
     await uiGuest.Join(args[1]);
     await Task.Delay(300);
     await uiGuest.Say("Two-peer smoke test: room chat delivered.");
@@ -152,7 +186,7 @@ using(var switchPeer=new PeerService(MemorySettings("Switch test")))
 }
 // A failed bind must not poison retries or advertise an address that never bound.
 using(var occupied=new TcpListener(IPAddress.Parse("127.0.0.3"),PeerService.Port))
-using(var retryPeer=new PeerService(new(){Name="Retry test"}))
+using(var retryPeer=new PeerService(MemorySettings("Retry test")))
 {
     occupied.Start();
     try{retryPeer.Start("127.0.0.3");throw new Exception("Expected port conflict");}
@@ -165,10 +199,10 @@ using(var retryPeer=new PeerService(new(){Name="Retry test"}))
     Console.WriteLine("PASS listener recovers after port conflict");
 }
 // Public discovery and friend-only enforcement use the actual connection address.
-var privacySettings=new Settings{Name="Private host"};
+var privacySettings=MemorySettings("Private host");
 using(var privateHost=new PeerService(privacySettings))
-using(var allowed=new PeerService(new(){Name="Allowed"}))
-using(var outsider=new PeerService(new(){Name="Outsider"}))
+using(var allowed=new PeerService(MemorySettings("Allowed")))
+using(var outsider=new PeerService(MemorySettings("Outsider")))
 {
     privateHost.Start("127.0.0.4");allowed.Start("127.0.0.5");outsider.Start("127.0.0.6");
     privateHost.Host(new(){Title="Secret room",FriendsOnly=true});
@@ -198,13 +232,13 @@ using(var outsider=new PeerService(new(){Name="Outsider"}))
     if(await PeerService.Query("127.0.0.4","127.0.0.5")!=null)throw new Exception("Closed room still advertised");
     Console.WriteLine("PASS private visibility, denied join, edits, public discovery, closed room removal");
 }
-using var host = new PeerService(new() { Name = "Host" });
-using var guest = new PeerService(new() { Name = "Guest" });
+using var host = new PeerService(MemorySettings("Host"));
+using var guest = new PeerService(MemorySettings("Guest"));
 var defaults = new Room();
 if (defaults.Map != "Rhûn" || defaults.Patch != "1.00" || defaults.Capacity != 6 || !defaults.Rules.Contains("4000") || !defaults.Rules.Contains("2x")) throw new Exception("Incorrect 1.00 defaults");
 if(!defaults.Rules.Contains("no Ring Heroes")||!defaults.Rules.Contains("no Custom Heroes"))throw new Exception("Hero defaults must be disabled");
 Console.WriteLine("PASS Rhun / 3v3 / 4k / 2x / heroes off / 1.00 defaults");
-try { host.Host(new() { Patch = "1.09" }); throw new Exception("Unsupported patch accepted"); }
+try { host.Host(new() { Patch = "unknown-patch" }); throw new Exception("Unsupported patch accepted"); }
 catch (InvalidOperationException) { Console.WriteLine("PASS unsupported patch rejected"); }
 host.Start("127.0.0.1"); guest.Start("127.0.0.2");
 host.Host(new() { Title = "Integration room", Capacity = 2 });
@@ -219,7 +253,7 @@ try{await guest.RequestReady();throw new Exception("Guest sent host-only ready r
 await Until(() => guest.Current?.Players.Count == 2, "join and roster synchronization");
 if (await PeerService.Query("127.0.0.2") != null) throw new Exception("Guest advertised a room it does not host");
 Console.WriteLine("PASS only hosts advertise rooms");
-using var third = new PeerService(new() { Name = "Third" });
+using var third = new PeerService(MemorySettings("Third"));
 try { await third.Join("127.0.0.1"); throw new Exception("Capacity not enforced"); }
 catch (IOException e) when (e.Message == "The room is full.") { Console.WriteLine("PASS full room rejection"); }
 string roomMessage = "", dm = "";
@@ -281,6 +315,11 @@ try
         void Big(int value){var bytes=new byte[4];System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(bytes,value);writer.Write(bytes);}
         writer.Write(System.Text.Encoding.ASCII.GetBytes("BIGF"));Big(24+entry.Length+ini.Length);Big(1);Big(24+entry.Length);Big(24+entry.Length);Big(ini.Length);writer.Write(entry);writer.Write(ini);
     }
+    // Resolve this fixture as a locally available patch library rather than
+    // accidentally reading the real machine's switcher archives.
+    File.WriteAllBytes(Path.Combine(fixture,"lotrbfme2.exe"),[]);
+    var fixtureLibrary=Path.Combine(fixture,"BFME2 Ecth's Patch Switcher","100");Directory.CreateDirectory(fixtureLibrary);
+    File.Copy(Path.Combine(fixture,"Maps.big"),Path.Combine(fixtureLibrary,"Maps.big"));
     var savedSettings=Settings.InMemory();savedSettings.GamePath=Path.Combine(fixture,"lotrbfme2.exe");
     using(var savedHost=new PeerService(savedSettings))
     {
@@ -302,7 +341,7 @@ try
         if(savedHost.Current!.Players[0].Spot!=1||savedSettings.PreferredSpot(@"maps\test.map")!=1)throw new Exception("Last host selection overwrote explicit preference");
         Console.WriteLine("PASS saved spots are map-specific and validated against current map metadata");
     }
-    using var placementHost=new PeerService(new(){Name="Placement host",GamePath=Path.Combine(fixture,"lotrbfme2.exe")});
+    using var placementHost=new PeerService(MemorySettings("Placement host",Path.Combine(fixture,"lotrbfme2.exe")));
     using var first=new PeerService(MemorySettings("First"));using var second=new PeerService(MemorySettings("Second"));
     placementHost.Start("127.0.0.10");placementHost.Host(new(){Map="Test",MapPath=@"maps\test.map"});
     await first.Join("127.0.0.10");await second.Join("127.0.0.10");
@@ -349,7 +388,7 @@ try
     Console.WriteLine("PASS invalid selections rejected, releases, disconnect and map changes");
 }
 finally{Directory.Delete(fixture,true);}
-using(var original=new PeerService(new(){Name="Original"}))
+using(var original=new PeerService(MemorySettings("Original")))
 using(var successor=new PeerService(MemorySettings("Successor")))
 using(var remaining=new PeerService(MemorySettings("Remaining")))
 {
@@ -379,8 +418,8 @@ using(var remaining=new PeerService(MemorySettings("Remaining")))
     await original.LeaveRoom();if(original.Current!=null)throw new Exception("Last host leave failed");
     Console.WriteLine("PASS host-only permissions, room preservation, promotion, leave and kick");
 }
-using(var readyHost=new PeerService(new(){Name="Host"}))
-using(var noListener=new PeerService(new(){Name="Needs listener"}))
+using(var readyHost=new PeerService(MemorySettings("Host")))
+using(var noListener=new PeerService(MemorySettings("Needs listener")))
 {
     readyHost.Start("127.0.0.30");readyHost.Host(new());await noListener.Join("127.0.0.30");
     await Until(()=>readyHost.Current?.Players.Count==2,"handoff preflight roster");
@@ -394,7 +433,7 @@ Console.WriteLine("PASS stale room snapshots cannot overwrite newer selections")
 Console.WriteLine("ALL PROTOCOL CHECKS PASSED");
 
 
-using(var presenceHost=new PeerService(new(){Name="Presence host"}))
+using(var presenceHost=new PeerService(MemorySettings("Presence host")))
 {
     presenceHost.Start("127.0.0.39");presenceHost.Host(new());
     await presenceHost.SetHostGameRunning(true);
@@ -415,8 +454,8 @@ if(!directory.Known(now.AddSeconds(21)).Contains("26.1.1.1"))throw new Exception
 directory.Success("26.1.1.1","Idle friend",null,now.AddSeconds(22));
 if(directory.Find("26.1.1.1",now.AddSeconds(22)) is not {Reconnecting:false,Room:null})throw new Exception("Confirmed room closure not immediate");
 Console.WriteLine("PASS presence grace, expiry, retry retention, recovery and immediate room closure");
-using(var idle=new PeerService(new(){Name="Idle player"}))
-using(var seeker=new PeerService(new(){Name="Seeker"}))
+using(var idle=new PeerService(MemorySettings("Idle player")))
+using(var seeker=new PeerService(MemorySettings("Seeker")))
 {
  idle.Start("127.0.0.40");seeker.Start("127.0.0.41");bool seen=false;
  seeker.Discovered+=ip=>{if(ip=="127.0.0.40")seen=true;};
@@ -427,13 +466,13 @@ using(var seeker=new PeerService(new(){Name="Seeker"}))
  Console.WriteLine("PASS idle player identity without a room or chat activity");
 }
 
-using(var isolatedHost=new PeerService(new(){Name="Large room"}))
+using(var isolatedHost=new PeerService(MemorySettings("Large room")))
 {
  isolatedHost.Start("127.0.0.50");isolatedHost.Host(new(){Capacity=64});
  var crowd=new List<PeerService>();
  try
  {
-  for(int i=0;i<9;i++){var peer=new PeerService(new(){Name="Guest "+i});crowd.Add(peer);peer.Start("127.0.0."+(51+i));await peer.Join("127.0.0.50");}
+  for(int i=0;i<9;i++){var peer=new PeerService(MemorySettings("Guest "+i));crowd.Add(peer);peer.Start("127.0.0."+(51+i));await peer.Join("127.0.0.50");}
   await Until(()=>crowd.All(p=>p.Current?.Players.Count==10),"ten-player room roster");
   if((await PeerService.Query("127.0.0.50","127.0.0.60"))?.Players.Count!=10)throw new Exception("Large room discovery failed");
   bool received=false;isolatedHost.PrivateMessage+=(_,_,text)=>received=text=="still connected";
@@ -500,8 +539,8 @@ using(var nameGuest=new PeerService(Settings.InMemory()))
  Console.WriteLine("PASS nickname persistence, live guest/host roster and discovery without readiness reset");
 }
 
-using(var failedHost=new PeerService(new(){Name="Failed host"}))
-using(var recoveryHost=new PeerService(new(){Name="Recovery host"}))
+using(var failedHost=new PeerService(MemorySettings("Failed host")))
+using(var recoveryHost=new PeerService(MemorySettings("Recovery host")))
 using(var recoveryGuest=new PeerService(MemorySettings("Recovery guest")))
 {
  failedHost.Start("127.0.0.81");recoveryHost.Start("127.0.0.82");recoveryGuest.Start("127.0.0.83");
@@ -518,8 +557,8 @@ using(var recoveryGuest=new PeerService(MemorySettings("Recovery guest")))
  recoveryHost.Leave();
 }
 
-using(var seriesHost=new PeerService(new(){GamePath=installation}))
-using(var seriesGuest=new PeerService(new(){GamePath=installation}))
+using(var seriesHost=new PeerService(MemorySettings("Series player",installation)))
+using(var seriesGuest=new PeerService(MemorySettings("Series player",installation)))
 {
  seriesHost.Start("127.0.0.90");seriesGuest.Start("127.0.0.91");seriesHost.Host(new(){Title="Series"});await seriesGuest.Join(seriesHost.Address);
  var setup=System.Text.Json.JsonSerializer.Deserialize<Room>(System.Text.Json.JsonSerializer.Serialize(seriesGuest.Current))!;
@@ -609,3 +648,6 @@ if(File.Exists(installation))
  if(invitation!=null)throw new Exception("Blocked invitation displayed");
  h.Leave();Console.WriteLine("PASS invitations, consent, blocked invitations and per-player game lifecycle");
 }
+
+}
+catch(Exception error){Console.Error.WriteLine(error);Environment.ExitCode=1;}

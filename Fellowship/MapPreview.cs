@@ -17,10 +17,11 @@ public sealed class MapPreview : Border
     readonly TextBlock fallback=UI.LocalizedText("Map preview unavailable",11,UI.Muted);
     string last="";
     public MapPreview(){FlowDirection=FlowDirection.LeftToRight;CornerRadius=new(6);Background=System.Windows.Media.Brushes.Transparent;Padding=new(0);Margin=new(0,12,0,8);mapCanvas.Children.Add(image);mapCanvas.Children.Add(selectionLayer);mapView.Child=mapCanvas;Child=mapView;}
-    public void ShowMap(string executable,string map)
+    public void ShowMap(string executable,string map,string? patch=null)
     {
-        var key=executable+"|"+map;if(last==key)return;last=key;
-        image.Source=Load(executable,map);image.ToolTip="Starting locations — preview only";Child=image.Source==null?fallback:mapView;
+        patch=patch??GamePatches.Active(executable);
+        var key=executable+"|"+map+"|"+patch;if(last==key)return;last=key;
+        image.Source=Load(executable,map,patch:patch);image.ToolTip="Starting locations — preview only";Child=image.Source==null?fallback:mapView;
     }
     public static string TeamColor(int team)=>team switch{1=>"#73ACFF",2=>"#ED8585",3=>"#C598F4",4=>"#72D6AB",_=>"#B3BCCB"};
     public void ShowSelections(Room room,string localId,bool enabled)
@@ -41,13 +42,12 @@ public sealed class MapPreview : Border
         }
     }
     public static List<MapSpot> ParseSpots(string cache,string map)=>GameMapData.ParseSpots(cache,map);
-    public static BitmapSource? Load(string executable,string map,string suffix="_art.tga")
+    public static BitmapSource? Load(string executable,string map,string suffix="_art.tga",string? patch=null)
     {
         try
         {
-            var bytes=GameMapData.ReadAsset(executable,map[..^4]+suffix);if(bytes==null)return null;
-            var terrain=Decode(bytes);var cache=GameMapData.ReadAsset(executable,@"maps\mapcache.ini");
-            var spots=cache==null?[]:ParseSpots(Encoding.ASCII.GetString(cache),map);
+            var bytes=GameMapData.ReadAsset(executable,map[..^4]+suffix,patch);if(bytes==null)return null;
+            var terrain=Decode(bytes);var spots=GameMapData.Spots(executable,map,patch);
             const int size=320;var visual=new DrawingVisual();
             using(var dc=visual.RenderOpen())
             {
@@ -73,7 +73,7 @@ public sealed class MapPreview : Border
             }
             var result=new RenderTargetBitmap(size,size,96,96,PixelFormats.Pbgra32);result.Render(visual);result.Freeze();return result;
         }
-        catch(Exception e) when(e is IOException or ArgumentException or OverflowException or FormatException){return null;}
+        catch(Exception e) when(e is IOException or InvalidDataException or ArgumentException or OverflowException or FormatException){return null;}
     }
     public static BitmapSource Decode(byte[] bytes)
     {

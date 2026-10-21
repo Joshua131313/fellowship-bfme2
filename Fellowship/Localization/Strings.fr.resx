@@ -1807,4 +1807,57 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Changing Fellowship group…" xml:space="preserve">
     <value>Changement du groupe Fellowship…</value>
   </data>
+  <data name="PRESET" xml:space="preserve">
+    <value>PRÉRÉGLAGE</value>
+  </data>
+  <data name="Choose supported BFME2 rules." xml:space="preserve">
+    <value>Choisissez des règles compatibles avec BFME2.</value>
+  </data>
+  <data name="The selected game.dat is not a Windows game executable." xml:space="preserve">
+    <value>Le fichier game.dat sélectionné n’est pas un exécutable de jeu Windows.</value>
+  </data>
+  <data name="1   Open Multiplayer → Network&#10;2   Host creates; guests join&#10;3   Check patch, rules, teams and spots" xml:space="preserve">
+    <value>1   Ouvrez Multijoueur → Réseau
+2   L’hôte crée le salon, les invités le rejoignent
+3   Vérifiez la version, les règles, les équipes et les positions</value>
+  </data>
+  <data name="Any room member can host BFME2. Use the patch shown by the room and join the native lobby manually." xml:space="preserve">
+    <value>Tout membre du salon peut héberger la partie BFME2. Utilisez la version indiquée dans le salon et rejoignez manuellement le salon en jeu.</value>
+  </data>
+  <data name="Automatic lobby sync is available for verified BFME2 1.00 only. Set rules, teams and spots in BFME2 manually for this patch." xml:space="preserve">
+    <value>La synchronisation automatique du salon est réservée à une installation vérifiée de BFME2 1.00. Pour cette version, réglez manuellement les règles, les équipes et les positions dans BFME2.</value>
+  </data>
+  <data name="Set the room's map, rules, teams and spots manually in BFME2. Fellowship keeps the room and chat open." xml:space="preserve">
+    <value>Réglez manuellement la carte, les règles, les équipes et les positions du salon dans BFME2. Fellowship garde le salon et le chat ouverts.</value>
+  </data>
+  <data name="Open Multiplayer → Network and set rules, teams and spots manually for this patch." xml:space="preserve">
+    <value>Ouvrez Multijoueur → Réseau et réglez manuellement les règles, les équipes et les positions pour cette version.</value>
+  </data>
+  <data name="This room uses BFME2 {0}. Your installed patch could not be verified. You can join the room; check it in the patch switcher before playing." xml:space="preserve">
+    <value>Ce salon utilise BFME2 {0}. Votre version installée n’a pas pu être vérifiée. Vous pouvez rejoindre le salon ; vérifiez votre version dans le sélecteur de versions avant de jouer.</value>
+  </data>
+  <data name="This room uses BFME2 {0}, but your installed patch is {1}. You can join the room; switch patches before playing." xml:space="preserve">
+    <value>Ce salon utilise BFME2 {0}, mais votre version installée est {1}. Vous pouvez rejoindre le salon ; changez de version avant de jouer.</value>
+  </data>
+  <data name="The preset map is not installed" xml:space="preserve">
+    <value>La carte du préréglage n’est pas installée</value>
+  </data>
+  <data name="Select Custom preset to edit." xml:space="preserve">
+    <value>Sélectionnez le préréglage personnalisé pour modifier ces options.</value>
+  </data>
+  <data name="Enter a preset name." xml:space="preserve">
+    <value>Saisissez un nom de préréglage.</value>
+  </data>
+  <data name="Select a map and a valid room limit." xml:space="preserve">
+    <value>Sélectionnez une carte et une limite de joueurs valide.</value>
+  </data>
+  <data name="Select a map, player limit, resources, command points and privacy." xml:space="preserve">
+    <value>Sélectionnez une carte, une limite de joueurs, les ressources, les points de commandement et la visibilité.</value>
+  </data>
+  <data name="BFME II  {0}   /   VPN" xml:space="preserve">
+    <value>BFME II  {0}   /   VPN</value>
+  </data>
+  <data name="Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps." xml:space="preserve">
+    <value>Les fichiers de cartes de cette version ne sont pas disponibles. Installez-la avec Ecth's Patch Switcher pour parcourir ses cartes.</value>
+  </data>
 </root>

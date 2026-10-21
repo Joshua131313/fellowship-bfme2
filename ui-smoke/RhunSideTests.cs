@@ -88,6 +88,7 @@ static class RhunSideTests
         }
         Console.WriteLine("PASS replayed matches preserve vertical positions with retained or Random spots for every host; explicit selections take priority without collisions");
         room.Mode="2v2";Check(!RhunSides.Apply(room,new(Guid.NewGuid().ToString("N"),Snapshot(first)),first),"2v2 received Rhun rules");
+        room.Mode="3v3";room.Patch="1.09";Check(!RhunSides.Enabled(room),"Other patches received the 1.00 native Rhun adapter");room.Patch="1.00";
         room.Mode="Custom";Check(!RhunSides.Enabled(room),"Custom mode received Rhun rules");
         room.Mode="3v3";room.MapPath="maps\\other.map";Check(!RhunSides.Enabled(room),"Other map received Rhun rules");
         var payload=System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new LivePlacement.Reply("Layout",Lobby:report));

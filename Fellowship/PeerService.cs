@@ -118,7 +118,6 @@ public sealed partial class PeerService : IDisposable
                 if(!joined){await c.Send(new(){Type="error",Text="Room handoff expired or was not authorized."});return;}
             }
             else if (hello.Type != "join") return;
-            if (hello.Version != "1.00") { await c.Send(new() { Type = "error", Text = "Only BFME2 1.00 is supported by this build." }); return; }
             string error = "";
             if(!joined)lock (gate)
             {
@@ -206,7 +205,8 @@ public sealed partial class PeerService : IDisposable
     }
     public void Host(Room room,List<MapSpot>? preparedSpots=null)
     {
-        if (room.Patch != "1.00") throw new InvalidOperationException("Only BFME2 1.00 is supported by this build.");
+        if (!GamePatches.IsKnown(room.Patch)) throw new InvalidOperationException("Check the room name, patch and player limit.");
+        room.Patch=GamePatches.Normalize(room.Patch);
         room.Match.Validate();
         if(room.Capacity is <2 or >64 || string.IsNullOrWhiteSpace(room.Title))throw new InvalidOperationException("Enter a room name and choose between 2 and 64 players.");
         Leave();
@@ -215,7 +215,7 @@ public sealed partial class PeerService : IDisposable
             IsHost = true; LocalId = "host"; Current = room;
             recoveryToken=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
             room.Isolated=false;
-            room.Spots=preparedSpots??GameMapData.Spots(settings.GamePath,room.MapPath);
+            room.Spots=preparedSpots??GameMapData.Spots(settings.GamePath,room.MapPath,room.Patch);
             room.Host = settings.Name;room.HostAddress=Address;
             var saved=settings.LastHostedSetup;
             int team=room.InitialTeams.Length>0?room.InitialTeams[0]:saved?.Team is >=0 and <=4?saved.Team:0;
@@ -405,13 +405,20 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task UpdateRoom(string map, string patch, string rules)
     {
-        if (patch != "1.00") throw new InvalidOperationException("Only BFME2 1.00 is supported by this build.");
+        if (!GamePatches.IsKnown(patch)) throw new InvalidOperationException("Check the room name, patch and player limit.");
+        patch=GamePatches.Normalize(patch);
         lock (gate)
         {
             if (!IsHost || Current == null) return;
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
-            Current.Map = Clean(map, 100); Current.Patch = Clean(patch, 40); Current.Rules = Clean(rules, 1000);
-
+            if(Current.Patch!=patch)
+            {
+                Current.SidePlan=null;Current.LastRhunLineup.Clear();Current.LastRhunHost="";
+                Current.Spots=GameMapData.Spots(settings.GamePath,Current.MapPath,patch);
+                foreach(var player in Current.Players){player.LastMapSpots[Current.MapPath]=player.Spot;player.Spot=0;}
+                Current.ApplyMapSpotChoices();
+            }
+            Current.Map = Clean(map, 100); Current.Patch = patch; Current.Rules = Clean(rules, 1000);
         }
         await BroadcastState();
     }
@@ -429,12 +436,18 @@ public sealed partial class PeerService : IDisposable
     async Task ApplyNativeRules(Room observed)
     {
         observed.Match.Validate();
-        var map=GameInstallation.Maps(settings.GamePath).FirstOrDefault(m=>m.Path.Equals(observed.MapPath,StringComparison.OrdinalIgnoreCase));
+        string patch;
+        lock(gate)
+        {
+            if(!IsHost||Current==null||Current.Patch!="1.00"||transferring||Current.Id!=observed.Id||Current.Revision!=observed.Revision)return;
+            patch=Current.Patch;
+        }
+        var map=GameInstallation.Maps(settings.GamePath,patch).FirstOrDefault(m=>m.Path.Equals(observed.MapPath,StringComparison.OrdinalIgnoreCase));
         if(map==null)throw new InvalidOperationException("Map is not installed.");
         Task update;
         lock(gate)
         {
-            if(!IsHost||Current==null||transferring||Current.Id!=observed.Id||Current.Revision!=observed.Revision)return;
+            if(!IsHost||Current==null||transferring||Current.Id!=observed.Id||Current.Revision!=observed.Revision||Current.Patch!=patch)return;
             var draft=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current))!;
             draft.Map=map.Name;draft.MapPath=map.Path;draft.Match=observed.Match;
             update=EditRoom(draft);
@@ -444,20 +457,21 @@ public sealed partial class PeerService : IDisposable
     public async Task EditRoom(Room draft)
     {
         draft.Match.Validate();
-        if(draft.Patch!="1.00"||draft.Capacity<2||draft.Capacity>64||string.IsNullOrWhiteSpace(draft.Title))throw new InvalidOperationException("Check the room name, patch and player limit.");
+        if(!GamePatches.IsKnown(draft.Patch)||draft.Capacity<2||draft.Capacity>64||string.IsNullOrWhiteSpace(draft.Title))throw new InvalidOperationException("Check the room name, patch and player limit.");
+        string patch=GamePatches.Normalize(draft.Patch);
         lock(gate)
         {
             if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can edit this room.");
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(draft.Capacity<Current.Players.Count)throw new InvalidOperationException("The player limit cannot be lower than the current roster.");
-            bool mapChanged=Current.MapPath!=draft.MapPath;
+            bool mapChanged=Current.MapPath!=draft.MapPath||Current.Patch!=patch;
             if(mapChanged||Current.Mode!=draft.Mode){Current.SidePlan=null;Current.LastRhunLineup.Clear();Current.LastRhunHost="";}
             if(mapChanged)
             {
-                Current.Spots=GameMapData.Spots(settings.GamePath,draft.MapPath);
+                Current.Spots=GameMapData.Spots(settings.GamePath,draft.MapPath,patch);
                 foreach(var p in Current.Players){p.LastMapSpots[Current.MapPath]=p.Spot;p.Spot=0;}
             }
-            Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;
+            Current.Title=Clean(draft.Title,80);Current.Capacity=draft.Capacity;Current.Map=Clean(draft.Map,100);Current.MapPath=draft.MapPath;Current.Patch=patch;
             Current.Mode=draft.Mode;Current.Match=draft.Match;Current.Rules=draft.Match.Summary;Current.FriendsOnly=draft.FriendsOnly;
             if(mapChanged)
             {

@@ -16,6 +16,22 @@ public static class HostPreset
     public const string SupportedHash = "D79265812638D141C4F02E5924B03100D3F69EACA10A9379CFE14B074FBAF716";
     public static string LogPath => Path.Combine(Settings.Folder,"host-preset.log");
     public static bool Matches(Room? room) => room is {Patch:"1.00"} && MatchRules.ResourceValues.Contains(room.Match.Resources) && MatchRules.CommandValues.Contains(room.Match.CommandPoints);
+    static readonly Dictionary<string,(long Length,long Modified,bool Valid)> verified=new(StringComparer.OrdinalIgnoreCase);
+    public static bool CanSynchronize(string path,Room? room)
+    {
+        if(!Matches(room)||GamePatches.Active(path)!="1.00")return false;
+        try
+        {
+            var file=new FileInfo(Path.Combine(Path.GetDirectoryName(path)!,"game.dat"));
+            lock(verified)
+            {
+                if(verified.TryGetValue(file.FullName,out var cached)&&cached.Length==file.Length&&cached.Modified==file.LastWriteTimeUtc.Ticks)return cached.Valid;
+                using var stream=file.OpenRead();bool valid=Convert.ToHexString(SHA256.HashData(stream))==SupportedHash;
+                verified[file.FullName]=(file.Length,file.LastWriteTimeUtc.Ticks,valid);return valid;
+            }
+        }
+        catch(Exception error) when(error is IOException or ArgumentException or UnauthorizedAccessException){return false;}
+    }
 
     public static void ValidateBinary(string path)
     {
@@ -36,7 +52,7 @@ public static class HostPreset
             ValidateBinary(path);
             var room=encoded==null?new Room():JsonSerializer.Deserialize<Room>(Convert.FromBase64String(encoded))??throw new InvalidOperationException("Invalid preset.");
             room.Match.Validate();
-            if(!GameInstallation.Maps(path).Any(m=>m.Path==room.MapPath))throw new InvalidOperationException("Selected map was not found in this installation.");
+            if(!GameInstallation.Maps(path,room.Patch).Any(m=>m.Path==room.MapPath))throw new InvalidOperationException("Selected map was not found in this installation.");
             if(GameLauncher.IsRunning())throw new InvalidOperationException("Exit BFME2 before applying the host preset.");
             var profile=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"My Battle for Middle-earth(tm) II Files");
             if(!Directory.Exists(profile))throw new InvalidOperationException("Run BFME2 once to create its player profile first.");
