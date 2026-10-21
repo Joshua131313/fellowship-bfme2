@@ -1950,4 +1950,10 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Invalid room invitation." xml:space="preserve">
     <value>Invitación a la sala no válida.</value>
   </data>
+  <data name="Show players" xml:space="preserve">
+    <value>Mostrar jugadores</value>
+  </data>
+  <data name="Hide players" xml:space="preserve">
+    <value>Ocultar jugadores</value>
+  </data>
 </root>

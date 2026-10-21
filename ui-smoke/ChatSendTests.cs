@@ -77,7 +77,7 @@ static class ChatSendTests
         Console.WriteLine("PASS clickable HTTP/HTTPS/www links, punctuation and balanced parentheses, unchanged selection, safe schemes, blocked privacy and long-link wrapping (navigation not invoked)");
 
         foreach(string theme in new[]{"Light","Dark","Black"})
-        foreach(bool rtl in new[]{false,true})RenderBubbles(theme,rtl);
+        foreach(bool rtl in new[]{false,true})RenderChatRows(theme,rtl);
         Appearance.Apply("Dark");
     }
     static IEnumerable<Hyperlink> Links(ChatTranscript chat)=>chat.Document.Blocks.OfType<Section>().SelectMany(s=>s.Blocks.OfType<Paragraph>()).SelectMany(p=>Inlines(p.Inlines)).OfType<Hyperlink>();
@@ -99,24 +99,32 @@ static class ChatSendTests
         view.Measure(new Size(480,330));view.Arrange(new Rect(0,0,480,330));view.UpdateLayout();
         var frame=new DispatcherFrame();Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle,new Action(()=>frame.Continue=false));Dispatcher.PushFrame(frame);view.UpdateLayout();
     }
-    static void RenderBubbles(string theme,bool rtl)
+    static void RenderChatRows(string theme,bool rtl)
     {
         Appearance.Apply(theme);
         var chat=new ChatTranscript{FlowDirection=rtl?FlowDirection.RightToLeft:FlowDirection.LeftToRight};
         chat.Append("Aragorn","Ready for another game?");chat.Append("You","Ready!",true);
         var host=new Border{Background=UI.Brush("#191D24"),Child=chat};Settle(host);
-        var bounds=((IEnumerable<(Rect Bounds,Brush Fill)>)typeof(ChatTranscript).GetField("backgrounds",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(chat)!).ToArray();
-        if(bounds.Length!=2||bounds.Any(b=>b.Bounds.Width>460||b.Bounds.Width<80||b.Bounds.Height>32))throw new Exception("Received and outgoing messages do not have compact single-line row bounds");
+        var bounds=((IEnumerable<(Rect Bounds,string Initial,Brush Fill)>)typeof(ChatTranscript).GetField("avatars",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(chat)!).ToArray();
+        if(bounds.Length!=2||bounds.Any(b=>b.Bounds.Width!=26||b.Bounds.Height!=26))throw new Exception("Received and outgoing messages lack compact avatar bounds");
         var transform=chat.TransformToAncestor(host);var actual=bounds.Select(b=>transform.TransformBounds(b.Bounds)).ToArray();
-        if(Math.Abs(rtl?actual[0].Right-actual[1].Right:actual[0].Left-actual[1].Left)>1)throw new Exception("Chat rows did not share the same logical leading edge");
-        var image=new RenderTargetBitmap(480,330,96,96,PixelFormats.Pbgra32);image.Render(host);var pixels=new byte[480*330*4];image.CopyPixels(pixels,480*4,0);
-        foreach(var bubble in bounds)
+        if(Math.Abs(rtl?actual[0].Right-actual[1].Right:actual[0].Left-actual[1].Left)>1||actual.Any(b=>rtl?b.Left<240:b.Right>240))throw new Exception("Chat avatars did not share the logical leading edge");
+        foreach(var section in chat.Document.Blocks.OfType<Section>())
         {
-            var expected=((SolidColorBrush)bubble.Fill).Color;var sample=transform.Transform(new Point(bubble.Bounds.Left+3,bubble.Bounds.Top+10));int x=(int)Math.Floor(sample.X),y=(int)Math.Floor(sample.Y),at=(y*480+x)*4;
-            if(pixels[at]!=expected.B||pixels[at+1]!=expected.G||pixels[at+2]!=expected.R)throw new Exception($"{theme} {(rtl?"RTL":"LTR")} bubble background is not visibly rendered at {x},{y}");
-            if(expected==((SolidColorBrush)host.Background).Color)throw new Exception("Incoming bubble disappears into the chat background");
+            var paragraph=(Paragraph)section.Blocks.FirstBlock;var top=paragraph.ContentStart.GetCharacterRect(LogicalDirection.Forward);var bottom=paragraph.ContentEnd.GetCharacterRect(LogicalDirection.Backward);
+            if(bottom.Bottom-top.Top>44)throw new Exception("Single-line body and name/time header consume too much vertical space");
         }
-        Directory.CreateDirectory("dist");var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(image));using var file=File.Create($"dist/preview-chat-bubbles-{theme.ToLowerInvariant()}-{(rtl?"rtl":"ltr")}.png");png.Save(file);
-        Console.WriteLine($"PASS {theme} {(rtl?"RTL":"LTR")} compact single-line chat rows with visible backgrounds and shared leading alignment");
+        var image=new RenderTargetBitmap(480,330,96,96,PixelFormats.Pbgra32);image.Render(host);var pixels=new byte[480*330*4];image.CopyPixels(pixels,480*4,0);
+        Directory.CreateDirectory("dist");var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(image));using var file=File.Create($"dist/preview-chat-rows-{theme.ToLowerInvariant()}-{(rtl?"rtl":"ltr")}.png");png.Save(file);
+        foreach(var avatar in bounds)
+        {
+            var expected=((SolidColorBrush)avatar.Fill).Color;var sample=transform.Transform(new Point(avatar.Bounds.Left+3,avatar.Bounds.Top+10));int x=(int)Math.Floor(sample.X),y=(int)Math.Floor(sample.Y),at=(y*480+x)*4;
+            if(pixels[at]!=expected.B||pixels[at+1]!=expected.G||pixels[at+2]!=expected.R)throw new Exception($"{theme} {(rtl?"RTL":"LTR")} player avatar is not visibly rendered at {x},{y}");
+            if(expected==((SolidColorBrush)host.Background).Color)throw new Exception("Player avatar disappears into the chat background");
+        }
+        // The body area remains the host surface; only avatars draw decoration.
+        var clear=transform.Transform(new Point(450,bounds[0].Bounds.Top+25));int clearAt=((int)clear.Y*480+(int)clear.X)*4;var surface=((SolidColorBrush)host.Background).Color;
+        if(pixels[clearAt]!=surface.B||pixels[clearAt+1]!=surface.G||pixels[clearAt+2]!=surface.R)throw new Exception("Chat message still paints a bubble across the conversation surface");
+        Console.WriteLine($"PASS {theme} {(rtl?"RTL":"LTR")} compact avatar rows, name/time header, body underneath and bubble-free shared surface");
     }
 }

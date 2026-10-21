@@ -1950,4 +1950,10 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Invalid room invitation." xml:space="preserve">
     <value>Invitation au salon non valide.</value>
   </data>
+  <data name="Show players" xml:space="preserve">
+    <value>Afficher les joueurs</value>
+  </data>
+  <data name="Hide players" xml:space="preserve">
+    <value>Masquer les joueurs</value>
+  </data>
 </root>

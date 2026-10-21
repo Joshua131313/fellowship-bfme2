@@ -41,13 +41,16 @@ static class BrowserRoomLayoutTests
             if(body.Visibility!=Visibility.Visible||!Nodes(body).Contains(host)||!Nodes(body).Contains(search))throw new Exception("Returning to Game rooms lost its filter actions");
         }
         finally{browser.Content=view;browser.Peer.Dispose();L.Apply(language);Appearance.Apply("Dark");}
-        Console.WriteLine("PASS header-free room browser, adjacent mirrored Host action, full table height growth, translated minimum-width filters and visible footer controls");
+        Console.WriteLine("PASS header-free room browser, matching filter gaps, adjacent mirrored Host action, full table height growth, translated minimum-width filters and visible footer controls");
     }
     static void CheckLayout(FrameworkElement view,Grid body,TextBox search,Button host,FrameworkElement table,FrameworkElement footer,FrameworkElement status,bool rtl)
     {
         var input=Bounds(search,view);var action=Bounds(host,view);double gap=rtl?input.Left-action.Right:action.Left-input.Right;
         if(gap< -.5||gap>24||Math.Abs(input.Bottom-action.Bottom)>1||search.ActualWidth<120)throw new Exception($"Host room is not adjacent to the search input on its logical trailing side: input={input}, host={action}, RTL={rtl}");
         var tableBounds=Bounds(table,body);var footerBounds=Bounds(footer,body);var statusBounds=Bounds(status,body);
+        var filter=body.Children.Cast<FrameworkElement>().Single(e=>Grid.GetRow(e)==2);var filterBounds=Bounds(filter,body);
+        double beforeFilters=filterBounds.Top-body.RowDefinitions.Take(2).Sum(row=>row.ActualHeight),afterFilters=tableBounds.Top-filterBounds.Bottom;
+        if(Math.Abs(beforeFilters-afterFilters)>.5||Math.Abs(beforeFilters-12)>.5)throw new Exception($"Room filter gaps do not match: above={beforeFilters}, below={afterFilters}");
         if(body.RowDefinitions[1].ActualHeight>.1||table.ActualHeight<180||tableBounds.Bottom>footerBounds.Top+.5||footerBounds.Bottom>statusBounds.Top+.5||statusBounds.Bottom>body.ActualHeight+.5)throw new Exception("Room table or bottom controls have unused header space or overlap");
         foreach(var button in Nodes(footer).OfType<Button>())
         {

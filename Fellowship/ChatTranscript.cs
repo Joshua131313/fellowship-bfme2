@@ -25,15 +25,14 @@ public sealed class ChatTranscript : RichTextBox
         public Task? Completion {get;internal set;}
         internal OutgoingMessage(string id,string text,Section section){Id=id;Text=text;Section=section;}
     }
-    sealed record Bubble(Section Section,bool Mine,string Id="");
-    readonly List<Bubble> bubbles=[];
+    sealed record ChatRow(Section Section,string Name,bool Mine,string Id="",bool System=false);
+    readonly List<ChatRow> rows=[];
     readonly Dictionary<string,OutgoingMessage> outgoing=new();
     readonly HashSet<string> knownOutgoing=[];
     readonly Queue<string> outgoingOrder=new();
-    List<(Rect Bounds,Brush Fill)> backgrounds=[];
+    List<(Rect Bounds,string Initial,Brush Fill)> avatars=[];
     ScrollViewer? viewer;
     bool following=true,scrollQueued,scrolling;
-    double ContentWidth=>viewer?.ViewportWidth>0?viewer.ViewportWidth:ActualWidth-Padding.Left-Padding.Right;
     public ChatTranscript()
     {
         IsReadOnly=true;IsDocumentEnabled=true;BorderThickness=new(0);Background=Brushes.Transparent;
@@ -51,12 +50,12 @@ public sealed class ChatTranscript : RichTextBox
                 if(VerticalOffset>=ExtentHeight-ViewportHeight-3)following=true;
                 else if(Math.Abs(e.VerticalChange)>0.1&&Math.Abs(e.ExtentHeightChange)<0.1&&Math.Abs(e.ViewportHeightChange)<0.1)following=false;
             }
-            if(Math.Abs(e.ViewportWidthChange)>0.1)LayoutBubbles();
+            if(Math.Abs(e.ViewportWidthChange)>0.1)LayoutRows();
             if(following&&(e.ExtentHeightChange!=0||e.ViewportHeightChange!=0))FollowLatest();
-            UpdateBackgrounds();
+            UpdateAvatars();
         }));
-        SizeChanged+=(_,_)=>{LayoutBubbles();if(following)FollowLatest();};
-        LayoutUpdated+=(_,_)=>UpdateBackgrounds();
+        SizeChanged+=(_,_)=>{LayoutRows();if(following)FollowLatest();};
+        LayoutUpdated+=(_,_)=>UpdateAvatars();
         var menu=new ContextMenu();Section? target=null;
         menu.Items.Add(UI.MenuAction("Copy selected text",()=>CopySelection(),()=>!Selection.IsEmpty));
         menu.Items.Add(UI.MenuAction("Copy message",()=>{if(target!=null)Copy(new TextRange(target.ContentStart,target.ContentEnd).Text.TrimEnd());},()=>target!=null));
@@ -67,7 +66,7 @@ public sealed class ChatTranscript : RichTextBox
     void CopySelection()=>Copy(Selection.Text);
     public void Append(string name,string text,bool mine=false)
     {
-        if(mine)FollowOwnMessage();var section=CreateSection(name);((Paragraph)section.Blocks.FirstBlock).Inlines.Add(MessageBody(text));Add(section,mine);
+        if(mine)FollowOwnMessage();var section=CreateSection(name);((Paragraph)section.Blocks.FirstBlock).Inlines.Add(MessageBody(text));Add(section,name,mine);
     }
     public OutgoingMessage AppendOutgoing(string name,string text,string id)
     {
@@ -77,7 +76,7 @@ public sealed class ChatTranscript : RichTextBox
         var message=new OutgoingMessage(id,text,section);outgoing[id]=message;
         knownOutgoing.Add(id);outgoingOrder.Enqueue(id);
         while(outgoingOrder.Count>1000)knownOutgoing.Remove(outgoingOrder.Dequeue());
-        SetSending(message);Add(section,true,id);return message;
+        SetSending(message);Add(section,name,true,id);return message;
     }
     public bool ConfirmOutgoing(string id,string text="")
     {
@@ -95,7 +94,7 @@ public sealed class ChatTranscript : RichTextBox
     {
         message.Sending=false;message.Confirmed=true;
         if(message.Delivery.Parent is Paragraph line)line.Inlines.Remove(message.Delivery);
-        LayoutBubbles();if(following)FollowLatest();
+        LayoutRows();if(following)FollowLatest();
     }
     public void SetFailed(OutgoingMessage message,Exception error,Action retry)
     {
@@ -105,14 +104,14 @@ public sealed class ChatTranscript : RichTextBox
         var label=new Run();L.Bind(label,Run.TextProperty,"Retry");
         var link=new Hyperlink(label){Cursor=Cursors.Hand,Foreground=UI.Brush(UI.Accent)};
         link.Click+=(_,e)=>{e.Handled=true;retry();};message.Delivery.Inlines.Add(link);
-        LayoutBubbles();if(following)FollowLatest();
+        LayoutRows();if(following)FollowLatest();
     }
     void Delivery(OutgoingMessage message,string text,string color)
     {
         message.Delivery.Inlines.Clear();message.Delivery.ToolTip=null;message.Delivery.Foreground=UI.Brush(color);
         message.Delivery.Inlines.Add(new Run("  ·  "));var run=new Run();L.Bind(run,Run.TextProperty,text);message.Delivery.Inlines.Add(run);
         if(message.Delivery.Parent==null)((Paragraph)message.Section.Blocks.FirstBlock).Inlines.Add(message.Delivery);
-        LayoutBubbles();if(following)FollowLatest();
+        LayoutRows();if(following)FollowLatest();
     }
     sealed class SystemText(string format,object[] arguments):IValueConverter
     {
@@ -122,14 +121,15 @@ public sealed class ChatTranscript : RichTextBox
     public void AppendSystem(string text,params object[] arguments)
     {
         var section=CreateSection("");var line=(Paragraph)section.Blocks.FirstBlock;var header=line.Inlines.FirstInline;L.Bind(header,Run.TextProperty,"SYSTEM");header.Foreground=UI.Brush(UI.Muted);
-        var run=Body("");if(arguments.Length==0)L.Bind(run,Run.TextProperty,text);else BindingOperations.SetBinding(run,Run.TextProperty,new Binding(nameof(L.Direction)){Mode=BindingMode.OneWay,Source=L.Current,Converter=new SystemText(text,arguments)});line.Inlines.Add(run);Add(section,false);
+        var run=Body("");if(arguments.Length==0)L.Bind(run,Run.TextProperty,text);else BindingOperations.SetBinding(run,Run.TextProperty,new Binding(nameof(L.Direction)){Mode=BindingMode.OneWay,Source=L.Current,Converter=new SystemText(text,arguments)});line.Inlines.Add(run);Add(section,"",false,system:true);
     }
     static Section CreateSection(string name)
     {
-        var section=new Section{Margin=new(0,0,0,4),Padding=new(8,4,8,4)};
-        var line=new Paragraph{Margin=new(0),LineHeight=18,LineStackingStrategy=LineStackingStrategy.BlockLineHeight};
-        line.Inlines.Add(new Run(name){FontWeight=FontWeights.SemiBold,FontSize=12,Foreground=UI.Brush(UI.Accent)});
-        line.Inlines.Add(new Run("  "+DateTime.Now.ToString("HH:mm")+"  "){FontSize=9,Foreground=UI.Brush(UI.Muted)});
+        var section=new Section{Margin=new(0,0,0,4),Padding=new(34,2,0,2)};
+        var line=new Paragraph{Margin=new(0),FontSize=13,LineHeight=18,LineStackingStrategy=LineStackingStrategy.BlockLineHeight};
+        line.Inlines.Add(new Run(name){FontWeight=FontWeights.SemiBold,FontSize=12,Foreground=UI.Brush("#EFF1F5")});
+        line.Inlines.Add(new Run("  "+DateTime.Now.ToString("HH:mm")){FontSize=10,Foreground=UI.Brush(UI.Muted)});
+        line.Inlines.Add(new LineBreak());
         section.Blocks.Add(line);return section;
     }
     static Run Body(string text)=>new(text){Foreground=UI.Brush("#DEE3ED")};
@@ -154,40 +154,24 @@ public sealed class ChatTranscript : RichTextBox
     {
         var section=CreateSection(name);var line=(Paragraph)section.Blocks.FirstBlock;bool shown=false;Span? body=null;
         var label=new Run();L.Bind(label,Run.TextProperty,"Show blocked message");var toggle=new Hyperlink(label){Cursor=Cursors.Hand,Foreground=UI.Brush(UI.Accent)};
-        toggle.Click+=(_,e)=>{e.Handled=true;shown=!shown;if(shown){if(body==null){body=new Span(new Run("  "));body.Inlines.Add(MessageBody(text));}line.Inlines.Add(body);}else line.Inlines.Remove(body!);L.Bind(label,Run.TextProperty,shown?"Hide message":"Show blocked message");LayoutBubbles();if(following)FollowLatest();};
-        line.Inlines.Add(toggle);Add(section,false);
+        toggle.Click+=(_,e)=>{e.Handled=true;shown=!shown;if(shown){if(body==null){body=new Span(new Run("  "));body.Inlines.Add(MessageBody(text));}line.Inlines.Add(body);}else line.Inlines.Remove(body!);L.Bind(label,Run.TextProperty,shown?"Hide message":"Show blocked message");LayoutRows();if(following)FollowLatest();};
+        line.Inlines.Add(toggle);Add(section,name,false);
     }
-    void Add(Section section,bool mine,string id="")
+    void Add(Section section,string name,bool mine,string id="",bool system=false)
     {
-        bubbles.Add(new(section,mine,id));Document.Blocks.Add(section);
-        while(bubbles.Count>200){var old=bubbles[0];Document.Blocks.Remove(old.Section);if(old.Id.Length>0)outgoing.Remove(old.Id);bubbles.RemoveAt(0);}
-        LayoutBubbles();if(following)FollowLatest();
+        rows.Add(new(section,name,mine,id,system));Document.Blocks.Add(section);
+        while(rows.Count>200){var old=rows[0];Document.Blocks.Remove(old.Section);if(old.Id.Length>0)outgoing.Remove(old.Id);rows.RemoveAt(0);}
+        LayoutRows();if(following)FollowLatest();
     }
-    void LayoutBubbles()
+    void LayoutRows()
     {
-        double width=ContentWidth;
-        if(width<80)return;
-        double cap=width,dpi=VisualTreeHelper.GetDpi(this).PixelsPerDip;
-        foreach(var bubble in bubbles)
+        // One text paragraph per message retains continuous selection, including
+        // links and delivery controls. Only its leading gutter is decorative.
+        foreach(var row in rows)
         {
-            double natural=80;
-            foreach(var block in bubble.Section.Blocks)
-            {
-                if(block is Paragraph p)
-                {
-                    var text=new TextRange(p.ContentStart,p.ContentEnd).Text;
-                    var measure=new FormattedText(text,CultureInfo.CurrentUICulture,FlowDirection,new Typeface(Document.FontFamily,FontStyles.Normal,FontWeights.Normal,FontStretches.Normal),p.FontSize,Foreground,dpi);
-                    natural=Math.Max(natural,Math.Ceiling(measure.WidthIncludingTrailingWhitespace)+16);
-                }
-                else if(block is BlockUIContainer container&&container.Child is FrameworkElement child)
-                {child.Measure(new Size(Math.Max(1,cap-24),double.PositiveInfinity));natural=Math.Max(natural,child.DesiredSize.Width+24);}
-            }
-            double gap=Math.Max(0,width-Math.Min(cap,natural));
-            // Every row starts on the same logical leading edge. WPF mirrors
-            // this control's visual coordinate system for right-to-left UI.
-            var margin=new Thickness(0,0,gap,4);
-            if(bubble.Section.Margin!=margin)bubble.Section.Margin=margin;
+            var margin=new Thickness(0,0,0,4);if(row.Section.Margin!=margin)row.Section.Margin=margin;
         }
+        UpdateAvatars();
     }
     void FollowOwnMessage()
     {
@@ -208,29 +192,35 @@ public sealed class ChatTranscript : RichTextBox
             finally{scrolling=false;}
         }));
     }
-    void UpdateBackgrounds()
+    void UpdateAvatars()
     {
-        var next=new List<(Rect,Brush)>();
-        foreach(var bubble in bubbles)
+        var next=new List<(Rect,string,Brush)>();
+        foreach(var row in rows)
         {
-            var first=bubble.Section.ContentStart;var last=bubble.Section.ContentEnd;
-            if(!first.HasValidLayout||!last.HasValidLayout)continue;
-            var top=first.GetCharacterRect(LogicalDirection.Forward);var bottom=last.GetCharacterRect(LogicalDirection.Backward);
-            if(top.IsEmpty||bottom.IsEmpty)continue;
-            var section=bubble.Section;
-            double width=ContentWidth-section.Margin.Left-section.Margin.Right;
-            if(width<=0)continue;
-            var bounds=new Rect(Padding.Left+section.Margin.Left,top.Top-4,width,Math.Max(1,bottom.Bottom-top.Top+8));
-            next.Add((bounds,UI.Brush(bubble.Mine?"#263657":"#263042")));
+            if(row.System)continue;
+            var first=row.Section.ContentStart;if(!first.HasValidLayout)continue;
+            var top=first.GetCharacterRect(LogicalDirection.Forward);if(top.IsEmpty)continue;
+            string name=row.Name.Trim();string initial=name.Length==0?"?":StringInfo.GetNextTextElement(name).ToUpperInvariant();
+            // WPF mirrors the control's drawing coordinates in right-to-left UI,
+            // putting this same gutter on the logical leading side in Arabic.
+            next.Add((new Rect(Padding.Left,top.Top+1,26,26),initial,UI.Brush("#2C3854")));
         }
-        if(!backgrounds.SequenceEqual(next)){backgrounds=next;InvalidateVisual();}
+        if(!avatars.SequenceEqual(next)){avatars=next;InvalidateVisual();}
     }
     protected override void OnRender(DrawingContext drawingContext)
     {
         base.OnRender(drawingContext);
         drawingContext.PushClip(new RectangleGeometry(new Rect(0,0,ActualWidth,ActualHeight)));
-        var border=new Pen(UI.Brush("#343F51"),1);
-        foreach(var (bounds,fill) in backgrounds)drawingContext.DrawRoundedRectangle(fill,border,bounds,6,6);
+        double dpi=VisualTreeHelper.GetDpi(this).PixelsPerDip;
+        foreach(var (bounds,initial,fill) in avatars)
+        {
+            drawingContext.DrawRoundedRectangle(fill,null,bounds,6,6);
+            var letter=new FormattedText(initial,CultureInfo.CurrentUICulture,FlowDirection,new Typeface(Document.FontFamily,FontStyles.Normal,FontWeights.SemiBold,FontStretches.Normal),12,UI.Brush("#B9CCFF"),dpi);
+            // FormattedText anchors right-to-left text at the origin's right
+            // edge, while left-to-right text starts at its left edge.
+            double center=FlowDirection==FlowDirection.RightToLeft?(bounds.Width+letter.Width)/2:(bounds.Width-letter.Width)/2;
+            drawingContext.DrawText(letter,new Point(bounds.X+center,bounds.Y+(bounds.Height-letter.Height)/2));
+        }
         drawingContext.Pop();
     }
 }

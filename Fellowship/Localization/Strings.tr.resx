@@ -1950,4 +1950,10 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Invalid room invitation." xml:space="preserve">
     <value>Geçersiz oda daveti.</value>
   </data>
+  <data name="Show players" xml:space="preserve">
+    <value>Oyuncuları göster</value>
+  </data>
+  <data name="Hide players" xml:space="preserve">
+    <value>Oyuncuları gizle</value>
+  </data>
 </root>

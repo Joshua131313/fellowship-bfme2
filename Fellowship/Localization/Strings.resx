@@ -1950,4 +1950,10 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Invalid room invitation." xml:space="preserve">
     <value>Invalid room invitation.</value>
   </data>
+  <data name="Show players" xml:space="preserve">
+    <value>Show players</value>
+  </data>
+  <data name="Hide players" xml:space="preserve">
+    <value>Hide players</value>
+  </data>
 </root>

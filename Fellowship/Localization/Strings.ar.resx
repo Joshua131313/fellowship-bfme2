@@ -1950,4 +1950,10 @@
   <data name="Invalid room invitation." xml:space="preserve">
     <value>دعوة الغرفة غير صالحة.</value>
   </data>
+  <data name="Show players" xml:space="preserve">
+    <value>إظهار اللاعبين</value>
+  </data>
+  <data name="Hide players" xml:space="preserve">
+    <value>إخفاء اللاعبين</value>
+  </data>
 </root>

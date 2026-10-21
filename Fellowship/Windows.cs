@@ -318,7 +318,7 @@ public sealed partial class BrowserWindow : Window
         var searchBox=new Grid();search.Width=double.NaN;searchBox.Children.Add(search);var searchHint=UI.LocalizedText("Search rooms…",12,UI.Muted);searchHint.Margin=new(12,0,0,0);searchHint.VerticalAlignment=VerticalAlignment.Center;searchHint.IsHitTestVisible=false;searchBox.Children.Add(searchHint);search.TextChanged+=(_,_)=>searchHint.Visibility=search.Text.Length==0?Visibility.Visible:Visibility.Collapsed;System.Windows.Automation.AutomationProperties.SetName(search,"Search rooms");
         var searchLabel=UI.LocalizedText("SEARCH",10,UI.Muted,true);searchLabel.Margin=new(0,0,0,8);var searchField=UI.Stack(searchLabel,searchBox);Grid.SetColumn(searchField,2);filters.Children.Add(searchField);
         var hostRoom=UI.Button("＋  Host room",CreateRoom,true);hostRoom.Height=34;hostRoom.Padding=new(12,5,12,5);hostRoom.Margin=new(12,0,0,0);hostRoom.VerticalAlignment=VerticalAlignment.Bottom;System.Windows.Automation.AutomationProperties.SetName(hostRoom,"Host room");Grid.SetColumn(hostRoom,3);filters.Children.Add(hostRoom);
-        var filterCard=UI.Card(UI.Stack(filters,serverHint),"#191D24",12);filterCard.Margin=new(24,0,24,12);UI.At(body,filterCard,2);ConfigureRadminGroups();
+        var filterCard=UI.Card(UI.Stack(filters,serverHint),"#191D24",12);filterCard.Margin=new(24,12,24,12);UI.At(body,filterCard,2);ConfigureRadminGroups();
         var table = new Grid();
         void Column(string heading, string property, double width, bool star = false) => rooms.Columns.Add(new DataGridTextColumn { Header = heading, SortMemberPath=property=="Slots"?"PlayerCount":property, Binding = property=="Status"?L.Display(property):new Binding(property), MinWidth = star ? (property == "Title" ? 160 : 100) : width, Width = star ? new DataGridLength(width,DataGridLengthUnitType.Star) : new DataGridLength(width) });
         var gameTemplate=new DataTemplate();var gameImage=new FrameworkElementFactory(typeof(Image));gameImage.SetBinding(Image.SourceProperty,new Binding("Icon"));gameImage.SetValue(Image.WidthProperty,28.0);gameImage.SetValue(Image.HeightProperty,28.0);gameImage.SetValue(Image.ToolTipProperty,"The Battle for Middle-earth II");gameTemplate.VisualTree=gameImage;
@@ -372,7 +372,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.133   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.134   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1042,6 +1042,7 @@ public sealed class RoomWindow : Window
     readonly TextBox map,patch,rules;
     readonly ChatTranscript messages=new();
     readonly ChatTranscript chatScroll;
+    readonly RoomChatPanel chatPanel;
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
     readonly Button launchMine,abort,requestReady;
@@ -1091,25 +1092,8 @@ public sealed class RoomWindow : Window
         switchPatch=UI.AsyncButton("",SwitchRoomPatch);switchPatch.Margin=new(14,0,0,0);switchPatch.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(switchPatch,1);patchWarning.Children.Add(switchPatch);
         UI.At(body,patchWarning,0);
         var columns=new Grid{Margin=new(22,12,22,16)};columns.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});columns.ColumnDefinitions.Add(new(){Width=new(300)});
-        var left=new Grid{Margin=new(0,0,14,0)};
-        var rosterSize=new RowDefinition{Height=new(256),MinHeight=work.Height<700?72:100};left.RowDefinitions.Add(rosterSize);
-        left.RowDefinitions.Add(new(){Height=new(12)});
-        var chatSize=new RowDefinition{Height=UI.Star,MinHeight=work.Height<700?100:160};left.RowDefinitions.Add(chatSize);
-        left.SizeChanged+=(_,_)=>
-        {
-            // Keep the requested splitter height, but let the roster scroll on
-            // short windows before taking space from the chat composer/footer.
-            double maximum=Math.Max(rosterSize.MinHeight,left.ActualHeight-12-chatSize.MinHeight);
-            if(Math.Abs(rosterSize.MaxHeight-maximum)>.5)rosterSize.MaxHeight=maximum;
-        };
-        var roster=new Grid();UI.Rows(roster,UI.Auto,UI.Star);playerCount.Margin=new(10,6,10,4);UI.At(roster,playerCount,0);UI.At(roster,players,1);UI.At(left,UI.Card(roster,"#191D24",0),0);
-        var resizeChat=new GridSplitter{HorizontalAlignment=HorizontalAlignment.Stretch,VerticalAlignment=VerticalAlignment.Stretch,Background=Brushes.Transparent,ResizeDirection=GridResizeDirection.Rows,ResizeBehavior=GridResizeBehavior.PreviousAndNext,ShowsPreview=true,Cursor=Cursors.SizeNS,Focusable=true,KeyboardIncrement=8};
-        var splitterHit=new FrameworkElementFactory(typeof(Border));splitterHit.SetValue(Border.BackgroundProperty,Brushes.Transparent);
-        var splitterGrip=new FrameworkElementFactory(typeof(Border));splitterGrip.SetValue(Border.WidthProperty,44d);splitterGrip.SetValue(Border.HeightProperty,3d);splitterGrip.SetValue(Border.CornerRadiusProperty,new CornerRadius(2));splitterGrip.SetValue(Border.BackgroundProperty,UI.Brush("#343F51"));splitterGrip.SetValue(FrameworkElement.HorizontalAlignmentProperty,HorizontalAlignment.Center);splitterGrip.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center);splitterHit.AppendChild(splitterGrip);
-        resizeChat.Template=new ControlTemplate(typeof(GridSplitter)){VisualTree=splitterHit};System.Windows.Automation.AutomationProperties.SetName(resizeChat,L.T("ROOM CHAT"));UI.At(left,resizeChat,1);
-        var chat=new Grid();UI.Rows(chat,UI.Auto,UI.Star,UI.Auto);
-        var chatHead=UI.LocalizedText("ROOM CHAT",10,UI.Muted,true);chatHead.Margin=new(14,12,0,5);UI.At(chat,chatHead,0);
-        chatScroll=messages;UI.At(chat,chatScroll,1);
+        var chatHead=UI.LocalizedText("ROOM CHAT",10,UI.Muted,true);
+        chatScroll=messages;
         var compose=new Grid{Margin=new(12)};compose.ColumnDefinitions.Add(new());compose.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var input=new TextBox{MaxLength=2000,ToolTip="Message your room · Enter to send",Margin=new(0,0,8,0)};
         var roomId=app.Peer.Current?.Id;
@@ -1127,7 +1111,8 @@ public sealed class RoomWindow : Window
             L.Bind(chatHead,TextBlock.TextProperty,"ROOM CHAT");chatHead.ToolTip=null;input.Focus();return Task.CompletedTask;
         }
         input.PreviewKeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await Send();}};
-        compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!app.Peer.IsReconnecting&&!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.IsReconnecting?"Reconnecting to room…":app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);UI.At(chat,compose,2);UI.At(left,UI.Card(chat,"#191D24",0),2);columns.Children.Add(left);
+        compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!app.Peer.IsReconnecting&&!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.IsReconnecting?"Reconnecting to room…":app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);
+        chatPanel=new(messages,players,playerCount,chatHead,compose);var chatCard=UI.Card(chatPanel,"#191D24",0);chatCard.Margin=new(0,0,14,0);columns.Children.Add(chatCard);
         var right=new StackPanel();right.Children.Add(UI.LocalizedText("MATCH SETUP",10,UI.Muted,true));
         setupSummary.Margin=new(0,12,0,0);
         var banner=setupBanner=UI.Card(UI.Stack(UI.LocalizedText("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#1C2330",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
