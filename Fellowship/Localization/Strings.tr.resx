@@ -1944,4 +1944,10 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="The room changed. Invite this player again." xml:space="preserve">
     <value>Oda değişti. Bu oyuncuyu yeniden davet edin.</value>
   </data>
+  <data name="The other player needs to add you as a friend before you can invite them to your room." xml:space="preserve">
+    <value>Diğer oyuncuyu odanıza davet edebilmeniz için önce sizi arkadaş olarak eklemesi gerekir.</value>
+  </data>
+  <data name="Invalid room invitation." xml:space="preserve">
+    <value>Geçersiz oda daveti.</value>
+  </data>
 </root>

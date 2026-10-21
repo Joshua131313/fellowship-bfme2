@@ -1944,4 +1944,10 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="The room changed. Invite this player again." xml:space="preserve">
     <value>The room changed. Invite this player again.</value>
   </data>
+  <data name="The other player needs to add you as a friend before you can invite them to your room." xml:space="preserve">
+    <value>The other player needs to add you as a friend before you can invite them to your room.</value>
+  </data>
+  <data name="Invalid room invitation." xml:space="preserve">
+    <value>Invalid room invitation.</value>
+  </data>
 </root>

@@ -189,11 +189,11 @@ public static class UI
         if(window.WindowState==WindowState.Minimized)window.WindowState=WindowState.Normal;
         window.Show();window.Activate();
     }
-    public static Grid Shell(Window w, string title, double width, double height)
+    public static Grid Shell(Window w, string title, double width, double height,TextBlock? rawTitle=null)
     {
         w.Style = (Style)Application.Current.FindResource(typeof(Window));L.Window(w);
         w.Icon=System.Windows.Media.Imaging.BitmapFrame.Create(new Uri("pack://application:,,,/Fellowship;component/Assets/Fellowship.ico"));
-        L.Bind(w,Window.TitleProperty,title + " · Fellowship"); w.Width = width; w.Height = height; w.MinWidth = Math.Min(width, 460); w.MinHeight = Math.Min(height, 420);
+        if(rawTitle==null)L.Bind(w,Window.TitleProperty,title + " · Fellowship");else w.Title=title+" · Fellowship";w.Width = width; w.Height = height; w.MinWidth = Math.Min(width, 460); w.MinHeight = Math.Min(height, 420);
         w.SourceInitialized+=(_,_)=>
         {
             // Let DWM round the native frame without a transparent layered window.
@@ -209,7 +209,12 @@ public static class UI
         w.Content = new Border { BorderBrush = Brush("#363C48"), BorderThickness = new(1), Background = Brush("#111419"), Child = root };
         var chrome = new Grid { FlowDirection=FlowDirection.LeftToRight,Height = 48, Background = Brush("#181C22") }; chrome.ColumnDefinitions.Add(new()); chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var compact=w.ResizeMode==ResizeMode.NoResize;
-        var brand = compact?Row(Text("◈",22,Accent),LocalizedText(title,12,"#F0F2F7",true)):Row(Text("◈", 24, Accent), Text("  FELLOWSHIP", 12, "#F0F2F7", true), LocalizedText(title, 12, Muted)); brand.Children[brand.Children.Count-1].SetValue(FrameworkElement.MarginProperty,new Thickness(12,0,0,0));brand.Margin = new(18,0,0,0); chrome.Children.Add(brand);
+        var brand=new Grid{Margin=new(18,0,12,0),VerticalAlignment=VerticalAlignment.Center};brand.ColumnDefinitions.Add(new(){Width=GridLength.Auto});if(!compact)brand.ColumnDefinitions.Add(new(){Width=GridLength.Auto});brand.ColumnDefinitions.Add(new());
+        brand.Children.Add(Text("◈",compact?22:24,Accent));
+        if(!compact){var name=Text("  FELLOWSHIP",12,"#F0F2F7",true);name.TextWrapping=TextWrapping.NoWrap;name.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(name,1);brand.Children.Add(name);}
+        var caption=rawTitle??LocalizedText(title,12,compact?"#F0F2F7":Muted,compact);caption.TextWrapping=TextWrapping.NoWrap;caption.TextTrimming=TextTrimming.CharacterEllipsis;caption.Margin=new(12,0,0,0);caption.VerticalAlignment=VerticalAlignment.Center;
+        if(rawTitle!=null){caption.Text=title;caption.ToolTip=new ToolTip{Content=Text(title)};caption.SetBinding(FrameworkElement.FlowDirectionProperty,new Binding(nameof(L.Direction)){Source=L.Current});}
+        Grid.SetColumn(caption,compact?1:2);brand.Children.Add(caption);chrome.Children.Add(brand);
         chrome.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2 && !compact) w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; else w.DragMove(); };
         Button Caption(string name,string geometry,Action action,bool close=false)
         {
@@ -370,7 +375,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.131   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.132   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1009,8 +1014,7 @@ public sealed class RoomWindow : Window
 {
     public bool AllowClose { get; set; }
     readonly BrowserWindow app;
-    readonly TextBlock title=UI.LocalizedText("Connecting…",23,"#F2F4F9",true);
-    readonly TextBlock phase=UI.LocalizedText("Waiting for host",11,UI.Green);
+    readonly TextBlock title=UI.Text("",12,UI.Muted);
     readonly TextBlock playerCount=UI.LocalizedText("PLAYERS",10,UI.Muted,true);
     readonly TextBlock presetStatus=UI.LocalizedText("",11,UI.Green,true);
     readonly MatchSummary setupSummary=new();
@@ -1033,7 +1037,6 @@ public sealed class RoomWindow : Window
     readonly Button switchPatch;
     bool switchingPatch;
     bool PatchChanging=>switchingPatch||PatchSwitcher.IsSwitching;
-    readonly TextBlock patchBadge=UI.LocalizedText("",10,UI.Accent,true);
     readonly TextBlock placementGuide=UI.LocalizedText("",10,UI.Muted);
     string? lastPatchWarning;
     sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team":"Team "+Value;}
@@ -1083,18 +1086,14 @@ public sealed class RoomWindow : Window
     public RoomWindow(BrowserWindow app)
     {
         this.app=app;var work=SystemParameters.WorkArea;
-        var body=UI.Shell(this,"Battle room",Math.Min(1160,Math.Max(1,work.Width-32)),Math.Min(840,Math.Max(1,work.Height-32)));MinWidth=Math.Min(900,Width);MinHeight=Math.Min(660,Height);
+        var body=UI.Shell(this,app.Peer.Current?.Title??"",Math.Min(1160,Math.Max(1,work.Width-32)),Math.Min(840,Math.Max(1,work.Height-32)),title);MinWidth=Math.Min(900,Width);MinHeight=Math.Min(660,Height);
         UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
-        var top=new Grid{Margin=new(22,18,22,18)};top.ColumnDefinitions.Add(new());top.ColumnDefinitions.Add(new(){Width=UI.Auto});
-        UI.Rows(top,UI.Auto,UI.Auto);
-        var titles=UI.Stack(title,phase);phase.Margin=new(0,6,0,0);top.Children.Add(titles);
-        var tag=UI.Badge("");tag.Child=patchBadge;Grid.SetColumn(tag,1);top.Children.Add(tag);
-        patchWarning.ColumnDefinitions.Add(new());patchWarning.ColumnDefinitions.Add(new(){Width=UI.Auto});patchWarning.Margin=new(0,12,0,0);
+        patchWarning.ColumnDefinitions.Add(new());patchWarning.ColumnDefinitions.Add(new(){Width=UI.Auto});patchWarning.Margin=new(22,12,22,0);
         patchNotice.TextWrapping=TextWrapping.Wrap;patchWarning.Children.Add(patchNotice);
         switchPatch=UI.AsyncButton("",SwitchRoomPatch);switchPatch.Margin=new(14,0,0,0);switchPatch.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(switchPatch,1);patchWarning.Children.Add(switchPatch);
-        Grid.SetRow(patchWarning,1);Grid.SetColumnSpan(patchWarning,2);top.Children.Add(patchWarning);UI.At(body,top,0);
-        var columns=new Grid{Margin=new(22,0,22,16)};columns.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});columns.ColumnDefinitions.Add(new(){Width=new(300)});
+        UI.At(body,patchWarning,0);
+        var columns=new Grid{Margin=new(22,12,22,16)};columns.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});columns.ColumnDefinitions.Add(new(){Width=new(300)});
         var left=new Grid{Margin=new(0,0,14,0)};
         left.RowDefinitions.Add(new(){Height=new(4,GridUnitType.Star),MinHeight=work.Height<700?72:100});
         left.RowDefinitions.Add(new(){Height=new(12)});
@@ -1390,7 +1389,7 @@ public sealed class RoomWindow : Window
         CommandManager.InvalidateRequerySuggested();
         var room=app.Peer.Current;
         ObserveRoomActivity(room,app.Peer.IsReconnecting);
-        if(room==null){players.Items.Clear();L.Bind(playerCount,TextBlock.TextProperty,"PLAYERS · DISCONNECTED");allowLaunch=false;L.Bind(phase,TextBlock.TextProperty,"Disconnected · rejoin from the room browser");launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=mapField.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;L.Bind(readySummary,TextBlock.TextProperty,"Return to Game rooms to reconnect.");return;}
+        if(room==null){players.Items.Clear();L.Bind(playerCount,TextBlock.TextProperty,"PLAYERS · DISCONNECTED");allowLaunch=false;launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=mapField.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;L.Bind(readySummary,TextBlock.TextProperty,"Return to Game rooms to reconnect.");return;}
         if(app.Peer.IsHost)
         {
             try{app.Settings.RememberHost(room);}
@@ -1400,7 +1399,7 @@ public sealed class RoomWindow : Window
         sideStatus.Visibility=app.Settings.LiveGameSync&&RhunSides.Enabled(room)&&HostPreset.CanSynchronize(app.Settings.GamePath,room)?Visibility.Visible:Visibility.Collapsed;
         bool reconnecting=app.Peer.IsReconnecting;
         mapPreview.ShowMap(app.Settings.GamePath,room.MapPath,room.Patch);mapPreview.IsEnabled=!reconnecting&&!launching&&!changingPlacement;
-        L.Bind(patchBadge,TextBlock.TextProperty,"BFME II  "+room.Patch+"   /   VPN");UpdatePatchNotice();
+        UpdatePatchNotice();
         mapPreview.ShowSelections(room,app.Peer.LocalId,!reconnecting&&!launching&&!changingPlacement);
         var self=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
         syncingPlacement=true;
@@ -1410,7 +1409,7 @@ public sealed class RoomWindow : Window
         L.Bind(placementStatus,TextBlock.TextProperty,changingPlacement?"Confirming with host…":room.Spots.Count==0?"Starting spots unavailable for this map.":$"Your spot: {(self?.Spot>0?self.Spot.ToString():"not selected")} · {(self?.Team>0?"Team "+self.Team:"No team")}");
         if(lastRoomName!=room.Title){roomName.Text=room.Title;lastRoomName=room.Title;}
         if(lastPrivacy!=room.FriendsOnly){privacyChoice.SelectedIndex=room.FriendsOnly?1:0;lastPrivacy=room.FriendsOnly;}
-        title.Text=room.Title;L.Bind(phase,TextBlock.TextProperty,reconnecting?"Reconnecting to room…":$"●  {room.Phase}   ·   Hosted by {room.Host}");L.Bind(playerCount,TextBlock.TextProperty,$"PLAYERS   {room.Players.Count} / {room.Capacity}");
+        if(title.Text!=room.Title){title.Text=room.Title;title.ToolTip=new ToolTip{Content=UI.Text(room.Title)};Title=room.Title+" · Fellowship";}L.Bind(playerCount,TextBlock.TextProperty,$"PLAYERS   {room.Players.Count} / {room.Capacity}");
         players.Items.Clear();
         foreach(var p in room.Players)
         {

@@ -11,8 +11,9 @@ static class RoomChatLayoutTests
 {
     public static void Run()
     {
+        string language=L.Code;L.Apply("en");
         var settings=Settings.InMemory();settings.LiveGameSync=false;settings.Name="Aragorn";
-        var browser=new BrowserWindow(settings);browser.Peer.Host(new Room{Title="Room chat layout",Patch="1.00",Capacity=8},[]);
+        var browser=new BrowserWindow(settings);typeof(BrowserWindow).GetField("closingRoom",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(browser,true);browser.Peer.Host(new Room{Title="Room chat layout",Patch="1.00",Capacity=8},[]);
         var room=browser.Peer.Current!;for(int i=1;i<8;i++)room.Players.Add(new(){Id="layout-"+i,Name="Player "+i,Address="10.200.0."+i,Team=i<4?1:2,Spot=i,Color=i,Ready=i%2==0,GameRunning=i==1,ManualAfk=i==2});
         var window=new RoomWindow(browser){AllowClose=true};
         try
@@ -22,6 +23,11 @@ static class RoomChatLayoutTests
             var view=(FrameworkElement)window.Content;window.Content=null;
             var splitter=Nodes(view).OfType<GridSplitter>().Single(s=>s.ResizeDirection==GridResizeDirection.Rows);
             var split=(Grid)splitter.Parent;
+            var columns=(Grid)split.Parent;var body=(Grid)columns.Parent;
+            var title=(TextBlock)typeof(RoomWindow).GetField("title",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;
+            var warning=(Grid)typeof(RoomWindow).GetField("patchWarning",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;
+            if(title.Text!=room.Title||window.Title!=room.Title+" · Fellowship"||title.FontSize>13||title.TextWrapping!=TextWrapping.NoWrap||title.TextTrimming!=TextTrimming.CharacterEllipsis)throw new Exception("Room title is not a compact raw titlebar caption");
+            if(body.Children.Cast<UIElement>().Single(e=>Grid.GetRow(e)==0)!=warning||Nodes(body).OfType<TextBlock>().Any(t=>t.Text==room.Title||t.Text=="Battle room"))throw new Exception("The redundant room content header is still present");
             if(splitter.ResizeBehavior!=GridResizeBehavior.PreviousAndNext||!split.RowDefinitions[0].Height.IsStar||!split.RowDefinitions[2].Height.IsStar||split.RowDefinitions[2].Height.Value<=split.RowDefinitions[0].Height.Value)throw new Exception("Room chat does not have a resizable larger share of the conversation column");
             var roster=(ListBox)typeof(RoomWindow).GetField("players",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;
             if(roster.Items.Count!=8)throw new Exception("Room roster layout test is missing players");
@@ -31,6 +37,7 @@ static class RoomChatLayoutTests
             {
                 Appearance.Apply(theme);Layout(view,window.Width,window.Height);
                 if(transcript.ActualHeight<150||transcript.ActualWidth<300||split.RowDefinitions[2].ActualHeight<=split.RowDefinitions[0].ActualHeight)throw new Exception("Default room chat viewport is still too small");
+                if(window.Height>=830&&(roster.ActualHeight<250||transcript.ActualHeight<220))throw new Exception("Removing the room header did not reclaim enough roster and chat space");
                 var scroll=VisualNodes(roster).OfType<ScrollViewer>().First();
                 if(window.Height>=800&&scroll.ExtentHeight>scroll.ViewportHeight+.01)throw new Exception($"Eight compact room players still need scrolling: {scroll.ExtentHeight} > {scroll.ViewportHeight}; roster height {roster.ActualHeight}");
                 foreach(var item in roster.Items.Cast<ListBoxItem>())if(item.ActualHeight>28.1)throw new Exception("Room player row is not compact: "+item.ActualHeight);
@@ -40,14 +47,30 @@ static class RoomChatLayoutTests
                 if(!tooltipText.Contains("Guest · IN BFME2")||!tooltipText.Contains("Spot 1 · Team 1")||!tooltipText.Contains("Blue")||!tooltipText.Contains("Not ready")||!tooltipText.Contains("Ping"))throw new Exception("Room player hover does not contain role, game, selections, color, ping and readiness");
                 if(Nodes((DependencyObject)first.Content).OfType<TextBlock>().Any(t=>t.Text.Contains("Spot ")||t.Text.Contains("Team ")||t.Text.Contains("BFME2")))throw new Exception("Detailed room player state still occupies roster rows");
                 VisibleActions(window,view);
+                var warningVisibility=warning.Visibility;warning.Visibility=Visibility.Collapsed;Layout(view,window.Width,window.Height);
+                if(body.RowDefinitions[0].ActualHeight>.1)throw new Exception("A hidden patch warning still reserves a room header row");
+                warning.Visibility=warningVisibility;Layout(view,window.Width,window.Height);
                 var png=new PngBitmapEncoder();var image=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);image.Render(view);png.Frames.Add(BitmapFrame.Create(image));Directory.CreateDirectory("dist");using var file=File.Create("dist/preview-room-chat-"+theme.ToLowerInvariant()+".png");png.Save(file);
             }
+            L.Apply("fr");room.Title="Ready";window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
+            if(title.Text!="Ready"||window.Title!="Ready · Fellowship"||title.ToolTip is not ToolTip{Content:TextBlock rawTip}||rawTip.Text!="Ready")throw new Exception("Live room rename was localized or failed to update the titlebar, tooltip and taskbar title");
+            L.Apply("ar");room.Title=string.Join(" ",Enumerable.Repeat("غرفة الأصدقاء مع عنوان طويل",6));window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
+            if(title.Text!=room.Title||title.FlowDirection!=FlowDirection.RightToLeft||title.TextTrimming!=TextTrimming.CharacterEllipsis)throw new Exception("Long Arabic room title lost raw text, direction or ellipsis");
+            var captionBounds=title.TransformToAncestor(view).TransformBounds(new Rect(0,0,title.ActualWidth,title.ActualHeight));
+            var controls=Nodes(view).OfType<Button>().Where(b=>b.Style==(Style)Application.Current.FindResource("CaptionButton")).ToArray();
+            foreach(var button in controls)
+            {
+                var bounds=button.TransformToAncestor(view).TransformBounds(new Rect(0,0,button.ActualWidth,button.ActualHeight));
+                if(bounds.Right>view.ActualWidth+.1||bounds.Left<captionBounds.Right-1)throw new Exception("Long room title overlaps or cuts off a titlebar control");
+            }
+            var rtlImage=new RenderTargetBitmap((int)window.MinWidth,(int)window.MinHeight,96,96,PixelFormats.Pbgra32);rtlImage.Render(view);var rtlPng=new PngBitmapEncoder();rtlPng.Frames.Add(BitmapFrame.Create(rtlImage));using(var file=File.Create("dist/preview-room-chat-title-rtl.png"))rtlPng.Save(file);
+            L.Apply("en");room.Title="Room chat layout";window.Refresh();
             Layout(view,window.MinWidth,window.MinHeight);VisibleActions(window,view);
             if(transcript.ActualHeight<50)throw new Exception("Minimum room size cuts off the chat composer or transcript");
             window.Content=view;
         }
-        finally{window.Close();browser.Peer.Dispose();Appearance.Apply("Dark");}
-        Console.WriteLine("PASS compact eight-player room roster, detailed name tooltips, larger chat viewport, vertical resize splitter, and visible bottom actions at minimum size");
+        finally{window.Close();browser.Peer.Dispose();Appearance.Apply("Dark");L.Apply(language);}
+        Console.WriteLine("PASS live raw room titlebar, no redundant header, long RTL title control clearance, compact eight-player roster, taller chat, splitter, and visible bottom actions");
     }
     static void VisibleActions(RoomWindow window,FrameworkElement view)
     {

@@ -1944,4 +1944,10 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="The room changed. Invite this player again." xml:space="preserve">
     <value>Le salon a changé. Invitez à nouveau ce joueur.</value>
   </data>
+  <data name="The other player needs to add you as a friend before you can invite them to your room." xml:space="preserve">
+    <value>L’autre joueur doit vous ajouter à ses amis avant que vous puissiez l’inviter dans votre salon.</value>
+  </data>
+  <data name="Invalid room invitation." xml:space="preserve">
+    <value>Invitation au salon non valide.</value>
+  </data>
 </root>

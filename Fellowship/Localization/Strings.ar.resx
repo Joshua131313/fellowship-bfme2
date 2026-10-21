@@ -1944,4 +1944,10 @@
   <data name="The room changed. Invite this player again." xml:space="preserve">
     <value>تغيرت الغرفة. ادعُ هذا اللاعب مرة أخرى.</value>
   </data>
+  <data name="The other player needs to add you as a friend before you can invite them to your room." xml:space="preserve">
+    <value>يجب أن يضيفك اللاعب الآخر إلى أصدقائه قبل أن تتمكن من دعوته إلى غرفتك.</value>
+  </data>
+  <data name="Invalid room invitation." xml:space="preserve">
+    <value>دعوة الغرفة غير صالحة.</value>
+  </data>
 </root>

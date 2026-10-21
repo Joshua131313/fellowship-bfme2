@@ -1944,4 +1944,10 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="The room changed. Invite this player again." xml:space="preserve">
     <value>La sala ha cambiado. Vuelve a invitar a este jugador.</value>
   </data>
+  <data name="The other player needs to add you as a friend before you can invite them to your room." xml:space="preserve">
+    <value>El otro jugador debe agregarte como amigo antes de que puedas invitarlo a tu sala.</value>
+  </data>
+  <data name="Invalid room invitation." xml:space="preserve">
+    <value>Invitación a la sala no válida.</value>
+  </data>
 </root>

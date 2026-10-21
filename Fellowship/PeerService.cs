@@ -12,6 +12,7 @@ public sealed partial class PeerService : IDisposable
 {
     public const int Port = 28742;
     const int MaxFrame = 32768;
+    const string InviteFriendRequired = "The other player needs to add you as a friend before you can invite them to your room.";
     readonly Settings settings;
     readonly ConcurrentDictionary<string,TaskCompletionSource<string>> placementRequests=new();
     readonly object gate = new();
@@ -101,8 +102,10 @@ public sealed partial class PeerService : IDisposable
             }
             if(hello.Type=="invite")
             {
-                if(!settings.Friends.Any(f=>f.Address==remoteAddress)||hello.Room is not {} invite||!IPAddress.TryParse(invite.HostAddress,out var hostIp)||hostIp.AddressFamily!=AddressFamily.InterNetwork||invite.Id.Length>64)
-                {await c.Send(new(){Type="error",Text="Only saved friends can invite you."});return;}
+                if(!settings.Friends.Any(f=>f.Address==remoteAddress))
+                {await c.Send(new(){Type="error",Text=InviteFriendRequired});return;}
+                if(hello.Room is not {} invite||!IPAddress.TryParse(invite.HostAddress,out var hostIp)||hostIp.AddressFamily!=AddressFamily.InterNetwork||invite.Id.Length>64)
+                {await c.Send(new(){Type="error",Text="Invalid room invitation."});return;}
                 Invitation?.Invoke(remoteAddress,Clean(hello.Name,40),new(){Id=invite.Id,HostAddress=invite.HostAddress,Title=Clean(invite.Title,80)});
                 await c.Send(new(){Type="ack"});return;
             }
@@ -578,7 +581,8 @@ public sealed partial class PeerService : IDisposable
         }
         await sending;
         using var timeout=new CancellationTokenSource(5000);
-        var reply=await connection.Read(timeout.Token);if(reply?.Type!="ack")throw new IOException(reply?.Text??"Invitation was not acknowledged.");
+        var reply=await connection.Read(timeout.Token);
+        if(reply?.Type!="ack")throw new IOException(reply?.Text=="Only saved friends can invite you."?InviteFriendRequired:reply?.Text??"Invitation was not acknowledged.");
     }
     async Task ReceiveLaunch(Connection connection)
     {

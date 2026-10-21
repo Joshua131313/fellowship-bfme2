@@ -32,11 +32,17 @@ static class InviteMembershipTests
 
         Room? otherInvitation=null,idleInvitation=null;other.Invitation+=(_,_,room)=>otherInvitation=room;idle.Invitation+=(_,_,room)=>idleInvitation=room;
         string otherRoom=other.Current!.Id,currentRoom=inviter.Current.Id;
+        otherSettings.Friends=[];
+        try{await inviter.Invite(other.Address);throw new Exception("Invitation accepted before the recipient saved the sender");}
+        catch(IOException error)when(error.Message=="The other player needs to add you as a friend before you can invite them to your room."){}
+        Check(otherInvitation==null,"Rejected invitation was displayed before the sender was added as a friend");
+        otherSettings.Friends=[new("Invitation owner",inviter.Address)];
         await inviter.Invite(other.Address);
         Check(otherInvitation?.Id==currentRoom&&otherInvitation.HostAddress==inviter.Address&&other.Current?.Id==otherRoom,"Friend in another room was blocked or moved without accepting the invitation");
         await inviter.Invite(idle.Address);
         Check(idleInvitation?.Id==currentRoom&&idle.Current==null,"Nonmember idle friend was blocked or joined without accepting");
         Console.WriteLine("PASS other-room and idle friends remain eligible for invitations without changing their rooms");
+        Console.WriteLine("PASS missing reciprocal friendship explains that the other player must add the sender, then succeeds after adding them");
 
         inviterSettings.BlockedUsers=[new("Other room owner",other.Address)];otherInvitation=null;
         await Rejected(()=>inviter.Invite(other.Address),"Choose an unblocked friend.","existing blocked-friend invitation guard is preserved");
