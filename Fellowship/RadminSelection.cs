@@ -16,7 +16,7 @@ public sealed partial class BrowserWindow
         var choice=new ComboBox{MinWidth=160,Height=34,HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Left};
         var caption=new FrameworkElementFactory(typeof(TextBlock));caption.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding());caption.SetValue(TextBlock.FontSizeProperty,12d);caption.SetValue(TextBlock.TextWrappingProperty,TextWrapping.NoWrap);caption.SetValue(TextBlock.TextTrimmingProperty,TextTrimming.CharacterEllipsis);choice.ItemTemplate=new DataTemplate{VisualTree=caption};
         System.Windows.Automation.AutomationProperties.SetName(choice,"Radmin group");
-        L.Bind(choice,FrameworkElement.ToolTipProperty,"Limit Fellowship to one Radmin group. Changing groups leaves your current room.");
+        L.Bind(choice,FrameworkElement.ToolTipProperty,"Selecting a Radmin group disables the others in Radmin VPN. Changing groups leaves your current room.");
         var refresh=UI.AsyncButton("↻",async()=>await RefreshRadminGroups(true));refresh.Width=34;refresh.Padding=new(0);refresh.Margin=new(8,0,0,0);L.Bind(refresh,FrameworkElement.ToolTipProperty,"Refresh Radmin groups");
         var field=new Grid();field.ColumnDefinitions.Add(new());field.ColumnDefinitions.Add(new(){Width=UI.Auto});field.Children.Add(choice);Grid.SetColumn(refresh,1);field.Children.Add(refresh);
         var status=UI.LocalizedText("",10,UI.Muted);status.TextWrapping=TextWrapping.Wrap;
@@ -39,25 +39,28 @@ public sealed partial class BrowserWindow
         };
         return panel;
     }
-    async Task SelectRadminGroup(string selected)
+    async Task<bool> SelectRadminGroup(string selected)
     {
-        if(changingGroup||selected==Settings.RadminGroup)return;
+        if(changingGroup)return false;
         changingGroup=true;
+        UpdateGroupPickers();
         try
         {
             while(readingGroups)await Task.Delay(50);
             await CloseRoom();
+            if(RadminNetworks.CanSpawn)await RadminNetworks.ChangeConnections(selected);
             Settings.RadminGroup=selected;Settings.RadminMembership=RadminMembership.Empty;Settings.Save();groupReadError="";
             ResetGroupPresence();UpdateGroupPickers();LoadNetworkChoices();
             await RefreshRadminGroups(true);await Refresh();
+            return true;
         }
-        catch(Exception error){groupReadError=error.Message;}
+        catch(Exception error){groupReadError=error.Message;UI.Error(error.Message);return false;}
         finally{changingGroup=false;UpdateGroupPickers();}
     }
     void ConfigureRadminGroups()
     {
         NetworkChanged+=()=>{UpdateGroupPickers();if(RadminNetworks.CanSpawn)_=RefreshRadminGroups(true);};
-        radminTimer.Tick+=async(_,_)=>await RefreshRadminGroups();
+        radminTimer.Tick+=async(_,_)=>{if(!changingGroup)await RefreshRadminGroups();};
         Closed+=(_,_)=>radminTimer.Stop();
         if(RadminNetworks.CanSpawn)
         {
@@ -66,7 +69,7 @@ public sealed partial class BrowserWindow
     }
     void UpdateGroupPickers()
     {
-        L.Bind(serverHint,TextBlock.TextProperty,UsingRadmin&&groupReadError.Length>0?groupReadError:UsingRadmin&&readingGroups?"Reading Radmin groups…":"Select a server to find its rooms");
+        L.Bind(serverHint,TextBlock.TextProperty,changingGroup?"Switching Radmin connections…":UsingRadmin&&groupReadError.Length>0?groupReadError:UsingRadmin&&readingGroups?"Reading Radmin groups…":"Select a server to find its rooms");
         loadingGroups=true;
         try
         {
@@ -80,7 +83,7 @@ public sealed partial class BrowserWindow
                     foreach(var name in names){var option=new ComboBoxItem{Tag=name,HorizontalContentAlignment=HorizontalAlignment.Left,Content=name,ToolTip=name};if(name.Length==0)L.Bind(option,ContentControl.ContentProperty,"All Radmin groups");choice.Items.Add(option);}
                 }
                 choice.SelectedItem=choice.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>(string)i.Tag==Settings.RadminGroup);
-                L.Bind(status,TextBlock.TextProperty,readingGroups?"Reading Radmin groups…":groupReadError.Length>0?groupReadError:Settings.RadminGroup.Length==0?"Choose a group to limit Fellowship. Other Radmin connections stay active.":"Only this group's members are used by Fellowship. Other Radmin connections stay active.");
+                L.Bind(status,TextBlock.TextProperty,changingGroup?"Switching Radmin connections…":readingGroups?"Reading Radmin groups…":groupReadError.Length>0?groupReadError:Settings.RadminGroup.Length==0?"Select one group to disable the others in Radmin VPN. All groups reconnects them.":"Selecting this group enables it and disables the others in Radmin VPN.");
             }
         }
         finally{loadingGroups=false;}

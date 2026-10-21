@@ -91,8 +91,9 @@ public sealed partial class BrowserWindow
     }
     async Task ReadRadminMenuGroups()
     {
+        if(changingGroup)return;
         if(UsingRadmin){await RefreshRadminGroups(true);return;}
-        if(readingGroups||!RadminNetworks.CanSpawn)return;
+        if(readingGroups||changingGroup||!RadminNetworks.CanSpawn)return;
         readingGroups=true;
         try{var snapshot=await RadminNetworks.Refresh("");if(snapshot.Groups.Length>0){Settings.RadminKnownGroups=snapshot.Groups;Settings.Save();}}
         catch(Exception error){System.Diagnostics.Debug.WriteLine("Radmin menu: "+error.Message);}
@@ -114,7 +115,7 @@ public sealed partial class BrowserWindow
         try
         {
             if(chosen.Address!=Settings.BindAddress)await ChangeNetwork(chosen.Name,chosen.Address);
-            if(chosen.Radmin&&group!=Settings.RadminGroup)await SelectRadminGroup(group);
+            if(chosen.Radmin&&!await SelectRadminGroup(group))return;
             LoadNetworkChoices();
             if(chosen.Radmin)await RefreshRadminGroups(true);
             while(refreshing)await Task.Delay(50);

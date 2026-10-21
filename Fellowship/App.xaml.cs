@@ -4,6 +4,10 @@ using System.Security.Principal;
 namespace Fellowship;
 public partial class App : Application
 {
+    readonly bool resourcesOnly;
+    public App():this(false){}
+    // UI checks load the real compiled resources without starting another app.
+    public App(bool resourcesOnly){this.resourcesOnly=resourcesOnly;if(resourcesOnly)ShutdownMode=ShutdownMode.OnExplicitShutdown;}
     void InputsChanged(object sender,RoutedEventArgs e)=>System.Windows.Input.CommandManager.InvalidateRequerySuggested();
     void SelectLoaded(object sender,RoutedEventArgs e)
     {
@@ -56,13 +60,14 @@ public partial class App : Application
     }
     protected override async void OnStartup(StartupEventArgs e)
     {
+        if(resourcesOnly)return;
         base.OnStartup(e);
-        if(e.Args.Length==2&&e.Args[0]=="--radmin-groups")
+        if(e.Args.Length==2&&(e.Args[0] is "--radmin-groups" or "--radmin-connect"))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             try
             {
-                var snapshot=await Task.Run(()=>RadminNetworks.Read(e.Args[1]));
+                object snapshot=await Task.Run<object>(()=>e.Args[0]=="--radmin-connect"?RadminNetworks.SetConnections(e.Args[1]):RadminNetworks.Read(e.Args[1]));
                 using var output=new System.IO.StreamWriter(Console.OpenStandardOutput(),new System.Text.UTF8Encoding(false)){AutoFlush=true};
                 await output.WriteAsync(System.Text.Json.JsonSerializer.Serialize(snapshot));Shutdown(0);
             }

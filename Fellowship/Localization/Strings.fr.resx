@@ -1768,15 +1768,6 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Reading Radmin groups…" xml:space="preserve">
     <value>Lecture des groupes Radmin…</value>
   </data>
-  <data name="Choose a group to limit Fellowship. Other Radmin connections stay active." xml:space="preserve">
-    <value>Choisissez un groupe pour limiter Fellowship. Les autres connexions Radmin restent actives.</value>
-  </data>
-  <data name="Only this group's members are used by Fellowship. Other Radmin connections stay active." xml:space="preserve">
-    <value>Fellowship utilise uniquement les membres de ce groupe. Les autres connexions Radmin restent actives.</value>
-  </data>
-  <data name="Limit Fellowship to one Radmin group. Changing groups leaves your current room." xml:space="preserve">
-    <value>Limitez Fellowship à un groupe Radmin. Changer de groupe vous fait quitter le salon actuel.</value>
-  </data>
   <data name="Open Radmin VPN to read its groups." xml:space="preserve">
     <value>Ouvrez Radmin VPN pour lire ses groupes.</value>
   </data>
@@ -1798,6 +1789,46 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="This player is outside the selected Radmin group." xml:space="preserve">
     <value>Ce joueur ne fait pas partie du groupe Radmin sélectionné.</value>
   </data>
-  <data name="Reset column ordering" xml:space="preserve"><value>Réinitialiser l’ordre des colonnes</value></data>
-  <data name="SEARCH" xml:space="preserve"><value>RECHERCHE</value></data>
+  <data name="Select one group to disable the others in Radmin VPN. All groups reconnects them." xml:space="preserve">
+    <value>Sélectionnez un groupe pour désactiver les autres dans Radmin VPN. Tous les groupes les reconnecte.</value>
+  </data>
+  <data name="Selecting a Radmin group disables the others in Radmin VPN. Changing groups leaves your current room." xml:space="preserve">
+    <value>Sélectionner un groupe Radmin désactive les autres dans Radmin VPN. Changer de groupe vous fait quitter le salon actuel.</value>
+  </data>
+  <data name="Switching Radmin connections…" xml:space="preserve">
+    <value>Changement des connexions Radmin…</value>
+  </data>
+  <data name="Open Radmin VPN to change its group connections." xml:space="preserve">
+    <value>Ouvrez Radmin VPN pour modifier les connexions de ses groupes.</value>
+  </data>
+  <data name="Close the open Radmin menu and try selecting the group again." xml:space="preserve">
+    <value>Fermez le menu Radmin ouvert et réessayez de sélectionner le groupe.</value>
+  </data>
+  <data name="Radmin group controls are unavailable." xml:space="preserve">
+    <value>Les commandes des groupes Radmin sont indisponibles.</value>
+  </data>
+  <data name="Radmin connection commands could not be recognized. Update Radmin VPN and try again." xml:space="preserve">
+    <value>Impossible de reconnaître les commandes de connexion Radmin. Mettez Radmin VPN à jour et réessayez.</value>
+  </data>
+  <data name="Radmin could not change the group connection." xml:space="preserve">
+    <value>Radmin n’a pas pu modifier la connexion du groupe.</value>
+  </data>
+  <data name="Radmin could not switch groups. Previous connections were restored." xml:space="preserve">
+    <value>Radmin n’a pas pu changer de groupe. Les connexions précédentes ont été rétablies.</value>
+  </data>
+  <data name="Radmin could not finish switching groups. Check the enabled networks in Radmin VPN and retry." xml:space="preserve">
+    <value>Radmin n’a pas pu terminer le changement de groupe. Vérifiez les réseaux activés dans Radmin VPN et réessayez.</value>
+  </data>
+  <data name="Radmin connection switching timed out. Check Radmin VPN and retry." xml:space="preserve">
+    <value>Le changement de connexion Radmin a expiré. Vérifiez Radmin VPN et réessayez.</value>
+  </data>
+  <data name="Selecting this group enables it and disables the others in Radmin VPN." xml:space="preserve">
+    <value>Sélectionner ce groupe l’active et désactive les autres dans Radmin VPN.</value>
+  </data>
+  <data name="Reset column ordering" xml:space="preserve">
+    <value>Réinitialiser l’ordre des colonnes</value>
+  </data>
+  <data name="SEARCH" xml:space="preserve">
+    <value>RECHERCHE</value>
+  </data>
 </root>

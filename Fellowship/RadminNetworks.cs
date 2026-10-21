@@ -15,7 +15,7 @@ public sealed record RadminMembership(string Group,string[] Members,DateTimeOffs
     public static readonly RadminMembership Empty=new("",[],DateTimeOffset.MinValue);
     public bool Allows(string group,string address)=>Group==group&&DateTimeOffset.UtcNow-ReadAt<TimeSpan.FromMinutes(2)&&Members.Contains(address,StringComparer.Ordinal);
 }
-public static class RadminNetworks
+public static partial class RadminNetworks
 {
     public static bool CanSpawn=>System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name=="Fellowship";
     static bool Ipv4(string text)=>IPAddress.TryParse(text,out var ip)&&ip.AddressFamily==AddressFamily.InterNetwork&&!ip.Equals(IPAddress.Any)&&!ip.Equals(IPAddress.Broadcast);
@@ -26,10 +26,8 @@ public static class RadminNetworks
     }
     static string Id(AutomationElement element)=>element.Cached.AutomationId;
     static string Name(AutomationElement element)=>element.Cached.Name;
-    public static RadminSnapshot Read(string selected)
+    static AutomationElement? FindMainWindow()
     {
-        // Only read the user's local Radmin UI. Never load its DLLs, credentials,
-        // change network enablement, launch it, or invoke connection controls.
         var session=Process.GetCurrentProcess().SessionId;
         var pids=Process.GetProcessesByName("RvRvpnGui").Where(p=>p.SessionId==session).Select(p=>p.Id).ToHashSet();
         AutomationElement? root=null;
@@ -42,6 +40,13 @@ public static class RadminNetworks
             if(candidate.Current.AutomationId!="MainWindow")return true;
             root=candidate;return false;
         },IntPtr.Zero);
+        return root;
+    }
+    public static RadminSnapshot Read(string selected)
+    {
+        // Refresh remains read-only: expansion is restored and connection actions
+        // are reserved for an explicit selection through SetConnections.
+        var root=FindMainWindow();
         if(root==null)return new([],selected,[],"",false,"Open Radmin VPN to read its groups.");
         var elements=Children(root);
         var groups=elements.Where(e=>Id(e).EndsWith(".CNetworkWidget",StringComparison.Ordinal)).Select(e=>
