@@ -1929,4 +1929,19 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Click to release this spot" xml:space="preserve">
     <value>Cliquez pour libérer cette position</value>
   </data>
+  <data name="{0} joined the room." xml:space="preserve">
+    <value>{0} a rejoint le salon.</value>
+  </data>
+  <data name="{0} left the room." xml:space="preserve">
+    <value>{0} a quitté le salon.</value>
+  </data>
+  <data name="Room host is now {0}" xml:space="preserve">
+    <value>L’hôte du salon est maintenant {0}</value>
+  </data>
+  <data name="This player is already in your room." xml:space="preserve">
+    <value>Ce joueur est déjà dans votre salon.</value>
+  </data>
+  <data name="The room changed. Invite this player again." xml:space="preserve">
+    <value>Le salon a changé. Invitez à nouveau ce joueur.</value>
+  </data>
 </root>

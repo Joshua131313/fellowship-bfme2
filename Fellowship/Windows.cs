@@ -798,7 +798,8 @@ public sealed partial class BrowserWindow : Window
         menu.Opened+=(_,_)=>{var room=PlayerRoom(ip);bool running=!Settings.IsBlocked(ip)&&(Presence.Find(ip,DateTimeOffset.UtcNow)?.GameRunning??player?.GameRunning??false);roomInfo.Visibility=joinRoom.Visibility=room!=null||running?Visibility.Visible:Visibility.Collapsed;L.Bind(joinRoom,HeaderedItemsControl.HeaderProperty,room!=null&&Peer.Current?.Id==room.Id?"Open room":"Join game room");foreach(var action in new[]{roomInfo,joinRoom}){ToolTipService.SetShowOnDisabled(action,true);if(room==null)L.Bind(action,FrameworkElement.ToolTipProperty,"No Fellowship room is available for this player.");else action.ToolTip=null;}};
         if(ip!=Peer.Address)
         {
-            menu.Items.Add(UI.MenuAction("Invite to room",async()=>{try{await Peer.Invite(ip);UI.InvitationSent(owner,name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>Peer.Current!=null&&Settings.Friends.Any(f=>f.Address==ip)&&!Settings.IsBlocked(ip)));
+            var invite=UI.MenuAction("Invite to room",async()=>{try{await Peer.Invite(ip);UI.InvitationSent(owner,name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>Peer.Current is {} current&&!current.Players.Any(p=>p.Address==ip)&&Settings.Friends.Any(f=>f.Address==ip)&&!Settings.IsBlocked(ip));
+            ToolTipService.SetShowOnDisabled(invite,true);invite.ToolTip="Invite to room";invite.ToolTipOpening+=(_,_)=>invite.ToolTip=L.T(Peer.Current?.Players.Any(p=>p.Address==ip)==true?"This player is already in your room.":"Invite to room");menu.Items.Add(invite);
             menu.Items.Add(UI.MenuAction("Send message",()=>OpenChat(ip,name),()=>UI.ValidAddress(ip)&&Peer.AllowsPeer(ip)));
             var friend=UI.MenuAction("Add friend",async()=>await ToggleFriend(name,ip),()=>UI.ValidAddress(ip)&&(Settings.Friends.Any(f=>f.Address==ip)||!Settings.IsBlocked(ip)));friend.InputGestureText="";menu.Items.Add(friend);
             var block=UI.MenuAction("Block player",async()=>await BlockPlayer(name,ip,!Settings.IsBlocked(ip)));menu.Items.Add(block);
@@ -1350,20 +1351,46 @@ public sealed class RoomWindow : Window
         messages.AppendBlocked(name,body);
     });
     void Append(string name,string text)=>messages.Append(name,text);
-    void AppendSystem(string text)=>messages.AppendSystem(text);
-    HashSet<string>? soundRoster;
+    void AppendSystem(string text,params object[] arguments)=>messages.AppendSystem(text,arguments);
+    string? activityRoom;
+    string activityHost="",activityHostName="";
+    bool activityPaused;
+    Dictionary<string,string> activityRoster=new(StringComparer.OrdinalIgnoreCase);
+    void ObserveRoomActivity(Room? room,bool reconnecting)
+    {
+        // Host handoff temporarily clears Current. An unavailable transport is
+        // not evidence that everyone left, so retain the immutable baseline.
+        if(room==null){if(activityRoom!=null)activityPaused=true;return;}
+        static string Key(Player player)=>player.Address.Length>0?player.Address:"id:"+player.Id;
+        var next=room.Players.GroupBy(Key,StringComparer.OrdinalIgnoreCase).ToDictionary(g=>g.Key,g=>g.First().Name,StringComparer.OrdinalIgnoreCase);
+        var host=room.Players.FirstOrDefault(p=>p.Id=="host");string nextHost=host==null?"":Key(host),nextHostName=host?.Name??"";
+        if(activityRoom!=room.Id)
+        {
+            activityRoom=room.Id;activityRoster=next;activityHost=nextHost;activityHostName=nextHostName;activityPaused=reconnecting;return;
+        }
+        if(reconnecting){activityPaused=true;return;}
+        bool changedHost=activityHost.Length>0&&nextHost.Length>0&&!StringComparer.OrdinalIgnoreCase.Equals(activityHost,nextHost),joined=false,left=false;
+        if(!activityPaused)
+        {
+            foreach(var member in activityRoster.Where(p=>!next.ContainsKey(p.Key))){AppendSystem("{0} left the room.",member.Value);left=true;}
+            foreach(var member in next.Where(p=>!activityRoster.ContainsKey(p.Key))){AppendSystem("{0} joined the room.",member.Value);joined=true;}
+        }
+        else if(changedHost&&!next.ContainsKey(activityHost))
+        {
+            // A confirmed successor snapshot can establish that the old host
+            // left. Other membership differences during an outage are unknown.
+            AppendSystem("{0} left the room.",activityHostName);left=true;
+        }
+        if(changedHost)AppendSystem("Room host is now {0}",nextHostName);
+        if(app.Settings.MessageSounds){if(joined)MessageAlert.Effect("room-join");else if(left)MessageAlert.Effect("room-leave");}
+        activityRoster=next;activityHost=nextHost;activityHostName=nextHostName;activityPaused=false;
+    }
     public void Refresh()
     {
         CommandManager.InvalidateRequerySuggested();
         var room=app.Peer.Current;
+        ObserveRoomActivity(room,app.Peer.IsReconnecting);
         if(room==null){players.Items.Clear();L.Bind(playerCount,TextBlock.TextProperty,"PLAYERS · DISCONNECTED");allowLaunch=false;L.Bind(phase,TextBlock.TextProperty,"Disconnected · rejoin from the room browser");launch.IsEnabled=false;consent.IsEnabled=false;customSetup.IsEnabled=false;inlineRules.IsEnabled=mapField.IsEnabled=false;mapPreview.IsEnabled=false;teamChoice.IsEnabled=false;colorChoice.IsEnabled=false;clearSpot.IsEnabled=false;L.Bind(readySummary,TextBlock.TextProperty,"Return to Game rooms to reconnect.");return;}
-        var nextRoster=room.Players.Select(p=>p.Address).ToHashSet();
-        if(soundRoster!=null&&app.Settings.MessageSounds)
-        {
-            if(nextRoster.Except(soundRoster).Any())MessageAlert.Effect("room-join");
-            else if(soundRoster.Except(nextRoster).Any())MessageAlert.Effect("room-leave");
-        }
-        soundRoster=nextRoster;
         if(app.Peer.IsHost)
         {
             try{app.Settings.RememberHost(room);}
@@ -1477,7 +1504,13 @@ public sealed class RoomWindow : Window
         app.Peer.Changed+=Changed;prompt.Closed+=(_,_)=>{app.Peer.Changed-=Changed;if(ReferenceEquals(readyPrompt,prompt))readyPrompt=null;};
         prompt.Show();
     }
-    public void ShowNotice(string text)=>AppendSystem(text);
+    public void ShowNotice(string text)
+    {
+        // Peer.Notice also updates the browser's status. The room transcript
+        // owns host notices through snapshots, including the transfer initiator.
+        if(text.StartsWith("Host is now ",StringComparison.Ordinal)||text.StartsWith("Room handed to ",StringComparison.Ordinal)){ObserveRoomActivity(app.Peer.Current,app.Peer.IsReconnecting);return;}
+        AppendSystem(text);
+    }
     public Task<string> HandleLaunch()=>app.Peer.IsHost||app.Peer.Current?.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?LaunchLocalCore():Task.FromResult("Launch skipped: player is not ready.");
     bool launching;
     async void LaunchLocal()=>await LaunchLocalCore();
@@ -1548,7 +1581,7 @@ public sealed class FriendsWindow : Window
         var footer=UI.LocalizedText("Double-click a friend to chat.\nDirect messages · no offline delivery",10,UI.Muted);footer.Margin=new(20,0,20,18);UI.At(body,footer,4);
         list.MouseDoubleClick+=(_,_)=>Message();
         var menu=MenuPlacement.AtCursor(this);var remove=new MenuItem{Header="Remove friend",Tag="Danger"};remove.Click+=async(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f}){await app.ToggleFriend(f.Name,f.Address);Render();}};var message=new MenuItem{Header="Send message"};message.Click+=(_,_)=>Message();menu.Items.Add(message);
-        var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})UI.Reveal(app.CreatePlayerInfo(this,f.Name,f.Address));};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);var block=new MenuItem{Header="Block player",Tag="Danger"};block.Click+=async(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})await app.BlockPlayer(f.Name,f.Address,!app.Settings.IsBlocked(f.Address));};menu.Items.Add(block);var invite=UI.MenuAction("Invite to room",async()=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})try{await app.Peer.Invite(f.Address);UI.InvitationSent(this,f.Name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>app.Peer.Current!=null&&list.SelectedItem is ListBoxItem{Tag:Friend f}&&!app.Settings.IsBlocked(f.Address));menu.Items.Insert(1,invite);list.ContextMenu=menu;menu.Opened+=(_,_)=>{bool selected=list.SelectedItem is ListBoxItem{Tag:Friend};message.IsEnabled=selected;info.IsEnabled=selected;remove.IsEnabled=selected;block.IsEnabled=selected;if(list.SelectedItem is ListBoxItem{Tag:Friend f}){block.Header=app.Settings.IsBlocked(f.Address)?"Unblock player":"Block player";block.Tag=app.Settings.IsBlocked(f.Address)?null:"Danger";}};
+        var info=new MenuItem{Header="Friend info"};info.Click+=(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})UI.Reveal(app.CreatePlayerInfo(this,f.Name,f.Address));};menu.Items.Add(info);menu.Items.Add(new Separator());menu.Items.Add(remove);var block=new MenuItem{Header="Block player",Tag="Danger"};block.Click+=async(_,_)=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})await app.BlockPlayer(f.Name,f.Address,!app.Settings.IsBlocked(f.Address));};menu.Items.Add(block);var invite=UI.MenuAction("Invite to room",async()=>{if(list.SelectedItem is ListBoxItem{Tag:Friend f})try{await app.Peer.Invite(f.Address);UI.InvitationSent(this,f.Name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>app.Peer.Current is {} current&&list.SelectedItem is ListBoxItem{Tag:Friend f}&&!current.Players.Any(p=>p.Address==f.Address)&&!app.Settings.IsBlocked(f.Address));ToolTipService.SetShowOnDisabled(invite,true);invite.ToolTip="Invite to room";invite.ToolTipOpening+=(_,_)=>invite.ToolTip=L.T(list.SelectedItem is ListBoxItem{Tag:Friend selected}&&app.Peer.Current?.Players.Any(p=>p.Address==selected.Address)==true?"This player is already in your room.":"Invite to room");menu.Items.Insert(1,invite);list.ContextMenu=menu;menu.Opened+=(_,_)=>{bool selected=list.SelectedItem is ListBoxItem{Tag:Friend};message.IsEnabled=selected;info.IsEnabled=selected;remove.IsEnabled=selected;block.IsEnabled=selected;if(list.SelectedItem is ListBoxItem{Tag:Friend f}){block.Header=app.Settings.IsBlocked(f.Address)?"Unblock player":"Block player";block.Tag=app.Settings.IsBlocked(f.Address)?null:"Danger";}};
         list.PreviewMouseRightButtonDown+=(_,e)=>{var item=ItemsControl.ContainerFromElement(list,e.OriginalSource as DependencyObject) as ListBoxItem;if(item?.Tag is Friend)item.IsSelected=true;};
         presenceTimer.Tick+=async(_,_)=>await RefreshPresence();Loaded+=async(_,_)=>await RefreshPresence();Closed+=(_,_)=>presenceTimer.Stop();presenceTimer.Start();Render();
     }
@@ -1626,7 +1659,7 @@ public sealed class ChatWindow : Window
             if(string.IsNullOrWhiteSpace(input.Text))return Task.CompletedTask;
             if(app.Settings.IsBlocked(address)){L.Bind(hint,TextBlock.TextProperty,"Unblock this player before messaging.");return Task.CompletedTask;}
             if(!UI.ValidAddress(address)){L.Bind(hint,TextBlock.TextProperty,"Choose a valid recipient VPN address.");return Task.CompletedTask;}
-            string text=input.Text;input.Clear();outbox.Send(L.T("You"),text);
+            string text=input.Text;input.Clear();outbox.Send(app.Settings.Name,text);
             L.Bind(hint,TextBlock.TextProperty,"ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE");hint.Foreground=UI.Brush(UI.Muted);hint.ToolTip=null;
             input.Focus();return Task.CompletedTask;
         }

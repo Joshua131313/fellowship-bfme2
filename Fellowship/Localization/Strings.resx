@@ -1929,4 +1929,19 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Click to release this spot" xml:space="preserve">
     <value>Click to release this spot</value>
   </data>
+  <data name="{0} joined the room." xml:space="preserve">
+    <value>{0} joined the room.</value>
+  </data>
+  <data name="{0} left the room." xml:space="preserve">
+    <value>{0} left the room.</value>
+  </data>
+  <data name="Room host is now {0}" xml:space="preserve">
+    <value>Room host is now {0}</value>
+  </data>
+  <data name="This player is already in your room." xml:space="preserve">
+    <value>This player is already in your room.</value>
+  </data>
+  <data name="The room changed. Invite this player again." xml:space="preserve">
+    <value>The room changed. Invite this player again.</value>
+  </data>
 </root>

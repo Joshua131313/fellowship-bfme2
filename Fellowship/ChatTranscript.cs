@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -113,10 +114,15 @@ public sealed class ChatTranscript : RichTextBox
         if(message.Delivery.Parent==null)((Paragraph)message.Section.Blocks.FirstBlock).Inlines.Add(message.Delivery);
         LayoutBubbles();if(following)FollowLatest();
     }
-    public void AppendSystem(string text)
+    sealed class SystemText(string format,object[] arguments):IValueConverter
+    {
+        public object Convert(object value,Type target,object parameter,CultureInfo culture)=>string.Format(CultureInfo.CurrentUICulture,L.T(format),arguments);
+        public object ConvertBack(object value,Type target,object parameter,CultureInfo culture)=>Binding.DoNothing;
+    }
+    public void AppendSystem(string text,params object[] arguments)
     {
         var section=CreateSection("");var line=(Paragraph)section.Blocks.FirstBlock;var header=line.Inlines.FirstInline;L.Bind(header,Run.TextProperty,"SYSTEM");header.Foreground=UI.Brush(UI.Muted);
-        var run=Body("");L.Bind(run,Run.TextProperty,text);line.Inlines.Add(run);Add(section,false);
+        var run=Body("");if(arguments.Length==0)L.Bind(run,Run.TextProperty,text);else BindingOperations.SetBinding(run,Run.TextProperty,new Binding(nameof(L.Direction)){Mode=BindingMode.OneWay,Source=L.Current,Converter=new SystemText(text,arguments)});line.Inlines.Add(run);Add(section,false);
     }
     static Section CreateSection(string name)
     {

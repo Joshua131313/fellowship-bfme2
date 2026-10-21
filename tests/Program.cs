@@ -5,6 +5,11 @@ using System.Net.Sockets;
 try
 {
 Settings MemorySettings(string name,string gamePath=""){var settings=Settings.InMemory();settings.Name=name;settings.GamePath=gamePath;return settings;}
+if(args.Length==0||args.Contains("--invite-membership"))
+{
+    await InviteMembershipTests.Run();
+    if(args.Contains("--invite-membership"))return;
+}
 if(args.Length==0||args.Contains("--chat-delivery"))
 {
     await ChatDeliveryTests.Run();
@@ -652,7 +657,7 @@ if(File.Exists(installation))
  await Until(()=>h.Current!.Players.Single(p=>p.Id==g.LocalId).GameRunning,"guest game status reaches room");
  await g.SetHostGameRunning(false);await Until(()=>!h.Current!.Players.Single(p=>p.Id==g.LocalId).GameRunning,"guest game exit clears status");
  if(!h.Current!.Players.Single(p=>p.Id==g.LocalId).Ready)throw new Exception("Status reset readiness");
- g.Leave();await g.SetHostGameRunning(true);
+ g.Leave();await Until(()=>!h.Current!.Players.Any(p=>p.Address==g.Address),"gracefully departed invite recipient is no longer a room member");await g.SetHostGameRunning(true);
  if(!(await PeerService.QueryPeer(g.Address,h.Address)).GameRunning)throw new Exception("Game status missing outside a room");
  await g.SetHostGameRunning(false);
  if((await PeerService.QueryPeer(g.Address,h.Address)).GameRunning)throw new Exception("Closed game still advertised in presence");

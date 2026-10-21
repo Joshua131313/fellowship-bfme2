@@ -12,6 +12,10 @@ class Program
  }
  static void Run(string[] args)
  {
+  if(args.Length==1&&args[0]=="--room-activity")
+  {var activityApp=new App(resourcesOnly:true);activityApp.InitializeComponent();Appearance.Apply("Dark");RoomActivityTests.Run();return;}
+  if(args.Length==1&&args[0]=="--friend-nicknames")
+  {var friendApp=new App(resourcesOnly:true);friendApp.InitializeComponent();Appearance.Apply("Dark");FriendNicknameTests.Run();return;}
   if(args.Length==1&&args[0]=="--map-players")
   {var mapApp=new App(resourcesOnly:true);mapApp.InitializeComponent();Appearance.Apply("Dark");MapPlayerLabelTests.Run();return;}
   if(args.Length==1&&args[0]=="--chat-room")
@@ -295,7 +299,7 @@ class Program
   if(manualWire?.ManualAfk!=true)throw new Exception("Manual presence not serialized");
   if(IdlePresence.LastOnline(activityTime.AddMinutes(-5),activityTime)!="5 minutes ago"||IdlePresence.LastOnline(activityTime.AddHours(-2),activityTime)!="2 hours ago"||IdlePresence.LastOnline(activityTime.AddDays(-2),activityTime)!=activityTime.AddDays(-2).ToLocalTime().ToString("d"))throw new Exception("Relative last online formatting failed");
   var legacyDirectory=new PeerDirectory();legacyDirectory.Success("10.0.0.2","Older app",null,activityTime);if(legacyDirectory.Find("10.0.0.2",activityTime)?.IdleSeconds!=null)throw new Exception("Older client idle status invented");
-  var app=new App(resourcesOnly:true);app.InitializeComponent();Appearance.Apply("Dark");PatchPresetTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();PatchSwitcherTests.Run();MapPlayerLabelTests.Run();ChatUiTests.Run();ChatSendTests.Run();RoomChatLayoutTests.Run();MenuUiTests.Run();
+  var app=new App(resourcesOnly:true);app.InitializeComponent();Appearance.Apply("Dark");PatchPresetTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();PatchSwitcherTests.Run();MapPlayerLabelTests.Run();ChatUiTests.Run();ChatSendTests.Run();RoomChatLayoutTests.Run();RoomActivityTests.Run();FriendNicknameTests.Run();MenuUiTests.Run();
   var transcript=new ChatTranscript();transcript.Append("Alice","First message");transcript.Append("Bob","Second message");transcript.SelectAll();
   if(!transcript.Selection.Text.Contains("First message")||!transcript.Selection.Text.Contains("Second message"))throw new Exception("Cross-message selection failed");
   transcript.AppendBlocked("Blocked","Hidden secret");transcript.SelectAll();if(transcript.Selection.Text.Contains("Hidden secret"))throw new Exception("Hidden blocked message leaked into selection");

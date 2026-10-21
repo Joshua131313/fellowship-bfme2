@@ -651,3 +651,8 @@ IN BFME2	DANS BFME2	EN BFME2	في BFME2	BFME2’DE
 BLOCKED	BLOQUÉ	BLOQUEADO	محظور	ENGELLENDİ
 Click to claim this spot	Cliquez pour choisir cette position	Haz clic para elegir esta posición	انقر لاختيار هذا الموقع	Bu konumu seçmek için tıklayın
 Click to release this spot	Cliquez pour libérer cette position	Haz clic para liberar esta posición	انقر لإخلاء هذا الموقع	Bu konumu bırakmak için tıklayın
+{0} joined the room.	{0} a rejoint le salon.	{0} se unió a la sala.	انضم {0} إلى الغرفة.	{0} odaya katıldı.
+{0} left the room.	{0} a quitté le salon.	{0} salió de la sala.	غادر {0} الغرفة.	{0} odadan ayrıldı.
+Room host is now {0}	L’hôte du salon est maintenant {0}	El anfitrión de la sala ahora es {0}	مضيف الغرفة الآن هو {0}	Odanın yeni kurucusu: {0}
+This player is already in your room.	Ce joueur est déjà dans votre salon.	Este jugador ya está en tu sala.	هذا اللاعب موجود بالفعل في غرفتك.	Bu oyuncu zaten odanızda.
+The room changed. Invite this player again.	Le salon a changé. Invitez à nouveau ce joueur.	La sala ha cambiado. Vuelve a invitar a este jugador.	تغيرت الغرفة. ادعُ هذا اللاعب مرة أخرى.	Oda değişti. Bu oyuncuyu yeniden davet edin.

@@ -556,10 +556,27 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task Invite(string address)
     {
-        var room=Current??throw new InvalidOperationException("Join or host a room first.");
-        if(settings.IsBlocked(address)||!settings.Friends.Any(f=>f.Address==address))throw new InvalidOperationException("Choose an unblocked friend.");
+        void Validate(Room room)
+        {
+            if(settings.IsBlocked(address)||!settings.Friends.Any(f=>f.Address==address))throw new InvalidOperationException("Choose an unblocked friend.");
+            if(address==Address||room.Players.Any(player=>player.Address==address))throw new InvalidOperationException("This player is already in your room.");
+            if(!AllowsPeer(address))throw new IOException("This player is outside the selected Radmin group.");
+        }
+        string roomId;int generation;
+        lock(gate)
+        {
+            var room=Current??throw new InvalidOperationException("Join or host a room first.");Validate(room);
+            roomId=room.Id;generation=sessionGeneration;
+        }
         using var connection=await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
-        await connection.Send(new(){Type="invite",Name=settings.Name,Room=new(){Id=room.Id,Title=room.Title,HostAddress=room.HostAddress}});
+        Task sending;
+        lock(gate)
+        {
+            if(Current is not {} room||room.Id!=roomId||sessionGeneration!=generation)throw new InvalidOperationException("The room changed. Invite this player again.");
+            Validate(room);
+            sending=connection.Send(new(){Type="invite",Name=settings.Name,Room=new(){Id=room.Id,Title=room.Title,HostAddress=room.HostAddress}});
+        }
+        await sending;
         using var timeout=new CancellationTokenSource(5000);
         var reply=await connection.Read(timeout.Token);if(reply?.Type!="ack")throw new IOException(reply?.Text??"Invitation was not acknowledged.");
     }

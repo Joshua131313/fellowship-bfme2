@@ -1929,4 +1929,19 @@
   <data name="Click to release this spot" xml:space="preserve">
     <value>انقر لإخلاء هذا الموقع</value>
   </data>
+  <data name="{0} joined the room." xml:space="preserve">
+    <value>انضم {0} إلى الغرفة.</value>
+  </data>
+  <data name="{0} left the room." xml:space="preserve">
+    <value>غادر {0} الغرفة.</value>
+  </data>
+  <data name="Room host is now {0}" xml:space="preserve">
+    <value>مضيف الغرفة الآن هو {0}</value>
+  </data>
+  <data name="This player is already in your room." xml:space="preserve">
+    <value>هذا اللاعب موجود بالفعل في غرفتك.</value>
+  </data>
+  <data name="The room changed. Invite this player again." xml:space="preserve">
+    <value>تغيرت الغرفة. ادعُ هذا اللاعب مرة أخرى.</value>
+  </data>
 </root>

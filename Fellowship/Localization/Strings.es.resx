@@ -1929,4 +1929,19 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Click to release this spot" xml:space="preserve">
     <value>Haz clic para liberar esta posición</value>
   </data>
+  <data name="{0} joined the room." xml:space="preserve">
+    <value>{0} se unió a la sala.</value>
+  </data>
+  <data name="{0} left the room." xml:space="preserve">
+    <value>{0} salió de la sala.</value>
+  </data>
+  <data name="Room host is now {0}" xml:space="preserve">
+    <value>El anfitrión de la sala ahora es {0}</value>
+  </data>
+  <data name="This player is already in your room." xml:space="preserve">
+    <value>Este jugador ya está en tu sala.</value>
+  </data>
+  <data name="The room changed. Invite this player again." xml:space="preserve">
+    <value>La sala ha cambiado. Vuelve a invitar a este jugador.</value>
+  </data>
 </root>

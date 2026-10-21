@@ -35,5 +35,29 @@ static class MenuUiTests
         if(picker.SelectedIndex!=1||content.HorizontalAlignment!=HorizontalAlignment.Left)throw new Exception("Preset refresh changed caption alignment or selection");
         var image=new RenderTargetBitmap(560,40,96,96,PixelFormats.Pbgra32);image.Render(picker);var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using var file=File.Create("dist/preview-preset-alignment.png");encoder.Save(file);
         Console.WriteLine("PASS right-of-cursor player menus, pointer cursors, preset alignment after refresh, and saved room title with/without previous match settings");
+
+        const string address="10.211.0.2";
+        var inviteSettings=Settings.InMemory();inviteSettings.Name="Frodo";inviteSettings.Friends=[new("Aragorn",address)];inviteSettings.MessageSounds=false;
+        var browser=new BrowserWindow(inviteSettings);typeof(BrowserWindow).GetField("closingRoom",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(browser,true);browser.Peer.Host(new(){Title="Invite eligibility"},[]);
+        var friends=new FriendsWindow(browser);
+        try
+        {
+            var shared=browser.PlayerMenu(browser,"Aragorn",address).Items.OfType<MenuItem>().Single(i=>i.Header as string=="Invite to room");
+            var list=(ListBox)typeof(FriendsWindow).GetField("list",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.GetValue(friends)!;
+            list.SelectedItem=list.Items.OfType<ListBoxItem>().Single(i=>i.Tag is Friend);
+            var selected=list.ContextMenu!.Items.OfType<MenuItem>().Single(i=>i.Header as string=="Invite to room");
+            if(shared.Command?.CanExecute(null)!=true||selected.Command?.CanExecute(null)!=true)throw new Exception("An eligible friend outside the room cannot be invited");
+            var member=new Player{Id="guest",Name="Aragorn",Address=address};browser.Peer.Current!.Players.Add(member);
+            if(shared.Command!.CanExecute(null)||selected.Command!.CanExecute(null))throw new Exception("Existing room members can still be invited from a player or friends menu");
+            member.Reconnecting=true;
+            if(shared.Command.CanExecute(null)||selected.Command.CanExecute(null))throw new Exception("Reserved reconnecting members can still be invited");
+            if(!ToolTipService.GetShowOnDisabled(shared)||!ToolTipService.GetShowOnDisabled(selected)||shared.ToolTip==null||selected.ToolTip==null)throw new Exception("Disabled invitation menus lack a visible explanation");
+            browser.Peer.Current.Players.Remove(member);
+            if(!shared.Command.CanExecute(null)||!selected.Command.CanExecute(null))throw new Exception("Invitation eligibility did not update after the player left");
+            list.SelectedItem=null;if(selected.Command.CanExecute(null))throw new Exception("Friends invite command ignored its current selection");
+            browser.Peer.Leave();if(shared.Command.CanExecute(null))throw new Exception("Invitation remained available after leaving the room");
+        }
+        finally{friends.Close();browser.Peer.Dispose();}
+        Console.WriteLine("PASS live invite eligibility excludes existing and reserved room members in shared player and friends menus");
     }
 }

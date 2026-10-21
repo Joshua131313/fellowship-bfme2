@@ -1929,4 +1929,19 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Click to release this spot" xml:space="preserve">
     <value>Bu konumu bırakmak için tıklayın</value>
   </data>
+  <data name="{0} joined the room." xml:space="preserve">
+    <value>{0} odaya katıldı.</value>
+  </data>
+  <data name="{0} left the room." xml:space="preserve">
+    <value>{0} odadan ayrıldı.</value>
+  </data>
+  <data name="Room host is now {0}" xml:space="preserve">
+    <value>Odanın yeni kurucusu: {0}</value>
+  </data>
+  <data name="This player is already in your room." xml:space="preserve">
+    <value>Bu oyuncu zaten odanızda.</value>
+  </data>
+  <data name="The room changed. Invite this player again." xml:space="preserve">
+    <value>Oda değişti. Bu oyuncuyu yeniden davet edin.</value>
+  </data>
 </root>

@@ -74,15 +74,19 @@ Fellowship readiness authorizes a launch request; **BFME2's native readiness is 
 
 ### See who is around
 
-The **Online players** tab shows players discovered on your selected network, including people outside your friends list. Search by player name or VPN address from the dashboard, or keep the Friends window open alongside your room.
+The **Online players** tab shows players discovered on your selected network, including people outside your friends list. Search by player name or VPN address from the dashboard, or keep the Friends window open alongside your room. Friends retain their latest confirmed nickname when they go offline and after restarting Fellowship.
 
 Player activity distinguishes **waiting in a lobby**, **in game**, **AFK**, and **reconnecting**. Right-click a player to open player information, send a message, manage friendship or blocking, invite them, or view and join their visible game room.
+
+Room invitations require both players to save each other as friends using their current VPN addresses. Players already in your room cannot be invited again.
 
 AFK status can follow idle detection automatically, or you can set it yourself. **Manual AFK stays active until you mark yourself available again.** Player information shows idle duration and connection history; recent last-online times use labels such as “5 minutes ago,” with an exact timestamp on hover. Click a player's IP address to copy it.
 
 ### Chat while you organize
 
 Use room chat for the group and private messages for individual conversations. Compact Discord-style rows put every player's name, time, and message together on the left, with natural wrapping for longer text; Arabic follows the right-to-left layout. Short messages occupy one line so more of the conversation stays visible. Sent messages appear locally immediately, while delivery is still pending, and the composer stays available for your next message. Pending status stays inline and disappears after confirmation. If delivery cannot be confirmed, the message stays in place with a **Retry** action; retries and room echoes reuse its identity to avoid duplicates.
+
+Room chat shows player joins, departures, and Fellowship room host changes as compact system messages. Opening a room or recovering its connection does not repeat the existing roster as new joins.
 
 Opening a chat focuses the composer. New messages stay in view when you are at the bottom, including after scrolling up and back down. Incoming messages preserve your position while you read earlier messages; sending your own message brings it into view. HTTP, HTTPS, and `www.` links are clickable and open in your default browser. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Player context menus open beside the cursor, preferring the right side. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
 

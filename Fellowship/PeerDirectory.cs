@@ -18,14 +18,16 @@ public sealed class PeerDirectory
     public void Clear()=>entries.Clear();
     public void Keep(Func<string,bool> allowed){foreach(var key in entries.Keys.Where(k=>!allowed(k)).ToArray())entries.Remove(key);}
     public static readonly TimeSpan Grace=TimeSpan.FromSeconds(20);
+    // Name is the queried address's own response, never a third-party roster or chat label.
     public void Success(string address,string name,Room? room,DateTimeOffset now,bool gameRunning=false,int? idleSeconds=null,bool manualAfk=false)
     {
+        bool renamed=settings!=null&&FriendDirectory.RememberOnline(settings,address,name);
         Expire(now);bool connected=!entries.TryGetValue(address,out var previous)||now-previous.Seen>Grace;
         if(!history.TryGetValue(address,out var activity))history[address]=activity=new();
         if(connected){activity.OnlineSince=now;}
         offlineRecorded.Remove(address);activity.LastSeen=now;entries[address]=new(address,name,room,now,false,gameRunning,IdlePresence.Normalize(idleSeconds),manualAfk);
         if(history.Count>1000)foreach(var key in history.OrderBy(p=>p.Value.LastSeen).Take(history.Count-1000).Select(p=>p.Key).ToArray())history.Remove(key);
-        Save(now,connected);
+        Save(now,connected||renamed);
     }
     public void Failure(string address){if(entries.TryGetValue(address,out var entry))entries[address]=entry with{Reconnecting=true};}
     public Entry? Find(string address,DateTimeOffset now){Expire(now);return entries.TryGetValue(address,out var entry)&&now-entry.Seen<=Grace?entry:null;}
