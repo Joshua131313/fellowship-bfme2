@@ -61,7 +61,10 @@ static class RoomChatLayoutTests
                 var warningVisibility=warning.Visibility;warning.Visibility=Visibility.Collapsed;Layout(view,window.Width,window.Height);
                 if(body.RowDefinitions[0].ActualHeight>.1)throw new Exception("A hidden patch warning still reserves a room header row");
                 warning.Visibility=warningVisibility;Layout(view,window.Width,window.Height);
-                var png=new PngBitmapEncoder();var image=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);image.Render(view);png.Frames.Add(BitmapFrame.Create(image));Directory.CreateDirectory("dist");using var file=File.Create("dist/preview-room-chat-"+theme.ToLowerInvariant()+".png");png.Save(file);
+                InactiveLaunchLayout(window,view,true,window.Width,window.Height,()=>
+                {
+                    var png=new PngBitmapEncoder();var image=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);image.Render(view);png.Frames.Add(BitmapFrame.Create(image));Directory.CreateDirectory("dist");using var file=File.Create("dist/preview-room-chat-"+theme.ToLowerInvariant()+".png");png.Save(file);
+                });
             }
             double defaultRoster=chatPanel.PlayersCard.ActualHeight,defaultChat=transcript.ActualHeight;Layout(view,window.Width,window.Height+160);
             if(Math.Abs(chatPanel.PlayersCard.ActualHeight-defaultRoster)>1||transcript.ActualHeight<defaultChat+140)throw new Exception("A taller room stretches the floating roster instead of expanding the full-height chat");Layout(view,window.Width,window.Height);
@@ -89,19 +92,23 @@ static class RoomChatLayoutTests
                 VisibleActions(window,view);
                 LaunchRole(window,false);
             }
-            var guestImage=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);guestImage.Render(view);var guestPng=new PngBitmapEncoder();guestPng.Frames.Add(BitmapFrame.Create(guestImage));using(var file=File.Create("dist/preview-room-chat-guest.png"))guestPng.Save(file);
+            InactiveLaunchLayout(window,view,false,window.Width,window.Height,()=>
+            {
+                var guestImage=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);guestImage.Render(view);var guestPng=new PngBitmapEncoder();guestPng.Frames.Add(BitmapFrame.Create(guestImage));using(var file=File.Create("dist/preview-room-chat-guest.png"))guestPng.Save(file);
+            });
             room.Players[^1].Reconnecting=true;window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
             if(summary.Visibility!=Visibility.Visible||summary.Text!="Waiting for disconnected players to reconnect.")throw new Exception("Reserved-player warning disappeared from the compact footer");VisibleActions(window,view);room.Players[^1].Reconnecting=false;
             reconnecting.SetValue(browser.Peer,true);window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
             if(summary.Visibility!=Visibility.Visible||summary.Text!="Reconnecting to room…"||consent.IsEnabled)throw new Exception("Local reconnect warning or readiness guard disappeared from the compact footer");VisibleActions(window,view);reconnecting.SetValue(browser.Peer,false);
             var launching=typeof(RoomWindow).GetField("launching",BindingFlags.Instance|BindingFlags.NonPublic)!;launching.SetValue(window,true);window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
-            if(summary.Visibility!=Visibility.Visible||summary.Text!="Launching BFME2…")throw new Exception("Launch progress disappeared from the compact footer");VisibleActions(window,view);launching.SetValue(window,false);
+            if(summary.Visibility!=Visibility.Visible||summary.Text!="Launching BFME2…")throw new Exception("Launch progress disappeared from the compact footer");VisibleActions(window,view);LaunchRole(window,false);launching.SetValue(window,false);
             current.SetValue(browser.Peer,null);window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
             if(summary.Visibility!=Visibility.Visible||summary.Text!="Return to Game rooms to reconnect.")throw new Exception("Disconnected room did not reveal its compact reconnect status");VisibleActions(window,view);current.SetValue(browser.Peer,room);window.Refresh();
             if(summary.Visibility!=Visibility.Collapsed)throw new Exception("Routine guest footer did not collapse again after connection recovery");
 
             window.Refresh();Layout(view,window.MinWidth,560);VisibleActions(window,view);FloatingBounds(chatPanel,transcript,composer,view,false);
             if(transcript.ActualHeight<50)throw new Exception("A short window clips the floating chat viewport or composer");
+            InactiveLaunchLayout(window,view,false,window.MinWidth,560);
             chatPanel.PlayersExpanded=false;window.Refresh();Layout(view,window.Width,window.Height);
             if(chatPanel.PlayersExpanded||chatPanel.PlayersCard.Visibility==Visibility.Visible)throw new Exception("Room refresh or resize resets the user's collapsed player list");
             chatPanel.PlayersExpanded=true;Layout(view,window.Width,window.Height);FloatingBounds(chatPanel,transcript,composer,view,false);
@@ -118,10 +125,14 @@ static class RoomChatLayoutTests
                 var bounds=button.TransformToAncestor(view).TransformBounds(new Rect(0,0,button.ActualWidth,button.ActualHeight));
                 if(bounds.Right>view.ActualWidth+.1||bounds.Left<captionBounds.Right-1)throw new Exception("Long room title overlaps or cuts off a titlebar control");
             }
-            var rtlImage=new RenderTargetBitmap((int)window.MinWidth,(int)window.MinHeight,96,96,PixelFormats.Pbgra32);rtlImage.Render(view);var rtlPng=new PngBitmapEncoder();rtlPng.Frames.Add(BitmapFrame.Create(rtlImage));using(var file=File.Create("dist/preview-room-chat-title-rtl.png"))rtlPng.Save(file);
+            InactiveLaunchLayout(window,view,false,window.MinWidth,window.MinHeight,()=>
+            {
+                var rtlImage=new RenderTargetBitmap((int)window.MinWidth,(int)window.MinHeight,96,96,PixelFormats.Pbgra32);rtlImage.Render(view);var rtlPng=new PngBitmapEncoder();rtlPng.Frames.Add(BitmapFrame.Create(rtlImage));using(var file=File.Create("dist/preview-room-chat-title-rtl.png"))rtlPng.Save(file);
+            });
             L.Apply("en");room.Title="Room chat layout";isHost.SetValue(browser.Peer,true);localId.SetValue(browser.Peer,"host");window.Refresh();
             Layout(view,window.MinWidth,window.MinHeight);VisibleActions(window,view);
             LaunchRole(window,true);
+            InactiveLaunchLayout(window,view,true,window.MinWidth,window.MinHeight);
             FloatingBounds(chatPanel,transcript,composer,view,false);
             if(transcript.ActualHeight<50)throw new Exception("Minimum room size cuts off the chat composer or transcript");
             window.Content=view;
@@ -134,15 +145,36 @@ static class RoomChatLayoutTests
         const BindingFlags hidden=BindingFlags.Instance|BindingFlags.NonPublic;
         var local=(Button)typeof(RoomWindow).GetField("launchMine",hidden)!.GetValue(window)!;
         var all=(Button)typeof(RoomWindow).GetField("launch",hidden)!.GetValue(window)!;
+        var abort=(Button)typeof(RoomWindow).GetField("abort",hidden)!.GetValue(window)!;
+        var requestReady=(Button)typeof(RoomWindow).GetField("requestReady",hidden)!.GetValue(window)!;
         var menu=(MenuItem)typeof(RoomWindow).GetField("launchMenu",hidden)!.GetValue(window)!;
-        string label=host?"Launch all":"Launch game";
-        if(host)
-        {
-            if(local.Visibility!=Visibility.Collapsed||all.Visibility!=Visibility.Visible||all.Content as string!=label||all.Tag as string!="Primary")throw new Exception("Room host does not have exactly its primary Launch all action");
-        }
-        else if(local.Visibility!=Visibility.Visible||local.Content as string!=label||local.Tag as string!="Primary"||all.Visibility!=Visibility.Collapsed)throw new Exception("Room guest does not have exactly its primary Launch game action");
-        if(menu.Header as string!=label||menu.Command==null)throw new Exception("Room launch menu does not follow the current host or guest role");
+        var allMenu=(MenuItem)typeof(RoomWindow).GetField("launchAllMenu",hidden)!.GetValue(window)!;
+        bool active=GameLauncher.IsRunning()||(bool)typeof(RoomWindow).GetField("launching",hidden)!.GetValue(window)!;
+        if(local.Visibility!=(active?Visibility.Collapsed:Visibility.Visible)||local.Content as string!="Launch game"||local.Tag as string!="Primary")throw new Exception("Room local Launch game visibility, label or primary appearance does not match the live game state");
+        if(all.Visibility!=(host&&!active?Visibility.Visible:Visibility.Collapsed)||all.Content as string!="Launch all"||all.Tag as string!="Primary"||allMenu.Visibility!=(host?Visibility.Visible:Visibility.Collapsed))throw new Exception("Room host Launch all visibility, label or primary appearance does not match the current role and live game state");
+        if(abort.Visibility!=(active?Visibility.Visible:Visibility.Collapsed)||requestReady.Visibility!=(host&&!active?Visibility.Visible:Visibility.Collapsed))throw new Exception("Room launch actions do not switch to Abort while BFME2 is active");
+        if(menu.Header as string!="Launch game"||menu.Command==null||allMenu.Header as string!="Launch all"||allMenu.Command==null)throw new Exception("Room local and host launch menus do not retain their distinct actions");
+        if((!host||active)&&allMenu.Command.CanExecute(null)||active&&menu.Command.CanExecute(null))throw new Exception("An unavailable host or active-game launch menu can execute");
         if(menu.Resources["Shortcut"] is not KeyGesture{Key:Key.F9,Modifiers:ModifierKeys.None}||!window.InputBindings.OfType<KeyBinding>().Any(binding=>binding.Key==Key.F9&&binding.Modifiers==ModifierKeys.None&&ReferenceEquals(binding.Command,menu.Command)))throw new Exception("Role switch detached F9 from the current room launch action");
+        if(window.InputBindings.OfType<KeyBinding>().Any(binding=>binding.Key==Key.F9&&binding.Modifiers==ModifierKeys.None&&ReferenceEquals(binding.Command,allMenu.Command)))throw new Exception("F9 launches the whole room instead of the local game");
+    }
+    static void InactiveLaunchLayout(RoomWindow window,FrameworkElement view,bool host,double width,double height,Action render=null)
+    {
+        // Stage only the detached visual tree to check the wider inactive bar.
+        // A user's real BFME2 process remains running and no command is invoked.
+        if(window.Content!=null)throw new Exception("Inactive launch layout must remain detached from the real window");
+        const BindingFlags hidden=BindingFlags.Instance|BindingFlags.NonPublic;
+        string[] names=["launchMine","launch","requestReady","abort"];
+        var controls=names.Select(name=>(Button)typeof(RoomWindow).GetField(name,hidden)!.GetValue(window)!).ToArray();
+        var previous=controls.Select(control=>control.Visibility).ToArray();
+        try
+        {
+            controls[0].Visibility=Visibility.Visible;controls[1].Visibility=host?Visibility.Visible:Visibility.Collapsed;controls[2].Visibility=host?Visibility.Visible:Visibility.Collapsed;controls[3].Visibility=Visibility.Collapsed;
+            Layout(view,width,height);VisibleActions(window,view);
+            if(host&&Bounds(controls[0],view).IntersectsWith(Bounds(controls[1],view)))throw new Exception("The host's primary Launch game and Launch all buttons overlap in the inactive layout");
+            render?.Invoke();
+        }
+        finally{for(int i=0;i<controls.Length;i++)controls[i].Visibility=previous[i];Layout(view,width,height);}
     }
     static void FloatingBounds(RoomChatPanel panel,ChatTranscript transcript,FrameworkElement composer,FrameworkElement view,bool rtl)
     {

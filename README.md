@@ -66,7 +66,7 @@ For a closer look at the special Rhûn rules, see [Automatic Rhûn 3v3 sides and
 ### Get everyone ready and launch
 
 - **Request ready:** the room host can prompt participants to ready up, with a dedicated ready-check sound that follows their sound preferences.
-- **Launch game / Launch all:** guests launch their local game with **Launch game**. The host uses **Launch all** to coordinate launching with participants who have explicitly readied up.
+- **Launch game / Launch all:** anyone, including the host, can launch their local game with **Launch game**. The host also has **Launch all** to coordinate launching with participants who have explicitly readied up.
 - **Abort locally:** while your game is running, Abort stops your own BFME2 instance. An active authorized live-sync helper reuses its permission to stop the game.
 - **Keep the group together:** Fellowship rooms remain open between games. Promote another room host, hand off ownership, or manage participants without recreating the whole group.
 
@@ -88,7 +88,7 @@ Use room chat for the group and private messages for individual conversations. C
 
 The room name appears in the window title bar, leaving the full room height for chat. A compact players card sits at the chat's top-right and fits eight rows at the default window size, while message text stays clear of it and the composer uses the full width. Collapse the card with **Hide players**, then reopen it from the players button; Arabic mirrors the card to the left. Hover a player for details or right-click for the usual player actions. A compact bottom bar keeps readiness and room actions close at hand.
 
-Room chat shows player joins, departures, and Fellowship room host changes as compact system messages. Opening a room or recovering its connection does not repeat the existing roster as new joins.
+Room chat shows player joins, departures, connection changes and Fellowship room host changes as compact rows with event icons and timestamps. Explicit room leaves, Fellowship disconnections and host removals have distinct wording when the room host supplies the reason. Older clients fall back to a neutral departure notice. Planned host transfers do not produce disconnect warnings, and opening a room or recovering its connection does not repeat the existing roster as new joins.
 
 Opening a chat focuses the composer. New messages stay in view when you are at the bottom, including after scrolling up and back down. Incoming messages preserve your position while you read earlier messages; sending your own message brings it into view. HTTP, HTTPS, and `www.` links are clickable and open in your default browser. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Player context menus open beside the cursor, preferring the right side. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
 
@@ -122,7 +122,7 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
 4. **Host or join.** Check the preselected installed patch, or choose another room patch, and use the default 3v3 preset or another setup. If patch detection is unavailable, the initial choice is **1.00**. Join a discovered room, preview it first, or enter the host's VPN IP directly. Resolve patch warnings before playing: close BFME2, open Ecth's Patch Switcher, then use **Set to …** for a supported target or select the exact patch manually.
 5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.
-6. **Prepare and launch.** For verified 1.00 synchronization, approve Windows' permission prompt and wait for **Sync ready**. Other patches launch with manual native setup. Guests use **Launch game**; the host uses **Launch all**.
+6. **Prepare and launch.** For verified 1.00 synchronization, approve Windows' permission prompt and wait for **Sync ready**. Other patches launch with manual native setup. Use **Launch game** for your local game; the host can use **Launch all** for the group.
 7. **Enter BFME2's LAN lobby.** The in-game host opens **Multiplayer → Network → Create Game**. Other players join that native lobby manually. Fellowship begins supported 1.00 synchronization once the lobby matches; set the lobby options manually for other patches.
 
 Fellowship coordinates the group and supported lobby selections. **Creating and joining the native BFME2 lobby still happens inside BFME2.** Rejoining an already-running match or restoring an army after quitting is not supported.

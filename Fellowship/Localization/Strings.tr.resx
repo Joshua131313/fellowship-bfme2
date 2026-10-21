@@ -1935,6 +1935,18 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="{0} left the room." xml:space="preserve">
     <value>{0} odadan ayrıldı.</value>
   </data>
+  <data name="{0} disconnected from Fellowship." xml:space="preserve">
+    <value>{0} oyuncusunun Fellowship bağlantısı kesildi.</value>
+  </data>
+  <data name="{0} reconnected to the room." xml:space="preserve">
+    <value>{0} odaya yeniden bağlandı.</value>
+  </data>
+  <data name="{0} was removed from the room." xml:space="preserve">
+    <value>{0} odadan çıkarıldı.</value>
+  </data>
+  <data name="{0} is no longer in the room." xml:space="preserve">
+    <value>{0} artık odada değil.</value>
+  </data>
   <data name="Room host is now {0}" xml:space="preserve">
     <value>Odanın yeni kurucusu: {0}</value>
   </data>

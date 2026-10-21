@@ -134,7 +134,7 @@ public static class UI
             "Active players" or "Online players"=>new(Key.P,ModifierKeys.Control|ModifierKeys.Shift),
             "Friends list" or "Friends"=>new(Key.D1,ModifierKeys.Control,"Ctrl+1"),
             "Getting started" or "Game setup guide"=>new(Key.F1),
-            "Launch game" or "Launch all"=>new(Key.F9),
+            "Launch game"=>new(Key.F9),
             "Leave room" or "Close window"=>new(Key.W,ModifierKeys.Control),
             "Room browser"=>new(Key.B,ModifierKeys.Control),
             "Send message"=>new(Key.M,ModifierKeys.Control),
@@ -372,7 +372,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.135   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.136   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -977,10 +977,11 @@ public sealed partial class BrowserWindow : Window
     }
 
     bool closingRoom;
-    public async Task CloseRoom()
+    public Task CloseRoom()=>CloseRoom(false);
+    public async Task CloseRoom(bool applicationExit)
     {
         if(closingRoom)return;closingRoom=true;
-        try{await Peer.LeaveRoom();var old=roomWindow;roomWindow=null;if(old!=null){old.AllowClose=true;old.Close();}}
+        try{await Peer.LeaveRoom(applicationExit);var old=roomWindow;roomWindow=null;if(old!=null){old.AllowClose=true;old.Close();}}
         finally{closingRoom=false;}
     }
     public void OpenCurrentRoom(){if(Peer.Current!=null)ShowRoom();}
@@ -1049,7 +1050,7 @@ public sealed class RoomWindow : Window
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
     readonly Button launchMine,abort,requestReady;
-    readonly MenuItem launchMenu;
+    readonly MenuItem launchMenu,launchAllMenu;
     Window? readyPrompt;
     DateTimeOffset nextReadyRequest;
     readonly System.Windows.Threading.DispatcherTimer launchStateTimer=new(){Interval=TimeSpan.FromSeconds(1)};
@@ -1059,11 +1060,11 @@ public sealed class RoomWindow : Window
         bool active=launching||GameLauncher.IsRunning();
         requestReady.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         requestReady.IsEnabled=app.Peer.Current?.Players.Count>1&&DateTimeOffset.UtcNow>=nextReadyRequest;
-        launchMine.Visibility=active||app.Peer.IsHost?Visibility.Collapsed:Visibility.Visible;
+        launchMine.Visibility=active?Visibility.Collapsed:Visibility.Visible;
         launchMine.IsEnabled=!app.Peer.IsReconnecting;
         launch.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         abort.Visibility=active?Visibility.Visible:Visibility.Collapsed;
-        L.Bind(launchMenu,HeaderedItemsControl.HeaderProperty,app.Peer.IsHost?"Launch all":"Launch game");
+        launchAllMenu.Visibility=app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         CommandManager.InvalidateRequerySuggested();
     }
     async Task AbortGame()
@@ -1090,12 +1091,12 @@ public sealed class RoomWindow : Window
     {
         this.app=app;var work=SystemParameters.WorkArea;
         var body=UI.Shell(this,app.Peer.Current?.Title??"",Math.Min(1160,Math.Max(1,work.Width-32)),Math.Min(840,Math.Max(1,work.Height-32)),title);MinWidth=Math.Min(900,Width);MinHeight=Math.Min(660,Height);
-        launchMenu=UI.MenuAction("Launch game",async()=>
+        launchMenu=UI.MenuAction("Launch game",LaunchLocal,()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
+        launchAllMenu=UI.MenuAction("Launch all",async()=>
         {
-            if(!app.Peer.IsHost){LaunchLocal();return;}
             try{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();}catch(Exception error){UI.Error(error.Message);}
-        },()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)&&(!app.Peer.IsHost||app.Peer.Current.AllGuestsReady));
-        UI.Menus(this,UI.MenuGroup("_Room",launchMenu,UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
+        },()=>app.Peer.IsHost&&!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current?.AllGuestsReady==true&&File.Exists(app.Settings.GamePath));
+        UI.Menus(this,UI.MenuGroup("_Room",launchMenu,launchAllMenu,UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
         patchWarning.ColumnDefinitions.Add(new());patchWarning.ColumnDefinitions.Add(new(){Width=UI.Auto});patchWarning.Margin=new(22,12,22,0);
         patchNotice.TextWrapping=TextWrapping.Wrap;patchWarning.Children.Add(patchNotice);
@@ -1194,7 +1195,7 @@ public sealed class RoomWindow : Window
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
         launch=UI.AsyncButton("Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&!PatchChanging&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>PatchChanging?"Switching patch…":launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
-        launchMine=UI.Require(UI.Button("Launch game",LaunchLocal,true),()=>!app.Peer.IsHost&&!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
+        launchMine=UI.Require(UI.Button("Launch game",LaunchLocal,true),()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
         requestReady=UI.AsyncButton("Request ready",async()=>{await app.Peer.RequestReady();nextReadyRequest=DateTimeOffset.UtcNow.AddSeconds(5);UpdateLaunchActions();AppendSystem("Ready request sent to room participants.");});
         requestReady.ToolTip="Ask everyone in the room to ready up";
@@ -1353,34 +1354,74 @@ public sealed class RoomWindow : Window
     string? activityRoom;
     string activityHost="",activityHostName="";
     bool activityPaused;
-    Dictionary<string,string> activityRoster=new(StringComparer.OrdinalIgnoreCase);
+    sealed record ActivityMember(string Id,string Address,string Name,bool ConnectionLost);
+    Dictionary<string,ActivityMember> activityRoster=new(StringComparer.OrdinalIgnoreCase);
+    readonly HashSet<string> activityDisconnected=new(StringComparer.OrdinalIgnoreCase);
+    readonly HashSet<string> activityDepartureIds=new(StringComparer.Ordinal);
+    readonly Queue<string> activityDepartureOrder=new();
+    void RememberDepartures(IEnumerable<RoomDeparture> departures)
+    {
+        foreach(var departure in departures)
+            if(activityDepartureIds.Add(departure.Id))activityDepartureOrder.Enqueue(departure.Id);
+        while(activityDepartureOrder.Count>256)activityDepartureIds.Remove(activityDepartureOrder.Dequeue());
+    }
+    void AppendActivity(ChatTranscript.SystemEventKind kind,string text,params object[] arguments)=>messages.AppendSystem(kind,text,arguments);
     void ObserveRoomActivity(Room? room,bool reconnecting)
     {
         // Host handoff temporarily clears Current. An unavailable transport is
         // not evidence that everyone left, so retain the immutable baseline.
         if(room==null){if(activityRoom!=null)activityPaused=true;return;}
         static string Key(Player player)=>player.Address.Length>0?player.Address:"id:"+player.Id;
-        var next=room.Players.GroupBy(Key,StringComparer.OrdinalIgnoreCase).ToDictionary(g=>g.Key,g=>g.First().Name,StringComparer.OrdinalIgnoreCase);
+        var next=room.Players.GroupBy(Key,StringComparer.OrdinalIgnoreCase).ToDictionary(g=>g.Key,g=>{var player=g.First();return new ActivityMember(player.Id,player.Address,player.Name,player.ConnectionLost);},StringComparer.OrdinalIgnoreCase);
         var host=room.Players.FirstOrDefault(p=>p.Id=="host");string nextHost=host==null?"":Key(host),nextHostName=host?.Name??"";
         if(activityRoom!=room.Id)
         {
-            activityRoom=room.Id;activityRoster=next;activityHost=nextHost;activityHostName=nextHostName;activityPaused=reconnecting;return;
+            activityRoom=room.Id;activityRoster=next;activityHost=nextHost;activityHostName=nextHostName;activityPaused=reconnecting;
+            activityDisconnected.Clear();activityDepartureIds.Clear();activityDepartureOrder.Clear();RememberDepartures(room.Departures);return;
         }
         if(reconnecting){activityPaused=true;return;}
+        var departures=room.Departures.Where(departure=>!activityDepartureIds.Contains(departure.Id)).ToArray();
+        RememberDepartures(room.Departures);
         bool changedHost=activityHost.Length>0&&nextHost.Length>0&&!StringComparer.OrdinalIgnoreCase.Equals(activityHost,nextHost),joined=false,left=false;
+        void Depart(string key,ActivityMember member)
+        {
+            // Match only newly observed evidence. A previous leave at the same
+            // address must not explain a later removal after that player rejoins.
+            var departure=departures.LastOrDefault(d=>d.PlayerId==member.Id&&(member.Address.Length==0||d.Address.Equals(member.Address,StringComparison.OrdinalIgnoreCase)))
+                ??departures.LastOrDefault(d=>member.Address.Length>0&&d.Address.Equals(member.Address,StringComparison.OrdinalIgnoreCase));
+            string reason=departure?.Reason??"unknown",name=string.IsNullOrWhiteSpace(departure?.Name)?member.Name:departure.Name;
+            bool announced=activityDisconnected.Remove(key);
+            if(announced&&reason is not ("left" or "removed"))return;
+            var kind=reason=="disconnected"?ChatTranscript.SystemEventKind.Disconnected:ChatTranscript.SystemEventKind.PlayerLeft;
+            string message=reason switch{"left"=>"{0} left the room.","disconnected"=>"{0} disconnected from Fellowship.","removed"=>"{0} was removed from the room.",_=>"{0} is no longer in the room."};
+            AppendActivity(kind,message,name);left=true;
+        }
         if(!activityPaused)
         {
-            foreach(var member in activityRoster.Where(p=>!next.ContainsKey(p.Key))){AppendSystem("{0} left the room.",member.Value);left=true;}
-            foreach(var member in next.Where(p=>!activityRoster.ContainsKey(p.Key))){AppendSystem("{0} joined the room.",member.Value);joined=true;}
+            // A leave and fresh join can arrive before the next UI refresh.
+            // Explicit new evidence distinguishes that from a host ID remap.
+            var replacements=activityRoster.Where(p=>next.TryGetValue(p.Key,out var current)&&p.Value.Id!=current.Id&&
+                departures.Any(d=>d.PlayerId==p.Value.Id&&d.Address.Equals(p.Value.Address,StringComparison.OrdinalIgnoreCase))).Select(p=>p.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach(var member in activityRoster.Where(p=>!next.ContainsKey(p.Key)||replacements.Contains(p.Key)))Depart(member.Key,member.Value);
+            foreach(var member in next)
+            {
+                if(!activityRoster.TryGetValue(member.Key,out var previous)||replacements.Contains(member.Key))
+                {AppendActivity(ChatTranscript.SystemEventKind.PlayerJoined,"{0} joined the room.",member.Value.Name);joined=true;}
+                if(member.Value.ConnectionLost&&previous?.ConnectionLost!=true&&activityDisconnected.Add(member.Key))
+                    AppendActivity(ChatTranscript.SystemEventKind.Disconnected,"{0} disconnected from Fellowship.",member.Value.Name);
+                else if(!member.Value.ConnectionLost&&previous?.ConnectionLost==true&&activityDisconnected.Remove(member.Key))
+                    AppendActivity(ChatTranscript.SystemEventKind.Reconnected,"{0} reconnected to the room.",member.Value.Name);
+            }
         }
         else if(changedHost&&!next.ContainsKey(activityHost))
         {
             // A confirmed successor snapshot can establish that the old host
             // left. Other membership differences during an outage are unknown.
-            AppendSystem("{0} left the room.",activityHostName);left=true;
+            if(activityRoster.TryGetValue(activityHost,out var previousHost))Depart(activityHost,previousHost);
         }
-        if(changedHost)AppendSystem("Room host is now {0}",nextHostName);
+        if(changedHost)AppendActivity(ChatTranscript.SystemEventKind.HostChanged,"Room host is now {0}",nextHostName);
         if(app.Settings.MessageSounds){if(joined)MessageAlert.Effect("room-join");else if(left)MessageAlert.Effect("room-leave");}
+        activityDisconnected.RemoveWhere(key=>!next.TryGetValue(key,out var member)||!member.ConnectionLost);
         activityRoster=next;activityHost=nextHost;activityHostName=nextHostName;activityPaused=false;
     }
     public void Refresh()
@@ -1508,7 +1549,13 @@ public sealed class RoomWindow : Window
         // Peer.Notice also updates the browser's status. The room transcript
         // owns host notices through snapshots, including the transfer initiator.
         if(text.StartsWith("Host is now ",StringComparison.Ordinal)||text.StartsWith("Room handed to ",StringComparison.Ordinal)){ObserveRoomActivity(app.Peer.Current,app.Peer.IsReconnecting);return;}
-        AppendSystem(text);
+        var kind=text switch
+        {
+            "Connection lost. Reconnecting to the room…"=>ChatTranscript.SystemEventKind.Disconnected,
+            "Room connection restored."=>ChatTranscript.SystemEventKind.Reconnected,
+            _=>ChatTranscript.SystemEventKind.Info
+        };
+        AppendActivity(kind,text);
     }
     public Task<string> HandleLaunch()=>app.Peer.IsHost||app.Peer.Current?.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?LaunchLocalCore():Task.FromResult("Launch skipped: player is not ready.");
     bool launching;

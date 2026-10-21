@@ -1935,6 +1935,18 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="{0} left the room." xml:space="preserve">
     <value>{0} salió de la sala.</value>
   </data>
+  <data name="{0} disconnected from Fellowship." xml:space="preserve">
+    <value>{0} se desconectó de Fellowship.</value>
+  </data>
+  <data name="{0} reconnected to the room." xml:space="preserve">
+    <value>{0} volvió a conectarse a la sala.</value>
+  </data>
+  <data name="{0} was removed from the room." xml:space="preserve">
+    <value>{0} fue expulsado de la sala.</value>
+  </data>
+  <data name="{0} is no longer in the room." xml:space="preserve">
+    <value>{0} ya no está en la sala.</value>
+  </data>
   <data name="Room host is now {0}" xml:space="preserve">
     <value>El anfitrión de la sala ahora es {0}</value>
   </data>

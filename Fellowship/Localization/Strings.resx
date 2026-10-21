@@ -1935,6 +1935,18 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="{0} left the room." xml:space="preserve">
     <value>{0} left the room.</value>
   </data>
+  <data name="{0} disconnected from Fellowship." xml:space="preserve">
+    <value>{0} disconnected from Fellowship.</value>
+  </data>
+  <data name="{0} reconnected to the room." xml:space="preserve">
+    <value>{0} reconnected to the room.</value>
+  </data>
+  <data name="{0} was removed from the room." xml:space="preserve">
+    <value>{0} was removed from the room.</value>
+  </data>
+  <data name="{0} is no longer in the room." xml:space="preserve">
+    <value>{0} is no longer in the room.</value>
+  </data>
   <data name="Room host is now {0}" xml:space="preserve">
     <value>Room host is now {0}</value>
   </data>

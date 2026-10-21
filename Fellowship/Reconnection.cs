@@ -111,7 +111,7 @@ public sealed partial class PeerService
     void ReservePlayer(string id)
     {
         if(Current?.Players.FirstOrDefault(p=>p.Id==id) is not {} player)return;
-        player.Reconnecting=true;
+        player.Reconnecting=true;player.ConnectionLost=true;
         if(!resumeTickets.ContainsKey(id))resumeTickets[id]=recoveryToken;
         reconnectDeadlines[id]=DateTimeOffset.UtcNow.AddSeconds(120);
         _=ExpireReservations(Current.Id,resumeTickets);
@@ -134,6 +134,7 @@ public sealed partial class PeerService
                     if(!IsHost||Current?.Id!=roomId||!ReferenceEquals(resumeTickets,reservation))return;
                     foreach(var id in reconnectDeadlines.Where(p=>p.Value<=DateTimeOffset.UtcNow).Select(p=>p.Key).ToArray())
                     {
+                        if(Current.Players.FirstOrDefault(p=>p.Id==id) is {} expired)Current.RecordDeparture(expired,"disconnected");
                         Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);reconnectDeadlines.Remove(id);changed=true;
                     }
                 }

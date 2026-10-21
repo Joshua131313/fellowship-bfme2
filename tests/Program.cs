@@ -5,6 +5,11 @@ using System.Net.Sockets;
 try
 {
 Settings MemorySettings(string name,string gamePath=""){var settings=Settings.InMemory();settings.Name=name;settings.GamePath=gamePath;return settings;}
+if(args.Length==0||args.Contains("--departures"))
+{
+    await DepartureReasonTests.Run();
+    if(args.Contains("--departures"))return;
+}
 if(args.Length==0||args.Contains("--invite-membership"))
 {
     await InviteMembershipTests.Run();

@@ -80,7 +80,7 @@ public sealed partial class PeerService : IDisposable
         using var c = new Connection(tcp);
         string id = Guid.NewGuid().ToString("N");
         bool joined = false,departed=false;
-        string joinedRoomId="";
+        string joinedRoomId="",departureReason="unknown";
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
@@ -124,7 +124,7 @@ public sealed partial class PeerService : IDisposable
                        Current.Players.FirstOrDefault(p=>p.Id==hello.Id&&p.Address==remoteAddress) is {} member)
                     {
                         id=hello.Id;guests.TryGetValue(id,out var previous);guests[id]=c;
-                        member.Reconnecting=false;reconnectDeadlines.Remove(id);joined=true;joinedRoomId=Current.Id;
+                        member.Reconnecting=false;member.ConnectionLost=false;reconnectDeadlines.Remove(id);joined=true;joinedRoomId=Current.Id;
                         previous?.Dispose();
                     }
                 }
@@ -144,7 +144,7 @@ public sealed partial class PeerService : IDisposable
                     // An explicit fresh join replaces this address's disconnected
                     // reservation; it must not consume a second place in the room.
                     foreach(var stale in Current.Players.Where(p=>p.Reconnecting&&p.Address==remoteAddress&&!guests.ContainsKey(p.Id)).ToArray())
-                    {Current.Players.Remove(stale);resumeTickets.Remove(stale.Id);reconnectDeadlines.Remove(stale.Id);}
+                    {Current.RecordDeparture(stale,"disconnected");Current.Players.Remove(stale);resumeTickets.Remove(stale.Id);reconnectDeadlines.Remove(stale.Id);}
                     if(Current.Players.Count>=Current.Capacity)error="The room is full.";
                     else
                     {
@@ -172,7 +172,7 @@ public sealed partial class PeerService : IDisposable
             {
                 if(settings.IsBlocked(remoteAddress)||!AllowsPeer(remoteAddress))break;
                 if(!guests.TryGetValue(id,out var active)||!ReferenceEquals(active,c)||Current?.Id!=joinedRoomId)break;
-                if(msg.Type=="leave"){departed=true;break;}
+                if(msg.Type=="leave"){departed=true;departureReason=msg.DepartureReason is "left" or "disconnected"?msg.DepartureReason:"unknown";break;}
                 if(msg.Type=="handoff-ready")
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
@@ -237,7 +237,11 @@ public sealed partial class PeerService : IDisposable
                     if(IsHost&&Current?.Id==joinedRoomId)
                     {
                         if(!departed&&!stop.IsCancellationRequested&&CanSee(c.RemoteAddress)&&AllowsPeer(c.RemoteAddress))ReservePlayer(id);
-                        else{Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);reconnectDeadlines.Remove(id);}
+                        else
+                        {
+                            if(Current.Players.FirstOrDefault(p=>p.Id==id) is {} removed)Current.RecordDeparture(removed,departed?departureReason:CanSee(c.RemoteAddress)&&AllowsPeer(c.RemoteAddress)?"disconnected":"removed");
+                            Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);reconnectDeadlines.Remove(id);
+                        }
                         changed=true;
                     }
                 }
@@ -257,6 +261,7 @@ public sealed partial class PeerService : IDisposable
             IsHost = true; LocalId = "host"; Current = room;
             recoveryToken=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
             room.Isolated=false;
+            room.Departures=[];
             room.Spots=preparedSpots??GameMapData.Spots(settings.GamePath,room.MapPath,room.Patch);
             room.Host = settings.Name;room.HostAddress=Address;
             var saved=settings.LastHostedSetup;
@@ -308,7 +313,7 @@ public sealed partial class PeerService : IDisposable
                 if(msg.Type=="become-host")
                 {
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
-                    lock(gate){if(!ReferenceEquals(upstream,c))return;upstream=null;Current=msg.Room;IsReconnecting=false;var hostPlayer=Current.Players.FirstOrDefault(p=>p.Id=="host");if(hostPlayer!=null){hostPlayer.Ready=true;hostPlayer.Reconnecting=false;}Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);reconnectDeadlines.Clear();foreach(var member in Current.Players.Where(p=>p.Id!="host")){member.Reconnecting=true;reconnectDeadlines[member.Id]=DateTimeOffset.UtcNow.AddSeconds(120);}recoveryToken=msg.Token;}
+                    lock(gate){if(!ReferenceEquals(upstream,c))return;upstream=null;Current=msg.Room;IsReconnecting=false;var hostPlayer=Current.Players.FirstOrDefault(p=>p.Id=="host");if(hostPlayer!=null){hostPlayer.Ready=true;hostPlayer.Reconnecting=false;hostPlayer.ConnectionLost=false;}Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);reconnectDeadlines.Clear();foreach(var member in Current.Players.Where(p=>p.Id!="host")){member.Reconnecting=true;reconnectDeadlines[member.Id]=DateTimeOffset.UtcNow.AddSeconds(120);}recoveryToken=msg.Token;}
                     CancelChats("Host transfer in progress. Try again shortly.");
                     await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId});
                     _ = Discover(presence:true);Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
@@ -539,6 +544,7 @@ public sealed partial class PeerService : IDisposable
             foreach(var p in Current.Players.Where(p=>p.Id!="host"&&!CanSee(p.Address)).ToArray())
             {
                 if(guests.TryRemove(p.Id,out var c))c.Dispose();
+                Current.RecordDeparture(p,"removed");
                 Current.Players.Remove(p);resumeTickets.Remove(p.Id);reconnectDeadlines.Remove(p.Id);
             }
         }
@@ -636,13 +642,14 @@ public sealed partial class PeerService : IDisposable
         try { using var timeout = new CancellationTokenSource(3000); await tcp.ConnectAsync(ip, Port, timeout.Token); return new(tcp); }
         catch { tcp.Dispose(); throw; }
     }
-    public void Leave()
+    public void Leave()=>_=LeaveCore("left");
+    Task LeaveCore(string reason)
     {
-        Connection? old;
+        Task closing;
         lock(gate)
         {
             sessionGeneration++;reconnectStop?.Cancel();reconnectStop=null;
-            old=upstream;upstream=null;old?.CloseGracefully();
+            var old=upstream;upstream=null;closing=old?.CloseGracefully(reason)??Task.CompletedTask;
             IsHost=false;IsReconnecting=false;Current=null;recoveryToken="";upstreamChatAck=false;
             CancelChats("Disconnected from room.");
             resumeTickets=new();reconnectDeadlines.Clear();
@@ -651,8 +658,19 @@ public sealed partial class PeerService : IDisposable
         foreach (var c in guests.Values) c.Dispose();
         guests.Clear(); Changed?.Invoke();
         _ = Discover(presence:true);
+        return closing;
     }
-    public void Dispose() { networkStop?.Cancel();discovery?.Dispose(); stop.Cancel(); listener?.Stop(); Leave(); stop.Dispose(); }
+    public void Dispose()
+    {
+        // Mark the upstream's graceful intent before cancelling its reader;
+        // otherwise ReceiveHost can dispose it before the exit frame is sent.
+        lock(gate)upstream?.CloseGracefully("disconnected");
+        // Stop accepting resumes before closing hosted connections. Otherwise
+        // a guest can retry during shutdown and mistake the closing owner for
+        // an authoritative rejection of its still-reserved room membership.
+        networkStop?.Cancel();discovery?.Dispose();stop.Cancel();listener?.Stop();
+        _=LeaveCore("disconnected");stop.Dispose();
+    }
     sealed class Connection : IDisposable
     {
         public string RemoteAddress {get;}
@@ -661,8 +679,9 @@ public sealed partial class PeerService : IDisposable
         readonly SemaphoreSlim writes = new(1);
         public bool GracefulClosing {get;private set;}
         public bool Welcomed {get;set;}
-        public void CloseGracefully(){GracefulClosing=true;_=FinishLeave();}
-        async Task FinishLeave(){try{await Send(new(){Type="leave"});}catch{}finally{Dispose();}}
+        Task? gracefulClose;
+        public Task CloseGracefully(string reason){GracefulClosing=true;return gracefulClose??=FinishLeave(reason);}
+        async Task FinishLeave(string reason){try{await Send(new(){Type="leave",DepartureReason=reason});}catch{}finally{Dispose();}}
         public Connection(TcpClient tcp)
         {
             this.tcp = tcp;RemoteAddress=((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString(); tcp.NoDelay = true; stream = tcp.GetStream();

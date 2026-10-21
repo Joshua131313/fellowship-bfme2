@@ -86,8 +86,27 @@ public sealed class Settings
     }
 }
 public sealed record MapSpot(int Number,double X,double Y);
+public sealed record RoomDeparture(string Id,string PlayerId,string Address,string Name,string Reason);
 public sealed class Room
 {
+    List<RoomDeparture> departures=[];
+    [System.Diagnostics.CodeAnalysis.AllowNull]
+    public List<RoomDeparture> Departures
+    {
+        get=>departures;
+        set=>departures=(value??[]).Select(NormalizeDeparture).Where(item=>item!=null).Cast<RoomDeparture>().TakeLast(16).ToList();
+    }
+    static RoomDeparture? NormalizeDeparture(RoomDeparture? departure)
+    {
+        if(departure==null||string.IsNullOrWhiteSpace(departure.Id)||string.IsNullOrWhiteSpace(departure.PlayerId)&&string.IsNullOrWhiteSpace(departure.Address))return null;
+        return departure with{PlayerId=departure.PlayerId??"",Address=departure.Address??"",Name=departure.Name??"",Reason=departure.Reason is "left" or "disconnected" or "removed"?departure.Reason:"unknown"};
+    }
+    public void RecordDeparture(Player player,string reason)
+    {
+        var departure=NormalizeDeparture(new(Guid.NewGuid().ToString("N"),player.Id,player.Address,player.Name,reason));if(departure==null)return;
+        Departures.Add(departure);
+        if(Departures.Count>16)Departures.RemoveRange(0,Departures.Count-16);
+    }
     public SidePlan? SidePlan {get;set;}
     public string LastRhunHost {get;set;}="";
     public Dictionary<string,LivePlacement.Choice> LastRhunLineup {get;set;}=new();
@@ -139,6 +158,7 @@ public sealed class Room
 }
 public sealed class Player
 {
+    public bool ConnectionLost {get;set;}
     public bool Reconnecting { get; set; }
     public bool ManualAfk { get; set; }
     public int? IdleSeconds { get; set; }
@@ -159,6 +179,7 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public string DepartureReason {get;set;}="";
     public bool SupportsChatAck {get;set;}
     public string RoomId {get;set;}="";
     public string RoomHostAddress {get;set;}="";

@@ -1935,6 +1935,18 @@
   <data name="{0} left the room." xml:space="preserve">
     <value>غادر {0} الغرفة.</value>
   </data>
+  <data name="{0} disconnected from Fellowship." xml:space="preserve">
+    <value>انقطع اتصال {0} بـ Fellowship.</value>
+  </data>
+  <data name="{0} reconnected to the room." xml:space="preserve">
+    <value>أُعيد اتصال {0} بالغرفة.</value>
+  </data>
+  <data name="{0} was removed from the room." xml:space="preserve">
+    <value>تمت إزالة {0} من الغرفة.</value>
+  </data>
+  <data name="{0} is no longer in the room." xml:space="preserve">
+    <value>لم يعد {0} في الغرفة.</value>
+  </data>
   <data name="Room host is now {0}" xml:space="preserve">
     <value>مضيف الغرفة الآن هو {0}</value>
   </data>

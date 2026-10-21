@@ -8,11 +8,11 @@ public sealed partial class PeerService
     string handoffTarget="",handoffId="";
     TaskCompletionSource<string>? handoffReady;
     Dictionary<string,string> resumeTickets=new();
-    public async Task LeaveRoom()
+    public async Task LeaveRoom(bool applicationExit=false)
     {
         string? next;
         lock(gate)next=IsHost?Current?.Players.FirstOrDefault(p=>p.Id!="host"&&!p.Reconnecting&&guests.ContainsKey(p.Id))?.Id:null;
-        if(next!=null)await Promote(next,true);else Leave();
+        if(next!=null)await Promote(next,true,applicationExit);else await LeaveCore(applicationExit?"disconnected":"left");
     }
     public async Task Kick(string id)
     {
@@ -23,11 +23,12 @@ public sealed partial class PeerService
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(id=="host"||!Current.Players.Any(p=>p.Id==id))throw new InvalidOperationException("That player is no longer connected.");
             guests.TryRemove(id,out connection);
+            Current.RecordDeparture(Current.Players.Single(p=>p.Id==id),"removed");
             Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);reconnectDeadlines.Remove(id);
         }
         try{if(connection!=null)await connection.Send(new(){Type="kicked"});}finally{connection?.Dispose();await BroadcastState();}
     }
-    public async Task Promote(string id,bool leaving=false)
+    public async Task Promote(string id,bool leaving=false,bool applicationExit=false)
     {
         Room snapshot;Connection successor;Dictionary<string,string> tickets;string address,oldId=Guid.NewGuid().ToString("N");
         lock(gate)
@@ -40,7 +41,7 @@ public sealed partial class PeerService
             address=target.Address;
             snapshot=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current))!;
             snapshot.Host=target.Name;snapshot.HostAddress=address;snapshot.Phase="Gathering";
-            if(leaving)snapshot.Players.RemoveAll(p=>p.Id=="host");else snapshot.Players.Single(p=>p.Id=="host").Id=oldId;
+            if(leaving){snapshot.RecordDeparture(snapshot.Players.Single(p=>p.Id=="host"),applicationExit?"disconnected":"left");snapshot.Players.RemoveAll(p=>p.Id=="host");}else snapshot.Players.Single(p=>p.Id=="host").Id=oldId;
             var promoted=snapshot.Players.Single(p=>p.Id==id);promoted.Id="host";promoted.Ready=true;
             tickets=snapshot.Players.Where(p=>p.Id!="host").ToDictionary(p=>p.Id,_=>Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)));
             handoffTarget=id;handoffId=Guid.NewGuid().ToString("N");handoffReady=new(TaskCreationOptions.RunContinuationsAsynchronously);transferring=true;

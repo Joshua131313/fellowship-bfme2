@@ -52,7 +52,7 @@ public partial class App : Application
     public async void Quit()
     {
         if(quitPending)return;quitPending=true;
-        try{if(MainWindow is BrowserWindow browser)await browser.CloseRoom();}
+        try{if(MainWindow is BrowserWindow browser)await browser.CloseRoom(applicationExit:true);}
         catch(Exception error){quitPending=false;UI.Error("Could not transfer the room: "+error.Message);return;}
         IsQuitting=true;
         tray?.Dispose();tray=null;
