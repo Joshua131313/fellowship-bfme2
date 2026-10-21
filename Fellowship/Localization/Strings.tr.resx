@@ -1905,4 +1905,28 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="No spot" xml:space="preserve">
     <value>Konum yok</value>
   </data>
+  <data name="Reconnecting to room…" xml:space="preserve">
+    <value>Odaya yeniden bağlanılıyor…</value>
+  </data>
+  <data name="Connection lost. Reconnecting to the room…" xml:space="preserve">
+    <value>Bağlantı kesildi. Odaya yeniden bağlanılıyor…</value>
+  </data>
+  <data name="Waiting for disconnected players to reconnect." xml:space="preserve">
+    <value>Bağlantısı kesilen oyuncuların yeniden bağlanması bekleniyor.</value>
+  </data>
+  <data name="Room connection restored." xml:space="preserve">
+    <value>Oda bağlantısı yeniden kuruldu.</value>
+  </data>
+  <data name="Delivery not confirmed" xml:space="preserve">
+    <value>Teslimat doğrulanamadı</value>
+  </data>
+  <data name="Your room connection can no longer be restored. Rejoin from the room browser." xml:space="preserve">
+    <value>Oda bağlantınız artık yeniden kurulamıyor. Oda listesinden yeniden katılın.</value>
+  </data>
+  <data name="Click to claim this spot" xml:space="preserve">
+    <value>Bu konumu seçmek için tıklayın</value>
+  </data>
+  <data name="Click to release this spot" xml:space="preserve">
+    <value>Bu konumu bırakmak için tıklayın</value>
+  </data>
 </root>

@@ -1905,4 +1905,28 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="No spot" xml:space="preserve">
     <value>Sin posición</value>
   </data>
+  <data name="Reconnecting to room…" xml:space="preserve">
+    <value>Reconectando con la sala…</value>
+  </data>
+  <data name="Connection lost. Reconnecting to the room…" xml:space="preserve">
+    <value>Conexión perdida. Reconectando con la sala…</value>
+  </data>
+  <data name="Waiting for disconnected players to reconnect." xml:space="preserve">
+    <value>Esperando a que los jugadores desconectados vuelvan a conectarse.</value>
+  </data>
+  <data name="Room connection restored." xml:space="preserve">
+    <value>Se ha restablecido la conexión con la sala.</value>
+  </data>
+  <data name="Delivery not confirmed" xml:space="preserve">
+    <value>Entrega sin confirmar</value>
+  </data>
+  <data name="Your room connection can no longer be restored. Rejoin from the room browser." xml:space="preserve">
+    <value>Ya no se puede restablecer tu conexión con la sala. Vuelve a unirte desde la lista de salas.</value>
+  </data>
+  <data name="Click to claim this spot" xml:space="preserve">
+    <value>Haz clic para elegir esta posición</value>
+  </data>
+  <data name="Click to release this spot" xml:space="preserve">
+    <value>Haz clic para liberar esta posición</value>
+  </data>
 </root>

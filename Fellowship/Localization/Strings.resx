@@ -1905,4 +1905,28 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="No spot" xml:space="preserve">
     <value>No spot</value>
   </data>
+  <data name="Reconnecting to room…" xml:space="preserve">
+    <value>Reconnecting to room…</value>
+  </data>
+  <data name="Connection lost. Reconnecting to the room…" xml:space="preserve">
+    <value>Connection lost. Reconnecting to the room…</value>
+  </data>
+  <data name="Waiting for disconnected players to reconnect." xml:space="preserve">
+    <value>Waiting for disconnected players to reconnect.</value>
+  </data>
+  <data name="Room connection restored." xml:space="preserve">
+    <value>Room connection restored.</value>
+  </data>
+  <data name="Delivery not confirmed" xml:space="preserve">
+    <value>Delivery not confirmed</value>
+  </data>
+  <data name="Your room connection can no longer be restored. Rejoin from the room browser." xml:space="preserve">
+    <value>Your room connection can no longer be restored. Rejoin from the room browser.</value>
+  </data>
+  <data name="Click to claim this spot" xml:space="preserve">
+    <value>Click to claim this spot</value>
+  </data>
+  <data name="Click to release this spot" xml:space="preserve">
+    <value>Click to release this spot</value>
+  </data>
 </root>

@@ -1905,4 +1905,28 @@
   <data name="No spot" xml:space="preserve">
     <value>بلا موقع</value>
   </data>
+  <data name="Reconnecting to room…" xml:space="preserve">
+    <value>جارٍ إعادة الاتصال بالغرفة…</value>
+  </data>
+  <data name="Connection lost. Reconnecting to the room…" xml:space="preserve">
+    <value>انقطع الاتصال. جارٍ إعادة الاتصال بالغرفة…</value>
+  </data>
+  <data name="Waiting for disconnected players to reconnect." xml:space="preserve">
+    <value>في انتظار إعادة اتصال اللاعبين المنقطعين.</value>
+  </data>
+  <data name="Room connection restored." xml:space="preserve">
+    <value>تمت استعادة الاتصال بالغرفة.</value>
+  </data>
+  <data name="Delivery not confirmed" xml:space="preserve">
+    <value>لم يُؤكَّد التسليم</value>
+  </data>
+  <data name="Your room connection can no longer be restored. Rejoin from the room browser." xml:space="preserve">
+    <value>لم يعد من الممكن استعادة اتصالك بالغرفة. أعد الانضمام من قائمة الغرف.</value>
+  </data>
+  <data name="Click to claim this spot" xml:space="preserve">
+    <value>انقر لاختيار هذا الموقع</value>
+  </data>
+  <data name="Click to release this spot" xml:space="preserve">
+    <value>انقر لإخلاء هذا الموقع</value>
+  </data>
 </root>

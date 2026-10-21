@@ -1905,4 +1905,28 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="No spot" xml:space="preserve">
     <value>Aucune position</value>
   </data>
+  <data name="Reconnecting to room…" xml:space="preserve">
+    <value>Reconnexion au salon…</value>
+  </data>
+  <data name="Connection lost. Reconnecting to the room…" xml:space="preserve">
+    <value>Connexion perdue. Reconnexion au salon…</value>
+  </data>
+  <data name="Waiting for disconnected players to reconnect." xml:space="preserve">
+    <value>En attente de la reconnexion des joueurs déconnectés.</value>
+  </data>
+  <data name="Room connection restored." xml:space="preserve">
+    <value>Connexion au salon rétablie.</value>
+  </data>
+  <data name="Delivery not confirmed" xml:space="preserve">
+    <value>Envoi non confirmé</value>
+  </data>
+  <data name="Your room connection can no longer be restored. Rejoin from the room browser." xml:space="preserve">
+    <value>Votre connexion au salon ne peut plus être rétablie. Rejoignez-le depuis la liste des salons.</value>
+  </data>
+  <data name="Click to claim this spot" xml:space="preserve">
+    <value>Cliquez pour choisir cette position</value>
+  </data>
+  <data name="Click to release this spot" xml:space="preserve">
+    <value>Cliquez pour libérer cette position</value>
+  </data>
 </root>

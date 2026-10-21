@@ -20,7 +20,7 @@ static class ChatUiTests
         var chat=new ChatTranscript();
         chat.Append("Aragorn","Ready for another game?");chat.Append("You","Ready!",true);Settle(chat);
         var incoming=(Section)chat.Document.Blocks.FirstBlock;var outgoing=(Section)chat.Document.Blocks.LastBlock;
-        if(incoming.Margin.Left!=0||incoming.Margin.Right<80||outgoing.Margin.Left<160||outgoing.Margin.Right!=0)throw new Exception("Chat bubbles are not compact and opposite aligned");
+        if(incoming.Margin.Left!=0||outgoing.Margin.Left!=0||incoming.Margin.Bottom>4||outgoing.Margin.Bottom>4||incoming.Blocks.Count!=1||outgoing.Blocks.Count!=1)throw new Exception("Chat rows are not compact, single-paragraph and left aligned");
         chat.SelectAll();if(!chat.Selection.Text.Contains("another game?")||!chat.Selection.Text.Contains("Ready!"))throw new Exception("Bubble selection is not continuous");
         chat.Selection.Select(chat.Document.ContentStart,chat.Document.ContentStart);
         foreach(var theme in new[]{"Light","Dark","Black"})
@@ -39,7 +39,7 @@ static class ChatUiTests
         chat.AppendBlocked("Blocked player","Hidden secret");Settle(chat);chat.SelectAll();
         if(chat.Selection.Text.Contains("Hidden secret"))throw new Exception("Blocked message leaked into selectable conversation");
         Appearance.Apply("Dark");
-        Console.WriteLine("PASS compact chat bubbles, cross-message selection, sticky scrolling after overflow/wrapping/resize, earlier-message position and blocked text privacy");
+        Console.WriteLine("PASS compact left-aligned chat rows, cross-message selection, sticky scrolling after overflow/wrapping/resize, earlier-message position and blocked text privacy");
     }
     static void AssertBottom(ChatTranscript chat,string stage)
     {

@@ -100,7 +100,7 @@ public static class UI
         var remember=new CheckBox{Content="Don't ask again",Margin=new(0,18,0,20),Visibility=showRemember?Visibility.Visible:Visibility.Collapsed};
         var cancel=Button("Cancel",window.Close);cancel.IsCancel=true;cancel.Margin=new(0,0,8,0);
         var accept=Button(action,()=>{confirmed(remember.IsChecked==true);FinishPopup(window,true);});accept.Tag="Danger";accept.Margin=new(0);
-        var buttons=Row(cancel,accept);buttons.HorizontalAlignment=HorizontalAlignment.Right;
+        var buttons=Row(cancel,accept);buttons.HorizontalAlignment=HorizontalAlignment.Right;buttons.Margin=new(0,showRemember?0:22,0,0);
         body.Children.Add(new Border{Padding=new(22,20,22,20),Child=Stack(LocalizedText(title,18,bold:true),new Border{Margin=new(0,10,0,0),Child=LocalizedText(description,13,Muted)},remember,buttons)});
         return window;
     }
@@ -132,7 +132,7 @@ public static class UI
             "Clear room filter"=>new(Key.L,ModifierKeys.Control),
             "Refresh rooms" or "Refresh presence"=>new(Key.F5),
             "Active players" or "Online players"=>new(Key.P,ModifierKeys.Control|ModifierKeys.Shift),
-            "Friends list" or "Friends"=>new(Key.F,ModifierKeys.Control|ModifierKeys.Shift),
+            "Friends list" or "Friends"=>new(Key.D1,ModifierKeys.Control,"Ctrl+1"),
             "Getting started" or "Game setup guide"=>new(Key.F1),
             "Launch mine"=>new(Key.F9),
             "Leave room" or "Close window"=>new(Key.W,ModifierKeys.Control),
@@ -370,7 +370,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.130   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.131   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1035,7 +1035,7 @@ public sealed class RoomWindow : Window
     readonly TextBlock patchBadge=UI.LocalizedText("",10,UI.Accent,true);
     readonly TextBlock placementGuide=UI.LocalizedText("",10,UI.Muted);
     string? lastPatchWarning;
-    sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team / free for all":"Team "+Value;}
+    sealed record TeamOption(int Value){public override string ToString()=>Value==0?"No team":"Team "+Value;}
     string lastRoomName="";bool? lastPrivacy;
     readonly ListBox players=new();
     readonly TextBox map,patch,rules;
@@ -1054,6 +1054,7 @@ public sealed class RoomWindow : Window
         requestReady.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         requestReady.IsEnabled=app.Peer.Current?.Players.Count>1&&DateTimeOffset.UtcNow>=nextReadyRequest;
         launchMine.Visibility=active?Visibility.Collapsed:Visibility.Visible;
+        launchMine.IsEnabled=!app.Peer.IsReconnecting;
         launch.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         abort.Visibility=active?Visibility.Visible:Visibility.Collapsed;
         CommandManager.InvalidateRequerySuggested();
@@ -1080,8 +1081,9 @@ public sealed class RoomWindow : Window
     string lastSettings="";
     public RoomWindow(BrowserWindow app)
     {
-        this.app=app;var body=UI.Shell(this,"Battle room",1020,760);MinWidth=900;MinHeight=660;
-        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
+        this.app=app;var work=SystemParameters.WorkArea;
+        var body=UI.Shell(this,"Battle room",Math.Min(1160,Math.Max(1,work.Width-32)),Math.Min(840,Math.Max(1,work.Height-32)));MinWidth=Math.Min(900,Width);MinHeight=Math.Min(660,Height);
+        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
         var top=new Grid{Margin=new(22,18,22,18)};top.ColumnDefinitions.Add(new());top.ColumnDefinitions.Add(new(){Width=UI.Auto});
         UI.Rows(top,UI.Auto,UI.Auto);
@@ -1092,24 +1094,36 @@ public sealed class RoomWindow : Window
         switchPatch=UI.AsyncButton("",SwitchRoomPatch);switchPatch.Margin=new(14,0,0,0);switchPatch.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(switchPatch,1);patchWarning.Children.Add(switchPatch);
         Grid.SetRow(patchWarning,1);Grid.SetColumnSpan(patchWarning,2);top.Children.Add(patchWarning);UI.At(body,top,0);
         var columns=new Grid{Margin=new(22,0,22,16)};columns.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});columns.ColumnDefinitions.Add(new(){Width=new(300)});
-        var left=new Grid{Margin=new(0,0,14,0)};UI.Rows(left,new GridLength(210),new GridLength(12),UI.Star);
-        var roster=new Grid();UI.Rows(roster,UI.Auto,UI.Star);playerCount.Margin=new(14,12,14,6);UI.At(roster,playerCount,0);UI.At(roster,players,1);UI.At(left,UI.Card(roster,"#191D24",0),0);
+        var left=new Grid{Margin=new(0,0,14,0)};
+        left.RowDefinitions.Add(new(){Height=new(4,GridUnitType.Star),MinHeight=work.Height<700?72:100});
+        left.RowDefinitions.Add(new(){Height=new(12)});
+        left.RowDefinitions.Add(new(){Height=new(5,GridUnitType.Star),MinHeight=work.Height<700?100:160});
+        var roster=new Grid();UI.Rows(roster,UI.Auto,UI.Star);playerCount.Margin=new(10,6,10,4);UI.At(roster,playerCount,0);UI.At(roster,players,1);UI.At(left,UI.Card(roster,"#191D24",0),0);
+        var resizeChat=new GridSplitter{HorizontalAlignment=HorizontalAlignment.Stretch,VerticalAlignment=VerticalAlignment.Stretch,Background=Brushes.Transparent,ResizeDirection=GridResizeDirection.Rows,ResizeBehavior=GridResizeBehavior.PreviousAndNext,ShowsPreview=true,Cursor=Cursors.SizeNS};
+        var splitterHit=new FrameworkElementFactory(typeof(Border));splitterHit.SetValue(Border.BackgroundProperty,Brushes.Transparent);
+        var splitterGrip=new FrameworkElementFactory(typeof(Border));splitterGrip.SetValue(Border.WidthProperty,44d);splitterGrip.SetValue(Border.HeightProperty,3d);splitterGrip.SetValue(Border.CornerRadiusProperty,new CornerRadius(2));splitterGrip.SetValue(Border.BackgroundProperty,UI.Brush("#343F51"));splitterGrip.SetValue(FrameworkElement.HorizontalAlignmentProperty,HorizontalAlignment.Center);splitterGrip.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center);splitterHit.AppendChild(splitterGrip);
+        resizeChat.Template=new ControlTemplate(typeof(GridSplitter)){VisualTree=splitterHit};System.Windows.Automation.AutomationProperties.SetName(resizeChat,L.T("ROOM CHAT"));UI.At(left,resizeChat,1);
         var chat=new Grid();UI.Rows(chat,UI.Auto,UI.Star,UI.Auto);
         var chatHead=UI.LocalizedText("ROOM CHAT",10,UI.Muted,true);chatHead.Margin=new(14,12,0,5);UI.At(chat,chatHead,0);
         chatScroll=messages;UI.At(chat,chatScroll,1);
         var compose=new Grid{Margin=new(12)};compose.ColumnDefinitions.Add(new());compose.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var input=new TextBox{MaxLength=2000,ToolTip="Message your room · Enter to send",Margin=new(0,0,8,0)};
-        bool sending=false;
-        async Task Send()
+        var roomId=app.Peer.Current?.Id;
+        var outbox=new ChatOutbox(messages,async(text,id)=>
         {
-            if(sending||string.IsNullOrWhiteSpace(input.Text))return;
-            sending=true;input.IsReadOnly=true;string text=input.Text;
-            try{await app.Peer.Say(text);if(app.Settings.MessageSounds)MessageAlert.Effect("sent");input.Clear();L.Bind(chatHead,TextBlock.TextProperty,"ROOM CHAT");}
-            catch(Exception error){L.Bind(chatHead,TextBlock.TextProperty,"Message not sent · reconnect and retry");chatHead.ToolTip=error.Message;}
-            finally{sending=false;input.IsReadOnly=false;input.Focus();}
+            if(app.Peer.Current is not {} activeRoom||activeRoom.Id!=roomId)throw new IOException("You are not connected to a room.");
+            await app.Peer.Say(text,id);
+        },()=>{if(app.Settings.MessageSounds)MessageAlert.Effect("sent");});
+        Task Send()
+        {
+            if(string.IsNullOrWhiteSpace(input.Text))return Task.CompletedTask;
+            if(app.Peer.Current is not {} activeRoom||activeRoom.Id!=roomId){L.Bind(chatHead,TextBlock.TextProperty,"Join a room before sending a message.");return Task.CompletedTask;}
+            if(app.Peer.IsReconnecting){L.Bind(chatHead,TextBlock.TextProperty,"Reconnecting to room…");return Task.CompletedTask;}
+            string text=input.Text;input.Clear();outbox.Send(app.Settings.Name,text);
+            L.Bind(chatHead,TextBlock.TextProperty,"ROOM CHAT");chatHead.ToolTip=null;input.Focus();return Task.CompletedTask;
         }
         input.PreviewKeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await Send();}};
-        compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);UI.At(chat,compose,2);UI.At(left,UI.Card(chat,"#191D24",0),2);columns.Children.Add(left);
+        compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!app.Peer.IsReconnecting&&!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.IsReconnecting?"Reconnecting to room…":app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);UI.At(chat,compose,2);UI.At(left,UI.Card(chat,"#191D24",0),2);columns.Children.Add(left);
         var right=new StackPanel();right.Children.Add(UI.LocalizedText("MATCH SETUP",10,UI.Muted,true));
         setupSummary.Margin=new(0,12,0,0);
         var banner=setupBanner=UI.Card(UI.Stack(UI.LocalizedText("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#1C2330",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
@@ -1181,7 +1195,7 @@ public sealed class RoomWindow : Window
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&!PatchChanging&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>PatchChanging?"Switching patch…":launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
-        launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
+        launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
         requestReady=UI.AsyncButton("Request ready",async()=>{await app.Peer.RequestReady();nextReadyRequest=DateTimeOffset.UtcNow.AddSeconds(5);UpdateLaunchActions();AppendSystem("Ready request sent to room participants.");});
         requestReady.ToolTip="Ask everyone in the room to ready up";
@@ -1202,13 +1216,13 @@ public sealed class RoomWindow : Window
                 }));
             }
         };
-        app.Peer.RoomChat+=OnChat;Closed+=(_,_)=>{app.Peer.RoomChat-=OnChat;syncLifetime.Cancel();};Refresh();
+        app.Peer.RoomChatReceived+=OnChat;Closed+=(_,_)=>{app.Peer.RoomChatReceived-=OnChat;syncLifetime.Cancel();};Refresh();
         Loaded+=async(_,_)=>await WatchNative();
         ContentRendered+=(_,_)=>{if(IsActive)input.Focus();};
     }
     LivePlacement.Command? SyncCommand()
     {
-        if((!app.Settings.LiveGameSync)||PatchChanging||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room||!HostPreset.CanSynchronize(app.Settings.GamePath,room))return null;
+        if((!app.Settings.LiveGameSync)||app.Peer.IsReconnecting||PatchChanging||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room||!HostPreset.CanSynchronize(app.Settings.GamePath,room))return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
         return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)),Rhun3v3:RhunSides.Enabled(room),Sides:room.SidePlan);
     }
@@ -1327,10 +1341,11 @@ public sealed class RoomWindow : Window
         }
         finally{syncingRules=false;}
     }
-    void OnChat(string text,bool blocked,bool mine)=>Dispatcher.InvokeAsync(()=>
+    void OnChat(string text,bool blocked,bool mine,string messageId)=>Dispatcher.InvokeAsync(()=>
     {
         var split=text.IndexOf("   ",StringComparison.Ordinal);
         var name=split<0?"Room":text[..split];var body=split<0?text:text[(split+3)..];
+        if(mine&&messages.ConfirmOutgoing(messageId,body))return;
         if(!blocked){messages.Append(name,body,mine);return;}
         messages.AppendBlocked(name,body);
     });
@@ -1356,25 +1371,41 @@ public sealed class RoomWindow : Window
             catch(UnauthorizedAccessException e){AppendSystem("Could not save last selections: "+e.Message);}
         }
         sideStatus.Visibility=app.Settings.LiveGameSync&&RhunSides.Enabled(room)&&HostPreset.CanSynchronize(app.Settings.GamePath,room)?Visibility.Visible:Visibility.Collapsed;
-        mapPreview.ShowMap(app.Settings.GamePath,room.MapPath,room.Patch);mapPreview.IsEnabled=!launching&&!changingPlacement;
+        bool reconnecting=app.Peer.IsReconnecting;
+        mapPreview.ShowMap(app.Settings.GamePath,room.MapPath,room.Patch);mapPreview.IsEnabled=!reconnecting&&!launching&&!changingPlacement;
         L.Bind(patchBadge,TextBlock.TextProperty,"BFME II  "+room.Patch+"   /   VPN");UpdatePatchNotice();
-        mapPreview.ShowSelections(room,app.Peer.LocalId,!launching&&!changingPlacement);
+        mapPreview.ShowSelections(room,app.Peer.LocalId,!reconnecting&&!launching&&!changingPlacement);
         var self=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
         syncingPlacement=true;
         try{colorChoice.SelectedItem=PlayerColors.Get(self?.Color??0);teamChoice.SelectedItem=teamChoice.Items.Cast<TeamOption>().FirstOrDefault(t=>t.Value==(self?.Team??0));}
         finally{syncingPlacement=false;}
-        teamChoice.IsEnabled=!launching&&!changingPlacement;colorChoice.IsEnabled=teamChoice.IsEnabled;clearSpot.IsEnabled=!launching&&!changingPlacement&&self?.Spot>0;
+        teamChoice.IsEnabled=!reconnecting&&!launching&&!changingPlacement;colorChoice.IsEnabled=teamChoice.IsEnabled;clearSpot.IsEnabled=teamChoice.IsEnabled&&self?.Spot>0;
         L.Bind(placementStatus,TextBlock.TextProperty,changingPlacement?"Confirming with host…":room.Spots.Count==0?"Starting spots unavailable for this map.":$"Your spot: {(self?.Spot>0?self.Spot.ToString():"not selected")} · {(self?.Team>0?"Team "+self.Team:"No team")}");
         if(lastRoomName!=room.Title){roomName.Text=room.Title;lastRoomName=room.Title;}
         if(lastPrivacy!=room.FriendsOnly){privacyChoice.SelectedIndex=room.FriendsOnly?1:0;lastPrivacy=room.FriendsOnly;}
-        title.Text=room.Title;L.Bind(phase,TextBlock.TextProperty,$"●  {room.Phase}   ·   Hosted by {room.Host}");L.Bind(playerCount,TextBlock.TextProperty,$"PLAYERS   {room.Players.Count} / {room.Capacity}");
+        title.Text=room.Title;L.Bind(phase,TextBlock.TextProperty,reconnecting?"Reconnecting to room…":$"●  {room.Phase}   ·   Hosted by {room.Host}");L.Bind(playerCount,TextBlock.TextProperty,$"PLAYERS   {room.Players.Count} / {room.Capacity}");
         players.Items.Clear();
         foreach(var p in room.Players)
         {
             var row=new Grid();row.ColumnDefinitions.Add(new());row.ColumnDefinitions.Add(new(){Width=UI.Auto});
-            row.Children.Add(UI.Row(UI.Avatar(p.Name,30),UI.Text(p.Name,13,IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk)?UI.Muted:"#E6EAF2",true),IdlePresence.Badge(IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk),showAvailable:false),new PingBadge{Milliseconds=app.Latency.Get(p.Address,app.Peer.Address),Margin=new(10,0,10,0)},UI.LocalizedText(p.Id=="host"?"   HOST":"",9,UI.Accent,true),UI.LocalizedText(p.GameRunning?"   IN BFME2":"   NOT IN GAME",9,p.GameRunning?UI.Green:UI.Muted),UI.LocalizedText(app.Settings.IsBlocked(p.Address)?"   BLOCKED":"",9,"#E8A6A6",true)));
-            var ready=UI.LocalizedText($"{(p.Spot>0?"Spot "+p.Spot:"No spot")} · {(p.Team>0?"Team "+p.Team:"No team")}  |  "+(p.Ready?"● Ready":"○ Not ready"),10,p.Ready?UI.Green:MapPreview.TeamColor(p.Team));Grid.SetColumn(ready,1);row.Children.Add(ready);
-            var item=new ListBoxItem{Content=row,Padding=new(12,6,12,6),Tag=p};
+            bool away=IdlePresence.IsAfk(p.IdleSeconds,p.ManualAfk),waiting=p.Reconnecting||reconnecting;
+            var identity=new Grid{Margin=new(0,0,10,0),VerticalAlignment=VerticalAlignment.Center};identity.ColumnDefinitions.Add(new(){Width=UI.Auto});identity.ColumnDefinitions.Add(new());identity.ColumnDefinitions.Add(new(){Width=UI.Auto});
+            var avatar=UI.Avatar(p.Name,20);avatar.CornerRadius=new(5);avatar.Margin=new(0,0,7,0);identity.Children.Add(avatar);
+            var name=UI.Text(p.Name,12,waiting||away?UI.Muted:"#E6EAF2",true);name.TextWrapping=TextWrapping.NoWrap;name.TextTrimming=TextTrimming.CharacterEllipsis;name.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(name,1);identity.Children.Add(name);
+            var badges=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};if(p.Id=="host"){var hostTag=UI.LocalizedText("HOST",9,UI.Accent,true);hostTag.Margin=new(7,0,0,0);badges.Children.Add(hostTag);}if(away)badges.Children.Add(IdlePresence.Badge(true,showAvailable:false));Grid.SetColumn(badges,2);identity.Children.Add(badges);row.Children.Add(identity);
+            string selectionColor=p.Reconnecting||reconnecting?UI.Muted:MapPreview.TeamColor(p.Team);
+            var details=new StackPanel{MaxWidth=320};details.Children.Add(UI.Text(p.Name,13,"#E6EAF2",true));
+            var role=UI.LocalizedText((p.Id=="host"?"Host":"Guest")+" · "+(p.GameRunning?"IN BFME2":"NOT IN GAME"),11,UI.Muted);role.Margin=new(0,4,0,4);details.Children.Add(role);
+            if(waiting)details.Children.Add(UI.LocalizedText("Reconnecting",11,UI.Muted));
+            if(away)details.Children.Add(UI.LocalizedText(p.ManualAfk?"AFK · set manually":"AFK · idle",11,IdlePresence.AwayColor));
+            if(app.Settings.IsBlocked(p.Address))details.Children.Add(UI.LocalizedText("BLOCKED",11,"#E8A6A6",true));
+            var pingLabel=UI.LocalizedText("Ping",11,UI.Muted);pingLabel.Margin=new(0,0,8,0);details.Children.Add(UI.Row(pingLabel,new PingBadge{Milliseconds=app.Latency.Get(p.Address,app.Peer.Address)}));
+            details.Children.Add(UI.LocalizedText((p.Spot>0?"Spot "+p.Spot:"No spot")+" · "+(p.Team>0?"Team "+p.Team:"No team"),11,selectionColor));
+            var color=PlayerColors.Get(p.Color);var colorLabel=UI.LocalizedText("COLOR",10,UI.Muted);colorLabel.Margin=new(0,0,8,0);details.Children.Add(UI.Row(colorLabel,new Border{Width=10,Height=10,CornerRadius=new(2),Background=UI.Brush(color.Hex),Margin=new(0,0,5,0)},UI.LocalizedText(color.Name,11)));
+            details.Children.Add(UI.LocalizedText(p.Ready?"Ready":"Not ready",11,p.Ready?UI.Green:UI.Muted));details.Children.Add(UI.Text(p.Address,10,UI.Muted));
+            name.ToolTip=new ToolTip{Content=details};ToolTipService.SetShowDuration(name,30000);
+            var ready=UI.LocalizedText(waiting?"Reconnecting":p.Ready?"● Ready":"○ Not ready",10,waiting?UI.Muted:p.Ready?UI.Green:UI.Muted);ready.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(ready,1);row.Children.Add(ready);
+            var item=new ListBoxItem{Content=row,Padding=new(10,3,10,3),Tag=p};
             var menu=app.PlayerMenu(this,p.Name,p.Address,p);
             if(app.Peer.IsHost&&p.Id!="host")
             {
@@ -1398,11 +1429,11 @@ public sealed class RoomWindow : Window
         {input.IsEnabled=customPresetRules;input.Opacity=customPresetRules?1:.55;ToolTipService.SetShowOnDisabled(input,true);input.ToolTip=customPresetRules?null:"Select Custom preset to edit.";}
 
         if(!savingRules)SyncInlineRules(room);
-        int readyCount=room.Players.Count(p=>p.Ready);
-        L.Bind(readySummary,TextBlock.TextProperty,launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.");
+        int readyCount=room.Players.Count(p=>p.Ready&&!p.Reconnecting);
+        L.Bind(readySummary,TextBlock.TextProperty,reconnecting?"Reconnecting to room…":room.Players.Any(p=>p.Reconnecting)?"Waiting for disconnected players to reconnect.":launching?"Launching BFME2…":host?$"{readyCount} / {room.Players.Count} players ready":room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true?"Ready for the host to launch":"Check Ready when you want to play.");
         UpdateLaunchActions();
         launch.IsEnabled=!launching&&room.AllGuestsReady;
-        consent.Visibility=host?Visibility.Collapsed:Visibility.Visible;consent.IsEnabled=true;
+        consent.Visibility=host?Visibility.Collapsed:Visibility.Visible;consent.IsEnabled=!reconnecting;
         consent.IsChecked=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId)?.Ready==true;
         if(consent.IsChecked!=true)allowLaunch=false;
     }
@@ -1428,7 +1459,7 @@ public sealed class RoomWindow : Window
     }
     public void PromptReady(string roomId)
     {
-        if(app.Peer.IsHost||app.Peer.Current?.Id!=roomId)return;
+        if(app.Peer.IsReconnecting||app.Peer.IsHost||app.Peer.Current?.Id!=roomId)return;
         MessageAlert.Effect("ready-request");
         if(readyPrompt!=null){UI.Reveal(readyPrompt);return;}
         var prompt=new Window{Owner=this};readyPrompt=prompt;
@@ -1441,7 +1472,7 @@ public sealed class RoomWindow : Window
             GameLauncher.Validate(app.Settings.GamePath);await app.Peer.SetReady(true);allowLaunch=true;consent.IsChecked=true;prompt.Close();
         },true);
         panel.Children.Add(UI.Row(UI.Button("Not yet",()=>prompt.Close()),ready));
-        void CheckRoom(){if(app.Peer.Current?.Id!=roomId||app.Peer.IsHost)prompt.Close();}
+        void CheckRoom(){if(app.Peer.IsReconnecting||app.Peer.Current?.Id!=roomId||app.Peer.IsHost)prompt.Close();}
         void Changed()=>Dispatcher.InvokeAsync(CheckRoom);
         app.Peer.Changed+=Changed;prompt.Closed+=(_,_)=>{app.Peer.Changed-=Changed;if(ReferenceEquals(readyPrompt,prompt))readyPrompt=null;};
         prompt.Show();
@@ -1452,6 +1483,7 @@ public sealed class RoomWindow : Window
     async void LaunchLocal()=>await LaunchLocalCore();
     async Task<string> LaunchLocalCore()
     {
+        if(app.Peer.IsReconnecting)return "Reconnecting to room…";
         if(PatchChanging)return "Switching patch…";
         if(launching)return "BFME2 launch is already in progress.";
         launching=true;launchCancellation=new();
@@ -1587,29 +1619,19 @@ public sealed class ChatWindow : Window
         composer.Children.Add(input);FocusManager.SetFocusedElement(this,input);
         ContentRendered+=(_,_)=>FocusInput();
         var hint=UI.LocalizedText("ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE",10,UI.Muted);hint.Margin=new(20,0,20,16);UI.At(body,hint,3);
-        bool sending=false;
-        async Task Send()
+        var outbox=new ChatOutbox(messages,(text,id)=>app.Peer.SendPrivate(address,text,id),
+            ()=>{if(app.Settings.MessageSounds)MessageAlert.Effect("sent");});
+        Task Send()
         {
-            if(sending||string.IsNullOrWhiteSpace(input.Text))return;
-            if(app.Settings.IsBlocked(address)){L.Bind(hint,TextBlock.TextProperty,"Unblock this player before messaging.");return;}
-            if(!UI.ValidAddress(address)){L.Bind(hint,TextBlock.TextProperty,"Choose a valid recipient VPN address.");return;}
-            string text=input.Text;sending=true;input.IsReadOnly=true;
-            L.Bind(hint,TextBlock.TextProperty,"Sending…");hint.Foreground=UI.Brush(UI.Muted);hint.ToolTip=null;
-            try
-            {
-                await app.Peer.SendPrivate(address,text);
-                if(app.Settings.MessageSounds)MessageAlert.Effect("sent");Append("You",text);input.Clear();
-                L.Bind(hint,TextBlock.TextProperty,"Message sent · Enter to send");hint.Foreground=UI.Brush(UI.Green);
-            }
-            catch(Exception error)
-            {
-                L.Bind(hint,TextBlock.TextProperty,"Delivery not confirmed. They may be offline or reconnecting. Your draft is kept—press Enter to retry.");
-                hint.Foreground=UI.Brush("#E5B77A");hint.ToolTip=L.ErrorMessage(error.Message);
-            }
-            finally{sending=false;input.IsReadOnly=false;input.Focus();}
+            if(string.IsNullOrWhiteSpace(input.Text))return Task.CompletedTask;
+            if(app.Settings.IsBlocked(address)){L.Bind(hint,TextBlock.TextProperty,"Unblock this player before messaging.");return Task.CompletedTask;}
+            if(!UI.ValidAddress(address)){L.Bind(hint,TextBlock.TextProperty,"Choose a valid recipient VPN address.");return Task.CompletedTask;}
+            string text=input.Text;input.Clear();outbox.Send(L.T("You"),text);
+            L.Bind(hint,TextBlock.TextProperty,"ENTER TO SEND   ·   BOTH PLAYERS MUST BE ONLINE");hint.Foreground=UI.Brush(UI.Muted);hint.ToolTip=null;
+            input.Focus();return Task.CompletedTask;
         }
         input.PreviewKeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await Send();}};
-        var send=UI.Require(UI.AsyncButton("Send  ↑",Send,true),()=>!sending&&!string.IsNullOrWhiteSpace(input.Text)&&UI.ValidAddress(address)&&!app.Settings.IsBlocked(address),()=>app.Settings.IsBlocked(address)?"Unblock this player before messaging.":"Type a message and use a valid recipient VPN address.");send.Margin=new(0);Grid.SetColumn(send,1);composer.Children.Add(send);UI.At(body,composer,2);
+        var send=UI.Require(UI.AsyncButton("Send  ↑",Send,true),()=>!string.IsNullOrWhiteSpace(input.Text)&&UI.ValidAddress(address)&&!app.Settings.IsBlocked(address),()=>app.Settings.IsBlocked(address)?"Unblock this player before messaging.":"Type a message and use a valid recipient VPN address.");send.Margin=new(0);Grid.SetColumn(send,1);composer.Children.Add(send);UI.At(body,composer,2);
     }
     public void Receive(string name,string text)
     {

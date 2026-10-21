@@ -5,6 +5,16 @@ using System.Net.Sockets;
 try
 {
 Settings MemorySettings(string name,string gamePath=""){var settings=Settings.InMemory();settings.Name=name;settings.GamePath=gamePath;return settings;}
+if(args.Length==0||args.Contains("--chat-delivery"))
+{
+    await ChatDeliveryTests.Run();
+    if(args.Contains("--chat-delivery"))return;
+}
+if(args.Length==0||args.Contains("--reconnect"))
+{
+    await ReconnectionTests.Run();
+    if(args.Contains("--reconnect"))return;
+}
 if(args.Length==0||args.Contains("--radmin-group"))
 {
     var hs=MemorySettings("Group host");hs.RadminGroup="Server A";hs.RadminMembership=new("Server A",["127.0.0.122"],DateTimeOffset.UtcNow);
@@ -301,7 +311,8 @@ await Task.Delay(100);
 if ((await PeerService.Query("127.0.0.1")) == null) throw new Exception("Invalid frame killed listener");
 Console.WriteLine("PASS oversized frame rejected; listener survives");
 host.Leave();
-await Until(() => guest.IsHost, "lost host promotes designated successor");
+await Until(() => guest.Current==null||guest.IsReconnecting, "lost host leaves the guest disconnected or reconnecting without promotion");
+if(guest.IsHost||await PeerService.Query(guest.Address,host.Address)!=null)throw new Exception("Host loss caused a guest to advertise the cached room as its owner");
 guest.Leave();
 // A synthetic BIG archive keeps placement tests independent of installed game files.
 var fixture=Path.Combine(Path.GetTempPath(),"Fellowship-placement-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(fixture);
@@ -550,11 +561,14 @@ using(var recoveryGuest=new PeerService(MemorySettings("Recovery guest")))
  await Until(()=>recoveryHost.Current?.Players.Count==3,"recovery roster replicated");
  var id=failedHost.Current!.Id;
  failedHost.Leave();
- await Until(()=>recoveryHost.IsHost&&recoveryGuest.Current?.HostAddress==recoveryHost.Address&&recoveryHost.Current?.Players.Count==2,"lost-host recovery reconnects surviving guest");
- if(recoveryHost.Current!.Id!=id||recoveryHost.Current.Match.Resources!=2000||recoveryHost.Current.Players.Single(p=>p.Name=="Recovery guest").Team!=3)throw new Exception("Recovery lost room selections");
- await recoveryHost.Kick(recoveryGuest.LocalId);
- await Until(()=>recoveryGuest.Current==null,"kicked guest must not recover or recreate room");
- recoveryHost.Leave();
+ await Until(()=>new[]{recoveryHost,recoveryGuest}.All(p=>p.Current==null||p.IsReconnecting),"lost-host recovery keeps guests disconnected or retrying the original owner");
+ if(recoveryHost.IsHost||recoveryGuest.IsHost)throw new Exception("Transport loss elected an unconfirmed replacement host");
+ foreach(var peer in new[]{recoveryHost,recoveryGuest})
+ {
+  if(peer.Current is {} cached&&(cached.Id!=id||cached.Match.Resources!=2000||cached.Players.Single(p=>p.Name=="Recovery guest").Team!=3))throw new Exception("Reconnecting cache lost room selections");
+  if(await PeerService.Query(peer.Address,failedHost.Address)!=null)throw new Exception("Reconnecting guest advertised a split room");
+  peer.Leave();
+ }
 }
 
 using(var seriesHost=new PeerService(MemorySettings("Series player",installation)))

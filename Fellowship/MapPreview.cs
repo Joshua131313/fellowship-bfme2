@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 namespace Fellowship;
@@ -28,18 +29,84 @@ public sealed class MapPreview : Border
     {
         selectionLayer.Children.Clear();
         if(image.Source==null)return;
+        var captions=new List<(MapSpot Spot,Player Player,bool Mine)>();
         foreach(var spot in room.Spots)
         {
             var occupant=room.Players.FirstOrDefault(p=>p.Spot==spot.Number);bool mine=occupant?.Id==localId;
-            string label=occupant==null?$"Spot {spot.Number} · click to claim":$"Spot {spot.Number} · {occupant.Name} · {(occupant.Team==0?"No team":"Team "+occupant.Team)}"+(mine?" · click to release":"");
             var ring=new System.Windows.Shapes.Ellipse{Width=34,Height=34,Fill=occupant==null?Brushes.Transparent:(Brush)new BrushConverter().ConvertFromString(PlayerColors.Get(occupant.Color).Hex)!,Stroke=mine?Brushes.White:Brushes.Transparent,StrokeThickness=3,Opacity=occupant==null?1:0.9};
             var marker=new Grid();marker.Children.Add(ring);
-            if(mine){var mineText=UI.LocalizedText("YOU",10,"#FFFFFF",true);mineText.HorizontalAlignment=HorizontalAlignment.Center;mineText.VerticalAlignment=VerticalAlignment.Center;mineText.Effect=new System.Windows.Media.Effects.DropShadowEffect{Color=Colors.Black,BlurRadius=3,ShadowDepth=1,Opacity=1};marker.Children.Add(mineText);}
-            var button=new Button{Style=(Style)Application.Current.FindResource("MapSpotButton"),Content=marker,Width=42,Height=42,Padding=new(0),Margin=new(0),Background=Brushes.Transparent,BorderThickness=new(0),ToolTip=label,IsEnabled=enabled&&(occupant==null||mine)};
-            System.Windows.Automation.AutomationProperties.SetName(button,label);
-            button.Click+=(_,_)=>SpotSelected?.Invoke(mine?0:spot.Number);
+            if(occupant==null)
+            {
+                var number=new TextBlock{Text=spot.Number.ToString(),FontSize=12,FontWeight=FontWeights.SemiBold,Foreground=Brushes.White,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center,Effect=new System.Windows.Media.Effects.DropShadowEffect{Color=Colors.Black,BlurRadius=3,ShadowDepth=1,Opacity=1}};marker.Children.Add(number);
+            }
+            var button=new Button{Style=(Style)Application.Current.FindResource("MapSpotButton"),Content=marker,Width=42,Height=42,Padding=new(0),Margin=new(0),Background=Brushes.Transparent,BorderThickness=new(0),ToolTip=SpotTip(spot,occupant,mine,enabled),IsEnabled=enabled&&(occupant==null||mine)};
+            ToolTipService.SetShowOnDisabled(button,true);
+            System.Windows.Automation.AutomationProperties.SetName(button,SpotDescription(spot,occupant,mine,enabled));
+            button.Click+=(_,_)=>{if(enabled&&(occupant==null||mine))SpotSelected?.Invoke(mine?0:spot.Number);};
             Canvas.SetLeft(button,spot.X*320-21);Canvas.SetTop(button,spot.Y*320-21);selectionLayer.Children.Add(button);
+            if(occupant!=null)captions.Add((spot,occupant,mine));
         }
+        // Keep every hit target centered on its native map coordinate. Captions
+        // have their own clamped bounds so edge spots cannot cut off a name.
+        var occupied=new List<Rect>();
+        var markers=room.Spots.Select(spot=>new Rect(spot.X*320-21,spot.Y*320-21,42,42)).ToArray();
+        foreach(var (spot,player,mine) in captions)
+        {
+            var text=new TextBlock{Text=player.Name,Foreground=Brushes.White,FontSize=14,FontWeight=FontWeights.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis,TextWrapping=TextWrapping.NoWrap,VerticalAlignment=VerticalAlignment.Center,TextAlignment=TextAlignment.Center,FlowDirection=L.Current.Direction};
+            text.Measure(new Size(double.PositiveInfinity,double.PositiveInfinity));
+            double width=Math.Clamp(text.DesiredSize.Width+16,58,108);
+            var bounds=CaptionBounds(spot,width,occupied,markers);occupied.Add(bounds);
+            var label=new Border{DataContext=player,Child=text,Width=bounds.Width,Height=bounds.Height,CornerRadius=new(4),Padding=new(6,1,6,1),Background=new SolidColorBrush(Color.FromArgb(238,16,24,39)),BorderBrush=mine?Brushes.White:(Brush)new BrushConverter().ConvertFromString(TeamColor(player.Team))!,BorderThickness=new(mine?1.5:1),ToolTip=SpotTip(spot,player,mine,enabled),Cursor=enabled&&mine?Cursors.Hand:Cursors.Arrow};
+            ToolTipService.SetShowOnDisabled(label,true);
+            System.Windows.Automation.AutomationProperties.SetName(label,SpotDescription(spot,player,mine,enabled));
+            if(enabled&&mine)label.MouseLeftButtonUp+=(_,args)=>{SpotSelected?.Invoke(0);args.Handled=true;};
+            Canvas.SetLeft(label,bounds.X);Canvas.SetTop(label,bounds.Y);selectionLayer.Children.Add(label);
+        }
+    }
+    static string SpotDescription(MapSpot spot,Player? player,bool mine,bool enabled)
+        =>string.Join("\n",player==null?SpotDetails(spot,player,mine,enabled):new[]{player.Name}.Concat(SpotDetails(spot,player,mine,enabled)));
+    static List<string> SpotDetails(MapSpot spot,Player? player,bool mine,bool enabled)
+    {
+        var details=new List<string>();
+        details.Add(L.T($"Spot {spot.Number}"));
+        if(player!=null)
+        {
+            if(mine)details.Add(L.T("YOU"));
+            details.Add(L.T(player.Team==0?"No team":$"Team {player.Team}"));
+            details.Add(L.T("COLOR")+": "+L.T(PlayerColors.Get(player.Color).Name));
+            details.Add(L.T(player.Ready?"Ready":"Not ready"));
+            if(player.Reconnecting)details.Add(L.T("Reconnecting"));
+            if(IdlePresence.IsAfk(player.IdleSeconds,player.ManualAfk))details.Add(L.T("AFK"));
+        }
+        if(enabled&&(player==null||mine))details.Add(L.T(player==null?"Click to claim this spot":"Click to release this spot"));
+        return details;
+    }
+    static ToolTip SpotTip(MapSpot spot,Player? player,bool mine,bool enabled)
+    {
+        var content=new StackPanel{MaxWidth=300,FlowDirection=L.Current.Direction};
+        // TextBlock content avoids the global string-tooltip translator treating
+        // an English-looking nickname as a resource key.
+        if(player!=null)content.Children.Add(new TextBlock{Text=player.Name,TextWrapping=TextWrapping.Wrap,FontWeight=FontWeights.SemiBold,Margin=new(0,0,0,4)});
+        foreach(string detail in SpotDetails(spot,player,mine,enabled))content.Children.Add(new TextBlock{Text=detail,TextWrapping=TextWrapping.Wrap,Margin=new(0,0,0,2)});
+        return new ToolTip{Content=content};
+    }
+    static Rect CaptionBounds(MapSpot spot,double width,List<Rect> placed,Rect[] markers)
+    {
+        const double height=23;
+        double x=spot.X*320,y=spot.Y*320;
+        var candidates=new[]{new Point(x-width/2,y+23),new Point(x-width/2,y-23-height),new Point(x+24,y-height/2),new Point(x-24-width,y-height/2),new Point(x-width,y+23),new Point(x,y+23)};
+        Rect best=default;double bestScore=double.PositiveInfinity;
+        foreach(var candidate in candidates)
+        {
+            var bounds=new Rect(Math.Clamp(candidate.X,2,318-width),Math.Clamp(candidate.Y,2,318-height),width,height);
+            double score=0;
+            foreach(var obstacle in placed.Concat(markers))
+            {
+                var intersection=Rect.Intersect(bounds,obstacle);if(!intersection.IsEmpty)score+=intersection.Width*intersection.Height;
+            }
+            if(score<bestScore){best=bounds;bestScore=score;if(score==0)break;}
+        }
+        return best;
     }
     public static List<MapSpot> ParseSpots(string cache,string map)=>GameMapData.ParseSpots(cache,map);
     public static BitmapSource? Load(string executable,string map,string suffix="_art.tga",string? patch=null)

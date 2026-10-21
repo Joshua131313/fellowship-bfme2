@@ -82,7 +82,9 @@ AFK status can follow idle detection automatically, or you can set it yourself. 
 
 ### Chat while you organize
 
-Use room chat for the group and private messages for individual conversations. Compact bubbles keep your messages on the right and incoming messages on the left. Opening a chat focuses the composer, and new messages stay in view unless you scroll back to read earlier messages. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Player context menus open beside the cursor, preferring the right side. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
+Use room chat for the group and private messages for individual conversations. Compact Discord-style rows put every player's name, time, and message together on the left, with natural wrapping for longer text; Arabic follows the right-to-left layout. Short messages occupy one line so more of the conversation stays visible. Sent messages appear locally immediately, while delivery is still pending, and the composer stays available for your next message. Pending status stays inline and disappears after confirmation. If delivery cannot be confirmed, the message stays in place with a **Retry** action; retries and room echoes reuse its identity to avoid duplicates.
+
+Opening a chat focuses the composer. New messages stay in view when you are at the bottom, including after scrolling up and back down. Incoming messages preserve your position while you read earlier messages; sending your own message brings it into view. HTTP, HTTPS, and `www.` links are clickable and open in your default browser. Press **Enter** to send, select text across multiple messages, or use the message context menu to copy a message or selection. Player info opens once per player and includes a **Send message** action. Player context menus open beside the cursor, preferring the right side. Sound cues and Windows notifications help you notice invitations, messages, friend activity, and new rooms.
 
 ### Make Fellowship feel like yours
 
@@ -143,9 +145,9 @@ All participating players need the updated app and enabled live sync for coordin
 The dashboard above shows the room browser. Expand the views below to see the lobby, player activity, and customization.
 
 <details>
-<summary><strong>Private chat — compact bubbles, conversation selection, and automatic scrolling</strong></summary>
+<summary><strong>Private chat — compact message rows, conversation selection, and automatic scrolling</strong></summary>
 
-![Private chat with incoming messages on the left and your messages on the right](docs/screenshots/private-chat.png)
+![Private chat with compact player names and messages, selectable conversation text, and a message composer](docs/screenshots/private-chat.png)
 
 </details>
 
@@ -186,8 +188,8 @@ Fellowship uses direct peer connections, with **no account signup or central roo
 
 - **Discovery is network-local.** Online players are discovered reachable peers, not a worldwide player directory. Firewalls and VPN routing can affect discovery.
 - **Friends-only rooms follow the room host's friends list.** Their details are hidden from other peers.
-- **Brief connection loss has a grace period.** Reconnecting status allows time for a peer to return; confirmed room closures are removed.
-- **Fellowship room ownership can transfer.** An orderly handoff and lost-host recovery are supported where reachable peers can take over. This does not transfer a running BFME2 match.
+- **Room connections recover from brief interruptions.** Guests keep their room and selected team, spot, and color while retrying the original host. A running host reserves a disconnected player's place for up to **120 seconds**. Launching and native synchronization pause while the room connection is unavailable.
+- **Fellowship room ownership transfers through an explicit handoff.** Promoting another player or leaving as host can transfer ownership. A lost connection does not promote a guest or elect another host. If the original host has crashed, players can leave and join or create a fresh room. See [room reconnection](docs/room-reconnection.md).
 - **Chat requires connectivity.** Offline message delivery and durable chat history are not implemented.
 
 This is an unsigned community build intended for trusted groups. Player names are self-asserted, and the peer protocol does not provide encrypted messaging. Native sync supports validated BFME2 binaries; compatibility with arbitrary mods or map archives is not guaranteed.
@@ -209,6 +211,7 @@ Closing the dashboard keeps Fellowship running in the system tray. Closing a bat
 | --- | --- |
 | Rooms or players are missing | Confirm all PCs use the same VPN network, selected interface, and current app version. Refresh presence or join by host IP. Check Windows Firewall access for Fellowship on that network. |
 | A player stays Reconnecting | Check that their VPN and Fellowship are still running. A brief interruption can clear after subsequent presence checks. |
+| Your room loses its host connection | Restore the VPN connection and leave the room open while Fellowship retries the original host. Its owner does not change because of the interruption. If the host has crashed or the reserved place expires, leave and rejoin a reachable room, or create a fresh one. |
 | Radmin groups or members cannot be read | Keep Radmin VPN running and choose **Refresh Radmin groups** from the Radmin side menu, or use the refresh button in Settings. If needed, open its main window. An unavailable selected group never silently switches to all groups. |
 | BFME2 reports a DirectX error at launch | Let sync preparation and its Windows permission prompt finish before launching. If needed, disable live sync, launch BFME2, then enable sync after the game loads. |
 | Live sync cannot apply a selection | Keep the native setup lobby open. Check the supported game version, matching map and participants, and occupied spots. Correct conflicting selections in BFME2 when sync pauses. |
@@ -244,7 +247,7 @@ dotnet build installer/Fellowship.wixproj -c Release
 
 Protocol checks use real loopback TCP/UDP peers. UI checks render screens offscreen and exercise selections, persistence, lifecycle, localization, and update behavior. These checks complement live testing with multiple PCs and BFME2 instances.
 
-Additional notes: [Patch support](docs/patch-support.md) · [Rhûn rotation and native sync](docs/automatic-rotation.md) · [Player colors](docs/player-colors.md) · [Blocking](docs/blocking.md) · [Legacy room-isolation removal](docs/room-isolation.md)
+Additional notes: [Patch support](docs/patch-support.md) · [Room reconnection](docs/room-reconnection.md) · [Rhûn rotation and native sync](docs/automatic-rotation.md) · [Player colors](docs/player-colors.md) · [Blocking](docs/blocking.md) · [Legacy room-isolation removal](docs/room-isolation.md)
 
 ---
 

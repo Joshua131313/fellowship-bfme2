@@ -92,7 +92,7 @@ public sealed class Room
     public string LastRhunHost {get;set;}="";
     public Dictionary<string,LivePlacement.Choice> LastRhunLineup {get;set;}=new();
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool AllGuestsReady=>Players.Where(p=>p.Id!="host").All(p=>p.Ready);
+    public bool AllGuestsReady=>Players.Where(p=>p.Id!="host").All(p=>p.Ready&&!p.Reconnecting);
     public const string DefaultRules = "3v3 · 4000 starting resources · 2x command points · no Ring Heroes · no Custom Heroes";
     public string Mode { get; set; } = "Custom";
     public int[] InitialTeams { get; set; } = [];
@@ -139,6 +139,7 @@ public sealed class Room
 }
 public sealed class Player
 {
+    public bool Reconnecting { get; set; }
     public bool ManualAfk { get; set; }
     public int? IdleSeconds { get; set; }
     public bool GameRunning { get; set; }
@@ -158,6 +159,8 @@ public sealed class Player
 }
 public sealed class Wire
 {
+    public bool SupportsChatAck {get;set;}
+    public string RoomId {get;set;}="";
     public string RoomHostAddress {get;set;}="";
     public LobbyReport? LobbyReport {get;set;}
     public bool ManualAfk { get; set; }

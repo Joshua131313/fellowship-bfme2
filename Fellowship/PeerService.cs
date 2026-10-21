@@ -20,14 +20,17 @@ public sealed partial class PeerService : IDisposable
     CancellationTokenSource? networkStop;
     TcpListener? listener;
     Connection? upstream;
+    bool upstreamChatAck;
     public Room? Current { get; private set; }
     public bool IsHost { get; private set; }
+    public bool IsReconnecting { get; private set; }
     string recoveryToken="";
     public string LocalId { get; private set; } = "host";
     public string Address { get; private set; } = "";
     public event Action? Changed;
     public event Action<string>? Chat;
     public event Action<string,bool,bool>? RoomChat;
+    public event Action<string,bool,bool,string>? RoomChatReceived;
     public event Action? RoomMessageReceived;
     volatile bool gameRunning;
     public event Action<string, string, string>? PrivateMessage;
@@ -75,7 +78,8 @@ public sealed partial class PeerService : IDisposable
         if(!AllowsPeer(((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString())){tcp.Dispose();return;}
         using var c = new Connection(tcp);
         string id = Guid.NewGuid().ToString("N");
-        bool joined = false;
+        bool joined = false,departed=false;
+        string joinedRoomId="";
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
@@ -105,17 +109,23 @@ public sealed partial class PeerService : IDisposable
             if (hello.Type == "dm")
             {
                 var remote = ((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString();
-                PrivateMessage?.Invoke(remote, Clean(hello.Name, 40), Clean(hello.Text, 2000));
-                await c.Send(new() { Type = "ack" }); return;
+                if(RememberMessage("dm|"+remote,hello.RequestId))PrivateMessage?.Invoke(remote, Clean(hello.Name, 40), Clean(hello.Text, 2000));
+                await c.Send(new() { Type = "ack",RequestId=hello.RequestId }); return;
             }
             if(hello.Type=="resume")
             {
                 lock(gate)
                 {
-                    if(IsHost&&Current!=null&&resumeTickets.TryGetValue(hello.Id,out var ticket)&&ticket==hello.Token&&Current.Players.Any(p=>p.Id==hello.Id&&p.Address==remoteAddress)&&!guests.ContainsKey(hello.Id))
-                    {id=hello.Id;resumeTickets.Remove(id);guests[id]=c;joined=true;}
+                    if(IsHost&&!transferring&&Current!=null&&CanSee(remoteAddress)&&(hello.RoomId.Length==0||hello.RoomId==Current.Id)&&hello.Id!="host"&&
+                       hello.Token.Length==64&&(hello.Token==recoveryToken||resumeTickets.GetValueOrDefault(hello.Id)==hello.Token)&&
+                       Current.Players.FirstOrDefault(p=>p.Id==hello.Id&&p.Address==remoteAddress) is {} member)
+                    {
+                        id=hello.Id;guests.TryGetValue(id,out var previous);guests[id]=c;
+                        member.Reconnecting=false;reconnectDeadlines.Remove(id);joined=true;joinedRoomId=Current.Id;
+                        previous?.Dispose();
+                    }
                 }
-                if(!joined){await c.Send(new(){Type="error",Text="Room handoff expired or was not authorized."});return;}
+                if(!joined){await c.Send(new(){Type="error",Id=transferring?"resume-retry":"resume-rejected",Text=transferring?"Host transfer in progress. Try again shortly.":"Your room connection can no longer be restored. Rejoin from the room browser."});return;}
             }
             else if (hello.Type != "join") return;
             string error = "";
@@ -123,54 +133,73 @@ public sealed partial class PeerService : IDisposable
             {
                 if (transferring) error="Host transfer in progress. Try again shortly.";
                 else if (!IsHost || Current == null) error = "This peer is not hosting a room.";
+                else if (hello.RoomId.Length>0&&hello.RoomId!=Current.Id) error="This room is no longer available or is private.";
                 else if (!CanSee(remoteAddress)) error = "This room is for the host's saved friends only.";
                 else if(Current.Isolated&&!hello.SupportsIsolation)error="This isolated room requires Fellowship 0.1.37 or newer.";
-                else if (Current.Players.Count >= Current.Capacity) error = "The room is full.";
                 else
                 {
-                    guests[id] = c;
-                    var player=new Player { Team=Current.NextTeam(),PreferredColor=hello.Color??0,LastSelectedColor=hello.LastSelectedColor,Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
-                    Current.ApplyPreferences(player,0,hello.Spot??0,hello.MapPath);
-                    Current.ApplyColorChoice(player,player.PreferredColor,player.LastSelectedColor);
-                    Current.Players.Add(player);
-                    joined = true;
+                    // An explicit fresh join replaces this address's disconnected
+                    // reservation; it must not consume a second place in the room.
+                    foreach(var stale in Current.Players.Where(p=>p.Reconnecting&&p.Address==remoteAddress&&!guests.ContainsKey(p.Id)).ToArray())
+                    {Current.Players.Remove(stale);resumeTickets.Remove(stale.Id);reconnectDeadlines.Remove(stale.Id);}
+                    if(Current.Players.Count>=Current.Capacity)error="The room is full.";
+                    else
+                    {
+                        guests[id] = c;
+                        var player=new Player { Team=Current.NextTeam(),PreferredColor=hello.Color??0,LastSelectedColor=hello.LastSelectedColor,Id = id, Name = Clean(hello.Name, 40), Address=remoteAddress,CanHostTransfer=hello.CanHostTransfer,PreferredMapSpots=hello.PreferredMapSpots??new() };
+                        Current.ApplyPreferences(player,0,hello.Spot??0,hello.MapPath);
+                        Current.ApplyColorChoice(player,player.PreferredColor,player.LastSelectedColor);
+                        Current.Players.Add(player);
+                        joined = true;joinedRoomId=Current.Id;
+                    }
                 }
             }
             if (!joined) { await c.Send(new() { Type = "error", Text = error }); return; }
-            await c.Send(new() { Type = "welcome", Id = id });
+            await c.Send(new() { Type = "welcome", Id = id,SupportsChatAck=true });
+            Room initial;string initialToken;
+            lock(gate)
+            {
+                if(!IsHost||Current?.Id!=joinedRoomId||!guests.TryGetValue(id,out var active)||!ReferenceEquals(active,c))throw new IOException("The room is closed.");
+                initial=JsonSerializer.Deserialize<Room>(JsonSerializer.Serialize(Current))!;initialToken=recoveryToken;
+            }
+            await c.Send(new(){Type="room",Room=initial,Token=initialToken});
+            c.Welcomed=true;
             await BroadcastState();
             while (await c.Read(stop.Token) is { } msg)
             {
                 if(settings.IsBlocked(remoteAddress)||!AllowsPeer(remoteAddress))break;
+                if(!guests.TryGetValue(id,out var active)||!ReferenceEquals(active,c)||Current?.Id!=joinedRoomId)break;
+                if(msg.Type=="leave"){departed=true;break;}
                 if(msg.Type=="handoff-ready")
                 {
                     if(handoffTarget==id&&handoffId==msg.RequestId)handoffReady?.TrySetResult(msg.Text);
                 }
                 else if(msg.Type=="game-status")
                 {
-                    lock(gate){var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null){player.GameRunning=msg.GameRunning;player.IdleSeconds=IdlePresence.Normalize(msg.IdleSeconds);player.ManualAfk=msg.ManualAfk;}}
+                    lock(gate){if(!guests.TryGetValue(id,out var live)||!ReferenceEquals(live,c))break;var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null){player.GameRunning=msg.GameRunning;player.IdleSeconds=IdlePresence.Normalize(msg.IdleSeconds);player.ManualAfk=msg.ManualAfk;}}
                     await BroadcastState();
                 }
                 else if(msg.Type=="launch-result"){Notice?.Invoke($"{Current?.Players.FirstOrDefault(p=>p.Id==id)?.Name??"Player"}: {Clean(msg.Text,300)}");}
                 else if(msg.Type=="rhun-layout"&&msg.LobbyReport is {} layout)
                 {
-                    bool changed;lock(gate)changed=Current!=null&&RhunSides.Apply(Current,layout,remoteAddress);
+                    bool changed;lock(gate)changed=guests.TryGetValue(id,out var live)&&ReferenceEquals(live,c)&&Current!=null&&RhunSides.Apply(Current,layout,remoteAddress);
                     if(changed)await BroadcastState();
                 }
                 else if(msg.Type=="native-setup"&&msg.Room is {} setup)
                 {
-                    try{await ApplyNativeRules(setup);}catch(InvalidOperationException){} // Invalid/stale observations cannot replace current rules.
+                    try{await ApplyNativeRules(setup,c,id);}catch(InvalidOperationException){} // Invalid/stale observations cannot replace current rules.
                 }
                 else if (msg.Type == "chat")
                 {
                     string? name;
                     lock (gate) name = Current?.Players.FirstOrDefault(p => p.Id == id)?.Name;
-                    await SendRoomChat(name ?? "Player", msg.Text,id);
+                    await SendRoomChat(name ?? "Player", msg.Text,id,msg.RequestId,joinedRoomId,c);
+                    if(msg.RequestId.Length>0)await c.Send(new(){Type="chat-result",RequestId=msg.RequestId});
                 }
                 else if(msg.Type=="placement")
                 {
                     string failure="";
-                    try{ApplyPlacement(id,msg.MapPath,msg.Spot,msg.Team,msg.Color);await BroadcastState();}
+                    try{ApplyPlacement(id,msg.MapPath,msg.Spot,msg.Team,msg.Color,c);await BroadcastState();}
                     catch(InvalidOperationException e){failure=e.Message;}
                     await c.Send(new(){Type="placement-result",RequestId=msg.RequestId,Text=failure});
                 }
@@ -178,13 +207,14 @@ public sealed partial class PeerService : IDisposable
                 {
                     string nickname=NormalizeNickname(msg.Name);
                     if(nickname.Length==0)continue;
-                    lock(gate){var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null)player.Name=nickname;}
+                    lock(gate){if(!guests.TryGetValue(id,out var live)||!ReferenceEquals(live,c))break;var player=Current?.Players.FirstOrDefault(p=>p.Id==id);if(player!=null)player.Name=nickname;}
                     await BroadcastState();
                 }
                 else if (msg.Type == "ready")
                 {
                     lock (gate)
                     {
+                        if(!guests.TryGetValue(id,out var live)||!ReferenceEquals(live,c))break;
                         var p = Current?.Players.FirstOrDefault(p => p.Id == id);
                         if (p != null) p.Ready = msg.Ready;
                     }
@@ -192,15 +222,24 @@ public sealed partial class PeerService : IDisposable
                 }
             }
         }
-        catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or JsonException or InvalidDataException) { }
+        catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or ObjectDisposedException or JsonException or InvalidDataException) { }
         finally
         {
-            if (joined&&guests.TryGetValue(id,out var active)&&ReferenceEquals(active,c))
+            bool changed=false;
+            lock(gate)
             {
-                guests.TryRemove(id, out _);
-                lock (gate) Current?.Players.RemoveAll(p => p.Id == id);
-                await BroadcastState();
+                if(joined&&guests.TryGetValue(id,out var active)&&ReferenceEquals(active,c))
+                {
+                    guests.TryRemove(id,out _);
+                    if(IsHost&&Current?.Id==joinedRoomId)
+                    {
+                        if(!departed&&!stop.IsCancellationRequested&&CanSee(c.RemoteAddress)&&AllowsPeer(c.RemoteAddress))ReservePlayer(id);
+                        else{Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);reconnectDeadlines.Remove(id);}
+                        changed=true;
+                    }
+                }
             }
+            if(changed)await BroadcastState();
         }
     }
     public void Host(Room room,List<MapSpot>? preparedSpots=null)
@@ -233,15 +272,19 @@ public sealed partial class PeerService : IDisposable
         var advertised=await Query(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         if(advertised==null)throw new IOException("This room is no longer available or is private.");
         Leave();
+        int generation=sessionGeneration;
         var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
         try
         {
-            await c.Send(new() { Type = "join",LastSelectedColor=settings.LastSelectedColor, PreferredMapSpots=new(settings.PreferredMapSpots),Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
+            await c.Send(new() { Type = "join",RoomId=advertised.Id,LastSelectedColor=settings.LastSelectedColor, PreferredMapSpots=new(settings.PreferredMapSpots),Name = settings.Name,CanHostTransfer=listener!=null,Color=settings.PreferredColor,Spot=settings.PreferredSpot(advertised.MapPath),MapPath=advertised.MapPath });
             using var timeout = new CancellationTokenSource(5000);
             var welcome = await c.Read(timeout.Token);
             if (welcome?.Type != "welcome") throw new IOException(welcome?.Text ?? "No response from host.");
-            LocalId = welcome.Id;
-            upstream = c;
+            lock(gate)
+            {
+                if(generation!=sessionGeneration||stop.IsCancellationRequested)throw new OperationCanceledException();
+                LocalId = welcome.Id;upstream = c;upstreamChatAck=welcome.SupportsChatAck;
+            }
             _ = ReceiveHost(c);
             while(ReferenceEquals(upstream,c)&&Current==null&&!timeout.IsCancellationRequested)await Task.Delay(25);
             if(Current==null||!ReferenceEquals(upstream,c))throw new IOException("The host did not finish sending the room. Please retry.");
@@ -262,43 +305,46 @@ public sealed partial class PeerService : IDisposable
                 if(msg.Type=="become-host")
                 {
                     if(listener==null||msg.Room==null||msg.Tickets==null){await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId,Text="The next host must enable its VPN listener and update Fellowship."});continue;}
-                    lock(gate){upstream=null;Current=msg.Room;var hostPlayer=Current.Players.FirstOrDefault(p=>p.Id=="host");if(hostPlayer!=null)hostPlayer.Ready=true;Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);recoveryToken=msg.Token;}
+                    lock(gate){if(!ReferenceEquals(upstream,c))return;upstream=null;Current=msg.Room;IsReconnecting=false;var hostPlayer=Current.Players.FirstOrDefault(p=>p.Id=="host");if(hostPlayer!=null){hostPlayer.Ready=true;hostPlayer.Reconnecting=false;}Current.HostAddress=Address;IsHost=true;LocalId="host";resumeTickets=new(msg.Tickets);reconnectDeadlines.Clear();foreach(var member in Current.Players.Where(p=>p.Id!="host")){member.Reconnecting=true;reconnectDeadlines[member.Id]=DateTimeOffset.UtcNow.AddSeconds(120);}recoveryToken=msg.Token;}
+                    CancelChats("Host transfer in progress. Try again shortly.");
                     await c.Send(new(){Type="handoff-ready",RequestId=msg.RequestId});
                     _ = Discover(presence:true);Changed?.Invoke();_ = ExpireReservations(msg.Room.Id,resumeTickets);return;
                 }
                 if(msg.Type=="redirect")
                 {
-                    upstream=null;Current=null;c.Dispose();
-                    try{await ResumeRoom(msg.Text,msg.Id,msg.Token);}catch(Exception ex){Notice?.Invoke("Could not reconnect to the new host: "+ex.Message);Changed?.Invoke();}
+                    lock(gate)
+                    {
+                        if(!ReferenceEquals(upstream,c)||Current==null)return;
+                        upstream=null;
+                        Current.HostAddress=msg.Text;LocalId=msg.Id;recoveryToken=msg.Token;
+                        BeginReconnect();
+                    }
+                    c.Dispose();
                     return;
                 }
                 if(msg.Type=="kicked")
-                {upstream=null;Current=null;Changed?.Invoke();Notice?.Invoke("The host removed you from the room.");return;}
-                if (msg.Type == "room"&&Room.AcceptsUpdate(Current,msg.Room))
+                {lock(gate){if(!ReferenceEquals(upstream,c))return;Leave();}Notice?.Invoke("The host removed you from the room.");return;}
+                if (msg.Type == "room"&&msg.Room!=null&&(Current==null||Current.Id==msg.Room.Id)&&Room.AcceptsUpdate(Current,msg.Room))
                 {
                     if(msg.Room is {} scoped&&!AllowsRoom(scoped)){Notice?.Invoke("The room includes players outside the selected Radmin group.");break;}
-                    Current=msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress;
+                    lock(gate){if(!ReferenceEquals(upstream,c))return;Current=msg.Room;recoveryToken=msg.Token;if(Current!=null)Current.HostAddress=c.RemoteAddress;}
                     Changed?.Invoke();
                 }
                 if(msg.Type=="placement-result"&&placementRequests.TryRemove(msg.RequestId,out var pending))pending.TrySetResult(msg.Text);
-                if (msg.Type == "chat") DeliverRoomChat(msg.Text,msg.Id);
+                if (msg.Type == "chat") DeliverRoomChat(msg.Text,msg.Id,msg.RequestId,c);
+                if(msg.Type=="chat-result"&&chatRequests.TryRemove(msg.RequestId,out var sent))sent.TrySetResult("");
                 if (msg.Type == "launch") _=ReceiveLaunch(c);
                 if(msg.Type=="request-ready"&&!IsHost&&Current?.Id==msg.Id&&ReferenceEquals(upstream,c))ReadyRequested?.Invoke(msg.Id);
             }
         }
-        catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or JsonException or InvalidDataException) { }
+        catch (Exception e) when (e is IOException or SocketException or OperationCanceledException or ObjectDisposedException or JsonException or InvalidDataException) { }
         finally
         {
-            if (ReferenceEquals(upstream, c))
+            lock(gate)if (ReferenceEquals(upstream, c))
             {
-                upstream = null;
-                if(!await RecoverHost())
-                {
-                    Current = null; Changed?.Invoke();
-                    Notice?.Invoke("Connection to the host ended. Rejoin from the room browser.");
-                }
+                upstream = null;BeginReconnect();
             }
-            c.Dispose();
+            if(!c.GracefulClosing)c.Dispose();
         }
     }
     public static async Task<Room?> Query(string address,string? source=null,Func<string,bool>? allowed=null)=>(await QueryPeer(address,source,false,allowed)).Room;
@@ -325,13 +371,14 @@ public sealed partial class PeerService : IDisposable
         if(allowed!=null&&reply.Room is {} advertised&&(!allowed(advertised.HostAddress)||advertised.Players.Any(p=>!allowed(p.Address))))reply.Room=null;
         return (Clean(reply.Name,40),reply.Room,reply.GameRunning,IdlePresence.Normalize(reply.IdleSeconds),reply.ManualAfk);
     }
-    public async Task SendPrivate(string address, string text)
+    public async Task SendPrivate(string address, string text,string messageId="")
     {
         if(settings.IsBlocked(address))throw new InvalidOperationException("Unblock this player before messaging.");
         using var c = await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
-        await c.Send(new() { Type = "dm", Name = settings.Name, Text = Clean(text, 2000) });
+        await c.Send(new() { Type = "dm", Name = settings.Name, Text = Clean(text, 2000),RequestId=messageId });
         using var timeout = new CancellationTokenSource(3000);
-        if ((await c.Read(timeout.Token))?.Type != "ack") throw new IOException("Message was not acknowledged.");
+        var reply=await c.Read(timeout.Token);
+        if(reply?.Type!="ack"||reply.RequestId.Length>0&&reply.RequestId!=messageId)throw new IOException("Message was not acknowledged.");
     }
     static string NormalizeNickname(string name)=>new string(name.Where(c=>!char.IsControl(c)).Take(40).ToArray()).Trim();
     public async Task SetNickname(string name)
@@ -358,10 +405,11 @@ public sealed partial class PeerService : IDisposable
         }
         Changed?.Invoke();
     }
-    void ApplyPlacement(string id,string mapPath,int? spot,int? team,int? color)
+    void ApplyPlacement(string id,string mapPath,int? spot,int? team,int? color,Connection? expected=null)
     {
         lock(gate)
         {
+            if(expected!=null&&(!guests.TryGetValue(id,out var active)||!ReferenceEquals(active,expected)))throw new InvalidOperationException("Disconnected from host.");
             if(!IsHost||Current==null)throw new InvalidOperationException("The room is closed.");
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
             if(mapPath!=Current.MapPath)throw new InvalidOperationException("The map changed. Choose a spot on the new map.");
@@ -378,6 +426,7 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task SelectPlacement(int? spot=null,int? team=null,string? expectedMap=null,int? color=null)
     {
+        if(IsReconnecting)throw new InvalidOperationException("Reconnecting to room…");
         var room=Current??throw new InvalidOperationException("Join a room first.");
         var mapPath=expectedMap??room.MapPath;
         if(IsHost){ApplyPlacement("host",mapPath,spot,team,color);await BroadcastState();RememberColor(color);return;}
@@ -401,6 +450,7 @@ public sealed partial class PeerService : IDisposable
     }
     public async Task SetReady(bool ready)
     {
+        if(IsReconnecting)throw new InvalidOperationException("Reconnecting to room…");
         if (!IsHost && upstream != null) await upstream.Send(new() { Type = "ready", Ready = ready });
     }
     public async Task UpdateRoom(string map, string patch, string rules)
@@ -425,20 +475,23 @@ public sealed partial class PeerService : IDisposable
     bool CanSee(string remote) => !settings.IsBlocked(remote)&&(Current?.FriendsOnly!=true || settings.Friends.Any(f=>f.Address==remote));
     public async Task SyncRhunLayout(LobbyReport report)
     {
+        if(IsReconnecting)return;
         if(IsHost){bool changed;lock(gate)changed=Current!=null&&RhunSides.Apply(Current,report,Address);if(changed)await BroadcastState();}
         else if(upstream!=null)await upstream.Send(new(){Type="rhun-layout",LobbyReport=report});
     }
     public Task SyncNativeRules(Room observed)
     {
+        if(IsReconnecting)return Task.CompletedTask;
         if(IsHost)return ApplyNativeRules(observed);
         return upstream?.Send(new(){Type="native-setup",Room=new(){Id=observed.Id,Revision=observed.Revision,MapPath=observed.MapPath,Match=observed.Match}})??Task.CompletedTask;
     }
-    async Task ApplyNativeRules(Room observed)
+    async Task ApplyNativeRules(Room observed,Connection? expected=null,string id="")
     {
         observed.Match.Validate();
         string patch;
         lock(gate)
         {
+            if(expected!=null&&(!guests.TryGetValue(id,out var active)||!ReferenceEquals(active,expected)))return;
             if(!IsHost||Current==null||Current.Patch!="1.00"||transferring||Current.Id!=observed.Id||Current.Revision!=observed.Revision)return;
             patch=Current.Patch;
         }
@@ -481,24 +534,12 @@ public sealed partial class PeerService : IDisposable
             }
 
             foreach(var p in Current.Players.Where(p=>p.Id!="host"&&!CanSee(p.Address)).ToArray())
-                if(guests.TryGetValue(p.Id,out var c))c.Dispose();
+            {
+                if(guests.TryRemove(p.Id,out var c))c.Dispose();
+                Current.Players.Remove(p);resumeTickets.Remove(p.Id);reconnectDeadlines.Remove(p.Id);
+            }
         }
         await BroadcastState();
-    }
-    public Task Say(string text) => Current==null?Task.FromException(new IOException("You are not connected to a room.")):IsHost ? SendRoomChat(settings.Name, text) : upstream?.Send(new() { Type = "chat", Text = Clean(text, 2000) }) ?? Task.FromException(new IOException("The room connection is unavailable."));
-    async Task SendRoomChat(string name, string text,string id="host")
-    {
-        var line = $"{name}   {Clean(text, 2000)}";
-        DeliverRoomChat(line,id);
-        await Broadcast(new() { Type = "chat", Text = line,Id=id });
-    }
-    void DeliverRoomChat(string text,string id)
-    {
-        var sender=Current?.Players.FirstOrDefault(p=>p.Id==id);
-        bool blocked=sender!=null?settings.IsBlocked(sender.Address):Current?.Players.Any(p=>settings.IsBlocked(p.Address)&&text.StartsWith(p.Name+"   ",StringComparison.Ordinal))==true;
-        RoomChat?.Invoke(text,blocked,id==LocalId);
-        if(!blocked&&id!=LocalId)RoomMessageReceived?.Invoke();
-        if(!blocked)Chat?.Invoke(text);
     }
     public async Task SetHostGameRunning(bool running)
     {
@@ -563,7 +604,7 @@ public sealed partial class PeerService : IDisposable
     }
     async Task Broadcast(Wire msg)
     {
-        await Task.WhenAll(guests.Values.Select(async c => { try { await c.Send(msg); } catch { c.Dispose(); } }));
+        await Task.WhenAll(guests.Values.Select(async c => { if(!c.Welcomed)return;try { await c.Send(msg); } catch { c.Dispose(); } }));
     }
     static string Clean(string s, int max) => new(s.Take(max).Where(c => !char.IsControl(c) || c == '\n').ToArray());
     static async Task<Connection> Connect(string address,string? source=null,Func<string,bool>? allowed=null)
@@ -576,9 +617,16 @@ public sealed partial class PeerService : IDisposable
     }
     public void Leave()
     {
-        var old = upstream; upstream = null; old?.Dispose();
+        Connection? old;
+        lock(gate)
+        {
+            sessionGeneration++;reconnectStop?.Cancel();reconnectStop=null;
+            old=upstream;upstream=null;old?.CloseGracefully();
+            IsHost=false;IsReconnecting=false;Current=null;recoveryToken="";upstreamChatAck=false;
+            CancelChats("Disconnected from room.");
+            resumeTickets=new();reconnectDeadlines.Clear();
+        }
         foreach(var pending in placementRequests.Values)pending.TrySetResult("Disconnected from room.");placementRequests.Clear();
-        lock (gate) { IsHost = false; Current = null; }
         foreach (var c in guests.Values) c.Dispose();
         guests.Clear(); Changed?.Invoke();
         _ = Discover(presence:true);
@@ -586,13 +634,17 @@ public sealed partial class PeerService : IDisposable
     public void Dispose() { networkStop?.Cancel();discovery?.Dispose(); stop.Cancel(); listener?.Stop(); Leave(); stop.Dispose(); }
     sealed class Connection : IDisposable
     {
-        public string RemoteAddress=>((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString();
+        public string RemoteAddress {get;}
         readonly TcpClient tcp;
         readonly NetworkStream stream;
         readonly SemaphoreSlim writes = new(1);
+        public bool GracefulClosing {get;private set;}
+        public bool Welcomed {get;set;}
+        public void CloseGracefully(){GracefulClosing=true;_=FinishLeave();}
+        async Task FinishLeave(){try{await Send(new(){Type="leave"});}catch{}finally{Dispose();}}
         public Connection(TcpClient tcp)
         {
-            this.tcp = tcp; tcp.NoDelay = true; stream = tcp.GetStream();
+            this.tcp = tcp;RemoteAddress=((IPEndPoint)tcp.Client.RemoteEndPoint!).Address.ToString(); tcp.NoDelay = true; stream = tcp.GetStream();
             // Detect a lost VPN connection even while nobody is chatting or changing readiness.
             tcp.Client.SetSocketOption(SocketOptionLevel.Socket,SocketOptionName.KeepAlive,true);
             tcp.Client.SetSocketOption(SocketOptionLevel.Tcp,SocketOptionName.TcpKeepAliveTime,15);
@@ -603,13 +655,14 @@ public sealed partial class PeerService : IDisposable
         {
             var bytes = JsonSerializer.SerializeToUtf8Bytes(msg);
             if (bytes.Length > MaxFrame) throw new InvalidDataException("Message is too large.");
-            await writes.WaitAsync();
+            using var timeout = new CancellationTokenSource(5000);
+            try{await writes.WaitAsync(timeout.Token);}catch{Dispose();throw;}
             try
             {
-                using var timeout = new CancellationTokenSource(5000);
                 await stream.WriteAsync(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(bytes.Length)), timeout.Token);
                 await stream.WriteAsync(bytes, timeout.Token);
             }
+            catch{Dispose();throw;}
             finally { writes.Release(); }
         }
         public async Task<Wire?> Read(CancellationToken ct)

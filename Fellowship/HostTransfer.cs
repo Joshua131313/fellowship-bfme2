@@ -11,20 +11,21 @@ public sealed partial class PeerService
     public async Task LeaveRoom()
     {
         string? next;
-        lock(gate)next=IsHost?Current?.Players.FirstOrDefault(p=>p.Id!="host")?.Id:null;
+        lock(gate)next=IsHost?Current?.Players.FirstOrDefault(p=>p.Id!="host"&&!p.Reconnecting&&guests.ContainsKey(p.Id))?.Id:null;
         if(next!=null)await Promote(next,true);else Leave();
     }
     public async Task Kick(string id)
     {
-        Connection connection;
+        Connection? connection;
         lock(gate)
         {
             if(!IsHost||Current==null)throw new InvalidOperationException("Only the host can remove players.");
             if(transferring)throw new InvalidOperationException("Host transfer in progress.");
-            if(id=="host"||!guests.TryRemove(id,out connection!))throw new InvalidOperationException("That player is no longer connected.");
-            Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);
+            if(id=="host"||!Current.Players.Any(p=>p.Id==id))throw new InvalidOperationException("That player is no longer connected.");
+            guests.TryRemove(id,out connection);
+            Current.Players.RemoveAll(p=>p.Id==id);resumeTickets.Remove(id);reconnectDeadlines.Remove(id);
         }
-        try{await connection.Send(new(){Type="kicked"});}finally{connection.Dispose();await BroadcastState();}
+        try{if(connection!=null)await connection.Send(new(){Type="kicked"});}finally{connection?.Dispose();await BroadcastState();}
     }
     public async Task Promote(string id,bool leaving=false)
     {
@@ -49,7 +50,7 @@ public sealed partial class PeerService
         {
             // Confirm that the successor's listening address is reachable before relinquishing ownership.
             await Query(address,Address,AllowsPeer);
-            await successor.Send(new(){Type="become-host",RequestId=handoffId,Room=snapshot,Tickets=tickets,Token=recoveryToken});sent=true;
+            sent=true;await successor.Send(new(){Type="become-host",RequestId=handoffId,Room=snapshot,Tickets=tickets,Token=recoveryToken});
             string result;
             try{result=await handoffReady!.Task.WaitAsync(TimeSpan.FromSeconds(7));}
             catch(TimeoutException)
@@ -75,7 +76,7 @@ public sealed partial class PeerService
                 catch{Notice?.Invoke("A player disconnected during transfer and may need to rejoin.");}
             }
             Leave();
-            if(!leaving)await ResumeRoom(address,oldId,tickets[oldId]);
+            if(!leaving)await ResumeRoom(address,oldId,tickets[oldId],snapshot.Id,sessionGeneration,stop.Token);
             Notice?.Invoke(leaving?"Room handed to "+snapshot.Host:"Host is now "+snapshot.Host);
         }
         catch
@@ -85,71 +86,5 @@ public sealed partial class PeerService
             throw;
         }
         finally{transferring=false;handoffReady=null;handoffTarget="";handoffId="";}
-    }
-    async Task<bool> RecoverHost()
-    {
-        var room=Current;var token=recoveryToken;var localId=LocalId;
-        if(stop.IsCancellationRequested||room==null||token.Length!=64||listener==null)return false;
-        // One designated successor prevents competing elections among remaining guests.
-        var successor=room.Players.FirstOrDefault(p=>p.Id!="host"&&p.CanHostTransfer);
-        if(successor==null||settings.IsBlocked(successor.Address))return false;
-        Notice?.Invoke("Host disconnected. Recovering room…");
-        if(successor.Id==localId)
-        {
-            lock(gate)
-            {
-                if(Current!=room||stop.IsCancellationRequested)return true;
-                room.Players.RemoveAll(p=>p.Id=="host");
-                var promoted=room.Players.Single(p=>p.Id==localId);promoted.Id="host";promoted.Ready=true;
-                room.Host=settings.Name;room.HostAddress=Address;room.Phase="Gathering";
-                IsHost=true;LocalId="host";
-                resumeTickets=room.Players.Where(p=>p.Id!="host").ToDictionary(p=>p.Id,_=>token);
-            }
-            _=ExpireReservations(room.Id,resumeTickets);
-            await BroadcastState();Notice?.Invoke("You are now the room host.");return true;
-        }
-        for(int attempt=0;attempt<10;attempt++)
-        {
-            if(Current!=room||stop.IsCancellationRequested)return true;
-            try
-            {
-                var active=await Query(successor.Address,Address,AllowsPeer);
-                if(active?.Id==room.Id&&active.HostAddress==successor.Address)
-                {
-                    if(Current!=room||stop.IsCancellationRequested)return true;
-                    await ResumeRoom(successor.Address,localId,token);
-                    Notice?.Invoke("Room reconnected to "+successor.Name);return true;
-                }
-            }
-            catch(Exception error) when(error is IOException or System.Net.Sockets.SocketException or OperationCanceledException){}
-            await Task.Delay(500);
-        }
-        return Current!=room;
-    }
-    async Task ResumeRoom(string address,string id,string token)
-    {
-        var connection=await Connect(address,string.IsNullOrEmpty(Address)?null:Address,AllowsPeer);
-        try
-        {
-            await connection.Send(new(){Type="resume",Id=id,Token=token});
-            using var timeout=new CancellationTokenSource(5000);var welcome=await connection.Read(timeout.Token);
-            if(welcome?.Type!="welcome")throw new IOException(welcome?.Text??"New host did not respond.");
-            LocalId=welcome.Id;upstream=connection;_ = ReceiveHost(connection);
-        }
-        catch{connection.Dispose();throw;}
-    }
-    async Task ExpireReservations(string roomId,Dictionary<string,string> reservation)
-    {
-        try
-        {
-            await Task.Delay(TimeSpan.FromSeconds(20),stop.Token);
-            lock(gate)
-            {
-                if(!IsHost||Current?.Id!=roomId||!ReferenceEquals(resumeTickets,reservation))return;
-                Current.Players.RemoveAll(p=>resumeTickets.ContainsKey(p.Id));resumeTickets.Clear();
-            }
-            await BroadcastState();
-        }
-        catch(OperationCanceledException){}
     }
 }

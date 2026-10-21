@@ -28,7 +28,7 @@ public sealed class GamePreferencesWindow : Window
         {
             if(current==null)return;
             int saved=spots.GetValueOrDefault(current.MapPath);
-            current.Players=[new(){Id="preference",Name="Your preference",Spot=saved,Color=(color.SelectedItem as PlayerColor)?.Value??0}];
+            current.Players=[new(){Id="preference",Name=settings.Name,Spot=saved,Color=(color.SelectedItem as PlayerColor)?.Value??0}];
             preview.ShowSelections(current,"preference",true);
             System.Windows.Automation.AutomationProperties.SetHelpText(preview,saved>0?$"Preferred spot: {saved}":"Click a starting location to choose your preference.");
         }
