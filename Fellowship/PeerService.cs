@@ -607,7 +607,7 @@ public sealed partial class PeerService : IDisposable
             if(!guests.TryGetValue(player.Id,out var connection)){failures.Add(player.Name);continue;}
             try{await connection.Send(new(){Type="launch"});}catch{failures.Add(player.Name);}
         }
-        if(failures.Count>0)Notice?.Invoke("Launch could not reach: "+string.Join(", ",failures)+". Ask them to reconnect or use Launch mine.");
+        if(failures.Count>0)Notice?.Invoke("Launch could not reach: "+string.Join(", ",failures)+". Ask them to reconnect or use Launch game.");
         LaunchRequested?.Invoke();
         await BroadcastState();
     }

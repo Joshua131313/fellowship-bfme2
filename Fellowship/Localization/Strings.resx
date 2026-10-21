@@ -1956,4 +1956,13 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Hide players" xml:space="preserve">
     <value>Hide players</value>
   </data>
+  <data name="Launch game" xml:space="preserve">
+    <value>Launch game</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Try launching the game again." xml:space="preserve">
+    <value>BFME2 was not launched because the Windows permission prompt was cancelled. Try launching the game again.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
+    <value>Launch could not reach: {0}. Ask them to reconnect or use Launch game.</value>
+  </data>
 </root>

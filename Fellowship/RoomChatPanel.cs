@@ -14,7 +14,7 @@ public sealed class RoomChatPanel : Grid
 {
     readonly Grid conversation=new();
     readonly ColumnDefinition rosterColumn=new(){Width=GridLength.Auto};
-    readonly TextBlock arrow=UI.Text("⌃",12,UI.Muted);
+    readonly System.Windows.Shapes.Path arrow=new(){Data=Geometry.Parse("M 0,0 L 5,5 L 10,0"),Stroke=UI.Brush("#A7B6CE"),StrokeThickness=1.6,StrokeStartLineCap=PenLineCap.Round,StrokeEndLineCap=PenLineCap.Round,StrokeLineJoin=PenLineJoin.Round,Margin=new(12,0,2,0),VerticalAlignment=VerticalAlignment.Center};
     readonly Button collapse;
     readonly ChatTranscript transcript;
     bool expanded=true;
@@ -38,7 +38,6 @@ public sealed class RoomChatPanel : Grid
         chatHeading.Margin=new(0,0,8,0);heading.Children.Add(chatHeading);
         var count=UI.Text("",10,UI.Muted,true);count.SetBinding(TextBlock.TextProperty,new Binding(nameof(TextBlock.Text)){Source=playerCount});
         count.TextWrapping=TextWrapping.NoWrap;
-        arrow.Margin=new(8,0,0,0);
         PlayersButton=UI.Button("",TogglePlayers);PlayersButton.Content=UI.Row(count,arrow);PlayersButton.Height=28;PlayersButton.MinHeight=28;PlayersButton.Padding=new(9,3,9,3);PlayersButton.Margin=new(0);PlayersButton.Background=Brushes.Transparent;
         Grid.SetColumn(PlayersButton,1);heading.Children.Add(PlayersButton);UI.At(this,heading,0);
         conversation.ColumnDefinitions.Add(new());conversation.ColumnDefinitions.Add(rosterColumn);
@@ -70,7 +69,6 @@ public sealed class RoomChatPanel : Grid
     void UpdateExpanded()
     {
         PlayersCard.Visibility=expanded?Visibility.Visible:Visibility.Collapsed;
-        arrow.Text=expanded?"⌃":"⌄";
         L.Bind(PlayersButton,FrameworkElement.ToolTipProperty,expanded?"Hide players":"Show players");
         L.Bind(PlayersButton,AutomationProperties.NameProperty,expanded?"Hide players":"Show players");
         UpdateBounds();

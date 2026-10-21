@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -55,6 +56,7 @@ static class RoomChatLayoutTests
                 if(!tooltipText.Contains("Guest · IN BFME2")||!tooltipText.Contains("Spot 1 · Team 1")||!tooltipText.Contains("Blue")||!tooltipText.Contains("Not ready")||!tooltipText.Contains("Ping"))throw new Exception("Room player hover does not contain role, game, selections, color, ping and readiness");
                 if(Nodes((DependencyObject)first.Content).OfType<TextBlock>().Any(t=>t.Text.Contains("Spot ")||t.Text.Contains("Team ")||t.Text.Contains("BFME2")))throw new Exception("Detailed room player state still occupies roster rows");
                 VisibleActions(window,view);
+                LaunchRole(window,true);
                 if(footer.ActualHeight>54||consent.Visibility!=Visibility.Collapsed)throw new Exception("Routine host footer still reserves helper rows");
                 var warningVisibility=warning.Visibility;warning.Visibility=Visibility.Collapsed;Layout(view,window.Width,window.Height);
                 if(body.RowDefinitions[0].ActualHeight>.1)throw new Exception("A hidden patch warning still reserves a room header row");
@@ -85,6 +87,7 @@ static class RoomChatLayoutTests
                 if(consent.Visibility!=Visibility.Visible||consent.IsChecked!=ready||summary.Visibility!=Visibility.Collapsed||footer.ActualHeight>54)throw new Exception("Routine guest readiness still shows helper rows or hides launch consent");
                 if(Nodes(footer).OfType<TextBlock>().Any(t=>t.Text is "Room stays open when you exit the game." or "Check Ready when you want to play." or "Ready for the host to launch"))throw new Exception("Routine guest footer subtexts remain visible");
                 VisibleActions(window,view);
+                LaunchRole(window,false);
             }
             var guestImage=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);guestImage.Render(view);var guestPng=new PngBitmapEncoder();guestPng.Frames.Add(BitmapFrame.Create(guestImage));using(var file=File.Create("dist/preview-room-chat-guest.png"))guestPng.Save(file);
             room.Players[^1].Reconnecting=true;window.Refresh();Layout(view,window.MinWidth,window.MinHeight);
@@ -118,12 +121,28 @@ static class RoomChatLayoutTests
             var rtlImage=new RenderTargetBitmap((int)window.MinWidth,(int)window.MinHeight,96,96,PixelFormats.Pbgra32);rtlImage.Render(view);var rtlPng=new PngBitmapEncoder();rtlPng.Frames.Add(BitmapFrame.Create(rtlImage));using(var file=File.Create("dist/preview-room-chat-title-rtl.png"))rtlPng.Save(file);
             L.Apply("en");room.Title="Room chat layout";isHost.SetValue(browser.Peer,true);localId.SetValue(browser.Peer,"host");window.Refresh();
             Layout(view,window.MinWidth,window.MinHeight);VisibleActions(window,view);
+            LaunchRole(window,true);
             FloatingBounds(chatPanel,transcript,composer,view,false);
             if(transcript.ActualHeight<50)throw new Exception("Minimum room size cuts off the chat composer or transcript");
             window.Content=view;
         }
         finally{window.Close();browser.Peer.Dispose();Appearance.Apply("Dark");L.Apply(language);}
-        Console.WriteLine("PASS full-height room chat, bounded floating eight-player roster, selection-safe width toggle, compact footer, connection/launch guards, live raw title and RTL layout");
+        Console.WriteLine("PASS full-height room chat, bounded floating roster, selection-safe toggle, role-specific primary launch action and F9 menu, compact footer, connection guards, raw title and RTL layout");
+    }
+    static void LaunchRole(RoomWindow window,bool host)
+    {
+        const BindingFlags hidden=BindingFlags.Instance|BindingFlags.NonPublic;
+        var local=(Button)typeof(RoomWindow).GetField("launchMine",hidden)!.GetValue(window)!;
+        var all=(Button)typeof(RoomWindow).GetField("launch",hidden)!.GetValue(window)!;
+        var menu=(MenuItem)typeof(RoomWindow).GetField("launchMenu",hidden)!.GetValue(window)!;
+        string label=host?"Launch all":"Launch game";
+        if(host)
+        {
+            if(local.Visibility!=Visibility.Collapsed||all.Visibility!=Visibility.Visible||all.Content as string!=label||all.Tag as string!="Primary")throw new Exception("Room host does not have exactly its primary Launch all action");
+        }
+        else if(local.Visibility!=Visibility.Visible||local.Content as string!=label||local.Tag as string!="Primary"||all.Visibility!=Visibility.Collapsed)throw new Exception("Room guest does not have exactly its primary Launch game action");
+        if(menu.Header as string!=label||menu.Command==null)throw new Exception("Room launch menu does not follow the current host or guest role");
+        if(menu.Resources["Shortcut"] is not KeyGesture{Key:Key.F9,Modifiers:ModifierKeys.None}||!window.InputBindings.OfType<KeyBinding>().Any(binding=>binding.Key==Key.F9&&binding.Modifiers==ModifierKeys.None&&ReferenceEquals(binding.Command,menu.Command)))throw new Exception("Role switch detached F9 from the current room launch action");
     }
     static void FloatingBounds(RoomChatPanel panel,ChatTranscript transcript,FrameworkElement composer,FrameworkElement view,bool rtl)
     {

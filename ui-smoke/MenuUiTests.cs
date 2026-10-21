@@ -48,6 +48,21 @@ static class MenuUiTests
             var selected=list.ContextMenu!.Items.OfType<MenuItem>().Single(i=>i.Header as string=="Invite to room");
             if(shared.Command?.CanExecute(null)!=true||selected.Command?.CanExecute(null)!=true)throw new Exception("An eligible friend outside the room cannot be invited");
             var member=new Player{Id="guest",Name="Aragorn",Address=address};browser.Peer.Current!.Players.Add(member);
+            var regular=browser.PlayerMenu(browser,member.Name,address,member);var friendMenu=((ListBoxItem)list.SelectedItem).ContextMenu!;
+            foreach(var ordinary in new[]{regular,friendMenu})
+            {
+                ordinary.RaiseEvent(new RoutedEventArgs(ContextMenu.OpenedEvent));
+                if(ordinary.Items.OfType<MenuItem>().Count(i=>i.Header as string is "Show game room info" or "Open room")!=2)throw new Exception("Ordinary player/friend menus lost room navigation actions");
+            }
+            var roomWindow=new RoomWindow(browser){AllowClose=true};
+            try
+            {
+                var roster=(ListBox)typeof(RoomWindow).GetField("players",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.GetValue(roomWindow)!;
+                var rosterMenu=roster.Items.OfType<ListBoxItem>().Single(i=>i.Tag is Player p&&p.Address==address).ContextMenu!;rosterMenu.RaiseEvent(new RoutedEventArgs(ContextMenu.OpenedEvent));
+                var labels=rosterMenu.Items.OfType<MenuItem>().Select(i=>i.Header as string).ToArray();
+                if(labels.Any(label=>label is "Show game room info" or "Open room" or "Join game room")||!labels.Contains("Player info")||!labels.Contains("Send message")||!labels.Contains("Transfer host")||!labels.Contains("Kick from room"))throw new Exception("Room roster menu did not omit redundant room actions while retaining player/host controls");
+            }
+            finally{roomWindow.Close();}
             if(shared.Command!.CanExecute(null)||selected.Command!.CanExecute(null))throw new Exception("Existing room members can still be invited from a player or friends menu");
             member.Reconnecting=true;
             if(shared.Command.CanExecute(null)||selected.Command.CanExecute(null))throw new Exception("Reserved reconnecting members can still be invited");
@@ -59,5 +74,6 @@ static class MenuUiTests
         }
         finally{friends.Close();browser.Peer.Dispose();}
         Console.WriteLine("PASS live invite eligibility excludes existing and reserved room members in shared player and friends menus");
+        Console.WriteLine("PASS room roster omits redundant room navigation while other player/friend menus retain it");
     }
 }

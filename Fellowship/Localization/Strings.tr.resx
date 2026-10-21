@@ -1956,4 +1956,13 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Hide players" xml:space="preserve">
     <value>Oyuncuları gizle</value>
   </data>
+  <data name="Launch game" xml:space="preserve">
+    <value>Oyunu başlat</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Try launching the game again." xml:space="preserve">
+    <value>Windows izin istemi iptal edildiği için BFME2 başlatılmadı. Oyunu yeniden başlatmayı deneyin.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
+    <value>Başlatma isteği şu oyunculara ulaşamadı: {0}. Yeniden bağlanmalarını veya Oyunu başlat seçeneğini kullanmalarını isteyin.</value>
+  </data>
 </root>

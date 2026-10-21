@@ -1956,4 +1956,13 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Hide players" xml:space="preserve">
     <value>Ocultar jugadores</value>
   </data>
+  <data name="Launch game" xml:space="preserve">
+    <value>Iniciar juego</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Try launching the game again." xml:space="preserve">
+    <value>BFME2 no se inició porque se canceló la solicitud de permisos de Windows. Intenta iniciar el juego de nuevo.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
+    <value>El inicio no pudo contactar con: {0}. Pídeles que se reconecten o usen Iniciar juego.</value>
+  </data>
 </root>

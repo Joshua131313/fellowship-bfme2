@@ -134,7 +134,7 @@ public static class UI
             "Active players" or "Online players"=>new(Key.P,ModifierKeys.Control|ModifierKeys.Shift),
             "Friends list" or "Friends"=>new(Key.D1,ModifierKeys.Control,"Ctrl+1"),
             "Getting started" or "Game setup guide"=>new(Key.F1),
-            "Launch mine"=>new(Key.F9),
+            "Launch game" or "Launch all"=>new(Key.F9),
             "Leave room" or "Close window"=>new(Key.W,ModifierKeys.Control),
             "Room browser"=>new(Key.B,ModifierKeys.Control),
             "Send message"=>new(Key.M,ModifierKeys.Control),
@@ -372,7 +372,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.134   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.135   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -790,14 +790,17 @@ public sealed partial class BrowserWindow : Window
         if(room!=null){var title=UI.Text(room.Title,11,UI.Muted);title.TextTrimming=TextTrimming.CharacterEllipsis;title.MaxWidth=165;title.Margin=new(8,0,0,0);title.ToolTip=room.Title+"\n"+ip;panel.Children.Add(title);}
         return panel;
     }
-    public ContextMenu PlayerMenu(Window owner,string name,string ip,Player? player=null)
+    public ContextMenu PlayerMenu(Window owner,string name,string ip,Player? player=null,bool showRoomActions=true)
     {
         var menu=MenuPlacement.AtCursor(owner);
         menu.Items.Add(UI.MenuAction("Player info",()=>UI.Reveal(CreatePlayerInfo(owner,name,ip,player))));
-        var roomInfo=UI.MenuAction("Show game room info",()=>{if(PlayerRoom(ip) is {} room)new RoomPreviewWindow(this,room,Settings.GamePath).Show();},()=>PlayerRoom(ip)!=null);
-        var joinRoom=UI.MenuAction("Join game room",async()=>{try{if(PlayerRoom(ip) is {} room)await JoinPreview(room.Id);}catch(Exception error){UI.Error(error.Message);}},()=>PlayerRoom(ip) is {} room&&(Peer.Current?.Id==room.Id||room.Players.Count<room.Capacity));
-        menu.Items.Add(roomInfo);menu.Items.Add(joinRoom);
-        menu.Opened+=(_,_)=>{var room=PlayerRoom(ip);bool running=!Settings.IsBlocked(ip)&&(Presence.Find(ip,DateTimeOffset.UtcNow)?.GameRunning??player?.GameRunning??false);roomInfo.Visibility=joinRoom.Visibility=room!=null||running?Visibility.Visible:Visibility.Collapsed;L.Bind(joinRoom,HeaderedItemsControl.HeaderProperty,room!=null&&Peer.Current?.Id==room.Id?"Open room":"Join game room");foreach(var action in new[]{roomInfo,joinRoom}){ToolTipService.SetShowOnDisabled(action,true);if(room==null)L.Bind(action,FrameworkElement.ToolTipProperty,"No Fellowship room is available for this player.");else action.ToolTip=null;}};
+        if(showRoomActions)
+        {
+            var roomInfo=UI.MenuAction("Show game room info",()=>{if(PlayerRoom(ip) is {} room)new RoomPreviewWindow(this,room,Settings.GamePath).Show();},()=>PlayerRoom(ip)!=null);
+            var joinRoom=UI.MenuAction("Join game room",async()=>{try{if(PlayerRoom(ip) is {} room)await JoinPreview(room.Id);}catch(Exception error){UI.Error(error.Message);}},()=>PlayerRoom(ip) is {} room&&(Peer.Current?.Id==room.Id||room.Players.Count<room.Capacity));
+            menu.Items.Add(roomInfo);menu.Items.Add(joinRoom);
+            menu.Opened+=(_,_)=>{var room=PlayerRoom(ip);bool running=!Settings.IsBlocked(ip)&&(Presence.Find(ip,DateTimeOffset.UtcNow)?.GameRunning??player?.GameRunning??false);roomInfo.Visibility=joinRoom.Visibility=room!=null||running?Visibility.Visible:Visibility.Collapsed;L.Bind(joinRoom,HeaderedItemsControl.HeaderProperty,room!=null&&Peer.Current?.Id==room.Id?"Open room":"Join game room");foreach(var action in new[]{roomInfo,joinRoom}){ToolTipService.SetShowOnDisabled(action,true);if(room==null)L.Bind(action,FrameworkElement.ToolTipProperty,"No Fellowship room is available for this player.");else action.ToolTip=null;}};
+        }
         if(ip!=Peer.Address)
         {
             var invite=UI.MenuAction("Invite to room",async()=>{try{await Peer.Invite(ip);UI.InvitationSent(owner,name).Show();}catch(Exception error){UI.Error(error.Message);}},()=>Peer.Current is {} current&&!current.Players.Any(p=>p.Address==ip)&&Settings.Friends.Any(f=>f.Address==ip)&&!Settings.IsBlocked(ip));
@@ -1046,6 +1049,7 @@ public sealed class RoomWindow : Window
     readonly CheckBox consent=new(){Content="Ready · allow host to launch BFME2"};
     readonly Button launch;
     readonly Button launchMine,abort,requestReady;
+    readonly MenuItem launchMenu;
     Window? readyPrompt;
     DateTimeOffset nextReadyRequest;
     readonly System.Windows.Threading.DispatcherTimer launchStateTimer=new(){Interval=TimeSpan.FromSeconds(1)};
@@ -1055,10 +1059,11 @@ public sealed class RoomWindow : Window
         bool active=launching||GameLauncher.IsRunning();
         requestReady.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         requestReady.IsEnabled=app.Peer.Current?.Players.Count>1&&DateTimeOffset.UtcNow>=nextReadyRequest;
-        launchMine.Visibility=active?Visibility.Collapsed:Visibility.Visible;
+        launchMine.Visibility=active||app.Peer.IsHost?Visibility.Collapsed:Visibility.Visible;
         launchMine.IsEnabled=!app.Peer.IsReconnecting;
         launch.Visibility=!active&&app.Peer.IsHost?Visibility.Visible:Visibility.Collapsed;
         abort.Visibility=active?Visibility.Visible:Visibility.Collapsed;
+        L.Bind(launchMenu,HeaderedItemsControl.HeaderProperty,app.Peer.IsHost?"Launch all":"Launch game");
         CommandManager.InvalidateRequerySuggested();
     }
     async Task AbortGame()
@@ -1085,7 +1090,12 @@ public sealed class RoomWindow : Window
     {
         this.app=app;var work=SystemParameters.WorkArea;
         var body=UI.Shell(this,app.Peer.Current?.Title??"",Math.Min(1160,Math.Max(1,work.Width-32)),Math.Min(840,Math.Max(1,work.Height-32)),title);MinWidth=Math.Min(900,Width);MinHeight=Math.Min(660,Height);
-        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
+        launchMenu=UI.MenuAction("Launch game",async()=>
+        {
+            if(!app.Peer.IsHost){LaunchLocal();return;}
+            try{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();}catch(Exception error){UI.Error(error.Message);}
+        },()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)&&(!app.Peer.IsHost||app.Peer.Current.AllGuestsReady));
+        UI.Menus(this,UI.MenuGroup("_Room",launchMenu,UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
         patchWarning.ColumnDefinitions.Add(new());patchWarning.ColumnDefinitions.Add(new(){Width=UI.Auto});patchWarning.Margin=new(22,12,22,0);
         patchNotice.TextWrapping=TextWrapping.Wrap;patchWarning.Children.Add(patchNotice);
@@ -1182,9 +1192,9 @@ public sealed class RoomWindow : Window
         var bottom=new Grid{Background=UI.Brush("#191D24"),Margin=new(0)};bottom.ColumnDefinitions.Add(new());bottom.ColumnDefinitions.Add(new(){Width=UI.Auto});
         var state=UI.Stack(consent,readySummary);state.Margin=new(22,8,10,8);state.VerticalAlignment=VerticalAlignment.Center;consent.Margin=new(0);L.Bind(consent,ContentControl.ContentProperty,"Ready · allow host to launch BFME2");readySummary.TextWrapping=TextWrapping.NoWrap;readySummary.TextTrimming=TextTrimming.CharacterEllipsis;readySummary.Visibility=Visibility.Collapsed;bottom.Children.Add(state);
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
-        launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
+        launch=UI.AsyncButton("Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
         UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&!PatchChanging&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>PatchChanging?"Switching patch…":launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
-        launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
+        launchMine=UI.Require(UI.Button("Launch game",LaunchLocal,true),()=>!app.Peer.IsHost&&!app.Peer.IsReconnecting&&!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
         requestReady=UI.AsyncButton("Request ready",async()=>{await app.Peer.RequestReady();nextReadyRequest=DateTimeOffset.UtcNow.AddSeconds(5);UpdateLaunchActions();AppendSystem("Ready request sent to room participants.");});
         requestReady.ToolTip="Ask everyone in the room to ready up";
@@ -1421,7 +1431,7 @@ public sealed class RoomWindow : Window
             name.ToolTip=new ToolTip{Content=details};ToolTipService.SetShowDuration(name,30000);
             var ready=UI.LocalizedText(waiting?"Reconnecting":p.Ready?"● Ready":"○ Not ready",10,waiting?UI.Muted:p.Ready?UI.Green:UI.Muted);ready.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(ready,1);row.Children.Add(ready);
             var item=new ListBoxItem{Content=row,Padding=new(10,3,10,3),Tag=p};
-            var menu=app.PlayerMenu(this,p.Name,p.Address,p);
+            var menu=app.PlayerMenu(this,p.Name,p.Address,p,showRoomActions:false);
             if(app.Peer.IsHost&&p.Id!="host")
             {
                 menu.Items.Add(new Separator());
@@ -1704,7 +1714,7 @@ public static class GameLauncher
         }
         catch (System.ComponentModel.Win32Exception e) when (e.NativeErrorCode == 1223)
         {
-            throw new InvalidOperationException("BFME2 was not launched because the Windows permission prompt was cancelled. Click Launch mine to try again.", e);
+            throw new InvalidOperationException("BFME2 was not launched because the Windows permission prompt was cancelled. Try launching the game again.", e);
         }
     }
     public static bool IsGameActive()

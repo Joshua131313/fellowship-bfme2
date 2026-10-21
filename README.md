@@ -66,7 +66,7 @@ For a closer look at the special Rhûn rules, see [Automatic Rhûn 3v3 sides and
 ### Get everyone ready and launch
 
 - **Request ready:** the room host can prompt participants to ready up, with a dedicated ready-check sound that follows their sound preferences.
-- **Launch mine / Launch all:** launch your local game, or coordinate a host launch for participants who have explicitly readied up.
+- **Launch game / Launch all:** guests launch their local game with **Launch game**. The host uses **Launch all** to coordinate launching with participants who have explicitly readied up.
 - **Abort locally:** while your game is running, Abort stops your own BFME2 instance. An active authorized live-sync helper reuses its permission to stop the game.
 - **Keep the group together:** Fellowship rooms remain open between games. Promote another room host, hand off ownership, or manage participants without recreating the whole group.
 
@@ -122,7 +122,7 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
 4. **Host or join.** Check the preselected installed patch, or choose another room patch, and use the default 3v3 preset or another setup. If patch detection is unavailable, the initial choice is **1.00**. Join a discovered room, preview it first, or enter the host's VPN IP directly. Resolve patch warnings before playing: close BFME2, open Ecth's Patch Switcher, then use **Set to …** for a supported target or select the exact patch manually.
 5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.
-6. **Prepare and launch.** For verified 1.00 synchronization, approve Windows' permission prompt and wait for **Sync ready**. Other patches launch with manual native setup. Use **Launch mine**, or let the host use **Launch all**.
+6. **Prepare and launch.** For verified 1.00 synchronization, approve Windows' permission prompt and wait for **Sync ready**. Other patches launch with manual native setup. Guests use **Launch game**; the host uses **Launch all**.
 7. **Enter BFME2's LAN lobby.** The in-game host opens **Multiplayer → Network → Create Game**. Other players join that native lobby manually. Fellowship begins supported 1.00 synchronization once the lobby matches; set the lobby options manually for other patches.
 
 Fellowship coordinates the group and supported lobby selections. **Creating and joining the native BFME2 lobby still happens inside BFME2.** Rejoining an already-running match or restoring an army after quitting is not supported.

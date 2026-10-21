@@ -1956,4 +1956,13 @@
   <data name="Hide players" xml:space="preserve">
     <value>إخفاء اللاعبين</value>
   </data>
+  <data name="Launch game" xml:space="preserve">
+    <value>تشغيل اللعبة</value>
+  </data>
+  <data name="BFME2 was not launched because the Windows permission prompt was cancelled. Try launching the game again." xml:space="preserve">
+    <value>لم يتم تشغيل BFME2 لأن مطالبة أذونات Windows أُلغيت. حاول تشغيل اللعبة مرة أخرى.</value>
+  </data>
+  <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
+    <value>تعذر إرسال طلب التشغيل إلى: {0}. اطلب منهم إعادة الاتصال أو استخدام «تشغيل اللعبة».</value>
+  </data>
 </root>
