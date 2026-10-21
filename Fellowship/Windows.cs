@@ -370,7 +370,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.129   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.130   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1028,6 +1028,10 @@ public sealed class RoomWindow : Window
     readonly TextBlock sideStatus=UI.LocalizedText("Rhûn 3v3 · Team 1 left · Hosting team 2 right · Automatic mirrored spots",11,UI.Accent,true);
     readonly TextBlock liveStatus=UI.LocalizedText("Live sync starts when BFME2 opens.",10,UI.Muted);
     readonly TextBlock patchNotice=UI.LocalizedText("",11,"#E5B77A");
+    readonly Grid patchWarning=new();
+    readonly Button switchPatch;
+    bool switchingPatch;
+    bool PatchChanging=>switchingPatch||PatchSwitcher.IsSwitching;
     readonly TextBlock patchBadge=UI.LocalizedText("",10,UI.Accent,true);
     readonly TextBlock placementGuide=UI.LocalizedText("",10,UI.Muted);
     string? lastPatchWarning;
@@ -1077,11 +1081,16 @@ public sealed class RoomWindow : Window
     public RoomWindow(BrowserWindow app)
     {
         this.app=app;var body=UI.Shell(this,"Battle room",1020,760);MinWidth=900;MinHeight=660;
-        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!launching&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
+        UI.Menus(this,UI.MenuGroup("_Room",UI.MenuAction("Launch mine",LaunchLocal,()=>!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath)),UI.MenuAction("Leave room",async()=>{try{await app.CloseRoom();}catch(Exception error){UI.Error(error.Message);}})),UI.MenuGroup("_View",UI.MenuAction("Room browser",()=>UI.Reveal(app)),UI.MenuAction("Friends",app.OpenFriends)),UI.MenuGroup("_Help",UI.MenuAction("Game setup guide",UI.OpenGuide)));
         UI.Rows(body,UI.Auto,UI.Star,UI.Auto);
         var top=new Grid{Margin=new(22,18,22,18)};top.ColumnDefinitions.Add(new());top.ColumnDefinitions.Add(new(){Width=UI.Auto});
+        UI.Rows(top,UI.Auto,UI.Auto);
         var titles=UI.Stack(title,phase);phase.Margin=new(0,6,0,0);top.Children.Add(titles);
-        var tag=UI.Badge("");tag.Child=patchBadge;Grid.SetColumn(tag,1);top.Children.Add(tag);UI.At(body,top,0);
+        var tag=UI.Badge("");tag.Child=patchBadge;Grid.SetColumn(tag,1);top.Children.Add(tag);
+        patchWarning.ColumnDefinitions.Add(new());patchWarning.ColumnDefinitions.Add(new(){Width=UI.Auto});patchWarning.Margin=new(0,12,0,0);
+        patchNotice.TextWrapping=TextWrapping.Wrap;patchWarning.Children.Add(patchNotice);
+        switchPatch=UI.AsyncButton("",SwitchRoomPatch);switchPatch.Margin=new(14,0,0,0);switchPatch.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(switchPatch,1);patchWarning.Children.Add(switchPatch);
+        Grid.SetRow(patchWarning,1);Grid.SetColumnSpan(patchWarning,2);top.Children.Add(patchWarning);UI.At(body,top,0);
         var columns=new Grid{Margin=new(22,0,22,16)};columns.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});columns.ColumnDefinitions.Add(new(){Width=new(300)});
         var left=new Grid{Margin=new(0,0,14,0)};UI.Rows(left,new GridLength(210),new GridLength(12),UI.Star);
         var roster=new Grid();UI.Rows(roster,UI.Auto,UI.Star);playerCount.Margin=new(14,12,14,6);UI.At(roster,playerCount,0);UI.At(roster,players,1);UI.At(left,UI.Card(roster,"#191D24",0),0);
@@ -1102,7 +1111,6 @@ public sealed class RoomWindow : Window
         input.PreviewKeyDown+=async(_,e)=>{if(e.Key==Key.Enter){e.Handled=true;await Send();}};
         compose.Children.Add(input);var send=UI.Require(UI.AsyncButton("Send",Send,true),()=>!string.IsNullOrWhiteSpace(input.Text)&&app.Peer.Current!=null,()=>app.Peer.Current==null?"Join a room before sending a message.":"Type a message before sending.");send.Margin=new(0);Grid.SetColumn(send,1);compose.Children.Add(send);UI.At(chat,compose,2);UI.At(left,UI.Card(chat,"#191D24",0),2);columns.Children.Add(left);
         var right=new StackPanel();right.Children.Add(UI.LocalizedText("MATCH SETUP",10,UI.Muted,true));
-        patchNotice.TextWrapping=TextWrapping.Wrap;patchNotice.Margin=new(0,12,0,4);right.Children.Add(patchNotice);
         setupSummary.Margin=new(0,12,0,0);
         var banner=setupBanner=UI.Card(UI.Stack(UI.LocalizedText("THE BATTLE FOR MIDDLE-EARTH II",10,"#AABCE1",true),setupSummary),"#1C2330",16);banner.Margin=new(0,14,0,12);right.Children.Add(banner);
         right.Children.Add(presetStatus);right.Children.Add(mapField);right.Children.Add(mapPreview);
@@ -1172,8 +1180,8 @@ public sealed class RoomWindow : Window
         var state=UI.Stack(consent,readySummary,UI.LocalizedText("Room stays open when you exit the game.",10,UI.Muted));state.Margin=new(22,14,10,14);readySummary.Margin=new(0,6,0,6);bottom.Children.Add(state);
         consent.Click+=async(_,_)=>{try{if(consent.IsChecked==true)GameLauncher.Validate(app.Settings.GamePath);allowLaunch=consent.IsChecked==true;await app.Peer.SetReady(allowLaunch);}catch(Exception e){allowLaunch=false;consent.IsChecked=false;UI.Error(e.Message);}};
         launch=UI.AsyncButton("▶  Launch all",async()=>{GameLauncher.Validate(app.Settings.GamePath);await app.Peer.Launch();},true,()=>!launching&&app.Peer.Current?.AllGuestsReady==true);
-        UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
-        launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
+        UI.Require(launch,()=>app.Peer.IsHost&&app.Peer.Current!=null&&!launching&&!PatchChanging&&File.Exists(app.Settings.GamePath)&&app.Peer.Current.AllGuestsReady,()=>PatchChanging?"Switching patch…":launching?"Wait for the current launch to finish.":!File.Exists(app.Settings.GamePath)?"Choose your BFME2 executable in Settings.":"The host can launch once every player is ready.");
+        launchMine=UI.Require(UI.Button("Launch mine",LaunchLocal),()=>!launching&&!PatchChanging&&!GameLauncher.IsRunning()&&app.Peer.Current!=null&&File.Exists(app.Settings.GamePath));
         abort=UI.AsyncButton("Abort",AbortGame);abort.Tag="Danger";abort.ToolTip="Stop BFME2 on this computer";
         requestReady=UI.AsyncButton("Request ready",async()=>{await app.Peer.RequestReady();nextReadyRequest=DateTimeOffset.UtcNow.AddSeconds(5);UpdateLaunchActions();AppendSystem("Ready request sent to room participants.");});
         requestReady.ToolTip="Ask everyone in the room to ready up";
@@ -1200,7 +1208,7 @@ public sealed class RoomWindow : Window
     }
     LivePlacement.Command? SyncCommand()
     {
-        if((!app.Settings.LiveGameSync)||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room||!HostPreset.CanSynchronize(app.Settings.GamePath,room))return null;
+        if((!app.Settings.LiveGameSync)||PatchChanging||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room||!HostPreset.CanSynchronize(app.Settings.GamePath,room))return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
         return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)),Rhun3v3:RhunSides.Enabled(room),Sides:room.SidePlan);
     }
@@ -1400,13 +1408,23 @@ public sealed class RoomWindow : Window
     }
     void UpdatePatchNotice()
     {
-        if(app.Peer.Current is not {} room)return;
+        if(app.Peer.Current is not {} room){patchWarning.Visibility=Visibility.Collapsed;return;}
         string? warning=PatchCompatibility.Warning(app.Settings.GamePath,room.Patch);
+        patchWarning.Visibility=warning==null&&!PatchChanging?Visibility.Collapsed:Visibility.Visible;
         patchNotice.Visibility=warning==null?Visibility.Collapsed:Visibility.Visible;
         if(lastPatchWarning!=warning){lastPatchWarning=warning;L.Bind(patchNotice,TextBlock.TextProperty,warning??"");}
+        L.Bind(switchPatch,ContentControl.ContentProperty,PatchChanging?"Switching patch…":"Set to "+room.Patch);
+        switchPatch.IsEnabled=!PatchChanging&&!launching;
         L.Bind(placementGuide,TextBlock.TextProperty,app.Settings.LiveGameSync&&HostPreset.CanSynchronize(app.Settings.GamePath,room)?
             "Click an empty spot to claim it. Teams, spots and colors sync both ways in the BFME2 LAN lobby. The host's map and rules sync too. Approve sync permission before launching BFME2.":
             "Set the room's map, rules, teams and spots manually in BFME2. Fellowship keeps the room and chat open.");
+    }
+    async Task SwitchRoomPatch()
+    {
+        if(PatchChanging||app.Peer.Current is not {} room)return;
+        switchingPatch=true;UpdatePatchNotice();UpdateLaunchActions();
+        try{await PatchSwitcher.Switch(app.Settings.GamePath,room.Patch);}
+        finally{switchingPatch=false;UpdatePatchNotice();UpdateLaunchActions();}
     }
     public void PromptReady(string roomId)
     {
@@ -1434,6 +1452,7 @@ public sealed class RoomWindow : Window
     async void LaunchLocal()=>await LaunchLocalCore();
     async Task<string> LaunchLocalCore()
     {
+        if(PatchChanging)return "Switching patch…";
         if(launching)return "BFME2 launch is already in progress.";
         launching=true;launchCancellation=new();
         Refresh();UpdateLaunchActions();

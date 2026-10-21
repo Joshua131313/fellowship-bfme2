@@ -92,8 +92,10 @@ public static class GameAssets
     static string Title(string path)
     {
         var parts=path.Split('\\');string name=parts.Length>1?parts[^2]:Path.GetFileNameWithoutExtension(path);
-        foreach(string prefix in new[]{"map wor ","map mp "})if(name.StartsWith(prefix,StringComparison.OrdinalIgnoreCase)){name=name[prefix.Length..];break;}
-        return name.Equals("rhun",StringComparison.OrdinalIgnoreCase)?"Rhûn":CultureInfo.InvariantCulture.TextInfo.ToTitleCase(name.Replace('_',' '));
+        foreach(string prefix in new[]{"map wor ","map mp ","map et "})if(name.StartsWith(prefix,StringComparison.OrdinalIgnoreCase)){name=name[prefix.Length..];break;}
+        if(name.Equals("rhun",StringComparison.OrdinalIgnoreCase))return "Rhûn";
+        var title=CultureInfo.InvariantCulture.TextInfo.ToTitleCase(name.Replace('_',' '));
+        return Regex.Replace(title,@"\s(Ii|Iii|Iv|Vi|Vii|Viii)$",m=>m.Value.ToUpperInvariant());
     }
     public static List<MapSpot> Spots(IEnumerable<string> archives,string map)
     {

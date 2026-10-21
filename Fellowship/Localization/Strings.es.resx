@@ -1860,4 +1860,49 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps." xml:space="preserve">
     <value>Los archivos de mapas de esta versión no están disponibles. Instálala en Ecth's Patch Switcher para ver sus mapas.</value>
   </data>
+  <data name="Set to {0}" xml:space="preserve">
+    <value>Cambiar a {0}</value>
+  </data>
+  <data name="Switching patch…" xml:space="preserve">
+    <value>Cambiando de versión…</value>
+  </data>
+  <data name="Ecth's Patch Switcher must be open to switch patches from Fellowship." xml:space="preserve">
+    <value>Ecth's Patch Switcher debe estar abierto para cambiar de versión desde Fellowship.</value>
+  </data>
+  <data name="Close BFME2 before switching patches." xml:space="preserve">
+    <value>Cierra BFME2 antes de cambiar de versión.</value>
+  </data>
+  <data name="Close Worldbuilder and FinalBIG before switching patches." xml:space="preserve">
+    <value>Cierra Worldbuilder y FinalBIG antes de cambiar de versión.</value>
+  </data>
+  <data name="A patch switch is already in progress." xml:space="preserve">
+    <value>Ya hay un cambio de versión en curso.</value>
+  </data>
+  <data name="Ecth's Patch Switcher cannot switch directly to this exact patch. Select it in the switcher, then return to Fellowship." xml:space="preserve">
+    <value>Ecth's Patch Switcher no puede cambiar directamente a esta versión exacta. Selecciónala en el selector de parches y vuelve a Fellowship.</value>
+  </data>
+  <data name="The switcher's latest patch could not be verified. Select the required patch in the switcher, then return to Fellowship." xml:space="preserve">
+    <value>No se pudo verificar la última versión de BFME2 del selector de parches. Selecciona la versión necesaria en el selector y vuelve a Fellowship.</value>
+  </data>
+  <data name="Fellowship and Ecth's Patch Switcher must use the same BFME2 installation." xml:space="preserve">
+    <value>Fellowship y Ecth's Patch Switcher deben usar la misma instalación de BFME2.</value>
+  </data>
+  <data name="Windows cancelled the patch switch." xml:space="preserve">
+    <value>Windows canceló el cambio de versión.</value>
+  </data>
+  <data name="Ecth's Patch Switcher could not be started." xml:space="preserve">
+    <value>No se pudo iniciar Ecth's Patch Switcher.</value>
+  </data>
+  <data name="Patch switching is still running. Wait for Ecth's Patch Switcher to finish before retrying." xml:space="preserve">
+    <value>El cambio de versión sigue en curso. Espera a que Ecth's Patch Switcher termine antes de volver a intentarlo.</value>
+  </data>
+  <data name="Ecth's Patch Switcher returned error {0}. Check the switcher and retry." xml:space="preserve">
+    <value>Ecth's Patch Switcher devolvió el error {0}. Revisa el selector de parches y vuelve a intentarlo.</value>
+  </data>
+  <data name="The required patch could not be verified after switching. Check Ecth's Patch Switcher before playing." xml:space="preserve">
+    <value>No se pudo verificar la versión necesaria después del cambio. Revisa Ecth's Patch Switcher antes de jugar.</value>
+  </data>
+  <data name="No spot" xml:space="preserve">
+    <value>Sin posición</value>
+  </data>
 </root>

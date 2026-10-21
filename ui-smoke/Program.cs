@@ -15,14 +15,21 @@ class Program
   if(args.Length==1&&args[0]=="--patch-maps")
   {PatchMapTests.Run();return;}
   if(args.Length==1&&args[0]=="--patch-room")
-  {var patchApp=new App(resourcesOnly:true);patchApp.InitializeComponent();Appearance.Apply("Dark");PatchMapTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();return;}
+  {var patchApp=new App(resourcesOnly:true);patchApp.InitializeComponent();Appearance.Apply("Dark");PatchMapTests.Run();PatchPresetTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();PatchSwitcherTests.Run();return;}
   if(args.Length==1&&args[0]=="--patch-preview")
   {
     var patchApp=new App(resourcesOnly:true);patchApp.InitializeComponent();var settings=Settings.InMemory();settings.GamePath=GameInstallation.Find();
-    foreach(var (language,theme,patch) in new[]{("en","Light","1.00"),("en","Dark","1.09v3.2 ß16"),("ar","Light","1.09v3")})
+    foreach(var (language,theme,patch) in new[]{("en","Light","1.00"),("en","Dark","1.09v3"),("ar","Light","1.09v3")})
     {
       L.Apply(language);Appearance.Apply(theme);var patchEditor=new RoomEditor(null,settings,new Room{Title="Weekend games",Patch=patch});
+      TabNodes(patchEditor).OfType<System.Windows.Controls.ComboBox>().Single(c=>System.Windows.Automation.AutomationProperties.GetName(c)=="PATCH").SelectedItem=patch;
       Render(patchEditor,$"dist/preview-patch-{language}-{theme.ToLowerInvariant()}.png");patchEditor.Close();
+    }
+    foreach(var language in new[]{"en","ar"})
+    {
+      L.Apply(language);Appearance.Apply("Light");var patchBrowser=new BrowserWindow(settings);
+      patchBrowser.Peer.Host(new Room{Title="Patch switch preview",Patch="1.09v3",Mode="3v3"});
+      var patchRoom=new RoomWindow(patchBrowser){AllowClose=true};Render(patchRoom,$"dist/preview-patch-warning-{language}.png");patchRoom.Close();patchBrowser.Peer.Dispose();
     }
     Console.WriteLine("PASS room patch selector rendered in light, dark and Arabic layouts");return;
   }
@@ -224,12 +231,12 @@ class Program
   var preview=MapPreview.Load(GameInstallation.Find(),GameMap.Rhun.Path);
   if(File.Exists(GameInstallation.Find())&&(preview==null||preview.PixelWidth!=320))throw new Exception("Installed map preview failed");
   try{MapPreview.Decode(new byte[18]);throw new Exception("Invalid preview accepted");}catch(InvalidDataException){}
-  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.130-win-x64.zip",browser_download_url=url,digest}}});
-  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.130/Fellowship-0.1.130-win-x64.zip";
-  if(AppUpdates.Parse(ReleaseJson("v0.1.130",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
+  string ReleaseJson(string tag,string url,string digest)=>System.Text.Json.JsonSerializer.Serialize(new{tag_name=tag,draft=false,prerelease=false,assets=new[]{new{name="Fellowship-0.1.131-win-x64.zip",browser_download_url=url,digest}}});
+  var goodUrl="https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.131/Fellowship-0.1.131-win-x64.zip";
+  if(AppUpdates.Parse(ReleaseJson("v0.1.131",goodUrl,"sha256:"+new string('a',64)))==null)throw new Exception("New update not detected");
   if(AppUpdates.Parse(ReleaseJson("v0.1.6",goodUrl,"sha256:"+new string('a',64)))!=null)throw new Exception("Downgrade offered");
-  try{AppUpdates.Parse(ReleaseJson("v0.1.130","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
-  var msiJson=ReleaseJson("v0.1.130",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
+  try{AppUpdates.Parse(ReleaseJson("v0.1.131","https://example.com/update.zip","sha256:"+new string('a',64)));throw new Exception("Untrusted update accepted");}catch(InvalidDataException){}
+  var msiJson=ReleaseJson("v0.1.131",goodUrl,"sha256:"+new string('a',64)).Replace(".zip",".msi");
   if(AppUpdates.Parse(msiJson) is not {Installer:true})throw new Exception("Installer update not detected");
   Console.WriteLine("PASS installer update selection");
   UpdateDownloadTests.Run().GetAwaiter().GetResult();
@@ -280,7 +287,7 @@ class Program
   if(manualWire?.ManualAfk!=true)throw new Exception("Manual presence not serialized");
   if(IdlePresence.LastOnline(activityTime.AddMinutes(-5),activityTime)!="5 minutes ago"||IdlePresence.LastOnline(activityTime.AddHours(-2),activityTime)!="2 hours ago"||IdlePresence.LastOnline(activityTime.AddDays(-2),activityTime)!=activityTime.AddDays(-2).ToLocalTime().ToString("d"))throw new Exception("Relative last online formatting failed");
   var legacyDirectory=new PeerDirectory();legacyDirectory.Success("10.0.0.2","Older app",null,activityTime);if(legacyDirectory.Find("10.0.0.2",activityTime)?.IdleSeconds!=null)throw new Exception("Older client idle status invented");
-  var app=new App(resourcesOnly:true);app.InitializeComponent();Appearance.Apply("Dark");PatchRoomTests.Run();PatchCompatibilityTests.Run();ChatUiTests.Run();MenuUiTests.Run();
+  var app=new App(resourcesOnly:true);app.InitializeComponent();Appearance.Apply("Dark");PatchPresetTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();PatchSwitcherTests.Run();ChatUiTests.Run();MenuUiTests.Run();
   var transcript=new ChatTranscript();transcript.Append("Alice","First message");transcript.Append("Bob","Second message");transcript.SelectAll();
   if(!transcript.Selection.Text.Contains("First message")||!transcript.Selection.Text.Contains("Second message"))throw new Exception("Cross-message selection failed");
   transcript.AppendBlocked("Blocked","Hidden secret");transcript.SelectAll();if(transcript.Selection.Text.Contains("Hidden secret"))throw new Exception("Hidden blocked message leaked into selection");
@@ -340,7 +347,7 @@ class Program
   browser.Presence.Failure("26.1.1.3");
   typeof(BrowserWindow).GetMethod("RenderActivePlayers",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.Invoke(browser,null);
   var availableProperty=typeof(AppUpdates).GetProperty("Available")!;
-  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.130"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.130/test.msi",new string('a',64),true));
+  availableProperty.SetValue(null,new AppUpdates.Release(new Version("0.1.131"),"https://github.com/Joshua131313/fellowship-bfme2/releases/download/v0.1.131/test.msi",new string('a',64),true));
   Render(new BrowserWindow(demoSettings),"dist/preview-update-notice.png");
   availableProperty.SetValue(null,null);
   Render(new GamePreferencesWindow(browser,demoSettings),"dist/preview-game-preferences.png");
@@ -467,11 +474,11 @@ class Program
   foreach(var theme in new[]{"Light","Dark","Black","System"})
   {
     Appearance.Apply(theme);
-    var themedUpdate=new UpdateProgressWindow("0.1.130");themedUpdate.Report("Installing update…","Applying the update",60);
+    var themedUpdate=new UpdateProgressWindow("0.1.131");themedUpdate.Report("Installing update…","Applying the update",60);
     Render(themedUpdate,"dist/preview-update-"+theme.ToLowerInvariant()+".png");
   }
   Appearance.Apply("Dark");
-  var updatePreview=new UpdateProgressWindow("0.1.130");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
+  var updatePreview=new UpdateProgressWindow("0.1.131");updatePreview.Report("Downloading update…","34.5 / 70.0 MB · 49%",49);Render(updatePreview,"dist/preview-update-progress.png");
   var presetPickerSettings=Settings.InMemory();presetPickerSettings.GamePath=GameInstallation.Find();presetPickerSettings.RoomPresets.Add(defaultPresets[0] with{Name="Temporary preset",BuiltIn=false});
   var presetPicker=new RoomPresetPicker(presetPickerSettings);int picked=0;presetPicker.Picked+=_=>picked++;
   var customItem=presetPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>().Single(i=>i.Tag is RoomPreset{BuiltIn:false});
@@ -482,7 +489,7 @@ class Program
   if(presetPickerSettings.RoomPresets.Count!=0||picked!=0)throw new Exception("Deleting preset applied it or failed to persist removal");
   presetPicker.SelectedIndex=1;if(picked!=1)throw new Exception("Preset presetPicker selection failed");
   Console.WriteLine("PASS preset dropdown selection and inline deletion without applying deleted preset");
-  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.130\nBFME2 · Radmin VPN"),"dist/preview-about.png");
+  Render(UI.Information(null,"About Fellowship","Fellowship 0.1.131\nBFME2 · Radmin VPN"),"dist/preview-about.png");
   var alertSettings=Settings.InMemory();alertSettings.Friends.Add(new("Friend","26.1.1.1"));
   var alerts=new ActivityAlerts();var alertTime=DateTimeOffset.UtcNow;
   var onlinePeer=new PeerDirectory.Entry("26.1.1.1","Friend",null,alertTime,false);

@@ -43,10 +43,20 @@ public sealed class RoomEditor : Window
             combo.ItemContainerStyle.Setters.Add(new Setter(Control.FontSizeProperty,12d));
             System.Windows.Automation.AutomationProperties.SetName(combo,title);field.Children.Add(combo);return combo;
         }
-        var selectedPatch=GamePatches.Normalize(initial.Patch);
+        var selectedPatch=GamePatches.NewRoomPatch(settings.GamePath);
         var presetRow=new Grid{Margin=new(0,6,0,0)};presetRow.ColumnDefinitions.Add(new(){Width=new(160)});presetRow.ColumnDefinitions.Add(new(){Width=new(12)});presetRow.ColumnDefinitions.Add(new());presetArea.Children.Add(presetRow);
         var patch=Choice(presetRow,"PATCH",GamePatches.Labels(settings.GamePath).Cast<object>().ToArray(),selectedPatch);
-        if(patch.SelectedIndex<0){patch.ItemsSource=GamePatches.Labels(settings.GamePath).Append(selectedPatch).Distinct().Cast<object>().ToArray();patch.SelectedItem=selectedPatch;}
+        if(patch.SelectedIndex<0)
+        {
+            // An installed older beta stays accurately identified as the current
+            // value, while the popup offers only the latest beta as a new choice.
+            patch.ItemsSource=GamePatches.Labels(settings.GamePath).Append(selectedPatch).Cast<object>().ToArray();
+            var currentOnly=new System.Windows.Data.Binding();
+            var hideCurrent=new DataTrigger{Binding=currentOnly,Value=selectedPatch};
+            hideCurrent.Setters.Add(new Setter(VisibilityProperty,Visibility.Collapsed));hideCurrent.Setters.Add(new Setter(IsEnabledProperty,false));
+            var itemStyle=new Style(typeof(ComboBoxItem),patch.ItemContainerStyle);itemStyle.Triggers.Add(hideCurrent);patch.ItemContainerStyle=itemStyle;
+            patch.IsTextSearchEnabled=false;patch.SelectedItem=selectedPatch;
+        }
         var mapRow=new Grid();Grid.SetRow(mapRow,1);form.Children.Add(mapRow);
         var maps=GameInstallation.Maps(settings.GamePath,selectedPatch);
         var map=Choice(mapRow,"MAP",maps.Cast<object>().ToArray(),maps.FirstOrDefault(m=>m.Path.Equals(initial.MapPath,StringComparison.OrdinalIgnoreCase))??maps.FirstOrDefault(),searchable:true);
@@ -78,14 +88,15 @@ public sealed class RoomEditor : Window
         var teams=new ComboBox{ItemsSource=layouts,SelectedIndex=0,MinWidth=160,ToolTip="Starting team arrangement; players can change teams in the lobby"};L.Choices(teams);
         int[] selectedTeams=[];
         teams.SelectionChanged+=(_,_)=>{if(teams.SelectedItem is TeamLayout layout)selectedTeams=layout.Teams;};
-        presetList.Picked+=preset=>
+        void ApplyPreset(RoomPreset preset)
         {
             var selected=maps.FirstOrDefault(m=>m.Path==preset.MapPath);
             if(selected==null){UI.Error("The preset map is not installed: "+preset.Map);return;}
             map.SelectedItem=selected;capacity.Text=preset.Capacity.ToString();resources.SelectedItem=preset.Resources;
             command.SelectedItem=factors.First(f=>f.Value==preset.CommandPoints);custom.IsChecked=preset.CustomHeroes;ring.IsChecked=preset.RingHeroes;
             teams.SelectedItem=layouts.FirstOrDefault(l=>l.Teams.SequenceEqual(preset.Teams));selectedTeams=preset.Teams.ToArray();
-        };
+        }
+        presetList.Picked+=ApplyPreset;
         void UpdatePresetEditing()
         {
             foreach(var input in new Control[]{map,resources,command,custom,ring})
@@ -100,8 +111,7 @@ public sealed class RoomEditor : Window
             maps=GameInstallation.Maps(settings.GamePath,selectedPatch);map.ItemsSource=maps;
             map.SelectedItem=maps.FirstOrDefault(m=>m.Path.Equals(previousMap,StringComparison.OrdinalIgnoreCase))??maps.FirstOrDefault();
             presetList.SetPatch(selectedPatch);
-            if(presetList.SelectedItem is ComboBoxItem{Tag:RoomPreset currentPreset}&&
-               !currentPreset.MapPath.Equals((map.SelectedItem as GameMap)?.Path,StringComparison.OrdinalIgnoreCase))presetList.SelectedIndex=0;
+            if(presetList.SelectedItem is ComboBoxItem{Tag:RoomPreset currentPreset})ApplyPreset(currentPreset);
             UpdatePreview();UpdatePresetEditing();
         };
         var store=UI.AsyncButton("Save preset",async()=>

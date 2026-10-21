@@ -1860,4 +1860,49 @@
   <data name="Map files for this patch are unavailable. Install it in Ecth's Patch Switcher to browse its maps." xml:space="preserve">
     <value>ملفات خرائط هذا الإصدار غير متاحة. ثبّته في Ecth's Patch Switcher لتصفح خرائطه.</value>
   </data>
+  <data name="Set to {0}" xml:space="preserve">
+    <value>التبديل إلى {0}</value>
+  </data>
+  <data name="Switching patch…" xml:space="preserve">
+    <value>جارٍ تبديل الإصدار…</value>
+  </data>
+  <data name="Ecth's Patch Switcher must be open to switch patches from Fellowship." xml:space="preserve">
+    <value>يجب فتح Ecth's Patch Switcher لتبديل الإصدار من Fellowship.</value>
+  </data>
+  <data name="Close BFME2 before switching patches." xml:space="preserve">
+    <value>أغلق BFME2 قبل تبديل الإصدار.</value>
+  </data>
+  <data name="Close Worldbuilder and FinalBIG before switching patches." xml:space="preserve">
+    <value>أغلق Worldbuilder وFinalBIG قبل تبديل الإصدار.</value>
+  </data>
+  <data name="A patch switch is already in progress." xml:space="preserve">
+    <value>هناك عملية تبديل إصدار قيد التنفيذ بالفعل.</value>
+  </data>
+  <data name="Ecth's Patch Switcher cannot switch directly to this exact patch. Select it in the switcher, then return to Fellowship." xml:space="preserve">
+    <value>لا يستطيع Ecth's Patch Switcher التبديل مباشرةً إلى هذا الإصدار المحدد. اختره في أداة تبديل الإصدارات، ثم عُد إلى Fellowship.</value>
+  </data>
+  <data name="The switcher's latest patch could not be verified. Select the required patch in the switcher, then return to Fellowship." xml:space="preserve">
+    <value>تعذر التحقق من أحدث إصدار BFME2 في أداة تبديل الإصدارات. اختر الإصدار المطلوب في الأداة، ثم عُد إلى Fellowship.</value>
+  </data>
+  <data name="Fellowship and Ecth's Patch Switcher must use the same BFME2 installation." xml:space="preserve">
+    <value>يجب أن يستخدم Fellowship وEcth's Patch Switcher نسخة BFME2 المثبّتة نفسها.</value>
+  </data>
+  <data name="Windows cancelled the patch switch." xml:space="preserve">
+    <value>ألغى Windows عملية تبديل الإصدار.</value>
+  </data>
+  <data name="Ecth's Patch Switcher could not be started." xml:space="preserve">
+    <value>تعذر تشغيل Ecth's Patch Switcher.</value>
+  </data>
+  <data name="Patch switching is still running. Wait for Ecth's Patch Switcher to finish before retrying." xml:space="preserve">
+    <value>لا تزال عملية تبديل الإصدار قيد التنفيذ. انتظر حتى ينتهي Ecth's Patch Switcher قبل إعادة المحاولة.</value>
+  </data>
+  <data name="Ecth's Patch Switcher returned error {0}. Check the switcher and retry." xml:space="preserve">
+    <value>أرجع Ecth's Patch Switcher الخطأ {0}. تحقق من أداة تبديل الإصدارات وأعد المحاولة.</value>
+  </data>
+  <data name="The required patch could not be verified after switching. Check Ecth's Patch Switcher before playing." xml:space="preserve">
+    <value>تعذر التحقق من الإصدار المطلوب بعد التبديل. تحقق من Ecth's Patch Switcher قبل اللعب.</value>
+  </data>
+  <data name="No spot" xml:space="preserve">
+    <value>بلا موقع</value>
+  </data>
 </root>

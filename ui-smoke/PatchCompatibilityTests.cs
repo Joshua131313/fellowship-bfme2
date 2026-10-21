@@ -17,8 +17,10 @@ static class PatchCompatibilityTests
     }
     public static void Run()
     {
-        foreach(string patch in new[]{"1.00","1.06","1.09","1.09v2","1.09v3","1.09v3.1"})
+        string[] stable=["1.00","1.06","1.09","1.09v2","1.09v3","1.09v3.1"];
+        foreach(string patch in stable)
             Check(GamePatches.IsKnown(patch)&&GamePatches.Normalize(patch)==patch,"Known main patch label did not validate: "+patch);
+        CheckCuratedLabels(GamePatches.Labels(""),stable);
         Check(GamePatches.Normalize(" 1.09 V3.01 ")=="1.09v3.1","Legacy 1.09v3.01 alias did not normalize to its current label");
         string beta=GamePatches.Normalize("1.09v3.2 ß16");
         foreach(string alias in new[]{"1.09 v3.02 beta 16","1.09v3.2 β16","1.09u4 beta16"})
@@ -30,6 +32,7 @@ static class PatchCompatibilityTests
         Directory.CreateDirectory(fixture);
         try
         {
+            CheckManifestSelector(fixture,stable);
             string executable=Path.Combine(fixture,"lotrbfme2.exe"),data=Path.Combine(fixture,"game.dat");
             File.WriteAllBytes(executable,[]);File.WriteAllBytes(data,[77,90,1,2,3,4]);
             GameLauncher.Validate(executable);
@@ -80,6 +83,38 @@ static class PatchCompatibilityTests
             if(Directory.Exists(fixture)&&fixture.StartsWith(tempRoot,StringComparison.OrdinalIgnoreCase))Directory.Delete(fixture,true);
         }
     }
+    static void CheckCuratedLabels(string[] labels,string[] stable,string? expectedBeta=null)
+    {
+        Check(labels.Length==stable.Length+1&&labels.Take(stable.Length).SequenceEqual(stable),"Room patch selector did not contain exactly six ordered stable patches followed by one beta");
+        string beta=labels[^1];
+        Check(beta.StartsWith("1.09",StringComparison.OrdinalIgnoreCase)&&(beta.Contains('ß')||beta.Contains('β')||beta.Contains("beta",StringComparison.OrdinalIgnoreCase)),"Room patch selector's final choice was not a 1.09 beta");
+        Check(!labels.Contains("1.07")&&!labels.Contains("1.08")&&!labels.Any(p=>p.StartsWith("BT2DC",StringComparison.OrdinalIgnoreCase))&&!labels.Contains("1.09v3.2 ß16"),"Historical patch choices leaked into the curated selector");
+        if(expectedBeta!=null)Check(beta==expectedBeta,"Room patch selector did not choose the newest manifest beta by its numeric release tuple");
+    }
+    static void CheckManifestSelector(string fixture,string[] stable)
+    {
+        string game=Path.Combine(fixture,"selector-game"),switcher=Path.Combine(fixture,"BFME2 Ecth's Patch Switcher");
+        Directory.CreateDirectory(game);string executable=Path.Combine(game,"lotrbfme2.exe");File.WriteAllBytes(executable,[]);
+        string manifest=Path.Combine(switcher,"data","GUI","web_cached_data","releases_new.json");Directory.CreateDirectory(Path.GetDirectoryName(manifest)!);
+        void Write(string latest,double build)
+        {
+            var patches=new[]
+            {
+                new{name=latest,source=@"future\latest",dependency="1.09v3.1",tupla=new[]{1.09,999d,build}},
+                new{name="1.09u999 ß2",source=@"future\earlier",dependency="1.09v3.1",tupla=new[]{1.09,999d,2d}},
+                new{name="1.09u998 ß99",source=@"future\old-branch",dependency="1.09v3.1",tupla=new[]{1.09,998d,99d}},
+                new{name="BT2DCv99.9",source=@"historical\bt2dc",dependency="1.06",tupla=new[]{999d,999d,999d}},
+                new{name="1.08",source=@"historical\108",dependency="1.06",tupla=new[]{998d,999d,999d}}
+            };
+            File.WriteAllText(manifest,System.Text.Json.JsonSerializer.Serialize(new{patches_2026=new{selector_fixture=patches}}));
+        }
+        Write("1.09u999 ß10",10);
+        CheckCuratedLabels(GamePatches.Labels(executable),stable,"1.09u999 ß10");
+        var previousWrite=File.GetLastWriteTimeUtc(manifest);
+        Write("1.09u999 ß11",11);File.SetLastWriteTimeUtc(manifest,previousWrite.AddSeconds(5));
+        CheckCuratedLabels(GamePatches.Labels(executable),stable,"1.09u999 ß11");
+        Console.WriteLine("PASS curated six-stable-plus-latest-beta selector, hidden historical patches, numeric beta ordering and updated-manifest refresh");
+    }
     static void CheckRoomWindow(string executable)
     {
         var settings=Settings.InMemory();settings.GamePath=executable;settings.LiveGameSync=true;
@@ -100,6 +135,20 @@ static class PatchCompatibilityTests
             Check(typeof(RoomWindow).GetMethod("SyncCommand",Hidden)!.Invoke(roomWindow,null)==null,"Room window created a native sync command for another patch");
             var notice=(TextBlock)typeof(RoomWindow).GetField("patchNotice",Hidden)!.GetValue(roomWindow)!;
             Check(notice.Visibility==Visibility.Visible&&notice.Text.Contains(required),"Room window omitted its selected-patch compatibility notice");
+            var change=(Button)typeof(RoomWindow).GetField("switchPatch",Hidden)!.GetValue(roomWindow)!;
+            Check(change.Content?.ToString()=="Set to "+required&&ReferenceEquals(change.Parent,notice.Parent)&&change.IsEnabled,"Patch switch action is missing beside the mismatch notice");
+            var switchGate=(SemaphoreSlim)typeof(PatchSwitcher).GetField("gate",BindingFlags.NonPublic|BindingFlags.Static)!.GetValue(null)!;
+            Check(switchGate.Wait(0),"Unexpected patch switch during UI fixture");
+            try
+            {
+                typeof(RoomWindow).GetMethod("UpdatePatchNotice",Hidden)!.Invoke(roomWindow,null);
+                Check(!change.IsEnabled&&change.Content?.ToString()=="Switching patch…","Pending switch did not disable its room action");
+                var launchMine=(Button)typeof(RoomWindow).GetField("launchMine",Hidden)!.GetValue(roomWindow)!;
+                Check(!launchMine.Command!.CanExecute(null),"A global patch worker did not disable local game launch");
+                var launchResult=(Task<string>)typeof(RoomWindow).GetMethod("LaunchLocalCore",Hidden)!.Invoke(roomWindow,null)!;
+                Check(launchResult.IsCompletedSuccessfully&&launchResult.Result=="Switching patch…","Incoming launch was not blocked before touching the game during a patch switch");
+            }
+            finally{switchGate.Release();}
         }
         finally
         {

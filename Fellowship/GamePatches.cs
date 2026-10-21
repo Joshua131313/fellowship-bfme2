@@ -29,10 +29,51 @@ public static class GamePatches
 
     public static string[] Labels(string executable)
     {
-        var roots=Roots(executable);var catalog=Catalog(roots);
-        return Common.Concat(catalog.Where(p=>!Common.Contains(p.Name)&&roots.Any(r=>Source(r,p.Source)!=null))
-            .OrderByDescending(p=>p.Order[0]).ThenByDescending(p=>p.Order[1]).ThenByDescending(p=>p.Order[2]).Select(p=>p.Name))
-            .Concat(catalog.Select(p=>p.Name)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var catalog=Catalog(Roots(executable));
+        var latest=catalog.Where(p=>IsBeta(p.Name))
+            .OrderByDescending(p=>p.Order[0]).ThenByDescending(p=>p.Order[1]).ThenByDescending(p=>p.Order[2]).FirstOrDefault();
+        // Keep historical definitions for archive inheritance and detection, not
+        // as choices in the room form. Only the newest beta belongs in this list.
+        return latest==null?Common.ToArray():Common.Append(latest.Name).ToArray();
+    }
+    static bool IsBeta(string name)=>(name.StartsWith("1.09",StringComparison.OrdinalIgnoreCase)||name.StartsWith("v2 ",StringComparison.OrdinalIgnoreCase))&&Key(name).Contains('ß');
+    public static string? LatestInstalled(string executable,string? switcherRoot=null)
+    {
+        var roots=switcherRoot==null?Roots(executable):[switcherRoot];var catalog=Catalog(roots);
+        return catalog.Where(p=>roots.Any(root=>
+        {
+            var chain=Chain(catalog,p);
+            if(chain==null||chain.Any(parent=>Source(root,parent.Source)==null))return false;
+            var own=OwnArchives(root,p,ReadOptions(root));
+            return p.Name is "1.00" or "1.06"?own.ContainsKey("Maps.big"):own.Keys.Any(IsPatchArchive);
+        })).OrderByDescending(p=>p.Order[0]).ThenByDescending(p=>p.Order[1]).ThenByDescending(p=>p.Order[2]).Select(p=>p.Name).FirstOrDefault();
+    }
+    public static string? LatestSwitcherTarget(string executable,string? switcherRoot=null)
+    {
+        var roots=switcherRoot==null?Roots(executable):[switcherRoot];var catalog=Catalog(roots);
+        try
+        {
+            var known=catalog.Select(p=>p.Source.Replace('/','\\')).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var betaParents=catalog.Where(p=>Key(p.Name).Contains('ß')).Select(p=>Path.GetDirectoryName(p.Source)).Where(p=>!string.IsNullOrEmpty(p)).Distinct(StringComparer.OrdinalIgnoreCase);
+            foreach(var root in roots)
+            foreach(var parent in betaParents)
+            {
+                var folder=Path.Combine(root,parent!);if(!Directory.Exists(folder))continue;
+                foreach(var child in Directory.EnumerateDirectories(folder))
+                    if(Regex.IsMatch(Path.GetFileName(child),@"^(?:ß|β|ss|beta)\s*\d",RegexOptions.IgnoreCase)&&!known.Contains(Path.GetRelativePath(root,child).Replace('/','\\')))return null;
+            }
+            // Ecth's CLI ranks source folders even before their archives are
+            // complete. Compare this answer with LatestInstalled before using
+            // -latest, so an incomplete newer folder cannot change the target.
+            return catalog.Where(p=>roots.Any(root=>Source(root,p.Source)!=null))
+                .OrderByDescending(p=>p.Order[0]).ThenByDescending(p=>p.Order[1]).ThenByDescending(p=>p.Order[2]).Select(p=>p.Name).FirstOrDefault();
+        }
+        catch(Exception error) when(error is IOException or UnauthorizedAccessException or ArgumentException){return null;}
+    }
+    public static string NewRoomPatch(string executable)
+    {
+        string active=Active(executable);
+        return Common.Contains(active)||IsBeta(active)?active:"1.00";
     }
     public static string Normalize(string value)
     {
@@ -207,7 +248,9 @@ public static class GamePatches
     static Patch[] Catalog(string[] roots)
     {
         var catalog=BuiltIn.Value.ToDictionary(p=>p.Name,StringComparer.OrdinalIgnoreCase);
-        foreach(var root in roots)
+        // Roots are ordered nearest-game first. Prefer that switcher's metadata
+        // when another installed copy advertises the same release differently.
+        foreach(var root in roots.Reverse())
         {
             string file=Path.Combine(root,"data","GUI","web_cached_data","releases_new.json");
             try

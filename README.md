@@ -33,19 +33,25 @@ BFME2 and other applications continue to use the groups connected in Radmin. Kee
 
 ### Build a room around your group
 
-New rooms default to the **3v3 preset** when Rhûn is installed:
+New rooms default to the **3v3 preset** when its map is available. On 1.00, that setup is:
 
 > **Rhûn · 6 players · 4,000 starting resources · 2× command points · Custom Heroes off · Ring Heroes off**
 
-Choose built-in **3v3, 2v2, 1v1, and FFA** presets, save your own, or select **Custom** to edit the setup. Search the selected patch's locally available map catalog, set the player limit and hero options, and choose a public or friends-only room.
+On **1.09v3 and its newer family**, 3v3 uses six-player **Lebennin IV**, 2v2 uses four-player **Lebennin**, and 1v1 uses **Fords of Isen II**. A **4v4 Tournament Hills** preset is available for **1.06 and all 1.09 versions**. Its eight starting positions form two matching groups of four. Presets whose map is missing are disabled.
+
+Choose built-in **3v3, 2v2, 1v1, FFA**, or the patch's **4v4** preset, save your own, or select **Custom** to edit the setup. Search the selected patch's locally available map catalog, set the player limit and hero options, and choose a public or friends-only room.
 
 Click the map preview to claim a starting spot, choose a team and player color, and save preferred colors and per-map positions in **Game preferences**. Valid, available preferences are applied when joining. Map previews use the active theme, and player information and preview windows let you keep interacting with the rest of Fellowship.
 
 ### Choose the patch your group plays
 
-New rooms default to **1.00**. The patch selector includes **1.06, 1.09, 1.09v2, 1.09v3, 1.09v3.1**, and individual beta builds from Ecth's Patch Switcher catalog. Selecting a patch refreshes the map choices, previews, starting positions, and saved presets using its locally installed archives and dependencies. Presets belong to their patch, so you can keep different setups with the same name.
+Create room starts with your **verified installed patch**, falling back to **1.00** if the installation cannot be verified. The patch selector contains **1.00, 1.06, 1.09, 1.09v2, 1.09v3, 1.09v3.1**, and the **newest 1.09 beta** recognized from Ecth's Patch Switcher catalog. Selecting a patch refreshes the map choices, previews, starting positions, and saved presets using its locally installed archives and dependencies. Presets belong to their patch, so you can keep different setups with the same name.
+
+If an older beta is already verified as installed, Create room keeps that exact build selected without adding historical betas to the normal dropdown.
 
 Fellowship checks the installed patch and shows a warning when it differs from the room's patch or cannot be verified. **You can still join the Fellowship room and chat.** Before playing, use the patch switcher to match the room's exact patch, including the beta build. Selecting a room patch does not modify your game files or run the switcher. See [patch support and map availability](docs/patch-support.md).
+
+To use **Set to …** beside the patch warning, close BFME2 and open Ecth's Patch Switcher first. The button calls the installed switcher's native command line for **1.00**, **1.06**, or its exact supported **latest installed patch**, then checks the result. Other exact versions require manual selection in the switcher; Fellowship never substitutes the latest patch for a different requested version. The switcher's own command may close its open window while applying the patch. Creating or joining a room never starts a patch switch automatically.
 
 ### Keep the native lobby in sync
 
@@ -106,7 +112,7 @@ Theme, sound, and settings changes **apply and save automatically**. First-run o
 1. **Install Fellowship.** Download the `.msi` from [the latest release](https://github.com/Joshua131313/fellowship-bfme2/releases/latest). The installer creates desktop and Start menu shortcuts. A portable ZIP is also available.
 2. **Connect your group.** Join the same VPN network on each PC. In Fellowship, select the matching server/network interface. With Radmin, choose a specific **Radmin group** to filter Fellowship to its members. Enable or disable actual VPN group connections in Radmin itself.
 3. **Set up your profile.** Complete the first-run preferences, then check your nickname and detected `lotrbfme2.exe` path in **Settings**.
-4. **Host or join.** Choose a room patch, which defaults to **1.00**, and use the default 3v3 preset or another setup. Join a discovered room, preview it first, or enter the host's VPN IP directly. Resolve any patch warning in Ecth's Patch Switcher before playing.
+4. **Host or join.** Check the preselected installed patch, or choose another room patch, and use the default 3v3 preset or another setup. If patch detection is unavailable, the initial choice is **1.00**. Join a discovered room, preview it first, or enter the host's VPN IP directly. Resolve patch warnings before playing: close BFME2, open Ecth's Patch Switcher, then use **Set to …** for a supported target or select the exact patch manually.
 5. **Choose your place.** Pick your team, map spot, and color. Participants ready up when they want to permit a host launch; the host can send a ready request.
 6. **Prepare and launch.** For verified 1.00 synchronization, approve Windows' permission prompt and wait for **Sync ready**. Other patches launch with manual native setup. Use **Launch mine**, or let the host use **Launch all**.
 7. **Enter BFME2's LAN lobby.** The in-game host opens **Multiplayer → Network → Create Game**. Other players join that native lobby manually. Fellowship begins supported 1.00 synchronization once the lobby matches; set the lobby options manually for other patches.
@@ -206,7 +212,7 @@ Closing the dashboard keeps Fellowship running in the system tray. Closing a bat
 | Radmin groups or members cannot be read | Keep Radmin VPN running and choose **Refresh Radmin groups** from the Radmin side menu, or use the refresh button in Settings. If needed, open its main window. An unavailable selected group never silently switches to all groups. |
 | BFME2 reports a DirectX error at launch | Let sync preparation and its Windows permission prompt finish before launching. If needed, disable live sync, launch BFME2, then enable sync after the game loads. |
 | Live sync cannot apply a selection | Keep the native setup lobby open. Check the supported game version, matching map and participants, and occupied spots. Correct conflicting selections in BFME2 when sync pauses. |
-| The room shows a patch warning | Join and chat normally, then close BFME2 and use the patch switcher to select the room's exact patch before playing. An unknown or mixed installation cannot enable native automation. |
+| The room shows a patch warning | Join and chat normally. Close BFME2 and open Ecth's Patch Switcher, then use **Set to …** for 1.00, 1.06, or its exact supported latest installed patch. Other exact targets require manual selection. An unknown or mixed installation cannot enable native automation. |
 | A patch's extra maps or previews are missing | Check that its files and required parent patches are downloaded locally in Ecth's Patch Switcher. Choosing a patch in Fellowship does not download or install its maps. See [patch support](docs/patch-support.md). |
 | Rhûn sides do not coordinate | Confirm **1.00 + 3v3 + Rhûn**, update every participant, enable verified live sync, and select native teams. The in-game host determines the hosting side. |
 | An older updater loops through repairs | Close Fellowship, run the latest release's `Fellowship-Repair-<version>.exe`, then install that release's MSI directly. The helper restores verified installer sources. If it still fails, include the installer/recovery log in your issue. |

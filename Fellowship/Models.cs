@@ -204,11 +204,25 @@ public sealed record RoomPreset(string Name,string Map,string MapPath,int Capaci
     public override string ToString()=>Name;
     public static List<RoomPreset> Defaults(IEnumerable<GameMap> maps,string patch="1.00")
     {
-        RoomPreset Make(string name,string map,int count,int resources,int[] teams)
+        var installedMaps=maps.ToArray();patch=GamePatches.Normalize(patch);
+        bool v3=patch.StartsWith("1.09v3",StringComparison.OrdinalIgnoreCase)||patch.StartsWith("1.09u4",StringComparison.OrdinalIgnoreCase);
+        RoomPreset Make(string name,string map,int count,int resources,int[] teams,string? path=null)
         {
-            var installed=maps.FirstOrDefault(m=>m.Name.Equals(map,StringComparison.OrdinalIgnoreCase));
-            return new(name,map,installed?.Path??"",count,resources,200,false,false,teams,true,GamePatches.Normalize(patch));
+            var installed=installedMaps.FirstOrDefault(m=>path==null?m.Name.Equals(map,StringComparison.OrdinalIgnoreCase):m.Path.Equals(path,StringComparison.OrdinalIgnoreCase));
+            return new(name,installed?.Name??map,installed?.Path??"",count,resources,200,false,false,teams,true,patch);
         }
-        return [Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),Make("2v2","Buckland",4,4000,[1,1,2,2]),Make("1v1 · 1,000 resources","Rohan",2,1000,[1,2]),Make("1v1 · 4,000 resources","Rohan",2,4000,[1,2]),Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])];
+        // These are distinct map-cache entries, not interchangeable name matches:
+        // Lebennin IV has six starts, Lebennin has four, and Fords of Isen II two.
+        var result=new List<RoomPreset>
+        {
+            v3?Make("3v3","Lebennin IV",6,4000,[1,1,1,2,2,2],@"maps\map et lebennin iv\map et lebennin iv.map"):Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),
+            v3?Make("2v2","Lebennin",4,4000,[1,1,2,2],@"maps\map et lebennin\map et lebennin.map"):Make("2v2","Buckland",4,4000,[1,1,2,2]),
+            v3?Make("1v1 · 1,000 resources","Fords of Isen II",2,1000,[1,2],@"maps\map mp fords of isen ii\map mp fords of isen ii.map"):Make("1v1 · 1,000 resources","Rohan",2,1000,[1,2]),
+            v3?Make("1v1 · 4,000 resources","Fords of Isen II",2,4000,[1,2],@"maps\map mp fords of isen ii\map mp fords of isen ii.map"):Make("1v1 · 4,000 resources","Rohan",2,4000,[1,2]),
+            Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])
+        };
+        if(patch=="1.06"||patch.StartsWith("1.09",StringComparison.OrdinalIgnoreCase)||patch.StartsWith("v2 ",StringComparison.OrdinalIgnoreCase))
+            result.Insert(2,Make("4v4","Tournament Hills",8,4000,[1,1,1,1,2,2,2,2],@"maps\map mp tournament hills\map mp tournament hills.map"));
+        return result;
     }
 }
