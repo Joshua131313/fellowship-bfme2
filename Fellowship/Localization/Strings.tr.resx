@@ -1992,4 +1992,115 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
     <value>Lobi takımları belirlenene kadar son oyundaki takımlar kullanılıyor.</value>
   </data>
+  <data name="Delay fix + borderless" xml:space="preserve">
+    <value>Gecikme düzeltmesi + kenarlıksız mod</value>
+  </data>
+  <data name="Both DLLs are installed and removed together. Existing files are backed up and restored when disabled." xml:space="preserve">
+    <value>İki DLL birlikte yüklenir ve kaldırılır. Mevcut dosyalar yedeklenir ve devre dışı bırakıldığında geri yüklenir.</value>
+  </data>
+  <data name="Applying game enhancements…" xml:space="preserve">
+    <value>Oyun iyileştirmeleri uygulanıyor…</value>
+  </data>
+  <data name="Incomplete installation — enable to repair both files." xml:space="preserve">
+    <value>Eksik yükleme — iki dosyayı onarmak için etkinleştirin.</value>
+  </data>
+  <data name="Interrupted change — enable to recover both files." xml:space="preserve">
+    <value>Değişiklik yarıda kesildi — iki dosyayı kurtarmak için etkinleştirin.</value>
+  </data>
+  <data name="Files changed outside Fellowship" xml:space="preserve">
+    <value>Dosyalar Fellowship dışında değiştirildi</value>
+  </data>
+  <data name="Select your BFME2 executable first." xml:space="preserve">
+    <value>Önce BFME2 çalıştırılabilir dosyasını seçin.</value>
+  </data>
+  <data name="Close BFME2 to change this setting." xml:space="preserve">
+    <value>Bu ayarı değiştirmek için BFME2’yi kapatın.</value>
+  </data>
+  <data name="Wait for patch switching to finish." xml:space="preserve">
+    <value>Yama değişiminin tamamlanmasını bekleyin.</value>
+  </data>
+  <data name="Game enhancements could not be changed" xml:space="preserve">
+    <value>Oyun iyileştirmeleri değiştirilemedi</value>
+  </data>
+  <data name="Wait for game enhancements to finish changing." xml:space="preserve">
+    <value>Oyun iyileştirmelerinin değiştirilmesini bekleyin.</value>
+  </data>
+  <data name="The game enhancement files are missing from Fellowship." xml:space="preserve">
+    <value>Oyun iyileştirme dosyaları Fellowship içinde eksik.</value>
+  </data>
+  <data name="The game enhancement files could not be verified." xml:space="preserve">
+    <value>Oyun iyileştirme dosyaları doğrulanamadı.</value>
+  </data>
+  <data name="The game DLLs were changed outside Fellowship. Restore those files before changing this feature." xml:space="preserve">
+    <value>Oyunun DLL dosyaları Fellowship dışında değiştirildi. Bu özelliği değiştirmeden önce bu dosyaları geri yükleyin.</value>
+  </data>
+  <data name="Close BFME2 before changing delay fix and borderless mode." xml:space="preserve">
+    <value>Gecikme düzeltmesini ve kenarlıksız modu değiştirmeden önce BFME2’yi kapatın.</value>
+  </data>
+  <data name="An interrupted change needs recovery. Close BFME2 and try again." xml:space="preserve">
+    <value>Yarıda kesilen bir değişikliğin kurtarılması gerekiyor. BFME2’yi kapatıp yeniden deneyin.</value>
+  </data>
+  <data name="Both files must be installed together. Enable the feature to repair it, or disable it to restore the previous files." xml:space="preserve">
+    <value>İki dosya birlikte yüklenmelidir. Onarmak için özelliği etkinleştirin veya önceki dosyaları geri yüklemek için devre dışı bırakın.</value>
+  </data>
+  <data name="Only part of the feature is installed. Enable it to install both files together." xml:space="preserve">
+    <value>Özelliğin yalnızca bir kısmı yüklü. İki dosyayı birlikte yüklemek için etkinleştirin.</value>
+  </data>
+  <data name="Existing DLLs will be backed up and restored when this feature is disabled." xml:space="preserve">
+    <value>Mevcut DLL dosyaları yedeklenecek ve bu özellik devre dışı bırakıldığında geri yüklenecek.</value>
+  </data>
+  <data name="A game enhancement change is already in progress." xml:space="preserve">
+    <value>Bir oyun iyileştirmesi değişikliği zaten sürüyor.</value>
+  </data>
+  <data name="Could not start the game enhancement helper." xml:space="preserve">
+    <value>Oyun iyileştirme yardımcısı başlatılamadı.</value>
+  </data>
+  <data name="Wait for patch switching to finish before changing this feature." xml:space="preserve">
+    <value>Bu özelliği değiştirmeden önce yama değişiminin tamamlanmasını bekleyin.</value>
+  </data>
+  <data name="The paired game enhancement files could not be verified." xml:space="preserve">
+    <value>Birlikte kullanılan iki oyun iyileştirme dosyası doğrulanamadı.</value>
+  </data>
+  <data name="The game enhancement change was interrupted. Close BFME2 and retry to restore both files; the recovery data has been preserved." xml:space="preserve">
+    <value>Oyun iyileştirmesi değişikliği yarıda kesildi. İki dosyayı geri yüklemek için BFME2’yi kapatıp yeniden deneyin; kurtarma verileri korundu.</value>
+  </data>
+  <data name="The paired game enhancement files could not be restored." xml:space="preserve">
+    <value>Birlikte kullanılan iki oyun iyileştirme dosyası geri yüklenemedi.</value>
+  </data>
+  <data name="Game enhancement recovery data could not be verified." xml:space="preserve">
+    <value>Oyun iyileştirmesi kurtarma verileri doğrulanamadı.</value>
+  </data>
+  <data name="The original game DLL backup is missing or changed. Restore the backup before disabling this feature." xml:space="preserve">
+    <value>Oyunun özgün DLL yedeği eksik veya değiştirilmiş. Bu özelliği devre dışı bırakmadan önce yedeği geri yükleyin.</value>
+  </data>
+  <data name="Invalid game enhancement recovery data." xml:space="preserve">
+    <value>Geçersiz oyun iyileştirmesi kurtarma verileri.</value>
+  </data>
+  <data name="Invalid game enhancement backup data." xml:space="preserve">
+    <value>Geçersiz oyun iyileştirmesi yedek verileri.</value>
+  </data>
+  <data name="Linked game enhancement files are not supported." xml:space="preserve">
+    <value>Bağlantı olarak oluşturulan oyun iyileştirme dosyaları desteklenmiyor.</value>
+  </data>
+  <data name="A game enhancement file path is a directory." xml:space="preserve">
+    <value>Bir oyun iyileştirme dosyasının yolu bir klasöre ait.</value>
+  </data>
+  <data name="Linked game enhancement backup folders are not supported." xml:space="preserve">
+    <value>Bağlantı olarak oluşturulan oyun iyileştirmesi yedek klasörleri desteklenmiyor.</value>
+  </data>
+  <data name="A game enhancement backup directory is a file." xml:space="preserve">
+    <value>Bir oyun iyileştirmesi yedek klasörünün yolu bir dosyaya ait.</value>
+  </data>
+  <data name="The game enhancement change could not finish. Review the helper message and retry; recovery data is preserved if needed." xml:space="preserve">
+    <value>Oyun iyileştirmesi değişikliği tamamlanamadı. Yardımcının mesajını inceleyip yeniden deneyin; gerektiğinde kurtarma verileri korunur.</value>
+  </data>
+  <data name="Repair needed — switch off, then on again." xml:space="preserve">
+    <value>Onarım gerekli — kapatıp yeniden açın.</value>
+  </data>
+  <data name="Interrupted change — switch off to recover both files." xml:space="preserve">
+    <value>Değişiklik yarıda kesildi — iki dosyayı kurtarmak için kapatın.</value>
+  </data>
+  <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
+    <value>BFME2’yi başlatmadan önce Ayarlar’dan gecikme düzeltmesi ve kenarlıksız modu onarın veya devre dışı bırakın.</value>
+  </data>
 </root>

@@ -80,6 +80,13 @@ public partial class App : Application
         var startupSettings=Settings.Load();
         L.Apply(startupSettings.Language);
         Appearance.Apply(startupSettings.Appearance);
+        if(e.Args.Length==3&&e.Args[0]=="--game-enhancements"&&e.Args[1] is "enable" or "disable")
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Task.Run(()=>GameEnhancements.Apply(e.Args[2],e.Args[1]=="enable"));Shutdown(0);}
+            catch(Exception error){await UI.ShowPopup(UI.Information(null,"Game enhancements could not be changed",error.Message));Shutdown(1);}
+            return;
+        }
         if(System.IO.Path.GetFileNameWithoutExtension(Environment.ProcessPath!).StartsWith("Fellowship-Repair-",StringComparison.OrdinalIgnoreCase))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;

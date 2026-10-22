@@ -1992,4 +1992,115 @@
   <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
     <value>تُستخدم فرق المباراة السابقة ما دامت فرق الردهة غير محددة.</value>
   </data>
+  <data name="Delay fix + borderless" xml:space="preserve">
+    <value>إصلاح التأخير + وضع بلا حدود</value>
+  </data>
+  <data name="Both DLLs are installed and removed together. Existing files are backed up and restored when disabled." xml:space="preserve">
+    <value>يُثبّت ملفا DLL ويُزالان معًا. تُحفظ نسخة من الملفات الموجودة وتُستعاد عند التعطيل.</value>
+  </data>
+  <data name="Applying game enhancements…" xml:space="preserve">
+    <value>جارٍ تطبيق تحسينات اللعبة…</value>
+  </data>
+  <data name="Incomplete installation — enable to repair both files." xml:space="preserve">
+    <value>التثبيت غير مكتمل — فعّل الخيار لإصلاح الملفين.</value>
+  </data>
+  <data name="Interrupted change — enable to recover both files." xml:space="preserve">
+    <value>انقطع التغيير — فعّل الخيار لاستعادة الملفين.</value>
+  </data>
+  <data name="Files changed outside Fellowship" xml:space="preserve">
+    <value>عُدّلت الملفات خارج Fellowship</value>
+  </data>
+  <data name="Select your BFME2 executable first." xml:space="preserve">
+    <value>اختر الملف التنفيذي للعبة BFME2 أولًا.</value>
+  </data>
+  <data name="Close BFME2 to change this setting." xml:space="preserve">
+    <value>أغلق BFME2 لتغيير هذا الإعداد.</value>
+  </data>
+  <data name="Wait for patch switching to finish." xml:space="preserve">
+    <value>انتظر حتى ينتهي تبديل إصدار اللعبة.</value>
+  </data>
+  <data name="Game enhancements could not be changed" xml:space="preserve">
+    <value>تعذّر تغيير تحسينات اللعبة</value>
+  </data>
+  <data name="Wait for game enhancements to finish changing." xml:space="preserve">
+    <value>انتظر حتى ينتهي تغيير تحسينات اللعبة.</value>
+  </data>
+  <data name="The game enhancement files are missing from Fellowship." xml:space="preserve">
+    <value>ملفات تحسين اللعبة غير موجودة في Fellowship.</value>
+  </data>
+  <data name="The game enhancement files could not be verified." xml:space="preserve">
+    <value>تعذّر التحقق من ملفات تحسين اللعبة.</value>
+  </data>
+  <data name="The game DLLs were changed outside Fellowship. Restore those files before changing this feature." xml:space="preserve">
+    <value>عُدّلت ملفات DLL الخاصة باللعبة خارج Fellowship. استعد هذه الملفات قبل تغيير هذه الميزة.</value>
+  </data>
+  <data name="Close BFME2 before changing delay fix and borderless mode." xml:space="preserve">
+    <value>أغلق BFME2 قبل تغيير إصلاح التأخير ووضع العرض بلا حدود.</value>
+  </data>
+  <data name="An interrupted change needs recovery. Close BFME2 and try again." xml:space="preserve">
+    <value>يلزم استعادة التغيير الذي انقطع. أغلق BFME2 وحاول مجددًا.</value>
+  </data>
+  <data name="Both files must be installed together. Enable the feature to repair it, or disable it to restore the previous files." xml:space="preserve">
+    <value>يجب تثبيت الملفين معًا. فعّل الميزة لإصلاحها، أو عطّلها لاستعادة الملفات السابقة.</value>
+  </data>
+  <data name="Only part of the feature is installed. Enable it to install both files together." xml:space="preserve">
+    <value>ثُبّت جزء من الميزة فقط. فعّلها لتثبيت الملفين معًا.</value>
+  </data>
+  <data name="Existing DLLs will be backed up and restored when this feature is disabled." xml:space="preserve">
+    <value>ستُحفظ نسخة احتياطية من ملفات DLL الموجودة، وستُستعاد عند تعطيل هذه الميزة.</value>
+  </data>
+  <data name="A game enhancement change is already in progress." xml:space="preserve">
+    <value>يجري بالفعل تغيير تحسينات اللعبة.</value>
+  </data>
+  <data name="Could not start the game enhancement helper." xml:space="preserve">
+    <value>تعذّر تشغيل الأداة المساعدة لتحسين اللعبة.</value>
+  </data>
+  <data name="Wait for patch switching to finish before changing this feature." xml:space="preserve">
+    <value>انتظر حتى ينتهي تبديل إصدار اللعبة قبل تغيير هذه الميزة.</value>
+  </data>
+  <data name="The paired game enhancement files could not be verified." xml:space="preserve">
+    <value>تعذّر التحقق من ملفَي تحسين اللعبة.</value>
+  </data>
+  <data name="The game enhancement change was interrupted. Close BFME2 and retry to restore both files; the recovery data has been preserved." xml:space="preserve">
+    <value>انقطع تغيير تحسينات اللعبة. أغلق BFME2 وحاول مجددًا لاستعادة الملفين؛ تم الاحتفاظ ببيانات الاستعادة.</value>
+  </data>
+  <data name="The paired game enhancement files could not be restored." xml:space="preserve">
+    <value>تعذّر استعادة ملفَي تحسين اللعبة.</value>
+  </data>
+  <data name="Game enhancement recovery data could not be verified." xml:space="preserve">
+    <value>تعذّر التحقق من بيانات استعادة تحسينات اللعبة.</value>
+  </data>
+  <data name="The original game DLL backup is missing or changed. Restore the backup before disabling this feature." xml:space="preserve">
+    <value>النسخة الاحتياطية لملفات DLL الأصلية للعبة مفقودة أو عُدّلت. استعد النسخة الاحتياطية قبل تعطيل هذه الميزة.</value>
+  </data>
+  <data name="Invalid game enhancement recovery data." xml:space="preserve">
+    <value>بيانات استعادة تحسينات اللعبة غير صالحة.</value>
+  </data>
+  <data name="Invalid game enhancement backup data." xml:space="preserve">
+    <value>بيانات النسخة الاحتياطية لتحسينات اللعبة غير صالحة.</value>
+  </data>
+  <data name="Linked game enhancement files are not supported." xml:space="preserve">
+    <value>روابط ملفات تحسين اللعبة غير مدعومة.</value>
+  </data>
+  <data name="A game enhancement file path is a directory." xml:space="preserve">
+    <value>مسار أحد ملفات تحسين اللعبة يشير إلى مجلد.</value>
+  </data>
+  <data name="Linked game enhancement backup folders are not supported." xml:space="preserve">
+    <value>روابط مجلدات النسخ الاحتياطي لتحسينات اللعبة غير مدعومة.</value>
+  </data>
+  <data name="A game enhancement backup directory is a file." xml:space="preserve">
+    <value>مسار أحد مجلدات النسخ الاحتياطي لتحسينات اللعبة يشير إلى ملف.</value>
+  </data>
+  <data name="The game enhancement change could not finish. Review the helper message and retry; recovery data is preserved if needed." xml:space="preserve">
+    <value>تعذّر إكمال تغيير تحسينات اللعبة. راجع رسالة الأداة المساعدة وحاول مجددًا؛ تُحفظ بيانات الاستعادة عند الحاجة.</value>
+  </data>
+  <data name="Repair needed — switch off, then on again." xml:space="preserve">
+    <value>يلزم الإصلاح — عطّل الخيار ثم فعّله مجددًا.</value>
+  </data>
+  <data name="Interrupted change — switch off to recover both files." xml:space="preserve">
+    <value>انقطع التغيير — عطّل الخيار لاستعادة الملفين.</value>
+  </data>
+  <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
+    <value>أصلح خيار إصلاح التأخير والوضع بلا حدود أو عطّله في الإعدادات قبل تشغيل BFME2.</value>
+  </data>
 </root>

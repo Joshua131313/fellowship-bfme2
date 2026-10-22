@@ -44,6 +44,7 @@ public static class PatchSwitcher
                 pending.Dispose();pending=null;
             }
             if(GamesRunning())throw new InvalidOperationException("Close BFME2 before switching patches.");
+            if(GameEnhancements.IsChanging)throw new InvalidOperationException("Wait for game enhancements to finish changing.");
             if(EditorsRunning())throw new InvalidOperationException("Close Worldbuilder and FinalBIG before switching patches.");
             var switcher=FindRunning(executable)??throw new InvalidOperationException(OpenRequired);
             if(!SameExecutable(executable,GameTarget(switcher.Root,GameInstallation.Find())??""))

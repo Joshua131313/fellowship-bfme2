@@ -372,7 +372,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.137   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.138   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -673,7 +673,9 @@ public sealed partial class BrowserWindow : Window
         profile.Margin=new(0);networkHint.Margin=new(0,10,0,0);
         left.Children.Add(Section("Profile & connection","How other players find you.",profile,networkHint));
         browse.Margin=new(0,10,8,0);gamePreferences.Margin=new(0,10,0,0);game.Height=48;
-        left.Children.Add(Section("Game installation","Connect your copy of The Battle for Middle-earth II.",children[3],game,UI.Row(browse,gamePreferences)));
+        var gameEnhancements=new GameEnhancementControls(()=>game.Text);
+        game.TextChanged+=(_,_)=>gameEnhancements.Refresh();
+        left.Children.Add(Section("Game installation","Connect your copy of The Battle for Middle-earth II.",children[3],game,UI.Row(browse,gamePreferences),gameEnhancements));
         var backup=(Border)children[^1];backup.Margin=new(0,12,0,0);
         left.Children.Add(Section("Backup & restore","Keep a copy of your preferences and contacts.",backup));
         left.Children.Add(Section("Updates","",children[^2]));
@@ -1736,9 +1738,12 @@ public static class GameLauncher
     }
     public static async Task Launch(string path,Room? room,bool preset=false,bool navigate=false,string localId="",bool applyOnly=false)
     {
+        if(GameEnhancements.IsChanging)throw new InvalidOperationException("Wait for game enhancements to finish changing.");
         if(navigate||applyOnly)throw new InvalidOperationException("Cursor navigation is disabled.");
         Validate(path);
         if(!applyOnly&&IsRunning()){FocusRunning();return;}
+        if(GameEnhancements.Inspect(path).State is GameEnhancementState.Partial or GameEnhancementState.RecoveryRequired)
+            throw new InvalidOperationException("Repair or disable delay fix and borderless mode in Settings before launching BFME2.");
         Directory.CreateDirectory(Settings.Folder);File.WriteAllText(Path.Combine(Settings.Folder,"last-session.json"),System.Text.Json.JsonSerializer.Serialize(room));
         try
         {

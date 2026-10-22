@@ -1992,4 +1992,115 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
     <value>Utilisation des équipes de la dernière partie tant que celles du salon ne sont pas définies.</value>
   </data>
+  <data name="Delay fix + borderless" xml:space="preserve">
+    <value>Correction du délai + sans bordure</value>
+  </data>
+  <data name="Both DLLs are installed and removed together. Existing files are backed up and restored when disabled." xml:space="preserve">
+    <value>Les deux DLL sont installées et retirées ensemble. Les fichiers existants sont sauvegardés puis restaurés à la désactivation.</value>
+  </data>
+  <data name="Applying game enhancements…" xml:space="preserve">
+    <value>Application des améliorations du jeu…</value>
+  </data>
+  <data name="Incomplete installation — enable to repair both files." xml:space="preserve">
+    <value>Installation incomplète — activez pour réparer les deux fichiers.</value>
+  </data>
+  <data name="Interrupted change — enable to recover both files." xml:space="preserve">
+    <value>Modification interrompue — activez pour récupérer les deux fichiers.</value>
+  </data>
+  <data name="Files changed outside Fellowship" xml:space="preserve">
+    <value>Fichiers modifiés en dehors de Fellowship</value>
+  </data>
+  <data name="Select your BFME2 executable first." xml:space="preserve">
+    <value>Sélectionnez d’abord l’exécutable de BFME2.</value>
+  </data>
+  <data name="Close BFME2 to change this setting." xml:space="preserve">
+    <value>Fermez BFME2 pour modifier ce réglage.</value>
+  </data>
+  <data name="Wait for patch switching to finish." xml:space="preserve">
+    <value>Attendez la fin du changement de version.</value>
+  </data>
+  <data name="Game enhancements could not be changed" xml:space="preserve">
+    <value>Impossible de modifier les améliorations du jeu</value>
+  </data>
+  <data name="Wait for game enhancements to finish changing." xml:space="preserve">
+    <value>Attendez la fin de la modification des améliorations du jeu.</value>
+  </data>
+  <data name="The game enhancement files are missing from Fellowship." xml:space="preserve">
+    <value>Les fichiers d’amélioration du jeu sont absents de Fellowship.</value>
+  </data>
+  <data name="The game enhancement files could not be verified." xml:space="preserve">
+    <value>Impossible de vérifier les fichiers d’amélioration du jeu.</value>
+  </data>
+  <data name="The game DLLs were changed outside Fellowship. Restore those files before changing this feature." xml:space="preserve">
+    <value>Les DLL du jeu ont été modifiées en dehors de Fellowship. Restaurez ces fichiers avant de modifier cette fonction.</value>
+  </data>
+  <data name="Close BFME2 before changing delay fix and borderless mode." xml:space="preserve">
+    <value>Fermez BFME2 avant de modifier la correction du délai et le mode sans bordure.</value>
+  </data>
+  <data name="An interrupted change needs recovery. Close BFME2 and try again." xml:space="preserve">
+    <value>Une modification interrompue doit être récupérée. Fermez BFME2 et réessayez.</value>
+  </data>
+  <data name="Both files must be installed together. Enable the feature to repair it, or disable it to restore the previous files." xml:space="preserve">
+    <value>Les deux fichiers doivent être installés ensemble. Activez la fonction pour la réparer, ou désactivez-la pour restaurer les fichiers précédents.</value>
+  </data>
+  <data name="Only part of the feature is installed. Enable it to install both files together." xml:space="preserve">
+    <value>La fonction n’est que partiellement installée. Activez-la pour installer les deux fichiers ensemble.</value>
+  </data>
+  <data name="Existing DLLs will be backed up and restored when this feature is disabled." xml:space="preserve">
+    <value>Les DLL existantes seront sauvegardées, puis restaurées à la désactivation de cette fonction.</value>
+  </data>
+  <data name="A game enhancement change is already in progress." xml:space="preserve">
+    <value>Une modification des améliorations du jeu est déjà en cours.</value>
+  </data>
+  <data name="Could not start the game enhancement helper." xml:space="preserve">
+    <value>Impossible de démarrer l’assistant d’amélioration du jeu.</value>
+  </data>
+  <data name="Wait for patch switching to finish before changing this feature." xml:space="preserve">
+    <value>Attendez la fin du changement de version avant de modifier cette fonction.</value>
+  </data>
+  <data name="The paired game enhancement files could not be verified." xml:space="preserve">
+    <value>Impossible de vérifier les deux fichiers d’amélioration du jeu.</value>
+  </data>
+  <data name="The game enhancement change was interrupted. Close BFME2 and retry to restore both files; the recovery data has been preserved." xml:space="preserve">
+    <value>La modification des améliorations du jeu a été interrompue. Fermez BFME2 et réessayez pour restaurer les deux fichiers ; les données de récupération ont été conservées.</value>
+  </data>
+  <data name="The paired game enhancement files could not be restored." xml:space="preserve">
+    <value>Impossible de restaurer les deux fichiers d’amélioration du jeu.</value>
+  </data>
+  <data name="Game enhancement recovery data could not be verified." xml:space="preserve">
+    <value>Impossible de vérifier les données de récupération des améliorations du jeu.</value>
+  </data>
+  <data name="The original game DLL backup is missing or changed. Restore the backup before disabling this feature." xml:space="preserve">
+    <value>La sauvegarde des DLL d’origine du jeu est absente ou a été modifiée. Restaurez-la avant de désactiver cette fonction.</value>
+  </data>
+  <data name="Invalid game enhancement recovery data." xml:space="preserve">
+    <value>Données de récupération des améliorations du jeu non valides.</value>
+  </data>
+  <data name="Invalid game enhancement backup data." xml:space="preserve">
+    <value>Données de sauvegarde des améliorations du jeu non valides.</value>
+  </data>
+  <data name="Linked game enhancement files are not supported." xml:space="preserve">
+    <value>Les liens vers des fichiers d’amélioration du jeu ne sont pas pris en charge.</value>
+  </data>
+  <data name="A game enhancement file path is a directory." xml:space="preserve">
+    <value>Le chemin d’un fichier d’amélioration du jeu désigne un dossier.</value>
+  </data>
+  <data name="Linked game enhancement backup folders are not supported." xml:space="preserve">
+    <value>Les liens vers des dossiers de sauvegarde des améliorations du jeu ne sont pas pris en charge.</value>
+  </data>
+  <data name="A game enhancement backup directory is a file." xml:space="preserve">
+    <value>Un chemin de dossier de sauvegarde des améliorations du jeu désigne un fichier.</value>
+  </data>
+  <data name="The game enhancement change could not finish. Review the helper message and retry; recovery data is preserved if needed." xml:space="preserve">
+    <value>La modification des améliorations du jeu n’a pas pu aboutir. Consultez le message de l’assistant et réessayez ; les données de récupération sont conservées si nécessaire.</value>
+  </data>
+  <data name="Repair needed — switch off, then on again." xml:space="preserve">
+    <value>Réparation nécessaire — désactivez, puis réactivez.</value>
+  </data>
+  <data name="Interrupted change — switch off to recover both files." xml:space="preserve">
+    <value>Modification interrompue — désactivez pour récupérer les deux fichiers.</value>
+  </data>
+  <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
+    <value>Réparez ou désactivez la correction du délai et le mode sans bordure dans les paramètres avant de lancer BFME2.</value>
+  </data>
 </root>

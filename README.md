@@ -53,6 +53,10 @@ Fellowship checks the installed patch and shows a warning when it differs from t
 
 To use **Set to …** beside the patch warning, close BFME2 and open Ecth's Patch Switcher first. The button calls the installed switcher's native command line for **1.00**, **1.06**, or its exact supported **latest installed patch**, then checks the result. Other exact versions require manual selection in the switcher; Fellowship never substitutes the latest patch for a different requested version. The switcher's own command may close its open window while applying the patch. Creating or joining a room never starts a patch switch automatically.
 
+### Delay fix and borderless mode
+
+In **Settings → Game installation**, use **Delay fix + borderless** to install or remove the bundled pair together as `d3d9.dll` and `dinput8.dll`. Close BFME2 before changing it. Fellowship backs up existing DLLs and restores them when disabled; the switch reflects the files in your selected game installation. [Installation and recovery details](docs/game-enhancements.md).
+
 ### Keep the native lobby in sync
 
 For a **verified BFME2 1.00 installation and a 1.00 room**, enabling **Live BFME2 synchronization** synchronizes supported map, rules, team, starting-position, and color selections through the game's own lobby controls. Changes can flow back from BFME2 into Fellowship, so you can make supported adjustments from inside the game.
