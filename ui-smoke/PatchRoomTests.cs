@@ -1,5 +1,7 @@
 using Fellowship;
+using System.Buffers.Binary;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
@@ -34,6 +36,8 @@ static class PatchRoomTests
         var roomPresets=nodes.OfType<RoomPresetPicker>().Single();
         if(patchChoice.SelectedItem?.ToString()!=GamePatches.NewRoomPatch(settings.GamePath))throw new Exception("New room did not select the detected supported patch");
         roomPresets.SelectedIndex=0;
+        var startingTeams=nodes.OfType<ComboBox>().Single(c=>c.Items.Cast<object>().Any(item=>item.ToString()=="Manual teams"));
+        startingTeams.SelectedItem=startingTeams.Items.Cast<object>().Single(item=>item.ToString()=="Manual teams");
         var available=patchChoice.Items.OfType<string>().FirstOrDefault(p=>GamePatches.Normalize(p)==patch);
         if(available!=null)
         {
@@ -41,7 +45,7 @@ static class PatchRoomTests
             patchChoice.SelectedItem=available;
             var expected=GameInstallation.Maps(settings.GamePath,patch);
             if(!mapChoice.Items.Cast<GameMap>().Select(m=>m.Path).SequenceEqual(expected.Select(m=>m.Path)))throw new Exception("Patch selector retained the previous map catalog");
-            if(expected.Any(m=>m.Path.Equals(oldMap,StringComparison.OrdinalIgnoreCase))&&(mapChoice.SelectedItem as GameMap)?.Path!=oldMap)throw new Exception("Patch selector discarded a map available on both patches");
+            if(expected.Any(m=>m.Path.Equals(oldMap,StringComparison.OrdinalIgnoreCase))&&(mapChoice.SelectedItem as GameMap)?.Path!=oldMap)throw new Exception("Manual-team patch selection discarded a map available on both patches");
             if(roomPresets.Items.OfType<ComboBoxItem>().Select(i=>i.Tag).OfType<RoomPreset>().Any(p=>GamePatches.Normalize(p.Patch)!=patch))throw new Exception("Room editor retained presets for the previous patch");
             patchChoice.SelectedItem="1.00";
             if(!mapChoice.Items.Cast<GameMap>().Select(m=>m.Path).SequenceEqual(GameInstallation.Maps(settings.GamePath,"1.00").Select(m=>m.Path)))throw new Exception("Switching back retained the alternate patch map catalog");
@@ -55,8 +59,84 @@ static class PatchRoomTests
             }
         }
         editor.Close();
+        CheckCustomPatchDefaults();
         CheckDetectedDefaults();
         Console.WriteLine("PASS patch-scoped presets, legacy preset migration, default room patch, and map/preset refresh when changing room patch");
+    }
+    static void CheckCustomPatchDefaults()
+    {
+        string fixture=Path.GetFullPath(Path.Combine(Path.GetTempPath(),"Fellowship-custom-patch-map-"+Guid.NewGuid().ToString("N"))),language=L.Code;
+        Directory.CreateDirectory(fixture);L.Apply("en");
+        try
+        {
+            string executable=Path.Combine(fixture,"lotrbfme2.exe"),switcher=Path.Combine(fixture,"BFME2 Ecth's Patch Switcher");File.WriteAllBytes(executable,[]);
+            foreach(string source in new[]{"100","106","109","109v2",Path.Combine("109v3","release")})Directory.CreateDirectory(Path.Combine(switcher,source));
+            WriteMapArchive(Path.Combine(switcher,"100","Maps.big"));WriteMapArchive(Path.Combine(switcher,"106","Maps.big"));
+            (string Name,int Resources)[] variants=[("3v3",2500),("2v2",1400),("1v1",1000),("1v1",4000),("4v4",1200),("Manual teams",3000),("FFA",2000)];
+            foreach(var variant in variants)
+            {
+                var settings=Settings.InMemory();settings.GamePath=executable;var editor=new RoomEditor(null,settings,new Room{Title="Custom patch map"});
+                try
+                {
+                    var nodes=Nodes(editor).ToArray();
+                    var patch=nodes.OfType<ComboBox>().Single(c=>AutomationProperties.GetName(c)=="PATCH");
+                    var map=nodes.OfType<SearchableMapBox>().Single();var presets=nodes.OfType<RoomPresetPicker>().Single();
+                    var teams=nodes.OfType<ComboBox>().Single(c=>c.Items.Cast<object>().Any(item=>item.ToString()=="Manual teams"));
+                    var resources=nodes.OfType<ComboBox>().Single(c=>AutomationProperties.GetName(c)=="STARTING RESOURCES");
+                    var command=nodes.OfType<ComboBox>().Single(c=>AutomationProperties.GetName(c)=="COMMAND POINTS");
+                    var capacity=nodes.OfType<TextBox>().Single(t=>t.MaxLength==2);
+                    var custom=nodes.OfType<CheckBox>().Single(c=>c.Content as string=="Custom Heroes");var ring=nodes.OfType<CheckBox>().Single(c=>c.Content as string=="Ring Heroes");
+                    object Layout(string name)=>teams.Items.Cast<object>().Single(item=>item.ToString()==name);
+                    presets.SelectedIndex=0;teams.SelectedItem=Layout(variant.Name);patch.SelectedItem="1.09v2";
+                    resources.SelectedItem=variant.Resources;command.SelectedItem=command.Items.Cast<object>().Single(item=>item.ToString()=="4×");var selectedCommand=command.SelectedItem;
+                    capacity.Text="13";custom.IsChecked=true;ring.IsChecked=true;
+                    var manual=map.Items.Cast<GameMap>().Single(m=>m.Path==GameMap.Rhun.Path);map.SelectedItem=manual;
+                    void RulesUnchanged()
+                    {
+                        if(!presets.IsCustom||!map.IsEnabled||(int)resources.SelectedItem!=variant.Resources||!ReferenceEquals(command.SelectedItem,selectedCommand)||capacity.Text!="13"||custom.IsChecked!=true||ring.IsChecked!=true||teams.SelectedItem?.ToString()!=variant.Name)throw new Exception("Custom patch change replaced rules, room capacity, team layout or editability for "+variant.Name+" / "+variant.Resources);
+                    }
+                    void ExpectedMap(string target)
+                    {
+                        var defaults=RoomPreset.Defaults(GameInstallation.Maps(executable,target),target);
+                        string expected=variant.Name is "Manual teams" or "FFA"?manual.Path:defaults.First(p=>p.Mode==variant.Name).MapPath;
+                        if(expected.Length==0||(map.SelectedItem as GameMap)?.Path!=expected)throw new Exception("Custom "+variant.Name+" did not choose the "+target+" map default while the old map was still installed");
+                        RulesUnchanged();
+                    }
+                    // Both versions contain the manually chosen Rhûn. The new
+                    // version must nevertheless apply its own format default.
+                    patch.SelectedItem="1.09v3";ExpectedMap("1.09v3");
+                    manual=map.Items.Cast<GameMap>().Single(m=>m.Path==GameMap.Rhun.Path);map.SelectedItem=manual;
+                    patch.SelectedItem="1.09v3";
+                    patch.RaiseEvent(new SelectionChangedEventArgs(System.Windows.Controls.Primitives.Selector.SelectionChangedEvent,Array.Empty<object>(),Array.Empty<object>()));
+                    if((map.SelectedItem as GameMap)?.Path!=manual.Path)throw new Exception("Selecting the same patch reset a deliberate Custom map");RulesUnchanged();
+                    teams.SelectedItem=Layout(variant.Name=="3v3"?"2v2":"3v3");
+                    if((map.SelectedItem as GameMap)?.Path!=manual.Path)throw new Exception("Changing only Starting Teams overwrote a manual Custom map");teams.SelectedItem=Layout(variant.Name);
+                    patch.SelectedItem="1.06";ExpectedMap("1.06");
+                    manual=map.Items.Cast<GameMap>().Single(m=>m.Path==GameMap.Rhun.Path);map.SelectedItem=manual;
+                    if((map.SelectedItem as GameMap)?.Path!=manual.Path)throw new Exception("A post-switch Custom map choice was replaced");RulesUnchanged();
+                }
+                finally{editor.Close();}
+            }
+            Console.WriteLine("PASS Custom version-change map defaults for 3v3/2v2/1v1 at1000/4000/4v4, same-path 1.09 transitions, unchanged custom rules, manual/FFA retention and post-switch map edits");
+        }
+        finally
+        {
+            L.Apply(language);string temp=Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+            if(Directory.Exists(fixture)&&fixture.StartsWith(temp,StringComparison.OrdinalIgnoreCase))Directory.Delete(fixture,true);
+        }
+    }
+    static void WriteMapArchive(string path)
+    {
+        (string Path,int Players)[] maps=[(GameMap.Rhun.Path,6),(@"maps\map mp buckland\map mp buckland.map",4),(@"maps\map wor rohan\map wor rohan.map",2),(@"maps\map et lebennin iv\map et lebennin iv.map",6),(@"maps\map et lebennin\map et lebennin.map",4),(@"maps\map mp fords of isen ii\map mp fords of isen ii.map",2),(@"maps\map mp tournament hills\map mp tournament hills.map",8),(@"maps\map wor gondor\map wor gondor.map",8)];
+        string Key(string value)=>string.Concat(value.Select(c=>char.IsAsciiLetterOrDigit(c)?c.ToString():"_"+((int)c).ToString("X2")));
+        string cache=string.Concat(maps.Select(m=>$"MapCache {Key(m.Path)}\n isMultiplayer = yes\n numPlayers = {m.Players}\nEND\n"));
+        var entries=new[]{(Name:@"maps\mapcache.ini",Data:Encoding.ASCII.GetBytes(cache))}.Concat(maps.Select(m=>(Name:m.Path,Data:Encoding.ASCII.GetBytes("fixture-map")))).ToArray();
+        int header=16+entries.Sum(e=>8+Encoding.ASCII.GetByteCount(e.Name)+1),offset=header;
+        using var stream=File.Create(path);using var writer=new BinaryWriter(stream,Encoding.ASCII);
+        void Be(int value){Span<byte> bytes=stackalloc byte[4];BinaryPrimitives.WriteInt32BigEndian(bytes,value);writer.Write(bytes);}
+        writer.Write(Encoding.ASCII.GetBytes("BIGF"));writer.Write(header+entries.Sum(e=>e.Data.Length));Be(entries.Length);Be(header);
+        foreach(var entry in entries){Be(offset);Be(entry.Data.Length);writer.Write(Encoding.ASCII.GetBytes(entry.Name));writer.Write((byte)0);offset+=entry.Data.Length;}
+        foreach(var entry in entries)writer.Write(entry.Data);
     }
     static void CheckDetectedDefaults()
     {

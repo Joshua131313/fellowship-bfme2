@@ -33,6 +33,53 @@ static class PatchMapTests
     }
     static bool Has(IEnumerable<GameMap> maps,string path)=>maps.Any(m=>m.Path.Equals(path,StringComparison.OrdinalIgnoreCase));
     static bool Starts(List<MapSpot> spots,double expected)=>spots.Count==2&&Math.Abs(spots[0].X-expected)<.000001;
+    static void BetaFallback(string fixture)
+    {
+        string game=Path.Combine(fixture,"beta-game"),switcher=Path.Combine(fixture,"isolated-switcher");
+        Directory.CreateDirectory(game);Directory.CreateDirectory(switcher);
+        string executable=Path.Combine(game,"game.dat");File.WriteAllBytes(executable,Bytes("fixture-game"));
+        foreach(string source in new[]{"100","106","109","109v2",@"109v3\release"})Directory.CreateDirectory(Path.Combine(switcher,source));
+        string stock=Path.Combine(switcher,"100","Maps.big"),patch106=Path.Combine(switcher,"106","Maps.big");
+        Big(stock,(@"maps\mapcache.ini",Bytes(Cache(Rhun,true))),(Rhun,Bytes("stock-rhun")));
+        // This lower-priority copy must never mask a missing entry in the
+        // retained v3 archive, even when a beta reuses its logical filename.
+        Big(patch106,(@"maps\mapcache.ini",Bytes(Cache(Shared,true,80))),(Shared,Bytes("106-shared")),(Preview,[99]));
+        Big(Path.Combine(switcher,"109","#BT2DC-109.big"));Big(Path.Combine(switcher,"109v2","##BT2DC-v2.big"));
+        string floor=Path.Combine(switcher,@"109v3\release","###BT2DC-v3.big");
+        const string communityPreview=@"maps\community_canyon\community_canyon.tga";
+        Big(floor,(@"maps\mapcache.ini",Bytes(Cache(Rhun,true)+Cache(Shared,true,10)+Cache(Community,true,25))),
+            (Rhun,Bytes("v3-rhun")),(Shared,Bytes("v3-shared")),(Community,Bytes("v3-community")),(Preview,[1,2,3]),(communityPreview,[4,5,6]));
+        const string unrelated=@"maps\unrelated_beta\unrelated_beta.map";
+        string otherBeta=Path.Combine(switcher,@"109v302\ß16");Directory.CreateDirectory(otherBeta);
+        Big(Path.Combine(otherBeta,"#!BT2DC-unrelated.big"),(@"maps\mapcache.ini",Bytes(Cache(unrelated,true))),(unrelated,Bytes("unrelated-beta")));
+        Big(Path.Combine(game,"#!BT2DC-active-other.big"),(@"maps\mapcache.ini",Bytes(Cache(unrelated,true))),(unrelated,Bytes("unrelated-active")));
+
+        const string beta="1.09u4 ß17";
+        var strictBefore=GamePatches.Archives(executable,beta).ToArray();
+        var missing=GamePatches.MapArchives(executable,beta,switcher);
+        Check(missing.Contains(floor,StringComparer.OrdinalIgnoreCase),"Missing advertised beta did not retain the installed v3 map archive");
+        var missingMaps=GameAssets.Maps(missing);
+        Check(Has(missingMaps,Rhun)&&Has(missingMaps,Shared)&&Has(missingMaps,Community),"Missing beta package hid installed v3 multiplayer maps");
+        Check(Starts(GameAssets.Spots(missing,Shared),.1),"Missing beta package did not inherit v3 starting positions");
+        Check(GameAssets.ReadAsset(missing,Preview)?.SequenceEqual(new byte[]{1,2,3})==true,"Missing beta package did not inherit v3 preview art");
+        Check(!Has(missingMaps,unrelated)&&missing.All(p=>!p.StartsWith(game+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)&&!p.StartsWith(otherBeta+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)),"Beta fallback imported an unrelated installed beta or active-game overlay");
+
+        string requested=Path.Combine(switcher,@"109u4\ß17");Directory.CreateDirectory(requested);
+        string partial=Path.Combine(requested,Path.GetFileName(floor));
+        Big(partial,(@"maps\mapcache.ini",Bytes(Cache(Community,true,75))),(Community,Bytes("beta-community")),(communityPreview,[7,8,9]));
+        var sources=GamePatches.MapArchives(executable,beta,switcher);
+        Check(sources.Contains(partial,StringComparer.OrdinalIgnoreCase)&&sources.Contains(floor,StringComparer.OrdinalIgnoreCase),"Partial beta replaced rather than retained its same-filename physical v3 fallback");
+        Check(Has(GameAssets.Maps(sources),Rhun)&&Has(GameAssets.Maps(sources),Shared)&&Has(GameAssets.Maps(sources),Community),"Partial beta MapCache hid v3 maps omitted from the beta cache");
+        Check(Starts(GameAssets.Spots(sources,Community),.75)&&GameAssets.ReadAsset(sources,communityPreview)?.SequenceEqual(new byte[]{7,8,9})==true,"Valid requested-beta spots or art lost precedence over v3");
+        Check(Starts(GameAssets.Spots(sources,Shared),.1)&&GameAssets.ReadAsset(sources,Preview)?.SequenceEqual(new byte[]{1,2,3})==true,"Lower-priority 1.06 metadata/art masked retained v3 entries omitted from a same-filename beta archive");
+        Check(GameAssets.ReadAsset(sources,Shared)?.SequenceEqual(Bytes("v3-shared"))==true,"A map asset absent from a partial beta did not fall through to v3 before 1.06");
+        Check(!Has(GameAssets.Maps(sources),unrelated),"Partial beta fallback imported another beta or active patch");
+        Check(GamePatches.Archives(executable,beta).SequenceEqual(strictBefore,StringComparer.OrdinalIgnoreCase),"Map-only fallback changed strict patch archive resolution");
+        foreach(string patch in new[]{"1.00","1.06","1.09v3","v2 ß21.12"})
+            Check(GamePatches.MapArchives(executable,patch,switcher).SequenceEqual(GamePatches.Archives(executable,patch),StringComparer.OrdinalIgnoreCase),"Map-only beta fallback altered stable/historical patch resolution: "+patch);
+        Check(GamePatches.MapArchives("missing-game.exe",beta,switcher).Count==0,"Beta fallback accepted a missing game executable");
+        Console.WriteLine("PASS missing/partial beta v3 map inheritance, same-filename asset/cache/art/spot fallback, exact beta priority and unrelated-patch isolation");
+    }
     public static void Run()
     {
         string fixture=Path.GetFullPath(Path.Combine(Path.GetTempPath(),"Fellowship-patch-maps-"+Guid.NewGuid().ToString("N")));
@@ -89,6 +136,7 @@ static class PatchMapTests
                 Check(GameAssets.ReadAsset([bad],Preview)==null,"Malformed archive supplied an asset: "+Path.GetFileName(bad));
             }
             Check(Has(GameAssets.Maps(malformed.Concat(new[]{original})),Rhun),"Malformed overlay prevented a valid lower-priority archive from being read");
+            BetaFallback(fixture);
             Console.WriteLine("PASS patch-specific multiplayer maps, arbitrary community names, campaign/missing-asset filtering, per-map cache fallback, archive priority, changed-file invalidation and malformed BIG bounds");
         }
         finally

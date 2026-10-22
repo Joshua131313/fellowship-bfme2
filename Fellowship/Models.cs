@@ -229,23 +229,33 @@ public sealed record RoomPreset(string Name,string Map,string MapPath,int Capaci
     public static List<RoomPreset> Defaults(IEnumerable<GameMap> maps,string patch="1.00")
     {
         var installedMaps=maps.ToArray();patch=GamePatches.Normalize(patch);
-        bool v3=patch.StartsWith("1.09v3",StringComparison.OrdinalIgnoreCase)||patch.StartsWith("1.09u4",StringComparison.OrdinalIgnoreCase);
+        bool family109=patch.StartsWith("1.09",StringComparison.OrdinalIgnoreCase)||patch.StartsWith("v2 ",StringComparison.OrdinalIgnoreCase);
+        bool legacy109=patch is "1.09" or "1.09v2"||patch.StartsWith("v2 ",StringComparison.OrdinalIgnoreCase);
         RoomPreset Make(string name,string map,int count,int resources,int[] teams,string? path=null)
         {
             var installed=installedMaps.FirstOrDefault(m=>path==null?m.Name.Equals(map,StringComparison.OrdinalIgnoreCase):m.Path.Equals(path,StringComparison.OrdinalIgnoreCase));
             return new(name,installed?.Name??map,installed?.Path??"",count,resources,200,false,false,teams,true,patch);
         }
+        RoomPreset Lebennin(string name,string map,string path,string fallback,int count,int[] teams)
+        {
+            var preset=Make(name,map,count,4000,teams,path);
+            // Plain 1.09 does not include these later Lebennin variants. Keep
+            // its installed stock default usable without borrowing patch maps.
+            return legacy109&&preset.MapPath.Length==0?Make(name,fallback,count,4000,teams):preset;
+        }
+        var classicFords=installedMaps.FirstOrDefault(map=>map.Name.Equals("Fords of Isen",StringComparison.OrdinalIgnoreCase));
+        RoomPreset Fords(string name,int resources)=>Make(name,classicFords?.Name??"Fords of Isen II",2,resources,[1,2],classicFords?.Path??@"maps\map mp fords of isen ii\map mp fords of isen ii.map");
         // These are distinct map-cache entries, not interchangeable name matches:
         // Lebennin IV has six starts, Lebennin has four, and Fords of Isen II two.
         var result=new List<RoomPreset>
         {
-            v3?Make("3v3","Lebennin IV",6,4000,[1,1,1,2,2,2],@"maps\map et lebennin iv\map et lebennin iv.map"):Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),
-            v3?Make("2v2","Lebennin",4,4000,[1,1,2,2],@"maps\map et lebennin\map et lebennin.map"):Make("2v2","Buckland",4,4000,[1,1,2,2]),
-            v3?Make("1v1 · 1,000 resources","Fords of Isen II",2,1000,[1,2],@"maps\map mp fords of isen ii\map mp fords of isen ii.map"):Make("1v1 · 1,000 resources","Rohan",2,1000,[1,2]),
-            v3?Make("1v1 · 4,000 resources","Fords of Isen II",2,4000,[1,2],@"maps\map mp fords of isen ii\map mp fords of isen ii.map"):Make("1v1 · 4,000 resources","Rohan",2,4000,[1,2]),
+            family109?Lebennin("3v3","Lebennin IV",@"maps\map et lebennin iv\map et lebennin iv.map","Rhûn",6,[1,1,1,2,2,2]):Make("3v3","Rhûn",6,4000,[1,1,1,2,2,2]),
+            family109?Lebennin("2v2","Lebennin",@"maps\map et lebennin\map et lebennin.map","Buckland",4,[1,1,2,2]):Make("2v2","Buckland",4,4000,[1,1,2,2]),
+            family109?Fords("1v1 · 1,000 resources",1000):Make("1v1 · 1,000 resources","Rohan",2,1000,[1,2]),
+            family109?Fords("1v1 · 4,000 resources",4000):Make("1v1 · 4,000 resources","Rohan",2,4000,[1,2]),
             Make("FFA","Gondor",8,4000,[0,0,0,0,0,0,0,0])
         };
-        if(patch=="1.06"||patch.StartsWith("1.09",StringComparison.OrdinalIgnoreCase)||patch.StartsWith("v2 ",StringComparison.OrdinalIgnoreCase))
+        if(patch=="1.06"||family109)
             result.Insert(2,Make("4v4","Tournament Hills",8,4000,[1,1,1,1,2,2,2,2],@"maps\map mp tournament hills\map mp tournament hills.map"));
         return result;
     }

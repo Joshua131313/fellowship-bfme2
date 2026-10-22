@@ -18,18 +18,18 @@ Select **PATCH** in Create room before choosing the map. The available maps, map
 
 This lets a 1.09 room show its additional multiplayer maps while a 1.00 room uses the 1.00 catalog, even when your game is currently switched to a different patch. The relevant files must already exist locally; Fellowship does not download patch or map content. If a map preview or its starting-position metadata is unavailable, the app cannot reconstruct it from the patch name alone.
 
-If an alternate patch's map files are missing, Create room explains how to install them and leaves its map list empty. Download the patch in Ecth's Patch Switcher before creating a room for it. This does not prevent joining somebody else's room.
+For betas based on 1.09v3 or newer with missing or incomplete local archives, map browsing falls back to available 1.09v3 map sources. Available beta overlays keep priority over inherited maps. This does not install the beta or change exact patch verification. If no usable map sources are available for an alternate patch, Create room explains how to install them and leaves its map list empty. Download the patch in Ecth's Patch Switcher before creating a room for it. This does not prevent joining somebody else's room.
 
-Changing the patch keeps the selected map when it exists in both catalogs; otherwise the form chooses an available fallback. Saved presets belong to a patch. You can save the same preset name on two patches without replacing the other patch's preset. Older saved presets are treated as 1.00 presets.
+Changing the patch while using **Custom preset** chooses the new patch's default map for the selected 1v1, 2v2, 3v3 or 4v4 team layout. Custom resource, hero and room settings remain intact. Manual-team and FFA layouts retain an available selection or use a map fallback. You can select another map after changing patches. Saved presets belong to a patch. You can save the same preset name on two patches without replacing the other patch's preset. Older saved presets are treated as 1.00 presets.
 
 Built-in map defaults also follow the selected patch:
 
 | Patch / preset | Default map |
 | --- | --- |
 | 1.00: 3v3, 2v2, 1v1 | Rhûn, Buckland, and Rohan respectively; the existing 1.00 defaults stay unchanged. |
-| 1.09v3 family: 3v3 | Six-player Lebennin IV. |
-| 1.09v3 family: 2v2 | Four-player Lebennin. |
-| 1.09v3 family: 1v1 | Two-player Fords of Isen II, with separate 1,000-resource and 4,000-resource presets. |
+| 1.09 family: 3v3 | Six-player Lebennin IV when available; otherwise the existing Rhûn default. |
+| 1.09 family: 2v2 | Four-player Lebennin when available; otherwise the existing Buckland default. |
+| 1.09 family: 1v1 | Fords of Isen when present, otherwise the two-player Fords of Isen II; separate 1,000-resource and 4,000-resource presets. |
 | 1.06 and all 1.09 versions: 4v4 | Eight-player Tournament Hills, with four players on each team. |
 
 The 1.09v3 family includes 1.09v3.1 and its newer v3.2/u4 beta descendants. The Lebennin variants are selected by their exact archive paths, so their similar names cannot substitute a four-player map for a six-player map. Tournament Hills has a symmetric arrangement of four starting positions on each half of the map. A preset stays disabled when its exact map is unavailable locally. These room presets do not enable native automation on patches other than verified 1.00.
@@ -76,6 +76,8 @@ The switcher's command-line implementation may close its running GUI as part of 
 | Room map catalog, previews, and saved presets | Read from local selected-patch files | Read from local selected-patch files |
 | Native map, rules, team, spot, and color synchronization | Available with live synchronization enabled | Set these options manually in BFME2 |
 | Automatic Rhûn 3v3 sides and replacement handling | Available for **3v3 + Rhûn** with live synchronization | Manual native setup |
+
+On that supported 1.00 setup, each Fellowship client can sync its own team, spot and color when the native game host or other players are outside Fellowship. Personal sync requires the selected map and preserves occupied spots and colors. A native guest never writes shared map or rule settings. Mixed lobbies use personal selections; coordinated Rhûn side plans require known Fellowship participants.
 
 The native adapter reads and writes the memory layout of one verified BFME2 1.00 binary. Other patches can change that layout, so patch catalog support does not enable that adapter on them. Fellowship skips incompatible synchronization preparation and leaves their native lobby setup to the player. The existing binary validation remains in place.
 

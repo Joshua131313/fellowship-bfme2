@@ -189,6 +189,41 @@ public static class GamePatches
         catch(Exception e) when(e is IOException or UnauthorizedAccessException or ArgumentException or System.Security.SecurityException){ }
         return Array.Empty<string>();
     }
+    // Map browsing can inherit the locally installed v3 catalogue when a beta
+    // is advertised before its download is complete. Detection and switching
+    // continue to use the strict archive/dependency resolver above.
+    public static IReadOnlyList<string> MapArchives(string executable,string? patch=null,string? switcherRoot=null)
+    {
+        string selected=Normalize(patch??Active(executable));
+        var roots=switcherRoot==null?Roots(executable):[switcherRoot];
+        var catalog=Catalog(roots);var definition=catalog.FirstOrDefault(p=>p.Name.Equals(selected,StringComparison.OrdinalIgnoreCase));
+        bool modernBeta=IsBeta(selected)&&(definition?.Order[1]>=3||Key(selected).StartsWith("1.09v3",StringComparison.Ordinal)||Key(selected).StartsWith("1.09u4",StringComparison.Ordinal));
+        if(!modernBeta)return Archives(executable,patch);
+        var game=GameDirectory(executable);if(game==null)return Array.Empty<string>();
+        try
+        {
+            var floor=catalog.FirstOrDefault(p=>p.Name=="1.09v3");
+            var floorChain=floor==null?null:Chain(catalog,floor);
+            var requested=definition==null?Array.Empty<Patch>():Chain(catalog,definition)??[definition];
+            foreach(var root in roots)
+            {
+                if(floorChain==null||floorChain.Any(p=>Source(root,p.Source)==null))continue;
+                var options=ReadOptions(root);var baseline=Merge(root,floorChain,options);
+                if(!OwnArchives(root,floor!,options).Keys.Any(IsPatchArchive))continue;
+                var selectedFiles=Merge(root,requested,options);
+                foreach(var pair in baseline)selectedFiles.TryAdd(pair.Key,pair.Value);
+                foreach(var name in Shared)
+                    if(Big(Path.Combine(game,name)))selectedFiles.TryAdd(name,Path.Combine(game,name));
+                // Preserve a physical v3 archive even when a partial beta uses
+                // the same logical filename. Missing map/art/cache entries then
+                // fall through without importing an unrelated installed beta.
+                return selectedFiles.Concat(baseline).OrderBy(e=>e.Key.ToLowerInvariant(),StringComparer.Ordinal).Select(e=>e.Value)
+                    .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            }
+        }
+        catch(Exception e) when(e is IOException or UnauthorizedAccessException or ArgumentException or System.Security.SecurityException){ }
+        return switcherRoot==null?Archives(executable,patch):Array.Empty<string>();
+    }
     static Dictionary<string,string> Merge(string root,Patch[] chain,Options options)
     {
         var files=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);

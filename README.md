@@ -37,7 +37,7 @@ New rooms default to the **3v3 preset** when its map is available. On 1.00, that
 
 > **Rhûn · 6 players · 4,000 starting resources · 2× command points · Custom Heroes off · Ring Heroes off**
 
-On **1.09v3 and its newer family**, 3v3 uses six-player **Lebennin IV**, 2v2 uses four-player **Lebennin**, and 1v1 uses **Fords of Isen II**. A **4v4 Tournament Hills** preset is available for **1.06 and all 1.09 versions**. Its eight starting positions form two matching groups of four. Presets whose map is missing are disabled.
+On the **1.09 family**, 3v3 prefers six-player **Lebennin IV**, 2v2 prefers four-player **Lebennin**, and 1v1 uses **Fords of Isen** when present, otherwise **Fords of Isen II**. Older catalogs without the Lebennin variants retain their available Rhûn/Buckland defaults. A **4v4 Tournament Hills** preset is available for **1.06 and all 1.09 versions**. Its eight starting positions form two matching groups of four. Presets whose map is missing are disabled.
 
 Choose built-in **3v3, 2v2, 1v1, FFA**, or the patch's **4v4** preset, save your own, or select **Custom** to edit the setup. Search the selected patch's locally available map catalog, set the player limit and hero options, and choose a public or friends-only room.
 
@@ -45,7 +45,7 @@ Click the map preview to claim a starting spot, choose a team and player color, 
 
 ### Choose the patch your group plays
 
-Create room starts with your **verified installed patch**, falling back to **1.00** if the installation cannot be verified. The patch selector contains **1.00, 1.06, 1.09, 1.09v2, 1.09v3, 1.09v3.1**, and the **newest 1.09 beta** recognized from Ecth's Patch Switcher catalog. Selecting a patch refreshes the map choices, previews, starting positions, and saved presets using its locally installed archives and dependencies. Presets belong to their patch, so you can keep different setups with the same name.
+Create room starts with your **verified installed patch**, falling back to **1.00** if the installation cannot be verified. The patch selector contains **1.00, 1.06, 1.09, 1.09v2, 1.09v3, 1.09v3.1**, and the **newest 1.09 beta** recognized from Ecth's Patch Switcher catalog. Selecting a patch refreshes the map choices, previews, starting positions, and saved presets using its locally installed archives and dependencies. Presets belong to their patch, so you can keep different setups with the same name. Changing patches with **Custom preset** selects the new patch's default map for your current team layout while keeping your custom rules. If a listed 1.09 beta is not downloaded, map browsing can use the locally available 1.09v3 map catalog; patch verification and switching still require the exact patch.
 
 If an older beta is already verified as installed, Create room keeps that exact build selected without adding historical betas to the normal dropdown.
 
@@ -58,6 +58,8 @@ To use **Set to …** beside the patch warning, close BFME2 and open Ecth's Patc
 For a **verified BFME2 1.00 installation and a 1.00 room**, enabling **Live BFME2 synchronization** synchronizes supported map, rules, team, starting-position, and color selections through the game's own lobby controls. Changes can flow back from BFME2 into Fellowship, so you can make supported adjustments from inside the game.
 
 The helper validates the supported game binary, waits for a matching, stable LAN setup lobby, checks occupied positions, and pauses writes during match transitions. Each player's helper changes that player's selections. The **BFME2 lobby host can be a different player from the Fellowship room owner**.
+
+Each Fellowship client can synchronize its own team, spot and color even when the native game host or other players do not use Fellowship. The native lobby must use the selected map. In a mixed lobby, your selected choices sync directly; coordinated Rhûn side rotation resumes when the native participants are known to Fellowship. Other players keep control of their own selections, and only the actual native host can synchronize shared map and rule settings.
 
 Other patches support Fellowship rooms, chat, readiness, and coordinated launching. Set their native maps, rules, teams, and spots manually in BFME2; their memory layouts have not been validated for automatic synchronization.
 

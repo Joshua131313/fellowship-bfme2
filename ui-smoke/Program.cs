@@ -12,6 +12,8 @@ class Program
  }
  static void Run(string[] args)
  {
+  if(args.Length==1&&args[0]=="--external-host-sync")
+  {ExternalHostSyncTests.Run();return;}
   if(args.Length==1&&args[0]=="--browser-rooms-layout")
   {var browserLayoutApp=new App(resourcesOnly:true);browserLayoutApp.InitializeComponent();Appearance.Apply("Dark");BrowserRoomLayoutTests.Run();return;}
   if(args.Length==1&&args[0]=="--room-activity")
@@ -38,6 +40,19 @@ class Program
       L.Apply(language);Appearance.Apply(theme);var patchEditor=new RoomEditor(null,settings,new Room{Title="Weekend games",Patch=patch});
       TabNodes(patchEditor).OfType<System.Windows.Controls.ComboBox>().Single(c=>System.Windows.Automation.AutomationProperties.GetName(c)=="PATCH").SelectedItem=patch;
       Render(patchEditor,$"dist/preview-patch-{language}-{theme.ToLowerInvariant()}.png");patchEditor.Close();
+    }
+    var latestBeta=GamePatches.Labels(settings.GamePath).LastOrDefault(p=>p.Contains('ß'));
+    if(latestBeta!=null&&GameInstallation.Maps(settings.GamePath,"1.09v3").Count>0)
+    {
+      L.Apply("en");Appearance.Apply("Light");var betaEditor=new RoomEditor(null,settings,new Room{Title="Beta maps"});
+      TabNodes(betaEditor).OfType<System.Windows.Controls.ComboBox>().Single(c=>System.Windows.Automation.AutomationProperties.GetName(c)=="PATCH").SelectedItem=latestBeta;
+      var betaMaps=GameInstallation.Maps(settings.GamePath,latestBeta);var betaPresets=RoomPreset.Defaults(betaMaps,latestBeta);
+      foreach(var (mode,count) in new[]{("3v3",6),("2v2",4),("1v1",2)})
+      {
+        var preset=betaPresets.First(p=>p.Mode==mode);
+        if(GameMapData.Spots(settings.GamePath,preset.MapPath,latestBeta).Count!=count)throw new Exception("Installed beta default has the wrong map variant: "+mode);
+      }
+      Render(betaEditor,"dist/preview-patch-beta.png");betaEditor.Close();Console.WriteLine($"PASS installed {latestBeta}: {betaMaps.Count} maps and 6/4/2-player defaults");
     }
     foreach(var language in new[]{"en","ar"})
     {
@@ -301,7 +316,7 @@ class Program
   if(manualWire?.ManualAfk!=true)throw new Exception("Manual presence not serialized");
   if(IdlePresence.LastOnline(activityTime.AddMinutes(-5),activityTime)!="5 minutes ago"||IdlePresence.LastOnline(activityTime.AddHours(-2),activityTime)!="2 hours ago"||IdlePresence.LastOnline(activityTime.AddDays(-2),activityTime)!=activityTime.AddDays(-2).ToLocalTime().ToString("d"))throw new Exception("Relative last online formatting failed");
   var legacyDirectory=new PeerDirectory();legacyDirectory.Success("10.0.0.2","Older app",null,activityTime);if(legacyDirectory.Find("10.0.0.2",activityTime)?.IdleSeconds!=null)throw new Exception("Older client idle status invented");
-  var app=new App(resourcesOnly:true);app.InitializeComponent();Appearance.Apply("Dark");PatchPresetTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();PatchSwitcherTests.Run();MapPlayerLabelTests.Run();ChatUiTests.Run();ChatSendTests.Run();RoomChatLayoutTests.Run();BrowserRoomLayoutTests.Run();RoomActivityTests.Run();FriendNicknameTests.Run();MenuUiTests.Run();
+  var app=new App(resourcesOnly:true);app.InitializeComponent();Appearance.Apply("Dark");ExternalHostSyncTests.Run();PatchPresetTests.Run();PatchRoomTests.Run();PatchCompatibilityTests.Run();PatchSwitcherTests.Run();MapPlayerLabelTests.Run();ChatUiTests.Run();ChatSendTests.Run();RoomChatLayoutTests.Run();BrowserRoomLayoutTests.Run();RoomActivityTests.Run();FriendNicknameTests.Run();MenuUiTests.Run();
   var transcript=new ChatTranscript();transcript.Append("Alice","First message");transcript.Append("Bob","Second message");transcript.SelectAll();
   if(!transcript.Selection.Text.Contains("First message")||!transcript.Selection.Text.Contains("Second message"))throw new Exception("Cross-message selection failed");
   transcript.AppendBlocked("Blocked","Hidden secret");transcript.SelectAll();if(transcript.Selection.Text.Contains("Hidden secret"))throw new Exception("Hidden blocked message leaked into selection");

@@ -112,6 +112,13 @@ public sealed class RoomEditor : Window
             map.SelectedItem=maps.FirstOrDefault(m=>m.Path.Equals(previousMap,StringComparison.OrdinalIgnoreCase))??maps.FirstOrDefault();
             presetList.SetPatch(selectedPatch);
             if(presetList.SelectedItem is ComboBoxItem{Tag:RoomPreset currentPreset})ApplyPreset(currentPreset);
+            else
+            {
+                // A version change chooses that version's map for the current
+                // team format without replacing the user's other Custom rules.
+                var defaultMap=RoomPreset.Defaults(maps,selectedPatch).FirstOrDefault(p=>(p.Mode is "1v1" or "2v2" or "3v3" or "4v4")&&p.Teams.SequenceEqual(selectedTeams)&&p.MapPath.Length>0);
+                if(defaultMap!=null)map.SelectedItem=maps.FirstOrDefault(m=>m.Path.Equals(defaultMap.MapPath,StringComparison.OrdinalIgnoreCase))??map.SelectedItem;
+            }
             UpdatePreview();UpdatePresetEditing();
         };
         var store=UI.AsyncButton("Save preset",async()=>

@@ -1224,7 +1224,7 @@ public sealed class RoomWindow : Window
     {
         if((!app.Settings.LiveGameSync)||app.Peer.IsReconnecting||PatchChanging||syncLifetime.IsCancellationRequested||app.Peer.Current is not {} room||!HostPreset.CanSynchronize(app.Settings.GamePath,room))return null;
         var player=room.Players.FirstOrDefault(p=>p.Id==app.Peer.LocalId);
-        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)),Rhun3v3:RhunSides.Enabled(room),Sides:room.SidePlan);
+        return player==null?null:new(room.Id,room.MapPath,room.HostAddress,new(player.Team,player.Spot,player.Color),NativeSetup.From(room),string.Join("|",room.Players.Select(p=>p.Address).Distinct().OrderBy(ip=>ip)),Rhun3v3:RhunSides.Enabled(room),Sides:room.SidePlan,AllowExternalHost:true);
     }
     bool syncPaused;
     public void RetryLiveSync()=>syncPaused=false;

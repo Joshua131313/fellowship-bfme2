@@ -33,6 +33,6 @@ public static class GameMapData
         }
         return [];
     }
-    public static byte[]? ReadAsset(string executable,string wanted,string? patch=null)=>GameAssets.ReadAsset(GamePatches.Archives(executable,patch),wanted);
-    public static List<MapSpot> Spots(string executable,string map,string? patch=null)=>GameAssets.Spots(GamePatches.Archives(executable,patch),map);
+    public static byte[]? ReadAsset(string executable,string wanted,string? patch=null)=>GameAssets.ReadAsset(GamePatches.MapArchives(executable,patch),wanted);
+    public static List<MapSpot> Spots(string executable,string map,string? patch=null)=>GameAssets.Spots(GamePatches.MapArchives(executable,patch),map);
 }

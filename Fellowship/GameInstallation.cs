@@ -28,7 +28,7 @@ public static class GameInstallation
     }
     public static List<GameMap> Maps(string executable,string? patch=null)
     {
-        var maps=GameAssets.Maps(GamePatches.Archives(executable,patch));
+        var maps=GameAssets.Maps(GamePatches.MapArchives(executable,patch));
         if(maps.Count==0&&(patch==null||GamePatches.Normalize(patch)=="1.00"))maps.Add(GameMap.Rhun);
         return maps;
     }

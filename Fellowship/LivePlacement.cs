@@ -11,7 +11,7 @@ namespace Fellowship;
 public static class LivePlacement
 {
     public sealed record Choice(int Team,int Spot,int Color=0);
-    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null,bool Abort=false,bool Rhun3v3=false,SidePlan? Sides=null);
+    public sealed record Command(string Room,string Map,string Host,Choice Choice,NativeSetup? Setup=null,string? Members=null,bool Abort=false,bool Rhun3v3=false,SidePlan? Sides=null,bool AllowExternalHost=false);
     public sealed record Reply(string Status,Choice? Observed=null,bool Import=false,NativeSetup? Setup=null,bool ImportSetup=false,bool Done=false,bool Aborted=false,LobbyReport? Lobby=null);
     public sealed class Control
     {
@@ -71,6 +71,34 @@ public static class LivePlacement
         public bool Changed(Choice next)=>observed!=null&&observed!=next;
         public void Remember(Choice next,Choice actual){desired=next;observed=actual;}
         public void Imported(Choice actual){desired=actual;observed=actual;}
+    }
+    // A mixed lobby cannot participate in the atomic Rhûn clear/claim protocol.
+    // On returning to managed play, require a new host session rather than
+    // applying a plan captured before players made their own native selections.
+    public sealed class CoordinationGuard
+    {
+        bool? coordinated;
+        string? previousSession;
+        public bool Observe(bool next,SidePlan? plan)
+        {
+            bool changed=coordinated.HasValue&&coordinated!=next;
+            if(!next)
+                previousSession=plan?.Session??previousSession;
+            coordinated=next;
+            return changed;
+        }
+        public bool IsFenced(SidePlan? plan,NativeLobby.Snapshot snapshot)
+        {
+            if(previousSession==null||plan!=null&&plan.Session!=previousSession)return false;
+            if(plan==null||plan.Started)return true;
+            // A host may already have the new member list while another helper
+            // briefly sees a mixed roster. Do not wait forever in that case:
+            // cancelled plans only import, and an already satisfied move writes
+            // nothing. Otherwise keep personal sync until a fresh plan arrives.
+            if(plan.Cancelled)return false;
+            return plan.Host!=snapshot.HostAddress||!plan.Moves.TryGetValue(snapshot.Local.Ip,out var move)||
+                snapshot.Local.Team+1!=move.Team||snapshot.Local.Spot+1!=move.Spot;
+        }
     }
     public static async Task Send<T>(Stream stream,T value,CancellationToken token)
     {
@@ -190,7 +218,7 @@ public static class LivePlacement
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
             (Choice Requested,Choice Confirmed)? rotationImport=null;
             string nativeSession="",lastReport="",appliedSidePlan="";long lastReportTick=0;NativeLobby.Snapshot? lastLobby=null;bool reportedStart=false;
-            int generation=0;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();NativeSetup? desiredSetup=null,observedSetup=null;
+            int generation=0;bool? lastPlanMode=null;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();var coordination=new CoordinationGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
             {
@@ -223,7 +251,7 @@ public static class LivePlacement
                 {
                     rotation.Suspend();
                     if(starting)reportedStart=true;
-                    if(reportedStart&&command.Rhun3v3&&lastLobby?.Local.Row==0&&command.Sides?.Started!=true)
+                    if(reportedStart&&lastLobby?.Local.Row==0&&UsesCoordinatedRhun(command,lastLobby)&&command.Sides?.Started!=true)
                     {
                         reportedStart=true;await Send(pipe,new Reply("Live sync paused during the match. Waiting for a new LAN lobby…",Lobby:new(nativeSession,lastLobby,true)),timeout.Token);continue;
                     }
@@ -232,7 +260,7 @@ public static class LivePlacement
                 }
                 if(editable&&generation!=session.Generation)
                 {
-                    generation=session.Generation;nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=null;reportedStart=false;rotation.NewSession();rotationImport=null;context=null;reconcile=new();desiredSetup=observedSetup=null;
+                    generation=session.Generation;nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=null;reportedStart=false;rotation.NewSession();rotationImport=null;context=null;reconcile=new();coordination=new();lastPlanMode=null;desiredSetup=observedSetup=null;
                 }
                 try
                 {
@@ -244,12 +272,25 @@ public static class LivePlacement
                 }
                 else
                 {
+                    bool coordinatedRhun=UsesCoordinatedRhun(command,snapshot);
+                    if(coordination.Observe(coordinatedRhun,command.Sides))
+                    {
+                        // The native host must publish a new plan session when a
+                        // mixed roster becomes fully managed again. A revision
+                        // alone may never change for an otherwise ready lineup.
+                        nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=null;reportedStart=false;
+                        appliedSidePlan="";rotation=new();rotationImport=null;
+                    }
+                    if(!coordinatedRhun){lastLobby=null;lastReport="";reportedStart=false;}
+                    bool useSidePlan=coordinatedRhun&&!coordination.IsFenced(command.Sides,snapshot);
+                    if(lastPlanMode.HasValue&&lastPlanMode!=useSidePlan){rotation=new();rotationImport=null;}
+                    lastPlanMode=useSidePlan;
                     if(HasDuplicateSpots(snapshot))
                     {
                         await Send(pipe,new Reply("BFME2 has conflicting starting spots. Resolve them in the native lobby; sync is paused."),timeout.Token);
                         continue;
                     }
-                    string nextContext=ContextKey(command,snapshot);
+                    string nextContext=ContextKey(command,snapshot)+"|"+useSidePlan;
                     if(context!=nextContext){context=nextContext;rotationImport=null;reconcile=new();desiredSetup=observedSetup=null;placementNotice=null;}
                     if(placementMap!=snapshot.Map){placementMap=snapshot.Map;rotationImport=null;reconcile=new();placementNotice=null;}
                     if(snapshot.Local.Row==0&&command.Setup is {} requestedSetup)
@@ -282,7 +323,7 @@ public static class LivePlacement
                     {
                         await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
                     }
-                    if(command.Rhun3v3)
+                    if(coordinatedRhun)
                     {
                         lastLobby=snapshot;
                         if(snapshot.Local.Row==0)
@@ -290,6 +331,9 @@ public static class LivePlacement
                             var fingerprint=JsonSerializer.Serialize(snapshot);
                             if(lastReport!=fingerprint||Environment.TickCount64-lastReportTick>2000){lastReport=fingerprint;lastReportTick=Environment.TickCount64;await Send(pipe,new Reply("Coordinating Rhûn team sides…",Lobby:new(nativeSession,snapshot)),timeout.Token);continue;}
                         }
+                    }
+                    if(useSidePlan)
+                    {
                         var plan=command.Sides;
                         if(plan is {Started:true})
                         {await Send(pipe,new Reply("Waiting for the Rhûn host's team selection…"),timeout.Token);continue;}
@@ -342,7 +386,7 @@ public static class LivePlacement
                         }
                         rotationImport=null;
                     }
-                    var replacement=command.Rhun3v3?rotation.Replacement(snapshot):null;
+                    var replacement=useSidePlan?rotation.Replacement(snapshot):null;
                     if(replacement!=null&&(!reconcile.ShouldWrite(command.Choice)||command.Choice.Spot==0))
                     {
                         try
@@ -427,10 +471,30 @@ public static class LivePlacement
         return 0;
     }
     public static string ContextKey(Command command,NativeLobby.Snapshot snapshot)=>
-        $"{command.Room}|{command.Host}|{command.Setup!=null}|{snapshot.Identity}|{snapshot.HostAddress}|{snapshot.Local.Row}";
-    public static bool MatchesLobby(Command command,NativeLobby.Snapshot snapshot)=>
-        (command.Members==null?snapshot.HostAddress==command.Host:command.Members.Split('|').Contains(snapshot.HostAddress,StringComparer.Ordinal))&&(command.Setup!=null&&snapshot.Local.Row==0||
-        (command.Members!=null||command.Setup==null)&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
+        $"{command.Room}|{command.Host}|{command.Setup!=null}|{snapshot.Identity}|{snapshot.HostAddress}|{snapshot.Local.Row}|{command.AllowExternalHost}|{UsesCoordinatedRhun(command,snapshot)}";
+    public static bool MatchesLobby(Command command,NativeLobby.Snapshot snapshot)
+    {
+        if(command.AllowExternalHost)
+        {
+            // NativeLobby identifies this row using the process's own network
+            // address and port; the bridge verifies that identity again. Guests
+            // can change their own selections without owning the shared setup.
+            if(snapshot.Slots.Count(s=>s.Local)!=1||snapshot.Local.State!=6)return false;
+            return command.Setup!=null&&snapshot.Local.Row==0||snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase);
+        }
+        return (command.Members==null?snapshot.HostAddress==command.Host:command.Members.Split('|').Contains(snapshot.HostAddress,StringComparer.Ordinal))&&
+            (command.Setup!=null&&snapshot.Local.Row==0||(command.Members!=null||command.Setup==null)&&snapshot.Map.Equals(command.Map,StringComparison.OrdinalIgnoreCase));
+    }
+    public static bool UsesCoordinatedRhun(Command command,NativeLobby.Snapshot snapshot)
+    {
+        if(!command.Rhun3v3)return false;
+        if(!command.AllowExternalHost)return true;
+        var members=(command.Members??command.Host).Split('|',StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
+        var humans=snapshot.Slots.Where(s=>s.State==6).ToArray();
+        return members.Contains(snapshot.HostAddress)&&humans.Any(s=>s.Row==0&&s.Ip==snapshot.HostAddress)&&
+            humans.Select(s=>s.Ip).Distinct(StringComparer.Ordinal).Count()==humans.Length&&humans.All(s=>members.Contains(s.Ip))&&
+            !snapshot.Slots.Any(s=>s.State!=6&&s.Active);
+    }
     public static bool HasDuplicateSpots(NativeLobby.Snapshot snapshot)=>snapshot.Slots
         .Where(s=>s.Active&&s.Spot>=0).GroupBy(s=>s.Spot).Any(g=>g.Count()>1);
     public static Choice ResolveOccupiedColor(NativeLobby.Snapshot snapshot,Choice desired)=>
