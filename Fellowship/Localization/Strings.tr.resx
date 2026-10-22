@@ -1977,4 +1977,19 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
     <value>Başlatma isteği şu oyunculara ulaşamadı: {0}. Yeniden bağlanmalarını veya Oyunu başlat seçeneğini kullanmalarını isteyin.</value>
   </data>
+  <data name="Rhûn 3v3 · Hosting team right · Other team left · Same top/middle/bottom position" xml:space="preserve">
+    <value>Rhûn 3v3 · Ev sahibi takım sağda · Diğer takım solda · Aynı üst/orta/alt konum</value>
+  </data>
+  <data name="Your mirrored spot is occupied. Waiting for it to become free." xml:space="preserve">
+    <value>Simetrik konumunuz dolu. Boşalması bekleniyor.</value>
+  </data>
+  <data name="Swapping sides. Waiting for the matching spot to become free." xml:space="preserve">
+    <value>Taraf değiştiriliyor. Eşleşen konumun boşalması bekleniyor.</value>
+  </data>
+  <data name="Choose a starting spot in Fellowship or BFME2." xml:space="preserve">
+    <value>Fellowship veya BFME2 içinde bir başlangıç konumu seçin.</value>
+  </data>
+  <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
+    <value>Lobi takımları belirlenene kadar son oyundaki takımlar kullanılıyor.</value>
+  </data>
 </root>

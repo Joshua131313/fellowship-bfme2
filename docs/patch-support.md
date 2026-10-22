@@ -77,7 +77,7 @@ The switcher's command-line implementation may close its running GUI as part of 
 | Native map, rules, team, spot, and color synchronization | Available with live synchronization enabled | Set these options manually in BFME2 |
 | Automatic Rhûn 3v3 sides and replacement handling | Available for **3v3 + Rhûn** with live synchronization | Manual native setup |
 
-On that supported 1.00 setup, each Fellowship client can sync its own team, spot and color when the native game host or other players are outside Fellowship. Personal sync requires the selected map and preserves occupied spots and colors. A native guest never writes shared map or rule settings. Mixed lobbies use personal selections; coordinated Rhûn side plans require known Fellowship participants.
+On that supported 1.00 setup, each Fellowship client can sync its own team, spot and color when the native game host or other players are outside Fellowship. Personal sync requires the selected map and preserves occupied spots and colors. A native guest never writes shared map or rule settings. In mixed Rhûn 3v3 lobbies, personal mirroring places the hosting native team on the right and the other team on the left while retaining each player's vertical position and native team number. Coordinated shared side plans require known Fellowship participants.
 
 The native adapter reads and writes the memory layout of one verified BFME2 1.00 binary. Other patches can change that layout, so patch catalog support does not enable that adapter on them. Fellowship skips incompatible synchronization preparation and leaves their native lobby setup to the player. The existing binary validation remains in place.
 

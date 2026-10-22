@@ -34,6 +34,15 @@ public static class NativePlacement
         BitConverter.GetBytes(move.FromTeam-1).CopyTo(bytes,1084);
         BitConverter.GetBytes(move.FromSpot-1).CopyTo(bytes,1088);return bytes;
     }
+    // Reuse the native compare-before-write mode for a personal side move.
+    // A newer manual spot/team edit rejects this request; native color stays intact.
+    public static byte[] GuardedSideRequestBytes(int pid,NativeLobby.Snapshot snapshot,int team,int spot)
+    {
+        var bytes=RequestBytes(pid,snapshot,team,spot,color:snapshot.Local.Color+1);
+        BitConverter.GetBytes(3).CopyTo(bytes,568);
+        BitConverter.GetBytes(snapshot.Local.Team).CopyTo(bytes,1084);
+        BitConverter.GetBytes(snapshot.Local.Spot).CopyTo(bytes,1088);return bytes;
+    }
     public static byte[] SetupRequestBytes(int pid,NativeLobby.Snapshot snapshot,NativeSetup setup)
     {
         setup.Rules.Validate();var target=Encoding.ASCII.GetBytes(setup.Map);

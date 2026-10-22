@@ -1977,4 +1977,19 @@ Si falta una sala, introduce la dirección VPN del anfitrión y actualiza.</valu
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
     <value>El inicio no pudo contactar con: {0}. Pídeles que se reconecten o usen Iniciar juego.</value>
   </data>
+  <data name="Rhûn 3v3 · Hosting team right · Other team left · Same top/middle/bottom position" xml:space="preserve">
+    <value>Rhûn 3v3 · Equipo anfitrión a la derecha · Otro equipo a la izquierda · Misma posición superior/central/inferior</value>
+  </data>
+  <data name="Your mirrored spot is occupied. Waiting for it to become free." xml:space="preserve">
+    <value>Tu posición reflejada está ocupada. Esperando a que quede libre.</value>
+  </data>
+  <data name="Swapping sides. Waiting for the matching spot to become free." xml:space="preserve">
+    <value>Cambiando de lado. Esperando a que quede libre la posición correspondiente.</value>
+  </data>
+  <data name="Choose a starting spot in Fellowship or BFME2." xml:space="preserve">
+    <value>Elige una posición de inicio en Fellowship o BFME2.</value>
+  </data>
+  <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
+    <value>Usando los equipos de la última partida mientras no se asignen los equipos de la sala.</value>
+  </data>
 </root>

@@ -1977,4 +1977,19 @@
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
     <value>تعذر إرسال طلب التشغيل إلى: {0}. اطلب منهم إعادة الاتصال أو استخدام «تشغيل اللعبة».</value>
   </data>
+  <data name="Rhûn 3v3 · Hosting team right · Other team left · Same top/middle/bottom position" xml:space="preserve">
+    <value>رون 3 ضد 3 · الفريق المضيف يمينًا · الفريق الآخر يسارًا · نفس الموضع العلوي/الأوسط/السفلي</value>
+  </data>
+  <data name="Your mirrored spot is occupied. Waiting for it to become free." xml:space="preserve">
+    <value>موقعك المقابل مشغول. في انتظار أن يصبح شاغرًا.</value>
+  </data>
+  <data name="Swapping sides. Waiting for the matching spot to become free." xml:space="preserve">
+    <value>جارٍ تبديل الجانبين. في انتظار أن يصبح الموقع المقابل شاغرًا.</value>
+  </data>
+  <data name="Choose a starting spot in Fellowship or BFME2." xml:space="preserve">
+    <value>اختر موقع بدء في Fellowship أو BFME2.</value>
+  </data>
+  <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
+    <value>تُستخدم فرق المباراة السابقة ما دامت فرق الردهة غير محددة.</value>
+  </data>
 </root>

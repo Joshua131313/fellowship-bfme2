@@ -59,7 +59,7 @@ For a **verified BFME2 1.00 installation and a 1.00 room**, enabling **Live BFME
 
 The helper validates the supported game binary, waits for a matching, stable LAN setup lobby, checks occupied positions, and pauses writes during match transitions. Each player's helper changes that player's selections. The **BFME2 lobby host can be a different player from the Fellowship room owner**.
 
-Each Fellowship client can synchronize its own team, spot and color even when the native game host or other players do not use Fellowship. The native lobby must use the selected map. In a mixed lobby, your selected choices sync directly; coordinated Rhûn side rotation resumes when the native participants are known to Fellowship. Other players keep control of their own selections, and only the actual native host can synchronize shared map and rule settings.
+Each Fellowship client can synchronize its own team, spot and color even when the native game host or other players do not use Fellowship. The native lobby must use the selected map. In a mixed Rhûn 3v3 lobby, your spot moves to the right when your native team is hosting and to the left when the other team is hosting, preserving top, middle or bottom. Native team numbers stay intact. Fully managed lobbies retain the shared side plan. Other players keep control of their own selections, and only the actual native host can synchronize shared map and rule settings.
 
 Other patches support Fellowship rooms, chat, readiness, and coordinated launching. Set their native maps, rules, teams, and spots manually in BFME2; their memory layouts have not been validated for automatic synchronization.
 
@@ -143,6 +143,8 @@ These special rules apply **only to a 1.00 room using the 3v3 preset/mode on Rh�
 | A substitute joins or players exchange positions | Respect chosen free positions. Remembered positions are fallbacks, so a player can give up a spot and choose another. |
 
 Fellowship reads the **actual BFME2 hosting player and native team selections**, then uses the previous match's lineup to identify the hosting team. The Fellowship room owner distributes the shared plan; room ownership does not decide which team hosts the game.
+
+When the native host or other players are outside Fellowship, each client uses its own native team relationship to the host and mirrors only its own spot. Top-left pairs with top-right, middle-left with middle-right, and bottom-left with bottom-right. Same-team host changes and replayed games keep the same side. While teams are unset, a confirmed previous six-player lineup can identify a known host as your teammate or opponent; current team selections always take priority. New or ambiguous hosts wait for a selection. A blocked counterpart stays pending rather than choosing a different vertical position or moving an outsider.
 
 Temporary observer status while connecting is allowed to settle before replacement logic acts. Existing occupied spots and explicit manual changes are respected. Hosting history lasts for the current Fellowship room; replacement history lives with the sync helper. A full app restart clears this transient history.
 

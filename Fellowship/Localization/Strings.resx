@@ -1977,4 +1977,19 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Launch could not reach: {0}. Ask them to reconnect or use Launch game." xml:space="preserve">
     <value>Launch could not reach: {0}. Ask them to reconnect or use Launch game.</value>
   </data>
+  <data name="Rhûn 3v3 · Hosting team right · Other team left · Same top/middle/bottom position" xml:space="preserve">
+    <value>Rhûn 3v3 · Hosting team right · Other team left · Same top/middle/bottom position</value>
+  </data>
+  <data name="Your mirrored spot is occupied. Waiting for it to become free." xml:space="preserve">
+    <value>Your mirrored spot is occupied. Waiting for it to become free.</value>
+  </data>
+  <data name="Swapping sides. Waiting for the matching spot to become free." xml:space="preserve">
+    <value>Swapping sides. Waiting for the matching spot to become free.</value>
+  </data>
+  <data name="Choose a starting spot in Fellowship or BFME2." xml:space="preserve">
+    <value>Choose a starting spot in Fellowship or BFME2.</value>
+  </data>
+  <data name="Using teams from the last game while lobby teams are unset." xml:space="preserve">
+    <value>Using teams from the last game while lobby teams are unset.</value>
+  </data>
 </root>

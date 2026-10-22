@@ -69,7 +69,7 @@ public static class LivePlacement
         Choice? desired, observed;
         public bool ShouldWrite(Choice next)=>desired==null||desired!=next;
         public bool Changed(Choice next)=>observed!=null&&observed!=next;
-        public void Remember(Choice next,Choice actual){desired=next;observed=actual;}
+        public void Remember(Choice next,Choice actual,bool retry=false){desired=retry?null:next;observed=actual;}
         public void Imported(Choice actual){desired=actual;observed=actual;}
     }
     // A mixed lobby cannot participate in the atomic Rhûn clear/claim protocol.
@@ -187,7 +187,8 @@ public static class LivePlacement
             using var pipe=new NamedPipeClientStream(".",pipeName,PipeDirection.InOut,PipeOptions.Asynchronous);
             await pipe.ConnectAsync(15000);
             if(!GetNamedPipeServerProcessId(pipe.SafePipeHandle,out uint server)||server!=parentPid)return 1;
-            var rotation=new LobbyRotation();
+            var rotation=new LobbyRotation();var personalSides=new PersonalRhunSides();
+            var rhunSpots=GameMapData.Spots(gamePath,GameMap.Rhun.Path,"1.00");
             while(!parent.HasExited)
             {
             if(gamePid==0)
@@ -217,7 +218,7 @@ public static class LivePlacement
             if(!string.Equals(NativePlacement.PhysicalPath(game.MainModule!.FileName),NativePlacement.PhysicalPath(Path.Combine(Path.GetDirectoryName(gamePath)!,"game.dat")),StringComparison.OrdinalIgnoreCase))throw new IOException("The running BFME2 does not match the configured installation.");
             using var reader=new NativeLobby(gamePid);string host=NativePlacement.Extract();
             (Choice Requested,Choice Confirmed)? rotationImport=null;
-            string nativeSession="",lastReport="",appliedSidePlan="";long lastReportTick=0;NativeLobby.Snapshot? lastLobby=null;bool reportedStart=false;
+            string nativeSession="",lastReport="",appliedSidePlan="";long lastReportTick=0;NativeLobby.Snapshot? lastLobby=null,lastSideLobby=null;bool reportedStart=false,rememberedStart=false;
             int generation=0;bool? lastPlanMode=null;string? lastTrace=null;string? room=null,context=null,placementMap=null,placementNotice=null;var reconcile=new Reconciler();var session=new SessionGuard();var coordination=new CoordinationGuard();NativeSetup? desiredSetup=null,observedSetup=null;
             var maps=GameInstallation.Maps(gamePath).Select(m=>m.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             while(!parent.HasExited&&!game.HasExited)
@@ -250,6 +251,10 @@ public static class LivePlacement
                 if(session.Stopped)
                 {
                     rotation.Suspend();
+                    if(starting&&!rememberedStart)
+                    {
+                        personalSides.RememberMatch(command,lastSideLobby);lastSideLobby=null;rememberedStart=true;
+                    }
                     if(starting)reportedStart=true;
                     if(reportedStart&&lastLobby?.Local.Row==0&&UsesCoordinatedRhun(command,lastLobby)&&command.Sides?.Started!=true)
                     {
@@ -260,13 +265,14 @@ public static class LivePlacement
                 }
                 if(editable&&generation!=session.Generation)
                 {
-                    generation=session.Generation;nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=null;reportedStart=false;rotation.NewSession();rotationImport=null;context=null;reconcile=new();coordination=new();lastPlanMode=null;desiredSetup=observedSetup=null;
+                    generation=session.Generation;nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=lastSideLobby=null;reportedStart=rememberedStart=false;rotation.NewSession();personalSides.NewLobby();rotationImport=null;context=null;reconcile=new();coordination=new();lastPlanMode=null;desiredSetup=observedSetup=null;
                 }
                 try
                 {
                 Reply reply;
                 if(!editable||snapshot==null||!MatchesLobby(command,snapshot))
                 {
+                    lastSideLobby=null;
                     rotation.Suspend();
                     reply=new("Waiting for the matching BFME2 LAN setup lobby…");
                 }
@@ -279,14 +285,15 @@ public static class LivePlacement
                         // mixed roster becomes fully managed again. A revision
                         // alone may never change for an otherwise ready lineup.
                         nativeSession=Guid.NewGuid().ToString("N");lastReport="";lastLobby=null;reportedStart=false;
-                        appliedSidePlan="";rotation=new();rotationImport=null;
+                        appliedSidePlan="";rotation=new();personalSides.NewLobby();rotationImport=null;
                     }
                     if(!coordinatedRhun){lastLobby=null;lastReport="";reportedStart=false;}
                     bool useSidePlan=coordinatedRhun&&!coordination.IsFenced(command.Sides,snapshot);
-                    if(lastPlanMode.HasValue&&lastPlanMode!=useSidePlan){rotation=new();rotationImport=null;}
+                    if(lastPlanMode.HasValue&&lastPlanMode!=useSidePlan){rotation=new();personalSides.NewLobby();rotationImport=null;}
                     lastPlanMode=useSidePlan;
                     if(HasDuplicateSpots(snapshot))
                     {
+                        lastSideLobby=null;
                         await Send(pipe,new Reply("BFME2 has conflicting starting spots. Resolve them in the native lobby; sync is paused."),timeout.Token);
                         continue;
                     }
@@ -314,11 +321,15 @@ public static class LivePlacement
                             if(!maps.Contains(actualSetup.Map))throw new IOException("Native map is not in Fellowship's installed-map catalog.");
                             if(observedSetup?.Map!=actualSetup.Map)reconcile=new();
                             desiredSetup=observedSetup=actualSetup;
+                            lastSideLobby=null;
                             await Send(pipe,new Reply("Live map, rules, team, spot & color sync connected",Setup:actualSetup,ImportSetup:true),timeout.Token);
                             continue;
                         }
                     }
                     var actual=new Choice(snapshot.Local.Team+1,snapshot.Local.Spot+1,snapshot.Local.Color+1);
+                    // Capture the latest native lineup, even while writes wait
+                    // for stability, so a last-second team edit is not missed.
+                    lastSideLobby=snapshot;
                     if(!rotation.Observe(snapshot,TimeSpan.FromMilliseconds(Environment.TickCount64)))
                     {
                         await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
@@ -367,6 +378,7 @@ public static class LivePlacement
                     }
                     if(snapshot.Local.Observer)
                     {
+                        personalSides.NewLobby();
                         if(!rotation.WasActive(snapshot.Local))
                         {
                             await Send(pipe,new Reply("Waiting for the lobby selections to settle…"),timeout.Token);continue;
@@ -407,30 +419,57 @@ public static class LivePlacement
                         }
                     }
 
-                    if(reconcile.ShouldWrite(command.Choice))
+                    var requested=command.Choice;
+                    var personal=personalSides.Resolve(command,snapshot,rhunSpots);
+                    if(personal.State!=PersonalRhunSides.State.Disabled)requested=personal.Choice;
+                    string? sideNotice=personal.State switch
+                    {
+                        PersonalRhunSides.State.WaitingForTeams=>"Waiting for the Rhûn host's team selection…",
+                        PersonalRhunSides.State.WaitingForSpot=>"Choose a starting spot in Fellowship or BFME2.",
+                        PersonalRhunSides.State.Blocked=>"Your mirrored spot is occupied. Waiting for it to become free.",
+                        PersonalRhunSides.State.ClearOwn=>"Swapping sides. Waiting for the matching spot to become free.",
+                        _=>personal.FromHistory?"Using teams from the last game while lobby teams are unset.":null
+                    };
+                    if(reconcile.ShouldWrite(requested))
                     {
                         placementNotice=null;
-                        var desired=ResolveOccupiedSpot(snapshot,command.Choice);
+                        var desired=ResolveOccupiedSpot(snapshot,requested);
                         desired=ResolveOccupiedColor(snapshot,desired);
-                        if(desired!=command.Choice)placementNotice="That spot or color is occupied in BFME2. Your native selection was kept; choose another.";
+                        bool rejected=false,guardedSide=false;
+                        if(desired!=requested)placementNotice="That spot or color is occupied in BFME2. Your native selection was kept; choose another.";
                         if(actual!=desired)
                         {
-                                try{await Execute(host,gamePid,snapshot,NativePlacement.RequestBytes(gamePid,snapshot,desired.Team,desired.Spot,color:desired.Color),2,timeout.Token);}
-                                catch(PlacementRejectedException error){placementNotice=error.Message;}
+                                try
+                                {
+                                    guardedSide=personal.State!=PersonalRhunSides.State.Disabled&&(desired.Team!=actual.Team||desired.Spot!=actual.Spot);
+                                    var request=guardedSide?NativePlacement.GuardedSideRequestBytes(gamePid,snapshot,desired.Team,desired.Spot):NativePlacement.RequestBytes(gamePid,snapshot,desired.Team,desired.Spot,color:desired.Color);
+                                    await Execute(host,gamePid,snapshot,request,2,timeout.Token);
+                                    if(personal.State!=PersonalRhunSides.State.Disabled)personalSides.RecordApplied(guardedSide?desired with{Color=snapshot.Local.Color+1}:desired);
+                                }
+                                catch(PlacementRejectedException error){placementNotice=error.Message;rejected=true;}
                                 var confirmed=ReadAfterWrite(reader);
                                 if(confirmed==null||confirmed.Identity!=snapshot.Identity)throw new NativeTransitionException();
                                 if(!confirmed.Map.Equals(snapshot.Map,StringComparison.OrdinalIgnoreCase)||confirmed.Local.Row!=snapshot.Local.Row||HasDuplicateSpots(confirmed))throw new NativeRefreshException();
                                 actual=new(confirmed.Local.Team+1,confirmed.Local.Spot+1,confirmed.Local.Color+1);
                         }
-                        reconcile.Remember(command.Choice,actual);
-                        bool correction=actual!=command.Choice;
-                        reply=new(placementNotice??(snapshot.Local.Row!=0?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,correction);
+                        // A raced native edit or allocation may reject the move.
+                        // Keep a personal side correction pending until confirmed;
+                        // Resolve will first honor any newer manual selection.
+                        // Guarded moves preserve the live native color. Apply a
+                        // pending explicit color on the next poll, after the side
+                        // is confirmed, without importing that intermediate color.
+                        bool pendingColor=guardedSide&&desired.Color==requested.Color&&actual.Color!=requested.Color;
+                        bool retrySide=personal.State!=PersonalRhunSides.State.Disabled&&(rejected||pendingColor||actual.Team!=requested.Team||actual.Spot!=requested.Spot);
+                        reconcile.Remember(requested,actual,retrySide);
+                        bool correction=!((rejected||pendingColor)&&personal.State!=PersonalRhunSides.State.Disabled)&&actual!=command.Choice;
+                        reply=new(sideNotice??placementNotice??(snapshot.Local.Row!=0?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,correction);
                     }
                     else
                     {
                         bool changed=reconcile.Changed(actual);
-                        if(changed)reconcile.Imported(actual);else reconcile.Remember(command.Choice,actual);
-                        reply=new(placementNotice??(snapshot.Local.Row!=0?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,changed);
+                        if(changed)reconcile.Imported(actual);else reconcile.Remember(requested,actual);
+                        bool pendingSideImport=(personal.State is PersonalRhunSides.State.Ready or PersonalRhunSides.State.ClearOwn)&&actual!=command.Choice;
+                        reply=new(sideNotice??placementNotice??(snapshot.Local.Row!=0?"Live team, spot & color sync connected":"Live map, rules, team, spot & color sync connected"),actual,changed||pendingSideImport);
                     }
                 }
                 await Send(pipe,reply,timeout.Token);

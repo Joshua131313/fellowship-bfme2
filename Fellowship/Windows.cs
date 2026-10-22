@@ -372,7 +372,7 @@ public sealed partial class BrowserWindow : Window
         footer.Children.Add(direct);
         count.Margin = new(10,0,0,0); onlineCount.Margin=new(18,0,0,0);var footerRight=UI.Row(count,onlineCount);Grid.SetColumn(footerRight,1);footer.Children.Add(footerRight);UI.At(body,footer,4);
         var bottom = new Grid { Background = UI.Brush("#181C22"), Height = 36 }; bottom.ColumnDefinitions.Add(new()); bottom.ColumnDefinitions.Add(new() { Width = UI.Auto }); status.Margin = new(22,0,0,0); bottom.Children.Add(status);
-        var hint = UI.LocalizedText("v0.1.136   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
+        var hint = UI.LocalizedText("v0.1.137   ·   RUNS IN SYSTEM TRAY",9,UI.Muted,true); hint.Margin = new(0,0,22,0); Grid.SetColumn(hint,1); bottom.Children.Add(hint); UI.At(body,bottom,5);
         var playerScroll=UI.Scroll(activePlayers);playerScroll.MaxHeight=280;
         var popupBody=UI.Stack(UI.LocalizedText("PLAYER SEARCH",10,UI.Muted,true),playerScroll);
         ((FrameworkElement)popupBody.Children[0]).Margin=new(0,0,0,10);
@@ -1031,7 +1031,7 @@ public sealed class RoomWindow : Window
     TaskCompletionSource<bool>? syncPrepared;
     readonly LivePlacement.Control syncControl=new();
     readonly System.Threading.CancellationTokenSource syncLifetime=new();
-    readonly TextBlock sideStatus=UI.LocalizedText("Rhûn 3v3 · Team 1 left · Hosting team 2 right · Automatic mirrored spots",11,UI.Accent,true);
+    readonly TextBlock sideStatus=UI.LocalizedText("Rhûn 3v3 · Hosting team right · Other team left · Same top/middle/bottom position",11,UI.Accent,true);
     readonly TextBlock liveStatus=UI.LocalizedText("Live sync starts when BFME2 opens.",10,UI.Muted);
     readonly TextBlock patchNotice=UI.LocalizedText("",11,"#E5B77A");
     readonly Grid patchWarning=new();

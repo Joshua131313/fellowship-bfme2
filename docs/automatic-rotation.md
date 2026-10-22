@@ -16,6 +16,18 @@ Substitutes can choose any available position. A player can give up a position t
 
 The Fellowship room owner distributes the plan, but is not assumed to host BFME2. A protocol test uses different players for those roles and verifies the plan, positions, and native hosting history on every participant. Other modes and maps retain ordinary saved-preference behavior.
 
+## Personal sides in mixed lobbies
+
+For Rhûn 3v3, a Fellowship client can also mirror its own spot when the native game host or other participants do not run Fellowship. The native host's team belongs on the right; the opposing team belongs on the left. Native team numbers are retained, and each helper writes only its own row. Once native teams are known, same-team host changes preserve the side instead of toggling it.
+
+Mirroring pairs positions by their vertical order in the actual map metadata: top with top, middle with middle, and bottom with bottom. A fresh lobby with Random position can restore the remembered vertical position. New explicit spot choices replace that preference; a deliberate Random choice within the current lobby stays Random. Explicit Fellowship team edits remain available after the initial native team is established.
+
+At native match start, the helper remembers a complete, unambiguous six-human 3+3 lineup. In a later lobby in the same room, that lineup can establish whether the local player and host were teammates while current teams remain unset. Current native teams and deliberate team edits override this fallback. Contradictory lineups, unknown hosts, observers, and ambiguous identities defer the decision. The status explains when last game's teams are being used. No completed-game counter or alternating-host assumption is involved, and restarting Fellowship clears this transient history.
+
+An occupied counterpart stays pending. The helper does not pick another vertical seat or clear an outsider. Two known Fellowship clients exchanging complementary seats may each clear their own spot before claiming the released counterpart. The intermediate Random echo does not erase the remembered vertical position. Countdown/session guards still stop native writes during a match.
+
+`PersonalRhunSideTests` covers personal mirroring and its transitions. Run `dotnet run --project ui-smoke/UiSmoke.csproj -c Release -- --personal-sides` for these cases plus the existing external-host and coordinated Rhûn regressions. These are simulated native-lobby tests; live multi-PC behavior is not claimed as tested.
+
 ## Native evidence
 
 - Slot +0x04: occupancy state (6 identifies a human connection).
