@@ -2103,4 +2103,31 @@
   <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
     <value>أصلح خيار إصلاح التأخير والوضع بلا حدود أو عطّله في الإعدادات قبل تشغيل BFME2.</value>
   </data>
+  <data name="Checking for updates…" xml:space="preserve">
+    <value>جارٍ البحث عن تحديثات…</value>
+  </data>
+  <data name="Fellowship will open when the update is ready." xml:space="preserve">
+    <value>سيفتح Fellowship عندما يصبح التحديث جاهزًا.</value>
+  </data>
+  <data name="Update progress" xml:space="preserve">
+    <value>تقدّم التحديث</value>
+  </data>
+  <data name="Open Fellowship" xml:space="preserve">
+    <value>فتح Fellowship</value>
+  </data>
+  <data name="Fellowship will update automatically before opening." xml:space="preserve">
+    <value>سيُحدَّث Fellowship تلقائيًا قبل فتحه.</value>
+  </data>
+  <data name="Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>سيُفتح Fellowship مجددًا عند اكتمال التثبيت.</value>
+  </data>
+  <data name="Could not start the updated Fellowship." xml:space="preserve">
+    <value>تعذر تشغيل الإصدار المحدَّث من Fellowship.</value>
+  </data>
+  <data name="The installed Fellowship version does not match the downloaded update. Open the log and retry." xml:space="preserve">
+    <value>إصدار Fellowship المثبّت لا يطابق التحديث الذي تم تنزيله. افتح السجل وأعد المحاولة.</value>
+  </data>
+  <data name="{0} MB downloaded" xml:space="preserve">
+    <value>تم تنزيل {0} ميغابايت</value>
+  </data>
 </root>

@@ -2103,4 +2103,31 @@ Bir oda eksikse kurucunun VPN adresini girip yenileyin.</value>
   <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
     <value>BFME2’yi başlatmadan önce Ayarlar’dan gecikme düzeltmesi ve kenarlıksız modu onarın veya devre dışı bırakın.</value>
   </data>
+  <data name="Checking for updates…" xml:space="preserve">
+    <value>Güncellemeler denetleniyor…</value>
+  </data>
+  <data name="Fellowship will open when the update is ready." xml:space="preserve">
+    <value>Güncelleme hazır olduğunda Fellowship açılacak.</value>
+  </data>
+  <data name="Update progress" xml:space="preserve">
+    <value>Güncelleme ilerlemesi</value>
+  </data>
+  <data name="Open Fellowship" xml:space="preserve">
+    <value>Fellowship’i aç</value>
+  </data>
+  <data name="Fellowship will update automatically before opening." xml:space="preserve">
+    <value>Fellowship açılmadan önce otomatik olarak güncellenecek.</value>
+  </data>
+  <data name="Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>Kurulum tamamlandığında Fellowship yeniden açılacak.</value>
+  </data>
+  <data name="Could not start the updated Fellowship." xml:space="preserve">
+    <value>Güncellenen Fellowship başlatılamadı.</value>
+  </data>
+  <data name="The installed Fellowship version does not match the downloaded update. Open the log and retry." xml:space="preserve">
+    <value>Kurulu Fellowship sürümü indirilen güncellemeyle eşleşmiyor. Günlüğü açıp yeniden deneyin.</value>
+  </data>
+  <data name="{0} MB downloaded" xml:space="preserve">
+    <value>{0} MB indirildi</value>
+  </data>
 </root>

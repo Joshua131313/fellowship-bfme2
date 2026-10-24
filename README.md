@@ -210,7 +210,9 @@ This is an unsigned community build intended for trusted groups. Player names ar
 
 ## Updates, backups, and Windows behavior
 
-Use **Settings → Check for updates** or the dashboard's update notice to download and install a release. The updater reopens Fellowship after installation. Settings provides backup export/restore and a shortcut to the preferences folder.
+Fellowship checks for updates when it starts. A compact branded screen downloads and verifies a newer release, installs it automatically, then reopens the app. Offline checks open your current version; a failed update offers **Retry** or **Open Fellowship**. Windows sign-in startup keeps its tray behavior, and opening the app while the updater is visible brings that screen forward.
+
+You can also use **Settings → Check for updates** or the dashboard's update notice while Fellowship is running. An active room is never interrupted for a background update. Settings provides backup export/restore and a shortcut to the preferences folder. [Startup updater details](docs/startup-updates.md).
 
 | Location | Purpose |
 | --- | --- |

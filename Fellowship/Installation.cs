@@ -23,12 +23,14 @@ public static class Installation
         using var preference=Registry.CurrentUser.CreateSubKey(@"Software\Fellowship\Preferences");
         preference.SetValue("StartWithWindows",enabled?"1":"0");
     }
-    public static void StartUpdate(string package)
+    public static void StartUpdate(string package,Version? expectedVersion=null,bool launchInTray=false)
     {
         var worker=Path.Combine(Path.GetDirectoryName(package)!,"installer-worker.exe");
         File.Copy(Environment.ProcessPath!,worker,true);
+        // This worker presents installation progress and recovery actions.
         var start=new ProcessStartInfo(NativePlacement.PhysicalPath(worker)){UseShellExecute=true};
         start.ArgumentList.Add("--install-update");start.ArgumentList.Add(NativePlacement.PhysicalPath(package));start.ArgumentList.Add(Environment.ProcessId.ToString());
+        if(expectedVersion!=null){start.ArgumentList.Add(expectedVersion.ToString(3));start.ArgumentList.Add(launchInTray?"tray":"foreground");}
         _ = Process.Start(start) ?? throw new IOException("Could not start the installer helper.");
     }
     public const long UpdateSpaceReserve=1024L*1024*1024;
@@ -59,7 +61,7 @@ public static class Installation
         using(File.Create(path)){} // Resolve virtualized paths before passing them to MSI.
         return NativePlacement.PhysicalPath(path);
     }
-    public static async Task<int> RunUpdate(string package,int previousPid)
+    public static async Task<int> RunUpdate(string package,int previousPid,Version? expectedVersion=null,bool launchInTray=false)
     {
         var window=new UpdateProgressWindow("UPDATE");window.Show();
         while(true)
@@ -99,18 +101,30 @@ public static class Installation
                 window.Report("Opening Fellowship…",code==3010?"Update installed. Windows may require a restart.":"Update installed successfully.",100);
                 if(!File.Exists(Executable))throw new IOException("Installation finished but Fellowship.exe was not found. Open the log for details.");
                 // The new app cleans again once this worker exits, releasing its file lock.
-                if(Version.TryParse(FileVersionInfo.GetVersionInfo(Executable).FileVersion,out var installedVersion))
+                if(!Version.TryParse(FileVersionInfo.GetVersionInfo(Executable).FileVersion,out var installedVersion)||expectedVersion!=null&&installedVersion.ToString(3)!=expectedVersion.ToString(3))
+                    throw new IOException("The installed Fellowship version does not match the downloaded update. Open the log and retry.");
+                if(installedVersion!=null)
                     UpdateCache.Clean(Path.Combine(Settings.Folder,"versions"),installedVersion,Environment.ProcessPath!);
-                Process.Start(new ProcessStartInfo(Executable){UseShellExecute=true});window.Finish();return 0;
+                OpenCurrent(launchInTray);window.Finish();return 0;
             }
             catch(Exception error)
             {
                 try{if(string.IsNullOrEmpty(log))log=CreateInstallerLog();if(new FileInfo(log).Length==0)File.WriteAllText(log,error.ToString());}catch(IOException){}catch(UnauthorizedAccessException){}
                 var decision=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 EventHandler closed=(_,_)=>decision.TrySetResult(false);window.Closed+=closed;
-                window.Failure(error.Message,()=>decision.TrySetResult(true),File.Exists(log)?log:null);
+                window.Failure(error.Message,()=>{launchInTray=false;decision.TrySetResult(true);},File.Exists(log)?log:null,File.Exists(Executable)?()=>
+                {
+                    try{OpenCurrent(false);decision.TrySetResult(false);window.Finish();}
+                    catch(Exception openError){window.Failure(openError.Message,()=>decision.TrySetResult(true),File.Exists(log)?log:null);}
+                }:null);
                 bool retry=await decision.Task;window.Closed-=closed;if(!retry)return 1;
             }
         }
+    }
+    static void OpenCurrent(bool launchInTray)
+    {
+        var start=new ProcessStartInfo(Executable){UseShellExecute=true};
+        foreach(string arg in StartupUpdates.RelaunchArguments(launchInTray))start.ArgumentList.Add(arg);
+        _=Process.Start(start)??throw new IOException("Could not start the updated Fellowship.");
     }
 }

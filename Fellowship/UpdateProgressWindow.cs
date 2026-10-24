@@ -9,7 +9,7 @@ public sealed class UpdateProgressWindow : Window
     readonly TextBlock stage=UI.LocalizedText("Preparing update…",15,bold:true);
     readonly TextBlock detail=UI.LocalizedText("",11,UI.Muted);
     readonly ProgressBar progress=new(){Height=7,Minimum=0,Maximum=100,IsIndeterminate=true,Foreground=UI.Brush("#6789F5"),Background=UI.Brush("#263042"),BorderThickness=new(0)};
-    readonly StackPanel actions=new(){Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new(0,20,0,0)};
+    readonly WrapPanel actions=new(){Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new(0,20,0,0)};
     bool busy=true;
     public UpdateProgressWindow(string version)
     {
@@ -29,12 +29,14 @@ public sealed class UpdateProgressWindow : Window
     {
         actions.Children.Clear();actions.Children.Add(UI.Button("Cancel",cancel));
     }
-    public void Failure(string message,Action? retry=null,string? log=null)
+    public void Failure(string message,Action? retry=null,string? log=null,Action? openCurrent=null)
     {
         busy=false;SizeToContent=SizeToContent.Height;Report("Update could not finish",message,0);L.BindError(detail,TextBlock.TextProperty,message);actions.Children.Clear();
         if(log!=null)actions.Children.Add(UI.Button("Open log",()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("notepad.exe"){ArgumentList={log},UseShellExecute=true})));
         if(retry!=null)actions.Children.Add(UI.Button("Retry",()=>{busy=true;actions.Children.Clear();retry();},true));
+        if(openCurrent!=null)actions.Children.Add(UI.Button("Open Fellowship",openCurrent));
         actions.Children.Add(UI.Button("Close",Close));
+        foreach(Button button in actions.Children)button.Margin=new(4,4,4,0);
     }
     public void Finish(){busy=false;Close();}
 }

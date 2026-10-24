@@ -2103,4 +2103,31 @@ Si un salon manque, saisissez l’adresse VPN de l’hôte et actualisez.</value
   <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
     <value>Réparez ou désactivez la correction du délai et le mode sans bordure dans les paramètres avant de lancer BFME2.</value>
   </data>
+  <data name="Checking for updates…" xml:space="preserve">
+    <value>Recherche de mises à jour…</value>
+  </data>
+  <data name="Fellowship will open when the update is ready." xml:space="preserve">
+    <value>Fellowship s’ouvrira lorsque la mise à jour sera prête.</value>
+  </data>
+  <data name="Update progress" xml:space="preserve">
+    <value>Progression de la mise à jour</value>
+  </data>
+  <data name="Open Fellowship" xml:space="preserve">
+    <value>Ouvrir Fellowship</value>
+  </data>
+  <data name="Fellowship will update automatically before opening." xml:space="preserve">
+    <value>Fellowship se mettra à jour automatiquement avant de s’ouvrir.</value>
+  </data>
+  <data name="Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>Fellowship se rouvrira à la fin de l’installation.</value>
+  </data>
+  <data name="Could not start the updated Fellowship." xml:space="preserve">
+    <value>Impossible de démarrer la version mise à jour de Fellowship.</value>
+  </data>
+  <data name="The installed Fellowship version does not match the downloaded update. Open the log and retry." xml:space="preserve">
+    <value>La version installée de Fellowship ne correspond pas à la mise à jour téléchargée. Ouvrez le journal et réessayez.</value>
+  </data>
+  <data name="{0} MB downloaded" xml:space="preserve">
+    <value>{0} Mo téléchargés</value>
+  </data>
 </root>

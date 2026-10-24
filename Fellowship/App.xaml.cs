@@ -112,10 +112,17 @@ public partial class App : Application
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             Shutdown(await NativePlacement.Run(e.Args[1],e.Args[2],e.Args[3],e.Args[0]=="--native-wait",placementParent,e.Args.Length==6?e.Args[5]:null));return;
         }
-        if(e.Args.Length==3&&e.Args[0]=="--install-update"&&int.TryParse(e.Args[2],out var updatePid))
+        if(e.Args.FirstOrDefault()=="--install-update")
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
-            Shutdown(await Installation.RunUpdate(e.Args[1],updatePid));return;
+            if(e.Args.Length is not (3 or 5)||!int.TryParse(e.Args[2],out var updatePid)||updatePid<=0){Shutdown(1);return;}
+            Version? expected=null;bool trayUpdate=false;
+            if(e.Args.Length==5)
+            {
+                if(!Version.TryParse(e.Args[3],out expected)||expected.Build<0||e.Args[4] is not ("tray" or "foreground")){Shutdown(1);return;}
+                trayUpdate=e.Args[4]=="tray";
+            }
+            Shutdown(await Installation.RunUpdate(e.Args[1],updatePid,expected,trayUpdate));return;
         }
         if(e.Args.Length is >=2 and <=4&&e.Args[0]=="--host-preset")
         {
@@ -123,7 +130,7 @@ public partial class App : Application
             Shutdown(await HostPreset.Run(e.Args[1],e.Args.Length>=3?e.Args[2]:null));return;
         }
         if(e.Args.Any(a=>a.EndsWith("-navigation")||a.EndsWith("-placement"))){Shutdown(1);return;}
-        if(e.Args.Length==2&&e.Args[0]=="--wait-for"&&int.TryParse(e.Args[1],out var oldPid))
+        if(e.Args.Length>=2&&e.Args[0]=="--wait-for"&&int.TryParse(e.Args[1],out var oldPid))
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             try{using var previous=System.Diagnostics.Process.GetProcessById(oldPid);using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(30));await previous.WaitForExitAsync(timeout.Token);}
@@ -134,21 +141,29 @@ public partial class App : Application
         instanceMutex=new Mutex(false,@"Local\Fellowship.UI."+identity,out bool first);
         activateEvent=new EventWaitHandle(false,EventResetMode.AutoReset,@"Local\Fellowship.Activate."+identity);
         if(!first){activateEvent.Set();Shutdown();return;}
+        Window? launchWindow=null;bool foreground=!e.Args.Contains("--startup");
+        activationWait=ThreadPool.RegisterWaitForSingleObject(activateEvent,(_,_)=>Dispatcher.BeginInvoke(()=>
+        {
+            foreground=true;
+            if(launchWindow!=null)UI.Reveal(launchWindow);
+        }),null,Timeout.Infinite,false);
         _=Task.Run(async()=>{await Task.Delay(3000);UpdateCache.CleanInstalledCache();});
         var settings=Settings.Load();L.Apply(settings.Language);Appearance.Apply(settings.Appearance);
         ShutdownMode=ShutdownMode.OnExplicitShutdown;
-        if(!settings.OnboardingCompleted&&!e.Args.Contains("--startup"))await UI.ShowPopup(new OnboardingWindow(settings));
+        if(e.Args.Contains("--skip-startup-update"))AppUpdates.DeferAutomaticCheck();
+        else if(await StartupUpdates.Run(!foreground,()=>!foreground,w=>launchWindow=w,()=>foreground=true)!=StartupUpdates.Outcome.OpenFellowship)return;
+        MainWindow=null;
+        if(!settings.OnboardingCompleted&&foreground)
+        {
+            var onboarding=new OnboardingWindow(settings);launchWindow=onboarding;await UI.ShowPopup(onboarding);launchWindow=null;
+        }
         var main = new BrowserWindow(settings);
         MainWindow = main;
+        launchWindow=main;
         ShutdownMode=ShutdownMode.OnExplicitShutdown;
         tray=new TrayIcon(main);
         _=main.CheckStartupConnection();
-        if(!e.Args.Contains("--startup"))main.Show();else main.EnsureOnline(true);
-        activationWait=ThreadPool.RegisterWaitForSingleObject(activateEvent,(_,_)=>Dispatcher.BeginInvoke(()=>
-        {
-            if(main.WindowState==WindowState.Minimized)main.WindowState=WindowState.Normal;
-            main.Show();main.Activate();
-        }),null,Timeout.Infinite,false);
+        if(foreground)main.Show();else main.EnsureOnline(true);
     }
     protected override void OnExit(ExitEventArgs e)
     {

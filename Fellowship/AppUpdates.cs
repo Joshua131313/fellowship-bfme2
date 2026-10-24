@@ -18,36 +18,40 @@ public static class AppUpdates
     public static event Action? AvailabilityChanged;
     public static bool Installing { get; private set; }
     public static event Action? InstallationChanged;
-    public static Release? Parse(string json)
+    public static DateTimeOffset LastCheckAttempt {get;private set;}
+    public static void DeferAutomaticCheck()=>LastCheckAttempt=DateTimeOffset.UtcNow;
+    internal static void SetInstalling(bool value){Installing=value;InstallationChanged?.Invoke();}
+    public static Release? Parse(string json,bool portableOnly=false)
     {
         using var doc=JsonDocument.Parse(json);var root=doc.RootElement;
         if(root.GetProperty("draft").GetBoolean()||root.GetProperty("prerelease").GetBoolean())return null;
         if(!Version.TryParse(root.GetProperty("tag_name").GetString()?.TrimStart('v'),out var version)||version<=new Version(VersionText))return null;
         var prefix=$"Fellowship-{version.ToString(3)}-win-x64";
-        foreach(var extension in new[]{".msi",".zip"})
+        foreach(var extension in portableOnly?new[]{".zip"}:new[]{".msi",".zip"})
         {
         var name=prefix+extension;
         foreach(var a in root.GetProperty("assets").EnumerateArray())
         {
             if(a.GetProperty("name").GetString()!=name)continue;
             string url=a.GetProperty("browser_download_url").GetString()??"",digest=a.GetProperty("digest").GetString()??"";
-            if(!Uri.TryCreate(url,UriKind.Absolute,out var uri)||uri.Scheme!="https"||uri.Host!="github.com"||!uri.AbsolutePath.StartsWith("/Joshua131313/fellowship-bfme2/releases/download/",StringComparison.Ordinal)||!digest.StartsWith("sha256:")||digest.Length!=71)throw new InvalidDataException("The release does not have a verified update package.");
+            if(!Uri.TryCreate(url,UriKind.Absolute,out var uri)||uri.Scheme!="https"||uri.Host!="github.com"||!uri.AbsolutePath.StartsWith("/Joshua131313/fellowship-bfme2/releases/download/",StringComparison.Ordinal)||!digest.StartsWith("sha256:")||digest.Length!=71||!digest[7..].All(Uri.IsHexDigit))throw new InvalidDataException("The release does not have a verified update package.");
             if(extension==".zip"&&Installation.IsInstalled)throw new InvalidDataException("The latest release has no installer yet. Your installed version is unchanged.");
             return new(version,url,digest[7..],extension==".msi");
         }
         }
         throw new InvalidDataException("The latest release has no Windows update package yet.");
     }
-    public static async Task<Release?> Check()
+    public static async Task<Release?> Check(CancellationToken cancellation=default,bool portableOnly=false)
     {
-        using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        LastCheckAttempt=DateTimeOffset.UtcNow;
+        using var timeout=CancellationTokenSource.CreateLinkedTokenSource(cancellation);timeout.CancelAfter(TimeSpan.FromSeconds(20));
         using var request=new HttpRequestMessage(HttpMethod.Get,"https://api.github.com/repos/Joshua131313/fellowship-bfme2/releases/latest");
         request.Headers.CacheControl=new System.Net.Http.Headers.CacheControlHeaderValue{NoCache=true};
         using var response=await Client.SendAsync(request,timeout.Token);
         if(response.StatusCode==System.Net.HttpStatusCode.NotFound)throw new IOException("No published release is available yet.");
-        response.EnsureSuccessStatusCode();Available=Parse(await response.Content.ReadAsStringAsync(timeout.Token));AvailabilityChanged?.Invoke();return Available;
+        response.EnsureSuccessStatusCode();Available=Parse(await response.Content.ReadAsStringAsync(timeout.Token),portableOnly);AvailabilityChanged?.Invoke();return Available;
     }
-    public static async Task<string> Download(Release release,string? stagingRoot=null,IProgress<(long Received,long? Total)>? progress=null,CancellationToken token=default)
+    public static async Task<string> Download(Release release,string? stagingRoot=null,IProgress<(long Received,long? Total)>? progress=null,CancellationToken token=default,bool keepPortableArchive=false)
     {
         Installation.EnsureUpdateSpace(stagingRoot??Settings.Folder,Installation.Executable,Path.GetTempPath(),Environment.SystemDirectory);
         using var downloadTimeout=CancellationTokenSource.CreateLinkedTokenSource(token);downloadTimeout.CancelAfter(TimeSpan.FromMinutes(10));token=downloadTimeout.Token;
@@ -71,7 +75,38 @@ public static class AppUpdates
         entry.ExtractToFile(exe);
         }
         if(FileVersionInfo.GetVersionInfo(exe).FileVersion is not {} version||new Version(version)!=new Version(release.Version.Major,release.Version.Minor,release.Version.Build,0))throw new InvalidDataException("Update version mismatch");
-        File.Delete(zip);return exe;
+        if(!keepPortableArchive)File.Delete(zip);return exe;
+    }
+    // Reuse only a ZIP matching the currently published release digest and an
+    // executable matching that verified archive. Old portable shortcuts can
+    // open the cached new app without downloading the same release each time.
+    public static async Task<string?> CachedPortable(Release release,string? stagingRoot=null,CancellationToken token=default)
+    {
+        token.ThrowIfCancellationRequested();if(release.Installer)return null;
+        string root=Path.Combine(stagingRoot??Path.Combine(Settings.Folder,"versions"),release.Version.ToString(3));
+        bool Linked(string path)=>(File.GetAttributes(path)&FileAttributes.ReparsePoint)!=0;
+        if(!Directory.Exists(root)||Linked(root))return null;
+        foreach(string folder in Directory.EnumerateDirectories(root).Take(64))
+        {
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                if(!Guid.TryParseExact(Path.GetFileName(folder),"N",out _)||Linked(folder))continue;
+                string zip=Path.Combine(folder,"update.zip"),exe=Path.Combine(folder,"Fellowship.exe");
+                if(!File.Exists(zip)||!File.Exists(exe)||Linked(zip)||Linked(exe)||new FileInfo(zip).Length>250_000_000||new FileInfo(exe).Length>350_000_000)continue;
+                using(var source=File.OpenRead(zip))
+                    if(!Convert.ToHexString(await SHA256.HashDataAsync(source,token)).Equals(release.Digest,StringComparison.OrdinalIgnoreCase))continue;
+                if(!Version.TryParse(FileVersionInfo.GetVersionInfo(exe).FileVersion,out var version)||version.ToString(3)!=release.Version.ToString(3))continue;
+                using var archive=ZipFile.OpenRead(zip);
+                var entry=archive.GetEntry($"Fellowship-{release.Version.ToString(3)}/Fellowship.exe")??archive.GetEntry("Fellowship.exe");
+                if(entry==null||entry.Length>350_000_000||entry.Length!=new FileInfo(exe).Length)continue;
+                using var content=entry.Open();using var executable=File.OpenRead(exe);
+                if(!(await SHA256.HashDataAsync(content,token)).SequenceEqual(await SHA256.HashDataAsync(executable,token)))continue;
+                return exe;
+            }
+            catch(Exception error) when(error is IOException or UnauthorizedAccessException or InvalidDataException){ }
+        }
+        return null;
     }
     public static async Task Install(Release release,Func<bool> inRoom,Action<string> status)
     {
@@ -95,10 +130,12 @@ public static class AppUpdates
             cancellation.Token.ThrowIfCancellationRequested();
             window.Report("Preparing installation…","Fellowship will close. The installer will keep you informed.");
             if(inRoom()){status("Leave your room, then retry the update.");window.Finish();return;}
-            if(release.Installer)Installation.StartUpdate(downloaded);
+            if(release.Installer)Installation.StartUpdate(downloaded,release.Version);
             else
             {
-                var start=new ProcessStartInfo(downloaded){UseShellExecute=true,WorkingDirectory=Path.GetDirectoryName(downloaded)!};start.ArgumentList.Add("--wait-for");start.ArgumentList.Add(Environment.ProcessId.ToString());Process.Start(start);
+                var start=new ProcessStartInfo(downloaded){UseShellExecute=true,WorkingDirectory=Path.GetDirectoryName(downloaded)!};
+                foreach(string arg in StartupUpdates.RelaunchArguments(false,Environment.ProcessId))start.ArgumentList.Add(arg);
+                _=Process.Start(start)??throw new IOException("Could not start the updated Fellowship.");
             }
             handedOff=true;window.Finish();((App)Application.Current).Quit();
         }

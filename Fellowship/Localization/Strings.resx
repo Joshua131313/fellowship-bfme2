@@ -2103,4 +2103,31 @@ If a room is missing, enter the host's VPN address and refresh.</value>
   <data name="Repair or disable delay fix and borderless mode in Settings before launching BFME2." xml:space="preserve">
     <value>Repair or disable delay fix and borderless mode in Settings before launching BFME2.</value>
   </data>
+  <data name="Checking for updates…" xml:space="preserve">
+    <value>Checking for updates…</value>
+  </data>
+  <data name="Fellowship will open when the update is ready." xml:space="preserve">
+    <value>Fellowship will open when the update is ready.</value>
+  </data>
+  <data name="Update progress" xml:space="preserve">
+    <value>Update progress</value>
+  </data>
+  <data name="Open Fellowship" xml:space="preserve">
+    <value>Open Fellowship</value>
+  </data>
+  <data name="Fellowship will update automatically before opening." xml:space="preserve">
+    <value>Fellowship will update automatically before opening.</value>
+  </data>
+  <data name="Fellowship will reopen when installation finishes." xml:space="preserve">
+    <value>Fellowship will reopen when installation finishes.</value>
+  </data>
+  <data name="Could not start the updated Fellowship." xml:space="preserve">
+    <value>Could not start the updated Fellowship.</value>
+  </data>
+  <data name="The installed Fellowship version does not match the downloaded update. Open the log and retry." xml:space="preserve">
+    <value>The installed Fellowship version does not match the downloaded update. Open the log and retry.</value>
+  </data>
+  <data name="{0} MB downloaded" xml:space="preserve">
+    <value>{0} MB downloaded</value>
+  </data>
 </root>
